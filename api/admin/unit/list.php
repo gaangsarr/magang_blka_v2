@@ -50,20 +50,24 @@ try {
     
     $periodeId = $periode ? (int)$periode['id'] : null;
     
+    // SESUDAH — tambah filter tipe = 'unit_pelaksana' dan tampilkan nama parent (UP3)
     $query = "
         SELECT 
             ep.id AS entitas_id,
             ep.nama,
+            ep.singkatan,
             ep.alamat,
-            upp.id AS upp_id,
+            parent.nama  AS nama_unit_induk,
+            upp.id       AS upp_id,
             upp.kuota_total,
             upp.kuota_tersisa,
             upp.aktif
         FROM entitas_perusahaan ep
+        LEFT JOIN entitas_perusahaan parent ON ep.parent_id = parent.id
         LEFT JOIN unit_pelaksana_periode upp 
             ON ep.id = upp.entitas_id AND upp.periode_id = :periode_id
-        WHERE ep.aktif = 1
-        ORDER BY ep.nama ASC
+        WHERE ep.aktif = 1 AND ep.tipe = 'unit_pelaksana'
+        ORDER BY parent.nama ASC, ep.nama ASC
     ";
     
     $stmt = $pdo->prepare($query);

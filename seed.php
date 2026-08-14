@@ -30,11 +30,13 @@ try {
     $stmt = $pdo->query("SELECT COUNT(*) FROM entitas_perusahaan");
     if ($stmt->fetchColumn() == 0) {
         // Koordinat sekitar ITPLN (Cengkareng, Duri Kosambi)
+        // CATATAN: Lebih baik jalankan `vendor/bin/phinx seed:run -s DemoDataSeeder`
+        // daripada seed.php ini. Biarkan seed.php hanya untuk periode & user jika perlu.
         $pdo->exec("
-            INSERT INTO entitas_perusahaan (nama, alamat, latitude, longitude) VALUES 
-            ('PLN UID Jakarta Raya', 'Jl. M.I. Ridwan Rais No.1', -6.180295, 106.833633),
-            ('PLN Pusdiklat', 'Jl. Harsono RM No.59', -6.302390, 106.820613),
-            ('PLN Icon Plus', 'Kawasan PLN Cawang', -6.251912, 106.867916)
+            INSERT INTO entitas_perusahaan (tipe, parent_id, nama, singkatan, alamat, latitude, longitude, aktif) VALUES 
+            ('holding',       NULL, 'PT PLN (Persero)',       'PLN',     'Jl. Trunojoyo Blok M-I No. 135, Jakarta Selatan', -6.2433, 106.8019, 1),
+            ('unit_induk',    1,    'PLN UID Jakarta Raya',   'UID JKT', 'Jl. M.I. Ridwan Rais No.1, Jakarta',             -6.1804, 106.8336, 1),
+            ('unit_pelaksana',2,    'PLN UP3 Cengkareng',     'UP3 CGK', 'Jl. Daan Mogot KM 16, Tangerang',                -6.1697, 106.7295, 1)
         ");
         echo "Entitas perusahaan ditambahkan.\n";
     }
