@@ -209,6 +209,32 @@ class Auth
         return (int) ($_SESSION['admin_id'] ?? 0);
     }
 
+    /**
+     * Shorthand: ambil nama admin dari session atau database.
+     */
+    public static function getAdminNama(): string
+    {
+        self::startSession(startPHP: true);
+        if (!empty($_SESSION['admin_nama'])) {
+            return (string) $_SESSION['admin_nama'];
+        }
+        $admin = self::getAdmin();
+        return $admin['nama'] ?? 'Administrator';
+    }
+
+    /**
+     * Shorthand: ambil role admin dari session atau database.
+     */
+    public static function getAdminRole(): string
+    {
+        self::startSession(startPHP: true);
+        if (!empty($_SESSION['admin_role'])) {
+            return (string) $_SESSION['admin_role'];
+        }
+        $admin = self::getAdmin();
+        return $admin['role'] ?? 'admin_blka';
+    }
+
     // ============================================================
     // SESSION STATUS CHECKS
     // ============================================================

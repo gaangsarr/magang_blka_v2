@@ -1,14 +1,26 @@
+/**
+ * public/js/admin/penetapan.js
+ * Manajemen Penetapan Unit, Pemindahan Paksa, & Publikasi Pengumuman Mahasiswa
+ */
+
+import { showAdminAlert, showAdminConfirm } from './common.js';
+
 let csrfToken = null;
 let allPenetapanData = [];
 let unitList = [];
 let jurusanList = [];
 let selectedIds = new Set();
+let currentPeriodeData = null;
+let isPeriodeSelectPopulated = false;
 
 window.showModal = function(id) {
-    document.getElementById(id).classList.remove('hidden');
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('hidden');
 };
+
 window.hideModal = function(id) {
-    document.getElementById(id).classList.add('hidden');
+    const el = document.getElementById(id);
+    if (el) el.classList.add('hidden');
 };
 
 function escapeHtml(unsafe) {
@@ -21,18 +33,23 @@ function escapeHtml(unsafe) {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. Cek Admin Auth
-    const statusRes = await fetch('/api/admin/status.php');
-    const statusData = await statusRes.json();
-    if (statusData.csrf_token) csrfToken = statusData.csrf_token;
-    if (!statusRes.ok || !statusData.authenticated) {
+    // 1. Cek Admin Auth & CSRF
+    try {
+        const statusRes = await fetch('/api/admin/status.php');
+        const statusData = await statusRes.json();
+        if (statusData.csrf_token) csrfToken = statusData.csrf_token;
+        if (!statusRes.ok || !statusData.authenticated) {
+            window.location.href = '/admin/login.html';
+            return;
+        }
+
+        if (statusData.admin && statusData.admin.nama) {
+            const nameElem = document.getElementById('admin-name');
+            if (nameElem) nameElem.innerText = statusData.admin.nama;
+        }
+    } catch (err) {
         window.location.href = '/admin/login.html';
         return;
-    }
-
-    if (statusData.admin && statusData.admin.nama) {
-        const nameElem = document.getElementById('admin-name');
-        if (nameElem) nameElem.innerText = statusData.admin.nama;
     }
 
     // 2. Load Unit Options for Relocate Modals
@@ -48,7 +65,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('filter-program').addEventListener('change', applyFilters);
     document.getElementById('filter-status').addEventListener('change', applyFilters);
 
-    // 5. Check All Toggle
+    // 5. Toggle Pengumuman Button Listener
+    const btnTogglePengumuman = document.getElementById('btn-toggle-pengumuman');
+    if (btnTogglePengumuman) {
+        btnTogglePengumuman.addEventListener('click', handleTogglePengumuman);
+    }
+
+    // 6. Check All Toggle
     const checkAll = document.getElementById('check-all');
     if (checkAll) {
         checkAll.addEventListener('change', (e) => {
@@ -67,7 +90,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // 6. Bulk Actions Setup
+    // 7. Bulk Actions Setup
     document.getElementById('btn-bulk-approve').addEventListener('click', handleBulkApprove);
     document.getElementById('btn-bulk-relocate').addEventListener('click', handleBulkRelocateOpen);
     document.getElementById('btn-bulk-reject').addEventListener('click', handleBulkReject);
@@ -94,23 +117,23 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
             const data = await res.json();
             if (res.ok) {
-                alert(data.message || 'Berhasil memindahkan mahasiswa terpilih.');
+                showAdminAlert(data.message || 'Berhasil memindahkan mahasiswa terpilih.', 'success');
                 hideModal('modal-bulk-relocate');
                 selectedIds.clear();
                 updateBulkToolbar();
-                loadPenetapanData();
+                loadPenetapanData(currentPeriodeData ? currentPeriodeData.id : null);
             } else {
-                alert(data.error || 'Gagal memproses pemindahan massal.');
+                showAdminAlert(data.error || 'Gagal memproses pemindahan massal.', 'error');
             }
         } catch (err) {
-            alert('Terjadi kesalahan jaringan.');
+            showAdminAlert('Terjadi kesalahan jaringan.', 'error');
         }
 
         btn.disabled = false;
         btn.innerText = 'Proses Pemindahan Massal';
     });
 
-    // 7. Individual Modals Submit Handlers
+    // 8. Individual Modals Submit Handlers
     document.getElementById('form-relocate').addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = document.getElementById('btn-submit-relocate');
@@ -132,15 +155,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
             const data = await res.json();
             if (res.ok) {
-                alert(data.message || 'Mahasiswa berhasil dipindahkan ke unit baru.');
+                showAdminAlert(data.message || 'Mahasiswa berhasil dipindahkan ke unit baru.', 'success');
                 hideModal('modal-relocate');
                 e.target.reset();
-                loadPenetapanData();
+                loadPenetapanData(currentPeriodeData ? currentPeriodeData.id : null);
             } else {
-                alert(data.error || 'Gagal memindahkan unit.');
+                showAdminAlert(data.error || 'Gagal memindahkan unit.', 'error');
             }
         } catch (err) {
-            alert('Terjadi kesalahan jaringan.');
+            showAdminAlert('Terjadi kesalahan jaringan.', 'error');
         }
 
         btn.disabled = false;
@@ -167,15 +190,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
             const data = await res.json();
             if (res.ok) {
-                alert(data.message || 'Penetapan disetujui.');
+                showAdminAlert(data.message || 'Penetapan disetujui.', 'success');
                 hideModal('modal-approve');
                 e.target.reset();
-                loadPenetapanData();
+                loadPenetapanData(currentPeriodeData ? currentPeriodeData.id : null);
             } else {
-                alert(data.error || 'Gagal menyetujui penetapan.');
+                showAdminAlert(data.error || 'Gagal menyetujui penetapan.', 'error');
             }
         } catch (err) {
-            alert('Terjadi kesalahan jaringan.');
+            showAdminAlert('Terjadi kesalahan jaringan.', 'error');
         }
 
         btn.disabled = false;
@@ -202,15 +225,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
             const data = await res.json();
             if (res.ok) {
-                alert(data.message || 'Pendaftaran ditolak.');
+                showAdminAlert(data.message || 'Pendaftaran ditolak.', 'success');
                 hideModal('modal-reject');
                 e.target.reset();
-                loadPenetapanData();
+                loadPenetapanData(currentPeriodeData ? currentPeriodeData.id : null);
             } else {
-                alert(data.error || 'Gagal menolak pendaftaran.');
+                showAdminAlert(data.error || 'Gagal menolak pendaftaran.', 'error');
             }
         } catch (err) {
-            alert('Terjadi kesalahan jaringan.');
+            showAdminAlert('Terjadi kesalahan jaringan.', 'error');
         }
 
         btn.disabled = false;
@@ -230,15 +253,16 @@ async function loadUnitList() {
             const bulkSelect = document.getElementById('bulk-relocate-new-unit');
             const filterUnit = document.getElementById('filter-unit');
 
-            selectElem.innerHTML = '<option value="">-- Pilih Unit Pelaksana Tujuan --</option>';
-            bulkSelect.innerHTML = '<option value="">-- Pilih Unit Pelaksana Tujuan --</option>';
-            filterUnit.innerHTML = '<option value="">Semua Unit Penempatan</option>';
+            if (selectElem) selectElem.innerHTML = '<option value="">-- Pilih Unit Pelaksana Tujuan --</option>';
+            if (bulkSelect) bulkSelect.innerHTML = '<option value="">-- Pilih Unit Pelaksana Tujuan --</option>';
+            if (filterUnit) filterUnit.innerHTML = '<option value="">Semua Unit Penempatan</option>';
 
             unitList.forEach(u => {
                 const sisa = u.kuota_tersisa !== null ? u.kuota_tersisa : 0;
-                selectElem.innerHTML += `<option value="${u.upp_id}" ${sisa <= 0 ? 'disabled' : ''}>${escapeHtml(u.nama)} (Sisa Kuota: ${sisa})</option>`;
-                bulkSelect.innerHTML += `<option value="${u.upp_id}" ${sisa <= 0 ? 'disabled' : ''}>${escapeHtml(u.nama)} (Sisa Kuota: ${sisa})</option>`;
-                filterUnit.innerHTML += `<option value="${escapeHtml(u.nama)}">${escapeHtml(u.nama)}</option>`;
+                const optHtml = `<option value="${u.upp_id}" ${sisa <= 0 ? 'disabled' : ''}>${escapeHtml(u.nama)} (Sisa Kuota: ${sisa})</option>`;
+                if (selectElem) selectElem.innerHTML += optHtml;
+                if (bulkSelect) bulkSelect.innerHTML += optHtml;
+                if (filterUnit) filterUnit.innerHTML += `<option value="${escapeHtml(u.nama)}">${escapeHtml(u.nama)}</option>`;
             });
         }
     } catch (e) {
@@ -246,11 +270,11 @@ async function loadUnitList() {
     }
 }
 
-let isPeriodeSelectPopulated = false;
-
 async function loadPenetapanData(targetPeriodeId = null) {
     const tbody = document.getElementById('table-penetapan');
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #64748b; padding: 24px;">Memuat data pendaftaran & penetapan...</td></tr>';
+    if (tbody) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #64748b; padding: 24px;">Memuat data pendaftaran & penetapan...</td></tr>';
+    }
     
     const selectEl = document.getElementById('select-periode-penetapan');
 
@@ -260,6 +284,8 @@ async function loadPenetapanData(targetPeriodeId = null) {
         const data = await res.json();
 
         if (data.ok) {
+            currentPeriodeData = data.periode_terpilih;
+
             // Populate period select dropdown
             if (data.all_periode && selectEl) {
                 selectEl.innerHTML = '';
@@ -267,7 +293,7 @@ async function loadPenetapanData(targetPeriodeId = null) {
                     const opt = document.createElement('option');
                     opt.value = p.id;
                     opt.innerText = `${p.nama} (${(p.status || 'DRAFT').toUpperCase()})`;
-                    if (data.periode_terpilih && parseInt(p.id) === parseInt(data.periode_terpilih.id)) {
+                    if (currentPeriodeData && parseInt(p.id) === parseInt(currentPeriodeData.id)) {
                         opt.selected = true;
                     }
                     selectEl.appendChild(opt);
@@ -284,40 +310,144 @@ async function loadPenetapanData(targetPeriodeId = null) {
             // Update Info Periode Text cleanly
             const infoEl = document.getElementById('info-periode');
             const btnExport = document.getElementById('btn-export-penetapan');
-            const p = data.periode_terpilih;
+            const p = currentPeriodeData;
 
             if (btnExport && p) {
                 btnExport.href = `/api/admin/penetapan/export.php?periode_id=${p.id}`;
             }
 
             if (!p) {
-                infoEl.innerHTML = '<span style="color: #ef4444; font-weight: 600;">Belum ada periode magang yang dibuat.</span>';
+                if (infoEl) infoEl.innerHTML = '<span style="color: #ef4444; font-weight: 600;">Belum ada periode magang yang dibuat.</span>';
             } else {
                 const st = (p.status || '').toLowerCase().trim();
-                if (st === 'dibuka') {
-                    infoEl.innerHTML = `<span style="color: #059669; font-weight: 700;">● Periode Aktif: ${escapeHtml(p.nama)} (DIBUKA)</span>`;
-                } else if (st === 'persiapan') {
-                    infoEl.innerHTML = `<span style="color: #d97706; font-weight: 700;">● Periode Persiapan: ${escapeHtml(p.nama)} (PERSIAPAN - SETTING KUOTA)</span>`;
-                } else {
-                    infoEl.innerHTML = `<span style="color: #64748b; font-weight: 600;">(Tidak Ada Periode Aktif) Periode Terpilih: ${escapeHtml(p.nama)} [STATUS: ${st.toUpperCase()}]</span>`;
+                if (infoEl) {
+                    if (st === 'dibuka') {
+                        infoEl.innerHTML = `<span style="color: #059669; font-weight: 700;">● Periode Aktif: ${escapeHtml(p.nama)} (DIBUKA)</span>`;
+                    } else if (st === 'persiapan') {
+                        infoEl.innerHTML = `<span style="color: #d97706; font-weight: 700;">● Periode Persiapan: ${escapeHtml(p.nama)} (PERSIAPAN - SETTING KUOTA)</span>`;
+                    } else {
+                        infoEl.innerHTML = `<span style="color: #64748b; font-weight: 600;">(Tidak Ada Periode Aktif) Periode Terpilih: ${escapeHtml(p.nama)} [STATUS: ${st.toUpperCase()}]</span>`;
+                    }
                 }
             }
+
+            // Update Announcement Banner UI
+            updateAnnouncementBanner(currentPeriodeData);
 
             if (data.jurusan_list) {
                 jurusanList = data.jurusan_list;
                 const selectJurusan = document.getElementById('filter-jurusan');
-                selectJurusan.innerHTML = '<option value="">Semua Jurusan</option>';
-                jurusanList.forEach(j => {
-                    selectJurusan.innerHTML += `<option value="${j.id}">${escapeHtml(j.nama)}</option>`;
-                });
+                if (selectJurusan) {
+                    selectJurusan.innerHTML = '<option value="">Semua Jurusan</option>';
+                    jurusanList.forEach(j => {
+                        selectJurusan.innerHTML += `<option value="${j.id}">${escapeHtml(j.nama)}</option>`;
+                    });
+                }
             }
 
-            allPenetapanData = data.data;
+            allPenetapanData = data.data || [];
             applyFilters();
         }
     } catch (err) {
         console.error(err);
-        tbody.innerHTML = '<tr><td colspan="8" style="color: #ef4444; text-align: center; padding: 24px;">Gagal memuat data penetapan.</td></tr>';
+        if (tbody) tbody.innerHTML = '<tr><td colspan="8" style="color: #ef4444; text-align: center; padding: 24px;">Gagal memuat data penetapan.</td></tr>';
+    }
+}
+
+function updateAnnouncementBanner(periode) {
+    const card = document.getElementById('announcement-banner-card');
+    const badge = document.getElementById('announcement-status-badge');
+    const desc = document.getElementById('announcement-desc');
+    const btn = document.getElementById('btn-toggle-pengumuman');
+    const btnText = document.getElementById('btn-toggle-pengumuman-text');
+    const pulseDot = document.getElementById('announcement-pulse-dot');
+
+    if (!card || !badge || !desc || !btn || !btnText) return;
+
+    if (!periode) {
+        card.style.display = 'none';
+        return;
+    }
+
+    card.style.display = 'flex';
+    const isPub = Boolean(parseInt(periode.pengumuman_dibuka, 10));
+
+    if (isPub) {
+        card.className = 'announcement-control-card is-published';
+        if (pulseDot) pulseDot.className = 'status-pulse-dot dot-published';
+        badge.className = 'badge-status-pill badge-pill-published';
+        badge.innerText = 'SUDAH DIPUBLIKASIKAN';
+        desc.innerHTML = `Hasil penetapan resmi periode <strong>${escapeHtml(periode.nama)}</strong> sudah aktif dan dapat dilihat langsung oleh seluruh mahasiswa.`;
+        
+        btn.className = 'btn-announcement-toggle btn-announcement-unpublish';
+        btnText.innerText = 'Tutup / Sembunyikan';
+        btn.querySelector('svg').innerHTML = '<rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>';
+    } else {
+        card.className = 'announcement-control-card is-draft';
+        if (pulseDot) pulseDot.className = 'status-pulse-dot dot-draft';
+        badge.className = 'badge-status-pill badge-pill-draft';
+        badge.innerText = 'BELUM DIPUBLIKASIKAN';
+        desc.innerHTML = `Mahasiswa pendaftar saat ini hanya melihat status pending (<em>"Dalam Proses Seleksi"</em>).`;
+
+        btn.className = 'btn-announcement-toggle btn-announcement-publish';
+        btnText.innerText = 'Publikasikan Sekarang';
+        btn.querySelector('svg').innerHTML = '<path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>';
+    }
+}
+
+async function handleTogglePengumuman() {
+    if (!currentPeriodeData) {
+        showAdminAlert('Tidak ada periode magang yang dipilih.', 'warning');
+        return;
+    }
+
+    const currentStatus = Boolean(parseInt(currentPeriodeData.pengumuman_dibuka, 10));
+    const newStatus = !currentStatus;
+
+    const confirmTitle = newStatus ? 'Publikasikan Pengumuman Penetapan?' : 'Tutup / Sembunyikan Pengumuman?';
+    const confirmMessage = newStatus 
+        ? `Apakah Anda yakin ingin mempublikasikan hasil penetapan periode "${currentPeriodeData.nama}" kepada seluruh mahasiswa? Seluruh mahasiswa pendaftar akan dapat melihat status resmi Diterima, Dipindahkan, atau Ditolak.`
+        : `Apakah Anda yakin ingin menutup pengumuman periode "${currentPeriodeData.nama}"? Tampilan mahasiswa pendaftar akan kembali disamarkan menjadi status Pending / Menunggu Pengumuman.`;
+
+    const confirmType = newStatus ? 'warning' : 'danger';
+    const confirmButtonText = newStatus ? 'Ya, Publikasikan Sekarang' : 'Ya, Sembunyikan Pengumuman';
+
+    const confirmed = await showAdminConfirm(confirmMessage, confirmTitle, confirmType, confirmButtonText, 'Batal');
+    if (!confirmed) return;
+
+    const btn = document.getElementById('btn-toggle-pengumuman');
+    if (btn) {
+        btn.disabled = true;
+        btn.style.opacity = '0.7';
+    }
+
+    try {
+        const res = await fetch('/api/admin/penetapan/toggle_pengumuman.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': csrfToken
+            },
+            body: JSON.stringify({
+                periode_id: parseInt(currentPeriodeData.id, 10),
+                pengumuman_dibuka: newStatus ? 1 : 0
+            })
+        });
+
+        const data = await res.json();
+        if (res.ok && data.ok) {
+            showAdminAlert(data.message, 'success');
+            await loadPenetapanData(currentPeriodeData.id);
+        } else {
+            showAdminAlert(data.error || 'Gagal mengubah status pengumuman.', 'error');
+        }
+    } catch (err) {
+        showAdminAlert('Terjadi kesalahan jaringan atau server.', 'error');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.style.opacity = '1';
+        }
     }
 }
 
@@ -351,6 +481,7 @@ function applyFilters() {
 
 function renderTable(dataArray) {
     const tbody = document.getElementById('table-penetapan');
+    if (!tbody) return;
     tbody.innerHTML = '';
 
     const checkAll = document.getElementById('check-all');
@@ -447,20 +578,17 @@ function updateBulkToolbar() {
     if (countElem) countElem.innerText = size;
 
     if (size > 0) {
-        toolbar.classList.add('active');
+        if (toolbar) toolbar.classList.add('active');
     } else {
-        toolbar.classList.remove('active');
+        if (toolbar) toolbar.classList.remove('active');
     }
 }
 
 // Bulk Actions Handlers
 async function handleBulkApprove() {
     if (selectedIds.size === 0) return;
-    const isConfirmed = window.showAdminConfirm
-        ? await window.showAdminConfirm(`Konfirmasi menyetujui penetapan ${selectedIds.size} mahasiswa terpilih pada unit pilihan awal mereka?`, 'Setujui Penetapan Massal', 'info', 'Ya, Setujui', 'Batal')
-        : confirm(`Konfirmasi menyetujui penetapan ${selectedIds.size} mahasiswa terpilih pada unit pilihan awal mereka?`);
-
-    if (!isConfirmed) return;
+    const confirmed = await showAdminConfirm(`Konfirmasi menyetujui penetapan ${selectedIds.size} mahasiswa terpilih pada unit pilihan awal mereka?`, 'Setujui Penetapan Massal', 'info', 'Ya, Setujui', 'Batal');
+    if (!confirmed) return;
 
     try {
         const res = await fetch('/api/admin/penetapan/bulk_update.php', {
@@ -473,18 +601,15 @@ async function handleBulkApprove() {
         });
         const data = await res.json();
         if (res.ok) {
-            if (window.showAdminAlert) await window.showAdminAlert(data.message || 'Berhasil menyetujui mahasiswa terpilih.', 'success');
-            else alert(data.message || 'Berhasil menyetujui mahasiswa terpilih.');
+            showAdminAlert(data.message || 'Berhasil menyetujui mahasiswa terpilih.', 'success');
             selectedIds.clear();
             updateBulkToolbar();
-            loadPenetapanData();
+            loadPenetapanData(currentPeriodeData ? currentPeriodeData.id : null);
         } else {
-            if (window.showAdminAlert) await window.showAdminAlert(data.error || 'Gagal memproses penetapan massal.', 'error');
-            else alert(data.error || 'Gagal memproses penetapan massal.');
+            showAdminAlert(data.error || 'Gagal memproses penetapan massal.', 'error');
         }
     } catch (e) {
-        if (window.showAdminAlert) await window.showAdminAlert('Terjadi kesalahan jaringan.', 'error');
-        else alert('Terjadi kesalahan jaringan.');
+        showAdminAlert('Terjadi kesalahan jaringan.', 'error');
     }
 }
 
@@ -497,8 +622,8 @@ function handleBulkRelocateOpen() {
 
 async function handleBulkReject() {
     if (selectedIds.size === 0) return;
-    const reason = prompt(`Tolak ${selectedIds.size} pengajuan magang mahasiswa terpilih. Masukkan alasan penolakan (opsional):`);
-    if (reason === null) return; // User cancelled prompt
+    const confirmed = await showAdminConfirm(`Apakah Anda yakin ingin menolak ${selectedIds.size} pendaftaran mahasiswa terpilih? Kuota unit terkait akan dibebaskan.`, 'Tolak Pendaftaran Massal', 'danger', 'Ya, Tolak Semua', 'Batal');
+    if (!confirmed) return;
 
     try {
         const res = await fetch('/api/admin/penetapan/bulk_update.php', {
@@ -507,20 +632,20 @@ async function handleBulkReject() {
             body: JSON.stringify({
                 pendaftaran_ids: Array.from(selectedIds),
                 status: 'ditolak',
-                catatan_admin: reason
+                catatan_admin: 'Ditolak massal oleh administrator'
             })
         });
         const data = await res.json();
         if (res.ok) {
-            alert(data.message || 'Berhasil menolak pendaftaran mahasiswa terpilih.');
+            showAdminAlert(data.message || 'Berhasil menolak pendaftaran mahasiswa terpilih.', 'success');
             selectedIds.clear();
             updateBulkToolbar();
-            loadPenetapanData();
+            loadPenetapanData(currentPeriodeData ? currentPeriodeData.id : null);
         } else {
-            alert(data.error || 'Gagal memproses penolakan massal.');
+            showAdminAlert(data.error || 'Gagal memproses penolakan massal.', 'error');
         }
     } catch (e) {
-        alert('Terjadi kesalahan jaringan.');
+        showAdminAlert('Terjadi kesalahan jaringan.', 'error');
     }
 }
 

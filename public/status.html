@@ -410,8 +410,25 @@
                 const isMoved = json.data.is_dipindahkan;
                 const unitAsal = json.data.nama_unit_asal || 'Unit Pilihan Awal';
                 const catatanAdmin = json.data.catatan_admin ? json.data.catatan_admin : '';
+                const isPengumumanBuka = json.pengumuman_dibuka === true;
 
-                if (st === 'dipindahkan' || isMoved) {
+                if (!isPengumumanBuka || st === 'menunggu_pengumuman') {
+                    statusBadge.innerText = 'MENUNGGU PENGUMUMAN';
+                    statusBadge.style.background = '#0284c7';
+                    statusBadge.style.color = '#ffffff';
+
+                    alertBox.innerHTML = `
+                        <div style="padding: 20px; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 16px; color: #0369a1;">
+                            <div style="font-size: 1.05rem; font-weight: 800; color: #0284c7; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                <span>Pendaftaran Sedang Ditinjau & Menunggu Pengumuman</span>
+                            </div>
+                            <p style="margin: 0; font-size: 0.9rem; line-height: 1.6; color: #0369a1;">
+                                Data pendaftaran Anda telah berhasil direkam. Tim BLKA ITPLN saat ini sedang melakukan proses verifikasi berkas dan penetapan unit penempatan magang. Hasil penetapan resmi belum diumumkan oleh admin. Silakan pantau halaman ini secara berkala.
+                            </p>
+                        </div>
+                    `;
+                } else if (st === 'dipindahkan' || isMoved) {
                     statusBadge.innerText = 'DITETAPKAN (DIPINDAHKAN)';
                     statusBadge.style.background = '#d97706';
                     statusBadge.style.color = '#ffffff';
