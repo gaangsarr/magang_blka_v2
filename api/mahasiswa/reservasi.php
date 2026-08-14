@@ -1,0 +1,90 @@
+<?php
+declare(strict_types=1);
+require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
+
+use Dotenv\Dotenv;
+use App\Database;
+use App\Auth;
+
+$root = dirname(__DIR__, 2);
+Dotenv::createImmutable($root)->safeLoad();
+
+header('Content-Type: application/json; charset=utf-8');
+Auth::requireMahasiswaApi();
+Auth::requireCsrfApi();
+Auth::rateLimit('reservasi', 5, 60); // Max 5 request per menit
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo json_encode(['error' => 'Method tidak diizinkan.']);
+    exit;
+}
+
+$body = json_decode(file_get_contents('php://input'), true);
+if (!isset($body['upp_id'])) {
+    http_response_code(400);
+    echo json_encode(['error' => 'upp_id wajib diisi.']);
+    exit;
+}
+
+$uppId = (int)$body['upp_id'];
+$mahasiswaId = Auth::getMahasiswaId();
+
+try {
+    $result = Database::transaction(function (PDO $pdo) use ($mahasiswaId, $uppId) {
+        // 1. Batalkan reservasi sebelumnya milik mahasiswa ini yang masih 'ditahan'
+        $stmtCekRes = $pdo->prepare("SELECT id, unit_pelaksana_periode_id FROM reservasi WHERE mahasiswa_id = :mid AND status = 'ditahan' AND expired_at > NOW()");
+        $stmtCekRes->execute([':mid' => $mahasiswaId]);
+        $oldReservations = $stmtCekRes->fetchAll(PDO::FETCH_ASSOC);
+
+        foreach ($oldReservations as $old) {
+            // Batalkan
+            $pdo->prepare("UPDATE reservasi SET status = 'dibatalkan' WHERE id = :id")->execute([':id' => $old['id']]);
+            // Kembalikan kuota
+            $pdo->prepare("UPDATE unit_pelaksana_periode SET kuota_tersisa = kuota_tersisa + 1 WHERE id = :upp_id")->execute([':upp_id' => $old['unit_pelaksana_periode_id']]);
+        }
+
+        // 2. Kunci row unit_pelaksana_periode untuk cek kuota (SELECT ... FOR UPDATE)
+        $stmtUpp = $pdo->prepare("SELECT kuota_tersisa FROM unit_pelaksana_periode WHERE id = :upp_id FOR UPDATE");
+        $stmtUpp->execute([':upp_id' => $uppId]);
+        $upp = $stmtUpp->fetch(PDO::FETCH_ASSOC);
+
+        if (!$upp) {
+            throw new \Exception('Unit pelaksana tidak ditemukan.');
+        }
+
+        if ((int)$upp['kuota_tersisa'] <= 0) {
+            throw new \Exception('Maaf, kuota untuk unit pelaksana ini sudah habis atau sedang direservasi orang lain.');
+        }
+
+        // 3. Kurangi kuota
+        $pdo->prepare("UPDATE unit_pelaksana_periode SET kuota_tersisa = kuota_tersisa - 1, updated_at = NOW() WHERE id = :upp_id")->execute([':upp_id' => $uppId]);
+
+        // 4. Buat reservasi baru (baca durasi dari .env, default 30 menit)
+        $reservationMinutes = max(1, (int)($_ENV['RESERVATION_MINUTES'] ?? 30));
+        $stmtInsert = $pdo->prepare("INSERT INTO reservasi (mahasiswa_id, unit_pelaksana_periode_id, status, expired_at, created_at) VALUES (:mid, :upp_id, 'ditahan', DATE_ADD(NOW(), INTERVAL {$reservationMinutes} MINUTE), NOW())");
+        $stmtInsert->execute([':mid' => $mahasiswaId, ':upp_id' => $uppId]);
+        $reservasiId = (int)$pdo->lastInsertId();
+
+        // Ambil waktu expired untuk UI
+        $stmtExpire = $pdo->prepare("SELECT expired_at FROM reservasi WHERE id = :id");
+        $stmtExpire->execute([':id' => $reservasiId]);
+        $expiredAt = $stmtExpire->fetchColumn();
+
+        return [
+            'reservasi_id' => $reservasiId,
+            'expired_at' => $expiredAt
+        ];
+    });
+
+    echo json_encode([
+        'ok' => true,
+        'data' => $result
+    ]);
+} catch (\Exception $e) {
+    http_response_code(400);
+    echo json_encode(['error' => $e->getMessage()]);
+} catch (\Throwable $e) {
+    http_response_code(500);
+    echo json_encode(['error' => 'Terjadi kesalahan sistem.']);
+}

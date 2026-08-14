@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Status Pendaftaran Magang</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/assets/img/logo_itpln.png">
+    <link rel="apple-touch-icon" href="/assets/img/logo_itpln.png">
+    <link rel="stylesheet" href="/css/main.css">
+</head>
+<style>
+    /* Modern UI Refinements */
+    .status-container {
+        max-width: 800px;
+        margin: 0 auto 60px;
+        padding: 0 20px;
+    }
+
+    .card {
+        background: #ffffff;
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0,0,0,0.05);
+        border: 1px solid rgba(226, 232, 240, 0.95);
+        padding: 40px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn {
+        border-radius: 10px;
+        padding: 12px 24px;
+        font-weight: 600;
+        transition: transform 0.1s, box-shadow 0.2s;
+    }
+    
+    .btn:active:not(:disabled) {
+        transform: scale(0.98);
+    }
+    
+    .status-section {
+        background: rgba(11, 61, 107, 0.03);
+        border: 1px solid rgba(11, 61, 107, 0.08);
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 24px;
+    }
+    /* --- Responsive Styling --- */
+    @media (max-width: 768px) {
+        .card { padding: 24px 20px; }
+    }
+
+    @media (max-width: 640px) {
+        .status-section { padding: 16px; }
+        .btn { width: 100%; min-width: 0; }
+    }
+</style>
+<body class="dot-bg">
+    <!-- Navbar Component -->
+    <nav class="navbar-component" aria-label="Navigasi Utama">
+      <div class="navbar-brand">
+        <img src="/assets/img/logo_itpln.png" alt="BLKA ITPLN" class="navbar-logo-img" />
+      </div>
+      
+      <!-- Desktop Navigation Menu -->
+      <ul class="navbar-menu">
+        <li><a href="/login.html">Beranda</a></li>
+        <li><a href="/daftar.html">Pendaftaran</a></li>
+        <li><a href="/status.html" class="active">Pengumuman</a></li>
+      </ul>
+
+      <!-- Navbar Profile Dropdown Menu Trigger -->
+      <div class="navbar-profile-wrapper">
+        <button type="button" class="nav-profile-btn" id="navProfileBtn" aria-label="Profil Saya" aria-expanded="false">
+          <div class="profile-avatar-circle" id="profileAvatarCircle">M</div>
+          <span class="profile-short-name" id="profileShortName">Mahasiswa</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="profile-chevron">
+            <path d="m6 9 6 6 6-6"/>
+          </svg>
+        </button>
+
+        <!-- Profile Dropdown Card -->
+        <div class="profile-dropdown-card" id="profileDropdownCard">
+          <div class="profile-card-header">
+            <div class="profile-card-avatar" id="profileCardAvatar">M</div>
+            <div class="profile-card-user">
+              <h4 class="profile-card-name" id="profileCardName">Memuat...</h4>
+              <span class="profile-card-badge">Mahasiswa ITPLN</span>
+            </div>
+          </div>
+
+          <div class="profile-card-divider"></div>
+
+          <div class="profile-info-list">
+            <div class="profile-info-item">
+              <span class="profile-info-label">NIM</span>
+              <span class="profile-info-value" id="profileCardNim">-</span>
+            </div>
+            <div class="profile-info-item">
+              <span class="profile-info-label">Jurusan</span>
+              <span class="profile-info-value" id="profileCardJurusan">-</span>
+            </div>
+            <div class="profile-info-item">
+              <span class="profile-info-label">Angkatan</span>
+              <span class="profile-info-value" id="profileCardAngkatan">-</span>
+            </div>
+            <div class="profile-info-item">
+              <span class="profile-info-label">Email</span>
+              <span class="profile-info-value" id="profileCardEmail">-</span>
+            </div>
+          </div>
+
+          <div class="profile-card-divider"></div>
+
+          <div class="profile-card-actions">
+            <button type="button" class="btn-profile-logout" id="btnProfileLogout">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                <polyline points="16 17 21 12 16 7"/>
+                <line x1="21" y1="12" x2="9" y2="12"/>
+              </svg>
+              <span>Keluar (Logout)</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mobile Hamburger Menu Button -->
+      <button type="button" class="navbar-toggle" id="navbar-toggle" aria-label="Buka Menu Navigasi" aria-expanded="false">
+        <svg class="hamburger-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="4" y1="6" x2="20" y2="6"/>
+          <line x1="4" y1="12" x2="20" y2="12"/>
+          <line x1="4" y1="18" x2="20" y2="18"/>
+        </svg>
+      </button>
+    </nav>
+
+    <!-- Mobile Navigation Drawer Dropdown -->
+    <div class="mobile-menu-drawer" id="mobile-menu-drawer">
+      <ul class="mobile-menu-links">
+        <li><a href="/login.html">Beranda</a></li>
+        <li><a href="/daftar.html">Pendaftaran</a></li>
+        <li><a href="/status.html" class="active">Pengumuman</a></li>
+      </ul>
+      <div class="mobile-menu-action" style="margin-top: 10px;">
+        <button type="button" class="btn-mobile-masuk" style="background:#dc2626;" id="btnMobileLogout">
+          Keluar (Logout)
+        </button>
+      </div>
+    </div>
+
+    <!-- Page Title Header -->
+    <div class="page-header" style="padding: 28px 20px 20px; text-align: center;">
+      <h1 style="font-size: 2rem; color: #0b3d6b; margin-bottom: 6px;">Status Pendaftaran & Pengumuman</h1>
+      <p class="text-abu" style="color: #64748b; font-size: 0.95rem;">Informasi pendaftaran magang Anda pada periode aktif.</p>
+    </div>
+
+    <div class="status-container">
+        <div class="card" id="status-card">
+            <div id="loading" class="text-abu" style="text-align: center; padding: 20px;">Memuat data pendaftaran... <div class="spinner"></div></div>
+            
+            <div id="content" class="hidden">
+                <!-- Dynamic Status Alert Box -->
+                <div id="status-alert-box" style="margin-bottom: 24px;"></div>
+                
+                <div class="status-section">
+                    <div class="form-row" style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 16px;">
+                        <div class="form-group" style="flex: 1; min-width: 200px;">
+                            <label class="form-label" style="font-size: 0.825rem; color: #64748b; font-weight: 500;">Nama Mahasiswa</label>
+                            <div id="mhs-nama" style="font-weight: 700; color: #0f172a; font-size: 1.05rem; margin-top: 4px;">-</div>
+                        </div>
+                        <div class="form-group" style="flex: 1; min-width: 200px;">
+                            <label class="form-label" style="font-size: 0.825rem; color: #64748b; font-weight: 500;">NIM Mahasiswa</label>
+                            <div id="mhs-nim" style="font-weight: 700; font-family: monospace; color: #0b3d6b; font-size: 1.05rem; margin-top: 4px;">-</div>
+                        </div>
+                    </div>
+
+                    <div class="form-row" style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 16px;">
+                        <div class="form-group" style="flex: 1; min-width: 200px;">
+                            <label class="form-label" style="font-size: 0.825rem; color: #64748b; font-weight: 500;">Unit Pelaksana Penempatan</label>
+                            <div id="unit-name" style="font-weight: 700; color: #0b3d6b; font-size: 1.1rem; margin-top: 4px;">-</div>
+                        </div>
+                        <div class="form-group" style="flex: 1; min-width: 200px;">
+                            <label class="form-label" style="font-size: 0.825rem; color: #64748b; font-weight: 500;">Program</label>
+                            <div id="program-name" style="font-weight: 600; color: #0f172a; font-size: 1rem; margin-top: 4px;">-</div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row" style="display: flex; gap: 20px; flex-wrap: wrap;">
+                        <div class="form-group" style="flex: 1; min-width: 200px; margin-bottom: 0;">
+                            <label class="form-label" style="font-size: 0.825rem; color: #64748b; font-weight: 500;">Status Seleksi</label>
+                            <div id="status-badge" class="badge badge-primary" style="display: inline-block; padding: 6px 14px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; margin-top: 4px;">-</div>
+                        </div>
+                        <div class="form-group" style="flex: 1; min-width: 200px; margin-bottom: 0;">
+                            <label class="form-label" style="font-size: 0.825rem; color: #64748b; font-weight: 500;">Tanggal Pengajuan</label>
+                            <div id="submit-date" style="font-family: monospace; color: #4b5563; font-size: 0.9rem; margin-top: 4px;">-</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="height: 1px; background: #e2e8f0; margin: 24px 0;"></div>
+                
+                <p id="status-footer-note" style="font-size: 0.875rem; color: #64748b; line-height: 1.5; margin-bottom: 24px;">
+                    Tim BLKA ITPLN melakukan verifikasi terhadap data dan kelayakan Anda. Pantau terus halaman ini untuk pembaruan pengumuman.
+                </p>
+
+                <div>
+                    <button type="button" class="btn btn-secondary" onclick="logout()" style="background: #f8fafc; border: 1px solid #e2e8f0; color: #dc2626; font-weight: 600;">Keluar (Logout)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- COMPONENT: FOOTER -->
+    <footer class="footer-component" aria-label="Footer Website" style="margin-top: 60px;">
+      <div class="footer-container">
+        <div class="footer-grid">
+          <!-- Col 1: Brand & Logo -->
+          <div class="footer-col footer-col-brand">
+            <div class="footer-logos">
+              <img src="/assets/img/logo_pln.png" alt="Logo PLN" class="footer-logo-img" />
+              <img src="/assets/img/logo_itpln.png" alt="Logo ITPLN" class="footer-logo-img" />
+            </div>
+            <h4 class="footer-brand-title">Bagian Layanan Karir Alumni | ITPLN</h4>
+            <p class="footer-brand-desc">
+              Portal resmi pendaftaran program magang mahasiswa Institut Teknologi PLN di unit-unit pelaksana PT PLN (Persero) seluruh Indonesia.
+            </p>
+          </div>
+
+          <!-- Col 2: Quick Links -->
+          <div class="footer-col">
+            <h5 class="footer-col-title">Navigasi</h5>
+            <ul class="footer-links">
+              <li><a href="/login.html">Beranda</a></li>
+              <li><a href="/daftar.html">Pendaftaran</a></li>
+              <li><a href="/status.html">Pengumuman</a></li>
+            </ul>
+          </div>
+
+          <!-- Col 3: Contact Info -->
+          <div class="footer-col">
+            <h5 class="footer-col-title">Kontak & Lokasi</h5>
+            <ul class="footer-contact">
+              <li>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                <a href="mailto:blka@itpln.ac.id">blka@itpln.ac.id</a>
+              </li>
+              <li>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                <span>Jl. Menara PLN, Cengkareng, Jakarta Barat</span>
+              </li>
+              <li>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span>Senin - Jumat (08:00 - 16:00 WIB)</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Footer Bottom Bar -->
+        <div class="footer-bottom">
+          <p class="footer-copyright">
+            © <span id="current-year"></span> BLKA ITPLN. All Rights Reserved.
+          </p>
+        </div>
+      </div>
+    </footer>
+
+    <!-- COMPONENT: INELIGIBLE ANGKATAN MODAL -->
+    <div class="auth-modal-backdrop hidden" id="modalIneligibleAngkatan" role="dialog" aria-modal="true" style="z-index: 9999;">
+        <div class="auth-modal-card">
+            <div class="auth-modal-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+            </div>
+
+            <h3 class="auth-modal-title">Akses Pengumuman Dibatasi</h3>
+            <p class="auth-modal-desc">
+                Mohon maaf, periode magang aktif saat ini diperuntukkan khusus untuk mahasiswa <strong>Angkatan <span id="textModalEligibleAngkatan">-</span></strong>.<br><br>
+                Angkatan Anda (<strong><span id="textModalMhsAngkatan">-</span></strong>) belum / tidak diizinkan mengakses pendaftaran dan pengumuman gelombang ini.
+            </p>
+
+            <div class="auth-modal-actions" style="justify-content: center; margin-top: 16px;">
+                <button type="button" id="btnModalLogoutIneligible" onclick="logout();" class="btn-profile-logout" style="max-width: 220px; margin: 0 auto;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                        <polyline points="16 17 21 12 16 7"/>
+                        <line x1="21" y1="12" x2="9" y2="12"/>
+                    </svg>
+                    <span>Keluar (Logout)</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Set dynamic copyright year
+        const yearElem = document.getElementById('current-year');
+        if (yearElem) yearElem.textContent = new Date().getFullYear();
+
+        // Mobile Hamburger Drawer Toggle
+        const navToggle = document.getElementById('navbar-toggle');
+        const navDrawer = document.getElementById('mobile-menu-drawer');
+        if (navToggle && navDrawer) {
+          navToggle.addEventListener('click', () => {
+            const expanded = navToggle.getAttribute('aria-expanded') === 'true';
+            navToggle.setAttribute('aria-expanded', !expanded);
+            navDrawer.classList.toggle('open');
+          });
+
+          document.addEventListener('click', (e) => {
+            if (!navToggle.contains(e.target) && !navDrawer.contains(e.target)) {
+              navDrawer.classList.remove('open');
+              navToggle.setAttribute('aria-expanded', 'false');
+            }
+          });
+        }
+
+        // Profile Dropdown Card Toggle
+        const navProfileBtn = document.getElementById('navProfileBtn');
+        const profileDropdownCard = document.getElementById('profileDropdownCard');
+        if (navProfileBtn && profileDropdownCard) {
+          navProfileBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const expanded = navProfileBtn.getAttribute('aria-expanded') === 'true';
+            navProfileBtn.setAttribute('aria-expanded', !expanded);
+            profileDropdownCard.classList.toggle('show');
+          });
+
+          document.addEventListener('click', (e) => {
+            if (!navProfileBtn.contains(e.target) && !profileDropdownCard.contains(e.target)) {
+              profileDropdownCard.classList.remove('show');
+              navProfileBtn.setAttribute('aria-expanded', 'false');
+            }
+          });
+        }
+
+        // Load Status & Profile
+        async function fetchStatusAndProfile() {
+            try {
+                // Fetch Auth Status
+                const authRes = await fetch('/api/auth/status.php');
+                const authData = await authRes.json();
+                
+                if (authRes.ok && authData.user) {
+                    const u = authData.user;
+                    const shortName = u.nama ? u.nama.split(' ')[0] : 'Mahasiswa';
+                    const initial = u.nama ? u.nama.charAt(0).toUpperCase() : 'M';
+                    
+                    const avatarCircle = document.getElementById('profileAvatarCircle');
+                    const shortNameElem = document.getElementById('profileShortName');
+                    const cardAvatar = document.getElementById('profileCardAvatar');
+                    const cardName = document.getElementById('profileCardName');
+                    const cardNim = document.getElementById('profileCardNim');
+                    const cardJurusan = document.getElementById('profileCardJurusan');
+                    const cardAngkatan = document.getElementById('profileCardAngkatan');
+                    const cardEmail = document.getElementById('profileCardEmail');
+
+                    if (avatarCircle) avatarCircle.textContent = initial;
+                    if (shortNameElem) shortNameElem.textContent = shortName;
+                    if (cardAvatar) cardAvatar.textContent = initial;
+                    if (cardName) cardName.textContent = u.nama;
+                    if (cardNim) cardNim.textContent = u.nim;
+                    if (cardJurusan) cardJurusan.textContent = u.jurusan;
+                    if (cardAngkatan) cardAngkatan.textContent = u.angkatan;
+                    if (cardEmail) cardEmail.textContent = u.email;
+                }
+
+                if (authData.is_eligible_angkatan === false) {
+                    const modal = document.getElementById('modalIneligibleAngkatan');
+                    const textEligible = document.getElementById('textModalEligibleAngkatan');
+                    const textMhs = document.getElementById('textModalMhsAngkatan');
+                    if (textEligible) textEligible.innerText = authData.angkatan_eligible || '-';
+                    if (textMhs) textMhs.innerText = authData.mhs_angkatan || '-';
+
+                    document.getElementById('loading').classList.add('hidden');
+                    if (modal) {
+                        modal.classList.remove('hidden');
+                    } else {
+                        alert(`Mohon maaf, Anda (Angkatan ${authData.mhs_angkatan}) tidak diizinkan mengakses halaman pengumuman karena periode aktif saat ini khusus untuk Angkatan (${authData.angkatan_eligible}).`);
+                        window.location.href = '/index.html';
+                    }
+                    return;
+                }
+
+                // Fetch Registration Status
+                const res = await fetch('/api/mahasiswa/status_pendaftaran.php');
+                const json = await res.json();
+                
+                document.getElementById('loading').classList.add('hidden');
+                
+                if (!res.ok || !json.ok || !json.terdaftar) {
+                    window.location.href = '/daftar.html';
+                    return;
+                }
+                
+                document.getElementById('content').classList.remove('hidden');
+                document.getElementById('mhs-nama').innerText = json.data.nama || (authData.user ? authData.user.nama : '-');
+                document.getElementById('mhs-nim').innerText = json.data.nim || (authData.user ? authData.user.nim : '-');
+                document.getElementById('unit-name').innerText = json.data.nama_unit;
+                document.getElementById('program-name').innerText = json.data.program === '1_bulan' ? 'Magang 1 Bulan' : 'Magang 5 Bulan (KRS)';
+                document.getElementById('submit-date').innerText = json.data.submitted_at;
+
+                const alertBox = document.getElementById('status-alert-box');
+                const statusBadge = document.getElementById('status-badge');
+                const st = json.data.status;
+                const isMoved = json.data.is_dipindahkan;
+                const unitAsal = json.data.nama_unit_asal || 'Unit Pilihan Awal';
+                const catatanAdmin = json.data.catatan_admin ? json.data.catatan_admin : '';
+
+                if (st === 'dipindahkan' || isMoved) {
+                    statusBadge.innerText = 'DITETAPKAN (DIPINDAHKAN)';
+                    statusBadge.style.background = '#d97706';
+                    statusBadge.style.color = '#ffffff';
+
+                    alertBox.innerHTML = `
+                        <div style="padding: 20px; background: #fffbebf5; border: 1px solid #fde68a; border-radius: 16px; color: #92400e;">
+                            <div style="font-size: 1.05rem; font-weight: 800; color: #b45309; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                                <span>Pemberitahuan Pemindahan Unit Pelaksana</span>
+                            </div>
+                            <p style="margin: 0 0 12px 0; font-size: 0.9rem; line-height: 1.5; color: #78350f;">
+                                Berdasarkan hasil verifikasi dan penataan kuota operasional oleh Administrator BLKA ITPLN, penempatan magang Anda telah dialokasikan / dipindahkan ke unit pelaksana baru:
+                            </p>
+                            <div style="background: #ffffff; border: 1px solid #fef3c7; border-radius: 12px; padding: 14px; margin-bottom: 10px;">
+                                <div style="font-size: 0.85rem; color: #64748b;">Pilihan Awal Anda: <span style="text-decoration: line-through; color: #94a3b8; font-weight: 600;">${unitAsal}</span></div>
+                                <div style="font-size: 1rem; font-weight: 800; color: #0b3d6b; margin-top: 4px; display: flex; align-items: center; gap: 6px;">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                                    <span>Unit Penetapan Baru: ${json.data.nama_unit}</span>
+                                </div>
+                            </div>
+                            ${catatanAdmin ? `<div style="font-size: 0.85rem; color: #92400e;"><strong>Catatan Admin:</strong> "${catatanAdmin}"</div>` : ''}
+                        </div>
+                    `;
+                } else if (st === 'diterima') {
+                    statusBadge.innerText = 'DITERIMA';
+                    statusBadge.style.background = '#10b981';
+                    statusBadge.style.color = '#ffffff';
+
+                    alertBox.innerHTML = `
+                        <div style="padding: 20px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 16px; color: #065f46;">
+                            <div style="font-size: 1.05rem; font-weight: 800; color: #047857; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                <span>Selamat! Pengajuan Magang Anda Diterima</span>
+                            </div>
+                            <p style="margin: 0; font-size: 0.9rem; line-height: 1.5;">
+                                Anda telah resmi ditetapkan pada <strong>${json.data.nama_unit}</strong>. ${catatanAdmin ? `<br><em>Catatan: "${catatanAdmin}"</em>` : ''}
+                            </p>
+                        </div>
+                    `;
+                } else if (st === 'ditolak') {
+                    statusBadge.innerText = 'DITOLAK';
+                    statusBadge.style.background = '#ef4444';
+                    statusBadge.style.color = '#ffffff';
+
+                    alertBox.innerHTML = `
+                        <div style="padding: 20px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 16px; color: #991b1b;">
+                            <div style="font-size: 1.05rem; font-weight: 800; color: #b91c1c; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                                <span>Pengajuan Belum Dapat Diterima</span>
+                            </div>
+                            <p style="margin: 0; font-size: 0.9rem; line-height: 1.5;">
+                                Mohon maaf, pengajuan magang Anda belum dapat disetujui untuk periode ini. ${catatanAdmin ? `<br><strong>Alasan:</strong> "${catatanAdmin}"` : ''}
+                            </p>
+                        </div>
+                    `;
+                } else {
+                    statusBadge.innerText = 'BERKAS DIAJUKAN';
+                    statusBadge.style.background = '#0b3d6b';
+                    statusBadge.style.color = '#ffffff';
+
+                    alertBox.innerHTML = `
+                        <div style="padding: 20px; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 16px; color: #0369a1;">
+                            <div style="font-size: 1.05rem; font-weight: 800; color: #0284c7; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                                <span>Pendaftaran Berhasil Disimpan</span>
+                            </div>
+                            <p style="margin: 0; font-size: 0.9rem; line-height: 1.5;">
+                                Data Anda telah berhasil direkam ke dalam sistem kami. BLKA ITPLN sedang melakukan proses peninjauan dan penetapan.
+                            </p>
+                        </div>
+                    `;
+                }
+                
+            } catch (err) {
+                document.getElementById('loading').innerText = 'Gagal memuat status.';
+            }
+        }
+        
+        // Real Logout
+        async function logout() {
+            try {
+                await fetch('/api/auth/logout.php', { method: 'POST', credentials: 'same-origin' });
+            } catch (err) {
+                console.error('Logout error:', err);
+            } finally {
+                sessionStorage.clear();
+                localStorage.clear();
+                window.location.replace('/login.html');
+            }
+        }
+
+        const btnProfileLogout = document.getElementById('btnProfileLogout');
+        const btnMobileLogout = document.getElementById('btnMobileLogout');
+        if (btnProfileLogout) btnProfileLogout.addEventListener('click', () => logout());
+        if (btnMobileLogout) btnMobileLogout.addEventListener('click', () => logout());
+
+        fetchStatusAndProfile();
+    </script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+# Dependencies
+/vendor/
+
+# Environment
+.env
+firebase-credentials.json
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+/logs/
+*.log
+
+# Cache
+/cache/
+/tmp/

@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Login ke Sistem Pendaftaran Magang ITPLN × PLN Persero menggunakan akun Microsoft resmi kampus." />
+  <title>Pendaftaran Magang | BLKA</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="assets/img/logo_itpln.png" />
+  <link rel="apple-touch-icon" href="assets/img/logo_itpln.png" />
+
+  <!-- Meta Tags & Open Graph -->
+  <meta name="theme-color" content="#0b3d6b" />
+  <meta property="og:title" content="Pendaftaran Magang BLKA ITPLN × PT PLN (Persero)" />
+  <meta property="og:description" content="Program magang profesional untuk mahasiswa ITPLN — belajar langsung di unit pelaksana PLN yang tersebar di seluruh Indonesia." />
+  <meta property="og:image" content="assets/img/logo_itpln.png" />
+  <meta property="og:type" content="website" />
+
+  <!-- Design System -->
+  <link rel="stylesheet" href="css/main.css" />
+
+  <!-- Firebase SDK (v11 modular via CDN) -->
+  <script>
+    window.FIREBASE_CONFIG = {
+      apiKey: "AIzaSyAqrNKCwBTr2-CUibgqAJqPD5-K8jjbPQY",
+      authDomain: "magang-itpln-pln.firebaseapp.com",
+      projectId: "magang-itpln-pln",
+      storageBucket: "magang-itpln-pln.firebasestorage.app",
+      messagingSenderId: "829471374715",
+      appId: "1:829471374715:web:3b7475d87ebea405ce91de",
+      measurementId: "G-QTD1494NQY",
+      azureTenantId: "7b388d18-1900-418c-a5d3-e28d7a9a38e6"
+    };
+  </script>
+  <script type="module" src="js/auth.js"></script>
+</head>
+<body class="dot-bg">
+
+  <!-- ============================================================
+       SECTION: HERO SCREEN VIEW (100vh Full Viewport First Screen)
+       ============================================================ -->
+  <div class="hero-screen-section">
+    <!-- Navbar Component -->
+    <nav class="navbar-component" aria-label="Navigasi Utama">
+      <div class="navbar-brand">
+        <img src="assets/img/logo_itpln.png" alt="BLKA ITPLN" class="navbar-logo-img" />
+      </div>
+      
+      <!-- Desktop Navigation Menu -->
+      <ul class="navbar-menu">
+        <li><a href="#" class="active">Beranda</a></li>
+        <li><a href="#" data-auth-required="true">Pendaftaran</a></li>
+        <li><a href="#" data-auth-required="true">Pengumuman</a></li>
+      </ul>
+
+      <!-- Desktop Navbar Action Button -->
+      <div class="navbar-action">
+        <a href="#masuk" class="btn-nav-masuk" onclick="document.getElementById('btn-login-microsoft').click(); return false;">Masuk</a>
+      </div>
+
+      <!-- Mobile Hamburger Menu Button -->
+      <button type="button" class="navbar-toggle" id="navbar-toggle" aria-label="Buka Menu Navigasi" aria-expanded="false">
+        <svg class="hamburger-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="4" y1="6" x2="20" y2="6"/>
+          <line x1="4" y1="12" x2="20" y2="12"/>
+          <line x1="4" y1="18" x2="20" y2="18"/>
+        </svg>
+      </button>
+    </nav>
+
+    <!-- Mobile Navigation Drawer Dropdown -->
+    <div class="mobile-menu-drawer" id="mobile-menu-drawer">
+      <ul class="mobile-menu-links">
+        <li><a href="#" class="active">Beranda</a></li>
+        <li><a href="#" data-auth-required="true">Pendaftaran</a></li>
+        <li><a href="#" data-auth-required="true">Pengumuman</a></li>
+      </ul>
+      <div class="mobile-menu-action">
+        <button type="button" class="btn-mobile-masuk" onclick="document.getElementById('btn-login-microsoft').click(); return false;">
+          Masuk dengan Akun ITPLN
+        </button>
+      </div>
+    </div>
+
+    <!-- Hero Content Layout (Centered in 100vh) -->
+    <main class="hero-component">
+      <!-- Hero Left: Content & Auth (Placed BELOW illustration on mobile) -->
+      <div class="hero-left">
+        <h1 class="hero-title">
+          Mulai Kariermu<br />
+          Bersama PT. PLN (Persero)
+        </h1>
+
+        <p class="hero-desc">
+          Program magang profesional untuk mahasiswa ITPLN — belajar langsung di unit pelaksana PLN yang tersebar di seluruh Indonesia.
+        </p>
+
+        <!-- Error Box (Populated by js/auth.js if login fails) -->
+        <div class="error-box" id="error-box" role="alert" aria-live="polite" style="margin-bottom: 20px; width: 100%; max-width: 440px;"></div>
+
+        <!-- Microsoft Login Action Button -->
+        <button
+          type="button"
+          class="btn-hero-login"
+          id="btn-login-microsoft"
+          aria-label="Masuk dengan Akun ITPLN"
+        >
+          <!-- Microsoft Logo SVG -->
+          <svg width="20" height="20" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="1" y="1" width="9" height="9" fill="#F25022"/>
+            <rect x="11" y="1" width="9" height="9" fill="#7FBA00"/>
+            <rect x="1" y="11" width="9" height="9" fill="#00A4EF"/>
+            <rect x="11" y="11" width="9" height="9" fill="#FFB900"/>
+          </svg>
+          <span>Masuk</span>
+        </button>
+
+        <!-- Account Requirement Info Hint -->
+        <p class="hero-login-hint">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+          <span>Wajib menggunakan akun email resmi kampus <strong>@itpln.ac.id</strong></span>
+        </p>
+      </div>
+
+      <!-- Hero Right: HeroMagang Illustration Component (Placed ON TOP on mobile) -->
+      <div class="hero-right">
+        <div class="hero-illustration-wrapper" id="heroVisualComponent">
+          <!-- Main Hero Image (HeroMagang.png) -->
+          <img 
+            src="assets/img/HeroMagang.png" 
+            alt="Ilustrasi Magang ITPLN & PT. PLN (Persero)" 
+            class="hero-illustration-img"
+            onerror="this.style.display='none'; document.getElementById('folderVisualComponent').style.display='block';"
+          />
+
+          <!-- Fallback 3-Layer Interactive Folder Component -->
+          <div class="folder-component" id="folderVisualComponent" style="display: none;">
+            <div class="folder-layer folder-layer-blue">
+              <img src="assets/img/folder_blue.png" alt="Folder Background" onerror="this.src='assets/img/folder_blue_back.png'" />
+            </div>
+            <div class="folder-layer folder-layer-kertas">
+              <img src="assets/img/kertas.png" alt="Dokumen Kertas" onerror="this.src='assets/img/folder_paper_sheets.png'" />
+            </div>
+            <div class="folder-layer folder-layer-kaca">
+              <img src="assets/img/folder_kaca.png" alt="Folder Kaca" onerror="this.src='assets/img/folder_glass_front.png'" />
+              <div class="folder-glass-info">
+                <h4 class="folder-glass-title">Magang ITPLN & PT. PLN (Persero)</h4>
+                <p class="folder-glass-sub">170 Files</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Empty Spacer to balance flex centering -->
+    <div style="height: 20px;"></div>
+  </div>
+
+  <!-- ============================================================
+       COMPONENT: FOOTER (Visible when scrolling down)
+       ============================================================ -->
+  <footer class="footer-component" aria-label="Footer Website">
+    <div class="footer-container">
+      <div class="footer-grid">
+        <!-- Col 1: Brand & Logo -->
+        <div class="footer-col footer-col-brand">
+          <div class="footer-logos">
+            <img src="assets/img/logo_pln.png" alt="Logo PLN" class="footer-logo-img" />
+            <img src="assets/img/logo_itpln.png" alt="Logo ITPLN" class="footer-logo-img" />
+          </div>
+          <h4 class="footer-brand-title">Bagian Layanan Karir Alumni | ITPLN</h4>
+          <p class="footer-brand-desc">
+            Portal resmi pendaftaran program magang mahasiswa Institut Teknologi PLN di unit-unit pelaksana PT PLN (Persero) seluruh Indonesia.
+          </p>
+        </div>
+
+        <!-- Col 2: Quick Links -->
+        <div class="footer-col">
+          <h5 class="footer-col-title">Navigasi</h5>
+          <ul class="footer-links">
+            <li><a href="#">Beranda</a></li>
+            <li><a href="#" data-auth-required="true">Pendaftaran</a></li>
+            <li><a href="#" data-auth-required="true">Pengumuman</a></li>
+          </ul>
+        </div>
+
+        <!-- Col 3: Contact Info -->
+        <div class="footer-col">
+          <h5 class="footer-col-title">Kontak & Lokasi</h5>
+          <ul class="footer-contact">
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+              <a href="mailto:blka@itpln.ac.id">blka@itpln.ac.id</a>
+            </li>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+              <span>Jl. Menara PLN, Cengkareng, Jakarta Barat</span>
+            </li>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span>Senin - Jumat (08:00 - 16:00 WIB)</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Footer Bottom Bar -->
+      <div class="footer-bottom">
+        <p class="footer-copyright">
+          © <span id="current-year"></span> BLKA ITPLN. All Rights Reserved.
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ============================================================
+       COMPONENT: AUTH REQUIRED MODAL
+       ============================================================ -->
+  <div class="auth-modal-backdrop hidden" id="authModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="auth-modal-card">
+      <button type="button" class="auth-modal-close" id="authModalCloseBtn" aria-label="Tutup Modal">&times;</button>
+      
+      <div class="auth-modal-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+      </div>
+
+      <h3 class="auth-modal-title" id="modalTitle">Login Diperlukan</h3>
+      <p class="auth-modal-desc">
+        Kamu harus masuk menggunakan akun Microsoft kampus (<strong>@itpln.ac.id</strong>) terlebih dahulu untuk mengakses layanan pendaftaran dan pengumuman magang.
+      </p>
+
+      <div class="auth-modal-actions">
+        <button type="button" class="btn-modal-login" id="authModalLoginBtn">
+          <svg width="18" height="18" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="1" y="1" width="9" height="9" fill="#F25022"/>
+            <rect x="11" y="1" width="9" height="9" fill="#7FBA00"/>
+            <rect x="1" y="11" width="9" height="9" fill="#00A4EF"/>
+            <rect x="11" y="11" width="9" height="9" fill="#FFB900"/>
+          </svg>
+          <span>Masuk Sekarang</span>
+        </button>
+        <button type="button" class="btn-modal-cancel" id="authModalCancelBtn">Batal</button>
+      </div>
+  <!-- COMPONENT: INELIGIBLE ANGKATAN MODAL -->
+  <div class="auth-modal-backdrop hidden" id="modalIneligibleAngkatan" role="dialog" aria-modal="true">
+    <div class="auth-modal-card">
+      <div class="auth-modal-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+      </div>
+
+      <h3 class="auth-modal-title">Pendaftaran Belum Dibuka</h3>
+      <p class="auth-modal-desc">
+        Mohon maaf, pendaftaran periode magang aktif saat ini hanya dibuka khusus untuk mahasiswa <strong>Angkatan <span id="textModalEligibleAngkatan">-</span></strong>.<br><br>
+        Angkatan Anda (<strong><span id="textModalMhsAngkatan">-</span></strong>) belum / tidak diizinkan mendaftar pada gelombang ini.
+      </p>
+
+      <div class="auth-modal-actions" style="justify-content: center; margin-top: 16px;">
+        <button type="button" id="btnModalLogoutIneligible" class="btn-profile-logout" style="max-width: 220px; margin: 0 auto;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+          <span>Keluar (Logout)</span>
+        </button>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <script>
+    // Set dynamic copyright year
+    const yearElem = document.getElementById('current-year');
+    if (yearElem) yearElem.textContent = new Date().getFullYear();
+
+    // Mobile Hamburger Drawer Toggle
+    const navToggle = document.getElementById('navbar-toggle');
+    const navDrawer = document.getElementById('mobile-menu-drawer');
+    if (navToggle && navDrawer) {
+      navToggle.addEventListener('click', () => {
+        const expanded = navToggle.getAttribute('aria-expanded') === 'true';
+        navToggle.setAttribute('aria-expanded', !expanded);
+        navDrawer.classList.toggle('open');
+      });
+
+      // Close drawer when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!navToggle.contains(e.target) && !navDrawer.contains(e.target)) {
+          navDrawer.classList.remove('open');
+          navToggle.setAttribute('aria-expanded', 'false');
+        }
+      });
+    }
+
+    // Auth Required Modal Handler
+    const modalBackdrop = document.getElementById('authModalBackdrop');
+    const modalCloseBtn = document.getElementById('authModalCloseBtn');
+    const modalCancelBtn = document.getElementById('authModalCancelBtn');
+    const modalLoginBtn = document.getElementById('authModalLoginBtn');
+
+    function openAuthModal() {
+      if (modalBackdrop) modalBackdrop.classList.remove('hidden');
+      if (navDrawer) navDrawer.classList.remove('open');
+    }
+
+    function closeAuthModal() {
+      if (modalBackdrop) modalBackdrop.classList.add('hidden');
+    }
+
+    // Attach listener to all links requiring authentication
+    document.querySelectorAll('[data-auth-required="true"]').forEach(link => {
+      link.addEventListener('click', (e) => {
+        if (window.isLoggedInUser) return; // User is logged in, allow normal link navigation
+        e.preventDefault();
+        openAuthModal();
+      });
+    });
+
+    if (modalCloseBtn) modalCloseBtn.addEventListener('click', closeAuthModal);
+    if (modalCancelBtn) modalCancelBtn.addEventListener('click', closeAuthModal);
+    
+    if (modalLoginBtn) {
+      modalLoginBtn.addEventListener('click', () => {
+        closeAuthModal();
+        document.getElementById('btn-login-microsoft').click();
+      });
+    }
+
+    if (modalBackdrop) {
+      modalBackdrop.addEventListener('click', (e) => {
+        if (e.target === modalBackdrop) closeAuthModal();
+      });
+    }
+  </script>
+
+  <!-- ============================================================
+       AUTH LOADING OVERLAY (Glassmorphism Modal with Animated Progress)
+       ============================================================ -->
+  <div id="authLoadingOverlay" class="auth-loading-overlay" aria-hidden="true" role="status" aria-live="polite">
+    <div class="auth-loading-card">
+      <!-- Animated Visual Icon / Dual Spinner -->
+      <div class="auth-loading-visual">
+        <div class="auth-spinner-ring outer-ring"></div>
+        <div class="auth-spinner-ring inner-ring"></div>
+        <!-- Microsoft Brand Quad Icon in Center -->
+        <div class="auth-loading-logo-box">
+          <svg width="20" height="20" viewBox="0 0 21 21" fill="none" class="auth-loading-ms-logo" xmlns="http://www.w3.org/2000/svg">
+            <rect x="1" y="1" width="9" height="9" fill="#F25022"/>
+            <rect x="11" y="1" width="9" height="9" fill="#7FBA00"/>
+            <rect x="1" y="11" width="9" height="9" fill="#00A4EF"/>
+            <rect x="11" y="11" width="9" height="9" fill="#FFB900"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Text State -->
+      <h3 class="auth-loading-title" id="authLoadingTitle">Menghubungkan Akun...</h3>
+      <p class="auth-loading-desc" id="authLoadingDesc">Membuka jendela autentikasi Microsoft SSO Kampus...</p>
+
+      <!-- Animated Progress Bar -->
+      <div class="auth-loading-progress-track">
+        <div class="auth-loading-progress-bar"></div>
+      </div>
+
+      <div class="auth-loading-footer-hint">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+        </svg>
+        <span>Mohon tunggu beberapa detik, jangan tutup jendela ini</span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

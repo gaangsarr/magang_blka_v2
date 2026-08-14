@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <title>Memuat — Sistem Pendaftaran Magang ITPLN × PLN</title>
+  <style>
+    body {
+      margin: 0;
+      background: #0a0f1e;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: system-ui, sans-serif;
+    }
+    .loader {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      color: rgba(255,255,255,0.5);
+      font-size: 0.875rem;
+    }
+    .spinner {
+      width: 28px;
+      height: 28px;
+      border: 2px solid rgba(255,255,255,0.15);
+      border-top-color: #0a84ff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="loader" role="status" aria-live="polite">
+    <div class="spinner" aria-hidden="true"></div>
+    <span>Memuat…</span>
+  </div>
+
+  <script>
+    /**
+     * index.html — Entry Point
+     * Cek session aktif via /api/auth/status.php lalu redirect:
+     *   - Belum login            → /login.html
+     *   - Login, belum mendaftar → /daftar.html
+     *   - Login, sudah mendaftar → /status.html
+     *   - Admin                  → /admin/index.html
+     */
+    (async function () {
+      try {
+        const res  = await fetch('/api/auth/status.php', { credentials: 'same-origin' });
+        const data = await res.json();
+
+        if (!data.authenticated) {
+          window.location.replace('/login.html');
+          return;
+        }
+
+        if (data.role === 'admin') {
+          window.location.replace('/admin/index.html');
+          return;
+        }
+
+        // Mahasiswa
+        if (data.sudah_mendaftar) {
+          window.location.replace('/status.html');
+        } else {
+          window.location.replace('/daftar.html');
+        }
+
+      } catch (_) {
+        // Jika API tidak bisa diakses (mis. PHP belum jalan), langsung ke login
+        window.location.replace('/login.html');
+      }
+    })();
+  </script>
+</body>
+</html>

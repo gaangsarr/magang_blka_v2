@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Pendaftar Magang — Admin BLKA ITPLN</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/assets/img/logo_itpln.png">
+    <link rel="apple-touch-icon" href="/assets/img/logo_itpln.png">
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body class="admin-body">
+    <div class="admin-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="admin-sidebar">
+            <div class="sidebar-header">
+                <img src="/assets/img/logo_itpln.png" alt="Logo ITPLN" class="sidebar-logo" />
+                <div>
+                    <h2 class="sidebar-title">BLKA Admin</h2>
+                    <span class="sidebar-subtitle">Magang ITPLN × PLN</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="/admin/index.html" class="nav-link">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/admin/periode.html" class="nav-link">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>
+                    <span>Periode Magang</span>
+                </a>
+                <a href="/admin/unit.html" class="nav-link">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>
+                    <span>Unit Pelaksana</span>
+                </a>
+                <a href="/admin/pendaftar.html" class="nav-link active">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    <span>Data Pendaftar</span>
+                </a>
+                <a href="/admin/penetapan.html" class="nav-link">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    <span>Penetapan Unit</span>
+                </a>
+                <a href="/admin/histori.html" class="nav-link">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    <span>Histori Pendaftar</span>
+                </a>
+                <a href="/admin/pengaturan.html" class="nav-link">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    <span>Pengaturan</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="/api/admin/logout.php" class="nav-link-logout">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    <span>Keluar</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="admin-main">
+            <!-- Topbar Header -->
+            <header class="admin-topbar">
+                <div class="topbar-title">
+                    <h1>Data Pendaftar Magang</h1>
+                    <p>Daftar mahasiswa ITPLN yang terdaftar pada gelombang periode magang aktif</p>
+                </div>
+
+                <div class="admin-profile-badge">
+                    <div class="admin-avatar" id="admin-avatar">A</div>
+                    <div class="admin-user-info">
+                        <span class="admin-user-name" id="admin-name">Administrator</span>
+                        <span class="admin-user-role" id="admin-role">Admin BLKA</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content Container -->
+            <div class="admin-content">
+                <div class="admin-card">
+                    <div class="admin-card-header" style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 20px;">
+                        <!-- Top Row: Title & Subtitle + Export Excel Button -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; width: 100%;">
+                            <div>
+                                <h3 class="admin-card-title">Daftar Pendaftar Mahasiswa</h3>
+                                <p style="font-size: 0.85rem; font-weight: 600; margin: 4px 0 0 0;" id="info-periode">Memuat periode...</p>
+                            </div>
+                            <a href="/api/admin/pendaftar/export.php" id="btn-export-pendaftar" class="btn-primary" style="display: inline-flex; align-items: center; gap: 8px; text-decoration: none; padding: 10px 20px; font-size: 0.875rem; background: #047857; border-radius: 10px; font-weight: 700; color: #ffffff; white-space: nowrap; box-shadow: 0 2px 8px rgba(4, 120, 87, 0.15);">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                <span>Export Excel</span>
+                            </a>
+                        </div>
+
+                        <!-- Filter Row: Period Selector + Search Bar -->
+                        <div style="display: flex; gap: 16px; align-items: center; justify-content: space-between; background: #f8fafc; padding: 12px 16px; border-radius: 12px; border: 1px solid #e2e8f0; flex-wrap: wrap; width: 100%;">
+                            <div style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 260px;">
+                                <label for="select-periode-pendaftar" style="font-size: 0.825rem; font-weight: 700; color: #0b3d6b; margin: 0; white-space: nowrap;">Pilih Periode:</label>
+                                <select id="select-periode-pendaftar" class="admin-input-field" style="width: 100%; max-width: 320px; font-size: 0.85rem; padding: 8px 12px; background: #ffffff;">
+                                    <option value="">Memuat periode...</option>
+                                </select>
+                            </div>
+
+                            <div class="admin-input-wrapper" style="max-width: 320px; width: 100%; flex: 1; min-width: 240px;">
+                                <svg class="admin-input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                                <input type="text" id="filter-input" class="admin-input-field" placeholder="Cari nama, NIM, atau unit..." style="background: #ffffff;" />
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="admin-table-container">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Tanggal Daftar</th>
+                                    <th>NIM</th>
+                                    <th>Nama & Kontak Mahasiswa</th>
+                                    <th>Program</th>
+                                    <th>Unit Penempatan</th>
+                                    <th style="text-align: center; width: 110px;">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-pendaftar">
+                                <tr>
+                                    <td colspan="6" style="text-align: center; color: #64748b; padding: 24px;">Memuat data pendaftar...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Detail Pendaftar -->
+    <div id="modal-detail-pendaftar" class="admin-modal-overlay">
+        <div class="admin-modal-card" style="max-width: 640px; text-align: left; max-height: 90vh; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 16px;">
+                <div>
+                    <h3 class="admin-modal-title" id="detail-mhs-nama" style="font-size: 1.35rem; margin-bottom: 4px;">Nama Mahasiswa</h3>
+                    <div style="font-size: 0.85rem; color: #64748b; display: flex; gap: 12px; align-items: center;">
+                        <span id="detail-mhs-nim" style="font-family: monospace; font-weight: 700; color: #0b3d6b;">-</span>
+                        <span>•</span>
+                        <span id="detail-mhs-program">-</span>
+                    </div>
+                </div>
+                <button type="button" id="btn-close-modal-detail" style="background: transparent; border: none; font-size: 1.5rem; color: #94a3b8; cursor: pointer; padding: 4px;">&times;</button>
+            </div>
+
+            <!-- Detail Content Grid -->
+            <div style="display: grid; gap: 18px;">
+                <!-- Section 1: Akademik & Kontak -->
+                <div style="background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0;">
+                    <h4 style="font-size: 0.875rem; color: #0b3d6b; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 0.5px;">Informasi Akademik & Kontak</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 0.875rem;">
+                        <div><span style="color: #64748b;">Jurusan:</span> <strong id="detail-jurusan" style="color: #0f172a;">-</strong></div>
+                        <div><span style="color: #64748b;">Angkatan:</span> <strong id="detail-angkatan" style="color: #0f172a;">-</strong></div>
+                        <div><span style="color: #64748b;">IPK Terakhir:</span> <strong id="detail-ipk" style="color: #0b3d6b;">-</strong></div>
+                        <div><span style="color: #64748b;">SKS Ditempuh:</span> <strong id="detail-sks" style="color: #0b3d6b;">-</strong></div>
+                        <div><span style="color: #64748b;">Email Kampus:</span> <div id="detail-email" style="font-family: monospace; color: #0f172a; font-weight: 600;">-</div></div>
+                        <div><span style="color: #64748b;">No. Handphone/WA:</span> <div id="detail-nohp" style="font-weight: 600; color: #0f172a;">-</div></div>
+                    </div>
+                </div>
+
+                <!-- Section 2: Peminatan Keahlian -->
+                <div style="background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0;">
+                    <h4 style="font-size: 0.875rem; color: #0b3d6b; margin: 0 0 8px 0; text-transform: uppercase; letter-spacing: 0.5px;">Bidang Peminatan Keahlian</h4>
+                    <div id="detail-peminatan" style="font-size: 0.875rem; color: #334155; font-weight: 600;">-</div>
+                </div>
+
+                <!-- Section 3: Domisili & Peta Interaktif -->
+                <div style="background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0;">
+                    <h4 style="font-size: 0.875rem; color: #0b3d6b; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 0.5px;">Alamat Domisili & Koordinat</h4>
+                    <div id="detail-alamat" style="font-size: 0.875rem; color: #1e293b; margin-bottom: 8px; line-height: 1.5;">-</div>
+                    <div style="font-size: 0.8rem; color: #64748b; font-family: monospace; display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                        <span>Lat: <strong id="detail-lat">-</strong>, Lng: <strong id="detail-lng">-</strong></span>
+                        <a id="detail-map-link" href="#" target="_blank" style="color: #0284c7; text-decoration: none; font-weight: 700; font-family: sans-serif; font-size: 0.8rem;">Buka di OpenStreetMap &rarr;</a>
+                    </div>
+                </div>
+
+                <!-- Section 4: Unit Penempatan PLN & Status -->
+                <div style="background: #ecfdf5; padding: 16px; border-radius: 12px; border: 1px solid #a7f3d0;">
+                    <h4 style="font-size: 0.875rem; color: #047857; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 0.5px;">Penetapan Unit Pelaksana PLN</h4>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div id="detail-unit-nama" style="font-size: 1rem; font-weight: 700; color: #065f46;">-</div>
+                            <div style="font-size: 0.8rem; color: #047857; margin-top: 2px;">Jarak Domisili: <strong id="detail-jarak">-</strong> km</div>
+                        </div>
+                        <div id="detail-status-badge">
+                            <span class="badge-status badge-dibuka">Status: -</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 24px; text-align: right;">
+                <button type="button" id="btn-close-modal-detail-bottom" class="admin-modal-btn secondary" style="width: auto; padding: 10px 24px;">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="/js/admin/common.js"></script>
+    <script type="module" src="/js/admin/pendaftar.js"></script>
+</body>
+</html>

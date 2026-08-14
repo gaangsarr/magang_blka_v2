@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manajemen Periode Magang — Admin BLKA ITPLN</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/assets/img/logo_itpln.png">
+    <link rel="apple-touch-icon" href="/assets/img/logo_itpln.png">
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body class="admin-body">
+    <div class="admin-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="admin-sidebar">
+            <div class="sidebar-header">
+                <img src="/assets/img/logo_itpln.png" alt="Logo ITPLN" class="sidebar-logo" />
+                <div>
+                    <h2 class="sidebar-title">BLKA Admin</h2>
+                    <span class="sidebar-subtitle">Magang ITPLN × PLN</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="/admin/index.html" class="nav-link">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/admin/periode.html" class="nav-link active">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>
+                    <span>Periode Magang</span>
+                </a>
+                <a href="/admin/unit.html" class="nav-link">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>
+                    <span>Unit Pelaksana</span>
+                </a>
+                <a href="/admin/pendaftar.html" class="nav-link">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    <span>Data Pendaftar</span>
+                </a>
+                <a href="/admin/penetapan.html" class="nav-link">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    <span>Penetapan Unit</span>
+                </a>
+                <a href="/admin/histori.html" class="nav-link">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    <span>Histori Pendaftar</span>
+                </a>
+                <a href="/admin/pengaturan.html" class="nav-link">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    <span>Pengaturan</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="/api/admin/logout.php" class="nav-link-logout">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    <span>Keluar</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="admin-main">
+            <!-- Topbar Header -->
+            <header class="admin-topbar">
+                <div class="topbar-title-group">
+                    <h1>Kelola Periode Magang</h1>
+                    <p>Atur pendaftaran gelombang magang, syarat angkatan, dan tanggal pelaksanaan</p>
+                </div>
+
+                <div class="admin-profile-badge">
+                    <div class="admin-avatar" id="admin-avatar">A</div>
+                    <div class="admin-user-info">
+                        <span class="admin-user-name" id="admin-name">Administrator</span>
+                        <span class="admin-user-role" id="admin-role">Admin BLKA</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content Container -->
+            <div class="admin-content">
+                <div class="admin-card">
+                    <div class="admin-card-header">
+                        <h3 class="admin-card-title">Daftar Gelombang Periode</h3>
+                        <button type="button" class="btn-primary" onclick="openCreateModal()" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; background: #0b3d6b; color: #ffffff; border: none; border-radius: 10px; font-weight: 700; font-size: 0.875rem; cursor: pointer; box-shadow: 0 4px 12px rgba(11, 61, 107, 0.2);">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            <span>Buat Periode Baru</span>
+                        </button>
+                    </div>
+                    
+                    <div class="admin-table-container">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nama Periode</th>
+                                    <th>Mulai</th>
+                                    <th>Selesai</th>
+                                    <th>Syarat Angkatan</th>
+                                    <th>Status</th>
+                                    <th>Program</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-periode">
+                                <tr>
+                                    <td colspan="8" style="text-align: center; color: #64748b; padding: 24px;">Memuat data periode...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Create -->
+    <div id="modal-create" class="auth-modal-backdrop hidden" role="dialog" aria-modal="true">
+        <div class="auth-modal-card" style="max-width: 560px; text-align: left; padding: 32px;">
+            <button type="button" class="auth-modal-close" onclick="hideModal('modal-create')">&times;</button>
+            <h3 class="auth-modal-title" style="margin-bottom: 4px;">Buat Periode Baru</h3>
+            <p class="auth-modal-desc" style="margin-bottom: 20px;">Tentukan jadwal, program, dan angkatan mahasiswa yang berhak mendaftar.</p>
+            
+            <form id="form-create-periode">
+                <div class="admin-input-group">
+                    <label class="admin-input-label" for="create-nama">Nama Periode</label>
+                    <input type="text" id="create-nama" class="admin-input-field" style="padding-left: 14px;" required placeholder="Contoh: Semester Ganjil 2026/2027">
+                </div>
+
+                <div style="display: flex; gap: 16px;">
+                    <div class="admin-input-group" style="flex: 1;">
+                        <label class="admin-input-label" for="create-tanggal_mulai">Tanggal Mulai</label>
+                        <input type="date" id="create-tanggal_mulai" class="admin-input-field" style="padding-left: 14px;" required>
+                    </div>
+                    <div class="admin-input-group" style="flex: 1;">
+                        <label class="admin-input-label" for="create-tanggal_selesai">Tanggal Selesai</label>
+                        <input type="date" id="create-tanggal_selesai" class="admin-input-field" style="padding-left: 14px;" required>
+                    </div>
+                </div>
+
+                <div class="admin-input-group">
+                    <label class="admin-input-label">Angkatan Mahasiswa yang Diizinkan Mendaftar</label>
+                    <p style="font-size: 0.775rem; color: #64748b; margin: 2px 0 8px 0;">Centang angkatan yang diperbolehkan mendaftar. Tambahkan angkatan baru jika belum tersedia di pilihan.</p>
+                    
+                    <div style="display: flex; gap: 10px; margin-bottom: 12px; align-items: center;">
+                        <input type="number" id="create-add-angkatan-input" class="admin-input-field" style="padding-left: 14px; max-width: 180px;" placeholder="Tambah (mis: 2027)" min="2000" max="2100" />
+                        <button type="button" id="btn-add-angkatan-create" style="padding: 10px 16px; background: #0b3d6b; color: #fff; border: none; border-radius: 8px; font-weight: 700; font-size: 0.825rem; cursor: pointer;">+ Tambah Angkatan</button>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;" id="container-chk-angkatan-create">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+                </div>
+
+                <div class="admin-input-group">
+                    <label class="admin-input-label">Program yang Tersedia</label>
+                    <div style="display: flex; gap: 20px; margin-top: 6px;">
+                        <label style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: #0f172a; cursor: pointer;">
+                            <input type="checkbox" id="create-prog1" checked style="width: 18px; height: 18px; accent-color: #0b3d6b;"> Magang 1 Bulan
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: #0f172a; cursor: pointer;">
+                            <input type="checkbox" id="create-prog5" checked style="width: 18px; height: 18px; accent-color: #0b3d6b;"> Magang 5 Bulan (KRS)
+                        </label>
+                    </div>
+                </div>
+
+                <div class="admin-input-group">
+                    <label class="admin-input-label" for="copy_from_periode_id">Salin Kuota Unit dari Periode Sebelumnya (Opsional)</label>
+                    <select id="copy_from_periode_id" class="admin-input-field" style="padding-left: 14px;">
+                        <option value="">-- Tidak Menyalin (Mulai Kosong) --</option>
+                    </select>
+                </div>
+
+                <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+                    <button type="button" class="btn-modal-cancel" style="width: auto; padding: 10px 20px;" onclick="hideModal('modal-create')">Batal</button>
+                    <button type="submit" class="btn-modal-login" style="width: auto; padding: 10px 24px;" id="btn-submit-periode">Simpan Draft</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Edit Periode -->
+    <div id="modal-edit" class="auth-modal-backdrop hidden" role="dialog" aria-modal="true">
+        <div class="auth-modal-card" style="max-width: 560px; text-align: left; padding: 32px;">
+            <button type="button" class="auth-modal-close" onclick="hideModal('modal-edit')">&times;</button>
+            <h3 class="auth-modal-title" style="margin-bottom: 4px; color: #0b3d6b;">Edit Periode Magang</h3>
+            <p class="auth-modal-desc" style="margin-bottom: 20px;">Perbarui data periode, tanggal pelaksanaan, dan syarat angkatan pendaftar.</p>
+            
+            <form id="form-edit-periode">
+                <input type="hidden" id="edit-periode-id">
+
+                <div class="admin-input-group">
+                    <label class="admin-input-label" for="edit-nama">Nama Periode</label>
+                    <input type="text" id="edit-nama" class="admin-input-field" style="padding-left: 14px;" required placeholder="Contoh: Semester Ganjil 2026/2027">
+                </div>
+
+                <div style="display: flex; gap: 16px;">
+                    <div class="admin-input-group" style="flex: 1;">
+                        <label class="admin-input-label" for="edit-tanggal_mulai">Tanggal Mulai</label>
+                        <input type="date" id="edit-tanggal_mulai" class="admin-input-field" style="padding-left: 14px;" required>
+                    </div>
+                    <div class="admin-input-group" style="flex: 1;">
+                        <label class="admin-input-label" for="edit-tanggal_selesai">Tanggal Selesai</label>
+                        <input type="date" id="edit-tanggal_selesai" class="admin-input-field" style="padding-left: 14px;" required>
+                    </div>
+                </div>
+
+                <div class="admin-input-group">
+                    <label class="admin-input-label">Angkatan Mahasiswa yang Diizinkan Mendaftar</label>
+                    <p style="font-size: 0.775rem; color: #64748b; margin: 2px 0 8px 0;">Centang angkatan yang diperbolehkan. Anda dapat menambah tahun angkatan baru kapan saja.</p>
+                    
+                    <div style="display: flex; gap: 10px; margin-bottom: 12px; align-items: center;">
+                        <input type="number" id="edit-add-angkatan-input" class="admin-input-field" style="padding-left: 14px; max-width: 180px;" placeholder="Tambah (mis: 2027)" min="2000" max="2100" />
+                        <button type="button" id="btn-add-angkatan-edit" style="padding: 10px 16px; background: #0b3d6b; color: #fff; border: none; border-radius: 8px; font-weight: 700; font-size: 0.825rem; cursor: pointer;">+ Tambah Angkatan</button>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;" id="container-chk-angkatan-edit">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+                </div>
+
+                <div class="admin-input-group">
+                    <label class="admin-input-label">Program yang Tersedia</label>
+                    <div style="display: flex; gap: 20px; margin-top: 6px;">
+                        <label style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: #0f172a; cursor: pointer;">
+                            <input type="checkbox" id="edit-prog1" style="width: 18px; height: 18px; accent-color: #0b3d6b;"> Magang 1 Bulan
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: #0f172a; cursor: pointer;">
+                            <input type="checkbox" id="edit-prog5" style="width: 18px; height: 18px; accent-color: #0b3d6b;"> Magang 5 Bulan (KRS)
+                        </label>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+                    <button type="button" class="btn-modal-cancel" style="width: auto; padding: 10px 20px;" onclick="hideModal('modal-edit')">Batal</button>
+                    <button type="submit" class="btn-modal-login" style="width: auto; padding: 10px 24px;" id="btn-submit-edit-periode">Simpan Perubahan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Update Status -->
+    <div id="modal-status" class="auth-modal-backdrop hidden" role="dialog" aria-modal="true">
+        <div class="auth-modal-card" style="max-width: 420px; text-align: left; padding: 32px;">
+            <button type="button" class="auth-modal-close" onclick="hideModal('modal-status')">&times;</button>
+            <h3 class="auth-modal-title" style="margin-bottom: 4px;">Ubah Status Periode</h3>
+            <p class="auth-modal-desc" style="margin-bottom: 20px;">Pilih status baru untuk periode ini. Hanya 1 periode yang boleh berstatus "dibuka".</p>
+            
+            <form id="form-status">
+                <input type="hidden" id="status-periode-id">
+                <div class="admin-input-group">
+                    <label class="admin-input-label" for="status">Status Periode</label>
+                    <select id="status" class="admin-input-field" style="padding-left: 14px;" required>
+                        <option value="draft">Draft</option>
+                        <option value="persiapan">Persiapan (Setting Kuota)</option>
+                        <option value="dibuka">Dibuka (Aktif - Mahasiswa Bisa Daftar)</option>
+                        <option value="ditutup">Ditutup (Pendaftaran Ditolak)</option>
+                        <option value="diarsipkan">Diarsipkan</option>
+                    </select>
+                </div>
+
+                <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+                    <button type="button" class="btn-modal-cancel" style="width: auto; padding: 10px 20px;" onclick="hideModal('modal-status')">Batal</button>
+                    <button type="submit" class="btn-modal-login" style="width: auto; padding: 10px 24px;">Ubah Status</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module" src="/js/admin/common.js"></script>
+    <script type="module" src="/js/admin/periode.js"></script>
+</body>
+</html>
