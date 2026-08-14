@@ -16,8 +16,9 @@ Auth::requireAdminApi();
 // Filter opsional via query string
 // ?tipe=unit_pelaksana          → filter per tipe
 // ?parent_id=5                  → filter per parent
-// ?aktif=1                      → filter status aktif/nonaktif (default: semua)
-// ?with_peminatan=1             → sertakan peminatan_ids (hanya berguna untuk unit_pelaksana)
+// ?aktif=1                      → filter status aktif/nonaktif
+// ?menerima_magang=1            → filter yang menerima magang
+// ?with_peminatan=1             → sertakan array peminatan_ids
 
 $filterTipe     = isset($_GET['tipe']) && in_array(
     $_GET['tipe'],
@@ -25,8 +26,9 @@ $filterTipe     = isset($_GET['tipe']) && in_array(
     true
 ) ? $_GET['tipe'] : null;
 
-$filterParentId = isset($_GET['parent_id']) ? (int)$_GET['parent_id'] : null;
-$filterAktif    = isset($_GET['aktif']) ? (int)(bool)$_GET['aktif'] : null;
+$filterParentId = isset($_GET['parent_id']) && $_GET['parent_id'] !== '' ? (int)$_GET['parent_id'] : null;
+$filterAktif    = isset($_GET['aktif']) && $_GET['aktif'] !== '' ? (int)(bool)$_GET['aktif'] : null;
+$filterMagang   = isset($_GET['menerima_magang']) && $_GET['menerima_magang'] !== '' ? (int)(bool)$_GET['menerima_magang'] : null;
 $withPeminatan  = isset($_GET['with_peminatan']) && $_GET['with_peminatan'] === '1';
 
 try {
@@ -47,6 +49,10 @@ try {
         $where[]  = 'e.aktif = ?';
         $params[] = $filterAktif;
     }
+    if ($filterMagang !== null) {
+        $where[]  = 'e.menerima_magang = ?';
+        $params[] = $filterMagang;
+    }
 
     $whereSQL = implode(' AND ', $where);
 
@@ -62,7 +68,8 @@ try {
             e.alamat,
             e.latitude,
             e.longitude,
-            e.aktif
+            e.aktif,
+            e.menerima_magang
         FROM entitas_perusahaan e
         LEFT JOIN entitas_perusahaan p ON e.parent_id = p.id
         WHERE $whereSQL
@@ -77,28 +84,34 @@ try {
     if ($withPeminatan && !empty($data)) {
         $ids = array_column($data, 'id');
         $placeholders = implode(',', array_fill(0, count($ids), '?'));
-        $stmtPem = $pdo->prepare(
-            "SELECT entitas_id, peminatan_id FROM unit_peminatan WHERE entitas_id IN ($placeholders)"
-        );
+        $stmtPem = $pdo->prepare("
+            SELECT up.entitas_id, up.peminatan_id, p.nama AS nama_peminatan
+            FROM unit_peminatan up
+            JOIN peminatan p ON up.peminatan_id = p.id
+            WHERE up.entitas_id IN ($placeholders)
+        ");
         $stmtPem->execute($ids);
         $pemRows = $stmtPem->fetchAll(PDO::FETCH_ASSOC);
 
-        // Group peminatan per entitas
         $pemMap = [];
+        $pemNamesMap = [];
         foreach ($pemRows as $row) {
             $pemMap[$row['entitas_id']][] = (int)$row['peminatan_id'];
+            $pemNamesMap[$row['entitas_id']][] = $row['nama_peminatan'];
         }
         foreach ($data as &$item) {
-            $item['peminatan_ids'] = $pemMap[$item['id']] ?? [];
+            $item['peminatan_ids']   = $pemMap[$item['id']] ?? [];
+            $item['peminatan_names'] = $pemNamesMap[$item['id']] ?? [];
         }
         unset($item);
     }
 
     // Cast tipe data
     foreach ($data as &$item) {
-        $item['id']        = (int)$item['id'];
-        $item['parent_id'] = $item['parent_id'] !== null ? (int)$item['parent_id'] : null;
-        $item['aktif']     = (bool)$item['aktif'];
+        $item['id']              = (int)$item['id'];
+        $item['parent_id']       = $item['parent_id'] !== null ? (int)$item['parent_id'] : null;
+        $item['aktif']           = (bool)$item['aktif'];
+        $item['menerima_magang'] = (bool)$item['menerima_magang'];
     }
     unset($item);
 

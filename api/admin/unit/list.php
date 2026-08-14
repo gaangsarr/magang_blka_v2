@@ -50,14 +50,16 @@ try {
     
     $periodeId = $periode ? (int)$periode['id'] : null;
     
-    // SESUDAH — tambah filter tipe = 'unit_pelaksana' dan tampilkan nama parent (UP3)
+    // Tampilkan semua entitas yang aktif dan menerima magang (semua level hierarki)
     $query = "
         SELECT 
             ep.id AS entitas_id,
+            ep.tipe,
             ep.nama,
             ep.singkatan,
             ep.alamat,
-            parent.nama  AS nama_unit_induk,
+            parent.nama  AS nama_parent,
+            parent.tipe  AS tipe_parent,
             upp.id       AS upp_id,
             upp.kuota_total,
             upp.kuota_tersisa,
@@ -66,8 +68,8 @@ try {
         LEFT JOIN entitas_perusahaan parent ON ep.parent_id = parent.id
         LEFT JOIN unit_pelaksana_periode upp 
             ON ep.id = upp.entitas_id AND upp.periode_id = :periode_id
-        WHERE ep.aktif = 1 AND ep.tipe = 'unit_pelaksana'
-        ORDER BY parent.nama ASC, ep.nama ASC
+        WHERE ep.aktif = 1 AND ep.menerima_magang = 1
+        ORDER BY FIELD(ep.tipe, 'holding', 'subholding', 'anak_perusahaan', 'unit_induk', 'unit_pelaksana'), parent.nama ASC, ep.nama ASC
     ";
     
     $stmt = $pdo->prepare($query);

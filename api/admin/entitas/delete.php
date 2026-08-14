@@ -43,7 +43,7 @@ try {
         exit;
     }
 
-    // Cek apakah masih punya child node (hierarki di bawahnya)
+    // Cek apakah masih punya child node aktif di bawahnya
     $stmtChild = $pdo->prepare(
         "SELECT COUNT(*) FROM entitas_perusahaan WHERE parent_id = ? AND aktif = 1"
     );
@@ -59,29 +59,27 @@ try {
         exit;
     }
 
-    // Untuk unit_pelaksana: cek apakah masih ada reservasi/pendaftaran aktif
-    if ($entitas['tipe'] === 'unit_pelaksana') {
-        $stmtReservasi = $pdo->prepare("
-            SELECT COUNT(*) 
-            FROM unit_pelaksana_periode upp
-            JOIN reservasi r ON r.upp_id = upp.id
-            WHERE upp.entitas_id = ?
-              AND r.status = 'aktif'
-        ");
-        $stmtReservasi->execute([$id]);
-        $reservasiAktif = (int)$stmtReservasi->fetchColumn();
+    // Cek apakah ada reservasi aktif pada alokasi kuota entitas ini
+    $stmtReservasi = $pdo->prepare("
+        SELECT COUNT(*) 
+        FROM unit_pelaksana_periode upp
+        JOIN reservasi r ON r.upp_id = upp.id
+        WHERE upp.entitas_id = ?
+          AND r.status = 'aktif'
+    ");
+    $stmtReservasi->execute([$id]);
+    $reservasiAktif = (int)$stmtReservasi->fetchColumn();
 
-        if ($reservasiAktif > 0) {
-            http_response_code(400);
-            echo json_encode([
-                'error' => "Tidak bisa menonaktifkan '{$entitas['nama']}' karena masih ada "
-                    . "$reservasiAktif reservasi aktif."
-            ]);
-            exit;
-        }
+    if ($reservasiAktif > 0) {
+        http_response_code(400);
+        echo json_encode([
+            'error' => "Tidak bisa menonaktifkan '{$entitas['nama']}' karena masih ada "
+                . "$reservasiAktif reservasi aktif."
+        ]);
+        exit;
     }
 
-    // Soft-delete: set aktif = 0 (data tidak dihapus permanen)
+    // Soft-delete: set aktif = 0
     $stmtDel = $pdo->prepare(
         "UPDATE entitas_perusahaan SET aktif = 0 WHERE id = ?"
     );

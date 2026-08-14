@@ -21,7 +21,7 @@ try {
     $pdo = Database::getInstance();
     
     // Ambil daftar peminatan
-    $stmt = $pdo->prepare("SELECT id, nama, deskripsi FROM peminatan WHERE aktif = 1 ORDER BY nama ASC");
+    $stmt = $pdo->prepare("SELECT id, nama, deskripsi, aktif FROM peminatan WHERE aktif = 1 ORDER BY nama ASC");
     $stmt->execute();
     $peminatan = $stmt->fetchAll(PDO::FETCH_ASSOC);
     

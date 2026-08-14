@@ -22,16 +22,17 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $body = json_decode(file_get_contents('php://input'), true);
 
-$tipe      = trim($body['tipe'] ?? '');
-$parentId  = isset($body['parent_id']) && $body['parent_id'] !== '' ? (int)$body['parent_id'] : null;
-$nama      = trim($body['nama'] ?? '');
-$singkatan = trim($body['singkatan'] ?? '') ?: null;
-$alamat    = trim($body['alamat'] ?? '') ?: null;
-$lat       = isset($body['latitude'])  && $body['latitude']  !== '' ? (float)$body['latitude']  : null;
-$lng       = isset($body['longitude']) && $body['longitude'] !== '' ? (float)$body['longitude'] : null;
-$aktif     = isset($body['aktif']) ? (int)(bool)$body['aktif'] : 1;
-$peminatanIds = isset($body['peminatan_ids']) && is_array($body['peminatan_ids'])
-    ? array_map('intval', $body['peminatan_ids'])
+$tipe           = trim($body['tipe'] ?? '');
+$parentId       = isset($body['parent_id']) && $body['parent_id'] !== '' ? (int)$body['parent_id'] : null;
+$nama           = trim($body['nama'] ?? '');
+$singkatan      = trim($body['singkatan'] ?? '') ?: null;
+$alamat         = trim($body['alamat'] ?? '') ?: null;
+$lat            = isset($body['latitude'])  && $body['latitude']  !== '' ? (float)$body['latitude']  : null;
+$lng            = isset($body['longitude']) && $body['longitude'] !== '' ? (float)$body['longitude'] : null;
+$aktif          = isset($body['aktif']) ? (int)(bool)$body['aktif'] : 1;
+$menerimaMagang = isset($body['menerima_magang']) ? (int)(bool)$body['menerima_magang'] : ($tipe === 'unit_pelaksana' ? 1 : 0);
+$peminatanIds   = isset($body['peminatan_ids']) && is_array($body['peminatan_ids'])
+    ? array_values(array_unique(array_filter(array_map('intval', $body['peminatan_ids']))))
     : [];
 
 // ── Validasi tipe ────────────────────────────────────────────────────────────
@@ -45,12 +46,12 @@ if (!in_array($tipe, $validTipe, true)) {
 // ── Validasi nama wajib ──────────────────────────────────────────────────────
 if (empty($nama)) {
     http_response_code(400);
-    echo json_encode(['error' => 'Nama wajib diisi.']);
+    echo json_encode(['error' => 'Nama entitas wajib diisi.']);
     exit;
 }
 
 // ── Validasi parent_id ───────────────────────────────────────────────────────
-// holding tidak perlu parent; semua tipe lain WAJIB punya parent
+// holding tidak boleh punya parent; tipe lain WAJIB punya parent
 if ($tipe !== 'holding' && $parentId === null) {
     http_response_code(400);
     echo json_encode(['error' => "Tipe '$tipe' wajib memiliki parent_id."]);
@@ -63,7 +64,6 @@ if ($tipe === 'holding' && $parentId !== null) {
 }
 
 // ── Validasi aturan hierarki parent-child ────────────────────────────────────
-// Aturan: tipe child → tipe parent yang diizinkan
 $parentRules = [
     'subholding'      => ['holding'],
     'anak_perusahaan' => ['holding', 'subholding'],
@@ -71,14 +71,14 @@ $parentRules = [
     'unit_pelaksana'  => ['unit_induk'],
 ];
 
-// ── Validasi peminatan hanya untuk unit_pelaksana ────────────────────────────
-if ($tipe === 'unit_pelaksana' && empty($peminatanIds)) {
+// ── Validasi peminatan jika menerima_magang = 1 ──────────────────────────────
+if ($menerimaMagang === 1 && empty($peminatanIds)) {
     http_response_code(400);
-    echo json_encode(['error' => 'Unit pelaksana wajib memiliki minimal 1 peminatan.']);
+    echo json_encode(['error' => 'Entitas yang menerima magang wajib memiliki minimal 1 peminatan.']);
     exit;
 }
-if ($tipe !== 'unit_pelaksana' && !empty($peminatanIds)) {
-    // Abaikan peminatan untuk tipe selain unit_pelaksana (bukan error, cukup ignore)
+if ($menerimaMagang === 0 && !empty($peminatanIds)) {
+    // Abaikan peminatan jika tidak menerima magang
     $peminatanIds = [];
 }
 
@@ -109,24 +109,25 @@ try {
         }
     }
 
+    $newId = 0;
     Database::transaction(function (PDO $pdo) use (
-        $tipe, $parentId, $nama, $singkatan, $alamat, $lat, $lng, $aktif, $peminatanIds
+        $tipe, $parentId, $nama, $singkatan, $alamat, $lat, $lng, $aktif, $menerimaMagang, $peminatanIds, &$newId
     ) {
         $stmt = $pdo->prepare("
             INSERT INTO entitas_perusahaan
-                (tipe, parent_id, nama, singkatan, alamat, latitude, longitude, aktif)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                (tipe, parent_id, nama, singkatan, alamat, latitude, longitude, aktif, menerima_magang)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
-        $stmt->execute([$tipe, $parentId, $nama, $singkatan, $alamat, $lat, $lng, $aktif]);
-        $entitasId = (int)$pdo->lastInsertId();
+        $stmt->execute([$tipe, $parentId, $nama, $singkatan, $alamat, $lat, $lng, $aktif, $menerimaMagang]);
+        $newId = (int)$pdo->lastInsertId();
 
-        // Insert peminatan hanya untuk unit_pelaksana
-        if (!empty($peminatanIds)) {
+        // Insert peminatan jika menerima magang
+        if ($menerimaMagang === 1 && !empty($peminatanIds)) {
             $stmtPem = $pdo->prepare(
                 "INSERT INTO unit_peminatan (entitas_id, peminatan_id) VALUES (?, ?)"
             );
             foreach ($peminatanIds as $pid) {
-                $stmtPem->execute([$entitasId, $pid]);
+                $stmtPem->execute([$newId, $pid]);
             }
         }
     });
@@ -134,6 +135,7 @@ try {
     echo json_encode([
         'ok'      => true,
         'message' => 'Entitas berhasil ditambahkan.',
+        'id'      => $newId,
     ]);
 
 } catch (\Throwable $e) {

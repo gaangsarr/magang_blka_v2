@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unit Induk PLN (UP3 / UID) — Admin BLKA ITPLN</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/assets/img/logo_itpln.png">
+    <link rel="apple-touch-icon" href="/assets/img/logo_itpln.png">
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body class="admin-body">
+    <div class="admin-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="admin-sidebar">
+            <div class="sidebar-header">
+                <img src="/assets/img/logo_itpln.png" alt="Logo ITPLN" class="sidebar-logo" />
+                <div>
+                    <h2 class="sidebar-title">BLKA Admin</h2>
+                    <span class="sidebar-subtitle">Magang ITPLN × PLN</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="/admin/index.html" class="nav-link">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/admin/periode.html" class="nav-link">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>
+                    <span>Periode Magang</span>
+                </a>
+
+                <!-- Hierarki PLN Group -->
+                <div class="nav-group">
+                    <div class="nav-group-header">
+                        <div class="nav-group-header-left">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>
+                            <span>Hierarki PLN</span>
+                        </div>
+                        <svg class="nav-group-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
+                    <div class="nav-subitems">
+                        <a href="/admin/holding.html" class="nav-sublink">
+                            <span class="subnav-dot"></span>
+                            <span>Holding (Pusat)</span>
+                        </a>
+                        <a href="/admin/subholding.html" class="nav-sublink">
+                            <span class="subnav-dot"></span>
+                            <span>Subholding</span>
+                        </a>
+                        <a href="/admin/anak-perusahaan.html" class="nav-sublink">
+                            <span class="subnav-dot"></span>
+                            <span>Anak Perusahaan</span>
+                        </a>
+                        <a href="/admin/unit-induk.html" class="nav-sublink active">
+                            <span class="subnav-dot"></span>
+                            <span>Unit Induk (UP3/UID)</span>
+                        </a>
+                        <a href="/admin/unit-pelaksana.html" class="nav-sublink">
+                            <span class="subnav-dot"></span>
+                            <span>Unit Pelaksana (ULP)</span>
+                        </a>
+                    </div>
+                </div>
+
+                <a href="/admin/unit.html" class="nav-link">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                    <span>Kelola Kuota</span>
+                </a>
+                <a href="/admin/peminatan.html" class="nav-link">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>
+                    <span>Master Peminatan</span>
+                </a>
+                <a href="/admin/pendaftar.html" class="nav-link">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    <span>Data Pendaftar</span>
+                </a>
+                <a href="/admin/penetapan.html" class="nav-link">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    <span>Penetapan Unit</span>
+                </a>
+                <a href="/admin/histori.html" class="nav-link">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    <span>Histori Pendaftar</span>
+                </a>
+                <a href="/admin/pengaturan.html" class="nav-link">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    <span>Pengaturan</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="/api/admin/logout.php" class="nav-link-logout">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    <span>Keluar</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="admin-main">
+            <header class="admin-topbar">
+                <div class="topbar-title-group">
+                    <h1>Hierarki: Unit Induk PLN (UP3 / Kantor Induk)</h1>
+                    <p>Unit Pelaksana Pelayanan Pelanggan (UP3) atau Unit Pelaksana Transmisi/Pembangkitan</p>
+                </div>
+
+                <div class="admin-profile-badge">
+                    <div class="admin-avatar" id="admin-avatar">A</div>
+                    <div class="admin-user-info">
+                        <span class="admin-user-name" id="admin-name">Administrator</span>
+                        <span class="admin-user-role" id="admin-role">Admin BLKA</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="admin-content">
+                <div class="admin-card">
+                    <div class="admin-card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <h3 class="admin-card-title" style="margin: 0;">Daftar Unit Induk</h3>
+                                <span class="badge-status badge-unit_induk" id="total-count-badge">0 Unit Induk</span>
+                            </div>
+                            <p style="font-size: 0.85rem; color: #64748b; margin: 4px 0 0 0;">Contoh: PLN UP3 Bekasi, PLN UP3 Bogor, PLN UP3 Depok, PLN UP3 Cengkareng</p>
+                        </div>
+
+                        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                            <input type="text" id="search-input" placeholder="Cari unit induk..." style="padding: 8px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.875rem; width: 220px;" />
+                            <button type="button" id="btn-add-entitas" class="btn-primary" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; background: #0b3d6b; color: #ffffff; border: none; border-radius: 10px; font-weight: 700; font-size: 0.875rem; cursor: pointer; box-shadow: 0 4px 12px rgba(11, 61, 107, 0.2);">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                <span>Tambah Unit Induk</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="admin-table-container">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Nama Unit Induk</th>
+                                    <th>Anak Perusahaan / UID Induk</th>
+                                    <th>Alamat & Koordinat</th>
+                                    <th>Peminatan Tersedia</th>
+                                    <th>Buka Magang</th>
+                                    <th>Status Operasional</th>
+                                    <th style="width: 140px;">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-entitas-body">
+                                <tr><td colspan="7" style="text-align: center; padding: 32px; color: #64748b;">Memuat data...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Form Create / Edit -->
+    <div id="modal-entitas" class="modal-overlay hidden" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 20px;">
+        <div class="modal-card" style="background: #ffffff; border-radius: 16px; width: 100%; max-width: 600px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); overflow: hidden; max-height: 90vh; display: flex; flex-direction: column;">
+            <div style="padding: 20px 24px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                <h3 id="modal-entitas-title" style="margin: 0; font-size: 1.15rem; font-weight: 800; color: #0b3d6b;">Tambah Unit Induk Baru</h3>
+                <button type="button" id="btn-close-modal" style="background: none; border: none; font-size: 1.5rem; line-height: 1; cursor: pointer; color: #64748b;">&times;</button>
+            </div>
+
+            <form id="form-entitas" style="padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px;">
+                <input type="hidden" id="entitas-id" value="" />
+
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 6px;">Anak Perusahaan / UID Induk <span style="color: #ef4444;">*</span></label>
+                    <select id="entitas-parent-id" required style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem;">
+                        <option value="">-- Pilih Induk Wilayah --</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 6px;">Nama Unit Induk (UP3) <span style="color: #ef4444;">*</span></label>
+                    <input type="text" id="entitas-nama" required placeholder="Contoh: PLN UP3 Bekasi" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem;" />
+                </div>
+
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 6px;">Singkatan / Alias</label>
+                    <input type="text" id="entitas-singkatan" placeholder="Contoh: UP3 Bekasi" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem;" />
+                </div>
+
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 6px;">Alamat Kantor</label>
+                    <textarea id="entitas-alamat" rows="2" placeholder="Jl. Veteran No. 9, Bekasi" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; resize: vertical;"></textarea>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 6px;">Latitude</label>
+                        <input type="number" step="any" id="entitas-latitude" placeholder="-6.2349" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem;" />
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 6px;">Longitude</label>
+                        <input type="number" step="any" id="entitas-longitude" placeholder="106.9896" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem;" />
+                    </div>
+                </div>
+
+                <!-- Toggle Buka Magang -->
+                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between;">
+                    <div>
+                        <div style="font-weight: 700; color: #166534; font-size: 0.9rem;">Membuka Kesempatan Magang?</div>
+                        <div style="font-size: 0.775rem; color: #15803d; margin-top: 2px;">Jika aktif, kantor UP3 ini dapat diset kuota pada periode magang dan dipilih mahasiswa.</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="entitas-menerima-magang" />
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <!-- Peminatan Section -->
+                <div id="peminatan-field-wrapper" style="border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px; transition: opacity 0.2s ease;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                        <label style="font-size: 0.85rem; font-weight: 700; color: #334155;">Peminatan yang Dibuka <span id="peminatan-req-badge" style="color: #ef4444; font-size: 0.75rem; font-weight: 700; display: none;">(Wajib jika buka magang)</span></label>
+                    </div>
+                    <div id="peminatan-checkboxes-container" style="display: flex; flex-wrap: wrap; gap: 8px; max-height: 140px; overflow-y: auto; padding: 4px;">
+                        <!-- Dynamically populated -->
+                    </div>
+                </div>
+
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 6px;">Status Operasional</label>
+                    <select id="entitas-aktif" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem;">
+                        <option value="1">Aktif / Beroperasi</option>
+                        <option value="0">Nonaktif / Tutup</option>
+                    </select>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 12px; border-top: 1px solid #e2e8f0; padding-top: 16px;">
+                    <button type="button" id="btn-cancel-modal" style="padding: 10px 18px; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: 600; cursor: pointer;">Batal</button>
+                    <button type="submit" id="btn-submit-entitas" style="padding: 10px 22px; background: #0b3d6b; color: #ffffff; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module" src="/js/admin/common.js"></script>
+    <script type="module">
+        import { initHierarkiPage } from '/js/admin/hierarki.js';
+        initHierarkiPage({
+            tipe: 'unit_induk',
+            label: 'Unit Induk',
+            hasParent: true,
+            parentTipes: ['anak_perusahaan', 'holding', 'subholding'],
+            parentLabel: 'Anak Perusahaan / UID Induk'
+        });
+    </script>
+</body>
+</html>

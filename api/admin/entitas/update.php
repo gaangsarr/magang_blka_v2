@@ -29,9 +29,6 @@ $alamat    = trim($body['alamat'] ?? '') ?: null;
 $lat       = isset($body['latitude'])  && $body['latitude']  !== '' ? (float)$body['latitude']  : null;
 $lng       = isset($body['longitude']) && $body['longitude'] !== '' ? (float)$body['longitude'] : null;
 $aktif     = isset($body['aktif']) ? (int)(bool)$body['aktif'] : 1;
-$peminatanIds = isset($body['peminatan_ids']) && is_array($body['peminatan_ids'])
-    ? array_map('intval', $body['peminatan_ids'])
-    : [];
 
 if (!$id || empty($nama)) {
     http_response_code(400);
@@ -42,8 +39,8 @@ if (!$id || empty($nama)) {
 try {
     $pdo = Database::getInstance();
 
-    // Ambil data existing untuk tahu tipenya
-    $stmtGet = $pdo->prepare("SELECT id, tipe FROM entitas_perusahaan WHERE id = ?");
+    // Ambil data existing
+    $stmtGet = $pdo->prepare("SELECT id, tipe, menerima_magang FROM entitas_perusahaan WHERE id = ?");
     $stmtGet->execute([$id]);
     $existing = $stmtGet->fetch(PDO::FETCH_ASSOC);
 
@@ -53,37 +50,62 @@ try {
         exit;
     }
 
-    $tipe = $existing['tipe'];
+    $menerimaMagang = isset($body['menerima_magang']) 
+        ? (int)(bool)$body['menerima_magang'] 
+        : (int)$existing['menerima_magang'];
 
-    // Validasi peminatan untuk unit_pelaksana
-    if ($tipe === 'unit_pelaksana' && empty($peminatanIds)) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Unit pelaksana wajib memiliki minimal 1 peminatan.']);
-        exit;
+    // Ambil peminatan_ids jika dikirim
+    $hasPeminatanPayload = isset($body['peminatan_ids']);
+    $peminatanIds = $hasPeminatanPayload && is_array($body['peminatan_ids'])
+        ? array_values(array_unique(array_filter(array_map('intval', $body['peminatan_ids']))))
+        : [];
+
+    // Jika menerima magang, pastikan ada minimal 1 peminatan
+    if ($menerimaMagang === 1) {
+        if ($hasPeminatanPayload && empty($peminatanIds)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Entitas yang menerima magang wajib memiliki minimal 1 peminatan.']);
+            exit;
+        } elseif (!$hasPeminatanPayload) {
+            // Cek apakah di DB sudah punya peminatan
+            $stmtCekPem = $pdo->prepare("SELECT COUNT(*) FROM unit_peminatan WHERE entitas_id = ?");
+            $stmtCekPem->execute([$id]);
+            if ((int)$stmtCekPem->fetchColumn() === 0) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Entitas yang menerima magang wajib memiliki minimal 1 peminatan. Pilih peminatan terlebih dahulu.']);
+                exit;
+            }
+        }
     }
 
     Database::transaction(function (PDO $pdo) use (
-        $id, $tipe, $nama, $singkatan, $alamat, $lat, $lng, $aktif, $peminatanIds
+        $id, $nama, $singkatan, $alamat, $lat, $lng, $aktif, $menerimaMagang, $hasPeminatanPayload, $peminatanIds
     ) {
-        // Update entitas — tanpa mengubah tipe dan parent_id (hierarki tidak boleh digeser sembarangan)
+        // Update entitas — tipe dan parent_id tetap dipertahankan
         $stmt = $pdo->prepare("
             UPDATE entitas_perusahaan
-            SET nama = ?, singkatan = ?, alamat = ?, latitude = ?, longitude = ?, aktif = ?
+            SET nama = ?, singkatan = ?, alamat = ?, latitude = ?, longitude = ?, aktif = ?, menerima_magang = ?
             WHERE id = ?
         ");
-        $stmt->execute([$nama, $singkatan, $alamat, $lat, $lng, $aktif, $id]);
+        $stmt->execute([$nama, $singkatan, $alamat, $lat, $lng, $aktif, $menerimaMagang, $id]);
 
-        // Update peminatan hanya untuk unit_pelaksana
-        if ($tipe === 'unit_pelaksana') {
+        // Update relasi peminatan jika payload dikirimkan
+        if ($hasPeminatanPayload) {
             $stmtDel = $pdo->prepare("DELETE FROM unit_peminatan WHERE entitas_id = ?");
             $stmtDel->execute([$id]);
 
-            $stmtPem = $pdo->prepare(
-                "INSERT INTO unit_peminatan (entitas_id, peminatan_id) VALUES (?, ?)"
-            );
-            foreach ($peminatanIds as $pid) {
-                $stmtPem->execute([$id, $pid]);
+            if ($menerimaMagang === 1 && !empty($peminatanIds)) {
+                $stmtPem = $pdo->prepare(
+                    "INSERT INTO unit_peminatan (entitas_id, peminatan_id) VALUES (?, ?)"
+                );
+                foreach ($peminatanIds as $pid) {
+                    $stmtPem->execute([$id, $pid]);
+                }
             }
+        } elseif ($menerimaMagang === 0) {
+            // Jika menerima_magang dimatikan, bersihkan relasi peminatan
+            $stmtDel = $pdo->prepare("DELETE FROM unit_peminatan WHERE entitas_id = ?");
+            $stmtDel->execute([$id]);
         }
     });
 

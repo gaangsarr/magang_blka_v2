@@ -5,6 +5,7 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     loadAdminProfileHeader();
+    setupNavGroups();
 
     // Clear cache on logout click
     const logoutBtn = document.querySelector('.nav-link-logout');
@@ -14,6 +15,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+function setupNavGroups() {
+    document.querySelectorAll('.nav-group').forEach(group => {
+        const header = group.querySelector('.nav-group-header');
+        if (header) {
+            header.addEventListener('click', () => {
+                group.classList.toggle('collapsed');
+            });
+        }
+    });
+}
 
 export async function loadAdminProfileHeader() {
     // 1. Try to load from sessionStorage cache

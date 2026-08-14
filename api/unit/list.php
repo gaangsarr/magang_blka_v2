@@ -49,10 +49,14 @@ try {
     $sql = "
         SELECT 
             upp.id AS upp_id,
+            e.id AS entitas_id,
+            e.tipe,
             e.nama AS nama_unit,
+            e.singkatan,
             e.alamat,
             e.latitude,
             e.longitude,
+            parent.nama AS nama_parent,
             upp.kuota_tersisa,
             upp.kuota_total,
             (
@@ -68,6 +72,7 @@ try {
             ) AS kecocokan
         FROM unit_pelaksana_periode upp
         JOIN entitas_perusahaan e ON upp.entitas_id = e.id
+        LEFT JOIN entitas_perusahaan parent ON e.parent_id = parent.id
         WHERE upp.periode_id = :periode_id AND upp.aktif = 1
         ORDER BY kecocokan DESC, jarak ASC
     ";
@@ -89,6 +94,7 @@ try {
         $u['kuota_total'] = (int)$u['kuota_total'];
         $u['kecocokan'] = (int)$u['kecocokan'];
     }
+    unset($u);
     
     echo json_encode([
         'ok' => true,
