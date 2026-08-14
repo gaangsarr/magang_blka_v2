@@ -205,8 +205,9 @@ export function initHierarkiPage(config) {
 
     async function loadData() {
         const tbody = document.getElementById('table-entitas-body');
+        const colSpan = hasParent ? 6 : 5;
         if (tbody) {
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 32px; color: #64748b;">Memuat data...</td></tr>';
+            tbody.innerHTML = `<tr><td colspan="${colSpan}" style="text-align: center; padding: 32px; color: #64748b;">Memuat data...</td></tr>`;
         }
 
         try {
@@ -216,16 +217,17 @@ export function initHierarkiPage(config) {
                 entitasList = data.data;
                 renderTable(entitasList);
             } else {
-                if (tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 32px; color: #ef4444;">Gagal memuat data.</td></tr>';
+                if (tbody) tbody.innerHTML = `<tr><td colspan="${colSpan}" style="text-align: center; padding: 32px; color: #ef4444;">Gagal memuat data.</td></tr>`;
             }
         } catch (err) {
-            if (tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 32px; color: #ef4444;">Kesalahan jaringan saat memuat data.</td></tr>';
+            if (tbody) tbody.innerHTML = `<tr><td colspan="${colSpan}" style="text-align: center; padding: 32px; color: #ef4444;">Kesalahan jaringan saat memuat data.</td></tr>`;
         }
     }
 
     function renderTable(dataArray) {
         const tbody = document.getElementById('table-entitas-body');
         const countBadge = document.getElementById('total-count-badge');
+        const colSpan = hasParent ? 6 : 5;
         if (!tbody) return;
 
         if (countBadge) {
@@ -233,7 +235,7 @@ export function initHierarkiPage(config) {
         }
 
         if (dataArray.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 36px; color: #64748b;">Belum ada data ${label}. Klik tombol "+ Tambah ${label}" untuk membuat baru.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="${colSpan}" style="text-align: center; padding: 36px; color: #64748b;">Belum ada data ${label}. Klik tombol "+ Tambah ${label}" untuk membuat baru.</td></tr>`;
             return;
         }
 
@@ -253,7 +255,7 @@ export function initHierarkiPage(config) {
                 const trGroup = document.createElement('tr');
                 trGroup.className = 'table-group-header';
                 trGroup.innerHTML = `
-                    <td colspan="7">
+                    <td colspan="${colSpan}">
                         <div class="table-group-title">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0b3d6b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
                             <span>${escapeHtml(parentName)}</span>
@@ -278,11 +280,6 @@ export function initHierarkiPage(config) {
 
     function createRow(item) {
         const tr = document.createElement('tr');
-
-        // Status Badge
-        const statusHtml = item.aktif
-            ? '<span class="badge-status badge-dibuka">Aktif</span>'
-            : '<span class="badge-status badge-ditutup">Nonaktif</span>';
 
         // Peminatan Tags
         let peminatanHtml = '<span style="color: #94a3b8; font-size: 0.8rem;">-</span>';
@@ -316,7 +313,6 @@ export function initHierarkiPage(config) {
                     ${magangBadge}
                 </div>
             </td>
-            <td>${statusHtml}</td>
             <td>
                 <div style="display: flex; gap: 6px; align-items: center;">
                     <button type="button" class="btn-edit" data-id="${item.id}" style="padding: 6px 12px; font-size: 0.8rem; background: #f8fafc; border: 1px solid #cbd5e1; color: #0b3d6b; font-weight: 600; border-radius: 8px; cursor: pointer;">
@@ -401,7 +397,6 @@ export function initHierarkiPage(config) {
             updatePeminatanSectionState(chkMagang.checked);
         }
 
-        document.getElementById('entitas-aktif').value = '1';
         showModal();
     }
 
@@ -420,7 +415,6 @@ export function initHierarkiPage(config) {
         document.getElementById('entitas-alamat').value = item.alamat || '';
         document.getElementById('entitas-latitude').value = item.latitude !== null ? item.latitude : '';
         document.getElementById('entitas-longitude').value = item.longitude !== null ? item.longitude : '';
-        document.getElementById('entitas-aktif').value = item.aktif ? '1' : '0';
 
         if (hasParent) {
             const parentSelect = document.getElementById('entitas-parent-id');
@@ -464,7 +458,6 @@ export function initHierarkiPage(config) {
         const alamat = document.getElementById('entitas-alamat').value.trim();
         const latVal = document.getElementById('entitas-latitude').value.trim();
         const lngVal = document.getElementById('entitas-longitude').value.trim();
-        const aktif = parseInt(document.getElementById('entitas-aktif').value, 10);
         const menerimaMagang = document.getElementById('entitas-menerima-magang').checked ? 1 : 0;
 
         let parentId = null;
@@ -494,7 +487,7 @@ export function initHierarkiPage(config) {
             alamat: alamat || null,
             latitude: latVal !== '' ? parseFloat(latVal) : null,
             longitude: lngVal !== '' ? parseFloat(lngVal) : null,
-            aktif,
+            aktif: 1,
             menerima_magang: menerimaMagang,
             peminatan_ids: selectedPeminatan
         };
