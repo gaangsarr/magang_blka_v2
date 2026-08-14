@@ -1,30 +1,14 @@
-/**
- * public/js/admin/common.js
- * Auto-load logged-in admin profile in topbar across all admin pages
- */
+import { initSidebar, updateSidebarProfile } from '/js/admin/sidebar.js';
 
-document.addEventListener('DOMContentLoaded', () => {
-    loadAdminProfileHeader();
-    setupNavGroups();
-
-    // Clear cache on logout click
-    const logoutBtn = document.querySelector('.nav-link-logout');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', () => {
-            sessionStorage.removeItem('admin_profile');
-        });
-    }
-});
-
-function setupNavGroups() {
-    document.querySelectorAll('.nav-group').forEach(group => {
-        const header = group.querySelector('.nav-group-header');
-        if (header) {
-            header.addEventListener('click', () => {
-                group.classList.toggle('collapsed');
-            });
-        }
+// Auto render sidebar immediately or on DOM ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        initSidebar();
+        loadAdminProfileHeader();
     });
+} else {
+    initSidebar();
+    loadAdminProfileHeader();
 }
 
 export async function loadAdminProfileHeader() {
@@ -74,11 +58,10 @@ function applyAdminProfile(adm) {
         avatarEl.innerText = initial;
     }
 
+    // Update sidebar footer profile and super admin filter
+    updateSidebarProfile(adm);
+
     if (!adm.is_super) {
-        const settingsLink = Array.from(document.querySelectorAll('.sidebar-nav a.nav-link')).find(a => a.href.includes('pengaturan.html'));
-        if (settingsLink) {
-            settingsLink.remove();
-        }
         const path = window.location.pathname;
         if (path.includes('pengaturan') || path.includes('kelola-admin')) {
             window.location.href = '/admin/index.html';

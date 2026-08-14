@@ -98,14 +98,17 @@ test("admin.css: nav-group styles", strpos($cssContent, ".nav-group") !== false)
 test("admin.css: switch toggle styles", strpos($cssContent, ".switch") !== false);
 test("admin.css: table group header styles", strpos($cssContent, ".table-group-header") !== false);
 
-// Spot check sidebar di beberapa halaman
+// Spot check modular sidebar di sidebar.js & placeholder di halaman
+$sidebarJs = file_get_contents(__DIR__ . '/public/js/admin/sidebar.js');
+test("sidebar.js: punya nested menu Hierarki Entitas PLN", strpos($sidebarJs, "Hierarki") !== false);
+test("sidebar.js: punya link ke holding.html", strpos($sidebarJs, "holding.html") !== false);
+test("sidebar.js: punya link ke peminatan.html", strpos($sidebarJs, "peminatan.html") !== false);
+
 $unitHtml = file_get_contents(__DIR__ . '/public/admin/unit.html');
-test("unit.html: punya nested menu Hierarki PLN", strpos($unitHtml, "Hierarki PLN") !== false);
-test("unit.html: punya link ke holding.html", strpos($unitHtml, "holding.html") !== false);
-test("unit.html: punya link ke peminatan.html", strpos($unitHtml, "peminatan.html") !== false);
+test("unit.html: menggunakan dynamic sidebar container", strpos($unitHtml, 'id="admin-sidebar"') !== false || strpos($unitHtml, 'class="admin-sidebar"') !== false);
 
 $dashboardHtml = file_get_contents(__DIR__ . '/public/admin/index.html');
-test("index.html: punya nested menu Hierarki PLN", strpos($dashboardHtml, "Hierarki PLN") !== false);
+test("index.html: menggunakan dynamic sidebar container", strpos($dashboardHtml, 'id="admin-sidebar"') !== false || strpos($dashboardHtml, 'class="admin-sidebar"') !== false);
 
 // ── Summary ──────────────────────────────────────────────────────────────────
 echo "\n" . str_repeat('─', 50) . "\n";
