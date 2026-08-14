@@ -173,7 +173,7 @@ if ($nimData === null) {
         'error' => sprintf(
             'Email "%s" terdeteksi sebagai akun Dosen/Staf ITPLN dan belum diberikan hak akses Admin. '
             . 'Jika kamu Mahasiswa, pastikan login dengan email mahasiswa (mis. nama231234@itpln.ac.id). '
-            . 'Jika kamu Staf/Dosen, silakan hubungi Super Admin BLKA.',
+            . 'Jika kamu Staf/Dosen, silakan hubungi Super Admin REMATE.',
             htmlspecialchars($email, ENT_QUOTES, 'UTF-8')
         )
     ], 403);

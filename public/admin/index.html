@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Utama Admin — BLKA ITPLN × PLN</title>
+    <title>Dashboard Utama — REMATE Admin</title>
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/assets/img/logo_itpln.png">
     <link rel="apple-touch-icon" href="/assets/img/logo_itpln.png">
@@ -22,86 +22,232 @@
             <header class="admin-topbar">
                 <div class="topbar-title-group">
                     <h1>Dashboard Utama</h1>
-                    <p>Overview statistik pendaftaran magang mahasiswa periode aktif</p>
+                    <p>Monitoring Eksekutif & Analitik Penyerapan Kuota Magang REMATE</p>
                 </div>
 
-                <div class="admin-profile-badge">
-                    <div class="admin-avatar" id="admin-avatar">A</div>
-                    <div class="admin-user-info">
-                        <span class="admin-user-name" id="admin-name">Administrator</span>
-                        <span class="admin-user-role" id="admin-role">Super Admin BLKA</span>
+                <div style="display: flex; align-items: center; gap: 14px;">
+                    <!-- Quick Executive Action Buttons -->
+                    <div class="topbar-actions" style="display: flex; gap: 10px;">
+                        <button type="button" id="btn-print-dashboard" class="btn-executive-action btn-print-act" title="Cetak Ringkasan Eksekutif">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+                            <span>Cetak Laporan</span>
+                        </button>
+                        <a href="/api/admin/dashboard_export.php" id="btn-export-dashboard" class="btn-executive-action btn-export-act" title="Unduh Rekapitulasi Excel / CSV">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            <span>Export Excel</span>
+                        </a>
+                    </div>
+
+                    <div class="admin-profile-badge">
+                        <div class="admin-avatar" id="admin-avatar">A</div>
+                        <div class="admin-user-info">
+                            <span class="admin-user-name" id="admin-name">Administrator</span>
+                            <span class="admin-user-role" id="admin-role">Super Admin REMATE</span>
+                        </div>
                     </div>
                 </div>
             </header>
 
             <!-- Main Content Grid -->
             <div class="admin-content">
-                <!-- Stat Cards Grid -->
-                <div class="stats-grid">
-                    <!-- Stat Card 1: Total Pendaftar -->
-                    <div class="stat-card">
+                
+                <!-- SECTION 1: Top Executive Status Banner (Periode & Status Pengumuman) -->
+                <div class="executive-banner-card" id="executive-banner">
+                    <div class="exec-banner-left">
+                        <div class="exec-periode-badge" id="exec-status-periode">Memuat Periode...</div>
+                        <h2 class="exec-periode-title" id="exec-periode-nama">Memuat Data Periode...</h2>
+                        <div class="exec-periode-meta">
+                            <span id="exec-periode-jadwal">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                <span>Pendaftaran: -</span>
+                            </span>
+                            <span class="exec-meta-separator">•</span>
+                            <span class="exec-countdown-pill" id="exec-countdown-pill">
+                                Memuat status waktu...
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="exec-banner-right">
+                        <div class="exec-announcement-status">
+                            <div class="exec-status-label">Status Pengumuman Mahasiswa</div>
+                            <div class="exec-announcement-pill" id="exec-announcement-pill">
+                                <span class="exec-pulse-dot"></span>
+                                <span id="exec-announcement-text">Memuat...</span>
+                            </div>
+                        </div>
+                        <a href="/admin/penetapan.html" class="btn-exec-shortcut" title="Buka Modul Penetapan & Pengumuman">
+                            <span>Kelola Penetapan</span>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- SECTION 2: Executive KPI Cards & Progress Penyerapan Kuota -->
+                <div class="stats-grid executive-kpi-grid">
+                    <!-- KPI 1: Total Pendaftar -->
+                    <div class="stat-card exec-kpi-card">
                         <div class="stat-icon-wrapper stat-icon-blue">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                         </div>
                         <div class="stat-details">
-                            <div class="stat-value" id="stat-pendaftar">-</div>
+                            <div class="stat-value" id="stat-pendaftar">0</div>
                             <div class="stat-label">Total Pendaftar</div>
+                            <div class="stat-subtext" id="stat-pendaftar-sub">Mahasiswa terdaftar aktif</div>
                         </div>
                     </div>
 
-                    <!-- Stat Card 2: Total Kuota -->
-                    <div class="stat-card">
+                    <!-- KPI 2: Okupansi & Serapan Kuota Nasional -->
+                    <div class="stat-card exec-kpi-card">
                         <div class="stat-icon-wrapper stat-icon-indigo">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
                         </div>
-                        <div class="stat-details">
-                            <div class="stat-value" id="stat-kuota-total">-</div>
-                            <div class="stat-label">Total Kuota</div>
+                        <div class="stat-details" style="width: 100%;">
+                            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                                <div class="stat-value" id="stat-okupansi-persen">0%</div>
+                                <span class="stat-badge-pill" id="stat-kuota-ratio">0 / 0 Kuota</span>
+                            </div>
+                            <div class="stat-label">Tingkat Okupansi Kuota</div>
+                            <!-- Progress Bar -->
+                            <div class="exec-progress-track">
+                                <div class="exec-progress-bar" id="exec-progress-bar" style="width: 0%;"></div>
+                            </div>
+                            <div class="stat-subtext" style="display: flex; justify-content: space-between; margin-top: 4px;">
+                                <span>Terisi: <strong id="stat-kuota-terisi">0</strong></span>
+                                <span>Sisa: <strong class="text-hijau" id="stat-kuota-tersisa">0</strong></span>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Stat Card 3: Sisa Kuota -->
-                    <div class="stat-card">
-                        <div class="stat-icon-wrapper stat-icon-emerald">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+                    <!-- KPI 3: Breakdown Status Seleksi Mahasiswa -->
+                    <div class="stat-card exec-kpi-card exec-kpi-card-breakdown">
+                        <div class="stat-label" style="margin-bottom: 8px; font-weight: 700; color: #0f172a; font-size: 0.85rem;">
+                            Progres Seleksi & Penetapan
                         </div>
-                        <div class="stat-details">
-                            <div class="stat-value text-hijau" id="stat-kuota-tersisa">-</div>
-                            <div class="stat-label">Sisa Kuota Terediakan</div>
+                        <div class="exec-status-breakdown-grid">
+                            <div class="breakdown-item bg-diterima">
+                                <div class="bd-label">Diterima</div>
+                                <div class="bd-val" id="bd-diterima">0</div>
+                            </div>
+                            <div class="breakdown-item bg-dipindahkan">
+                                <div class="bd-label">Relokasi</div>
+                                <div class="bd-val" id="bd-dipindahkan">0</div>
+                            </div>
+                            <div class="breakdown-item bg-menunggu">
+                                <div class="bd-label">Menunggu</div>
+                                <div class="bd-val" id="bd-menunggu">0</div>
+                            </div>
+                            <div class="breakdown-item bg-ditolak">
+                                <div class="bd-label">Ditolak</div>
+                                <div class="bd-val" id="bd-ditolak">0</div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Charts Grid Container -->
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; margin-top: 24px;">
-                    <!-- Chart 1: Sebaran Per Jurusan -->
-                    <div class="chart-card">
+                <!-- SECTION 3: Supply vs Demand (Analitik Kepadatan Unit PLN) -->
+                <div class="exec-supply-demand-grid">
+                    <!-- Left: Unit Kuota Penuh -->
+                    <div class="admin-card exec-card">
+                        <div class="exec-card-header">
+                            <div>
+                                <h3 class="exec-card-title">
+                                    <span class="status-indicator-dot dot-red"></span>
+                                    <span>Unit Kuota Penuh (100% Terisi)</span>
+                                </h3>
+                                <p class="exec-card-subtitle">Kantor PLN yang kuotanya sudah habis terisi</p>
+                            </div>
+                            <span class="exec-count-badge badge-red" id="badge-unit-penuh-count">0 Unit</span>
+                        </div>
+                        <div class="exec-table-wrapper custom-scrollbar">
+                            <table class="exec-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nama Unit PLN</th>
+                                        <th>Hierarki</th>
+                                        <th style="text-align: right;">Kuota</th>
+                                        <th style="text-align: center;">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-unit-penuh">
+                                    <tr><td colspan="4" class="text-center text-muted" style="padding: 28px; text-align: center;">Memuat data unit penuh...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Right: Unit Butuh Mahasiswa (Rekomendasi Relokasi) -->
+                    <div class="admin-card exec-card">
+                        <div class="exec-card-header">
+                            <div>
+                                <h3 class="exec-card-title">
+                                    <span class="status-indicator-dot dot-green"></span>
+                                    <span>Rekomendasi Relokasi (Sisa Kuota Terbanyak)</span>
+                                </h3>
+                                <p class="exec-card-subtitle">Kantor PLN dengan sisa kuota lowong siap tampung</p>
+                            </div>
+                            <span class="exec-count-badge badge-green" id="badge-unit-under-count">0 Unit</span>
+                        </div>
+                        <div class="exec-table-wrapper custom-scrollbar">
+                            <table class="exec-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nama Unit PLN</th>
+                                        <th>Hierarki</th>
+                                        <th style="text-align: right;">Terisi / Total</th>
+                                        <th style="text-align: right; color: #10b981;">Sisa Kuota</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-unit-under">
+                                    <tr><td colspan="4" class="text-center text-muted" style="padding: 28px; text-align: center;">Memuat data unit sisa...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 4: Strategic Visual Analytics Grid (3 Charts) -->
+                <div class="exec-charts-grid">
+                    <!-- Chart 1: Sebaran Hierarki PLN (Doughnut Chart) -->
+                    <div class="chart-card exec-chart-card">
                         <div class="chart-header">
                             <div>
-                                <h3 class="chart-title">Pendaftar Per Jurusan</h3>
-                                <p style="font-size: 0.8rem; color: #64748b; margin-top: 2px;">Sebaran program studi mahasiswa pendaftar</p>
+                                <h3 class="chart-title">Partisipasi Hierarki Entitas PLN</h3>
+                                <p style="font-size: 0.8rem; color: #64748b; margin-top: 2px;">Komposisi level kantor pembuka magang</p>
                             </div>
-                            <span class="chart-badge" id="badge-periode-jurusan">Memuat...</span>
+                        </div>
+                        <div class="chart-wrapper" style="position: relative; height: 260px; width: 100%; display: flex; justify-content: center; align-items: center;">
+                            <canvas id="hierarkiChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Chart 2: Distribusi Peminatan Mahasiswa (Horizontal Bar Chart) -->
+                    <div class="chart-card exec-chart-card">
+                        <div class="chart-header">
+                            <div>
+                                <h3 class="chart-title">Distribusi Peminatan Bidang Magang</h3>
+                                <p style="font-size: 0.8rem; color: #64748b; margin-top: 2px;">Bidang keahlian yang paling banyak dipilih pendaftar</p>
+                            </div>
+                        </div>
+                        <div class="chart-wrapper" style="position: relative; height: 260px; width: 100%;">
+                            <canvas id="peminatanChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Chart 3: Pendaftar Per Program Studi (Bar Chart) -->
+                    <div class="chart-card exec-chart-card">
+                        <div class="chart-header">
+                            <div>
+                                <h3 class="chart-title">Pendaftar Per Program Studi</h3>
+                                <p style="font-size: 0.8rem; color: #64748b; margin-top: 2px;">Sebaran jurusan mahasiswa pendaftar</p>
+                            </div>
                         </div>
                         <div class="chart-wrapper" style="position: relative; height: 260px; width: 100%;">
                             <canvas id="jurusanChart"></canvas>
                         </div>
                     </div>
-
-                    <!-- Chart 2: Unit Pelaksana Terfavorit -->
-                    <div class="chart-card">
-                        <div class="chart-header">
-                            <div>
-                                <h3 class="chart-title">Unit Pelaksana Paling Banyak Diminati</h3>
-                                <p style="font-size: 0.8rem; color: #64748b; margin-top: 2px;">Top 10 lokasi magang favorit pilihan pendaftar</p>
-                            </div>
-                            <span class="chart-badge" id="badge-periode-unit">Memuat...</span>
-                        </div>
-                        <div class="chart-wrapper" style="position: relative; height: 260px; width: 100%;">
-                            <canvas id="unitChart"></canvas>
-                        </div>
-                    </div>
                 </div>
+
             </div>
         </main>
     </div>
@@ -110,3 +256,4 @@
     <script type="module" src="/js/admin/dashboard.js"></script>
 </body>
 </html>
+

@@ -46,9 +46,9 @@ $adminId = Auth::getAdminId();
 
 try {
     Database::transaction(function (PDO $pdo) use ($id, $status, $adminId) {
-        if ($status === 'dibuka') {
-            // Tutup periode lain yang sedang dibuka (hanya 1 yang boleh buka)
-            $stmtTutup = $pdo->prepare("UPDATE periode SET status = 'ditutup' WHERE status = 'dibuka' AND id != ?");
+        if (in_array($status, ['dibuka', 'persiapan'], true)) {
+            // Tutup periode lain yang sedang dibuka atau persiapan (hanya 1 periode yang boleh aktif)
+            $stmtTutup = $pdo->prepare("UPDATE periode SET status = 'ditutup' WHERE status IN ('dibuka', 'persiapan') AND id != ?");
             $stmtTutup->execute([$id]);
         }
         

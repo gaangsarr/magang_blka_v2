@@ -83,7 +83,7 @@ function renderAdminTable(admins, currentAdmin) {
         const isSuper = (a.role === 'super_admin' || a.role === 'superadmin');
         const roleBadge = isSuper
             ? '<span class="badge-status" style="background: #f3e8ff; color: #7e22ce; border: 1px solid #d8b4fe; font-weight: 700;">Super Admin</span>'
-            : '<span class="badge-status badge-dibuka">Admin BLKA</span>';
+            : '<span class="badge-status badge-dibuka">Admin REMATE</span>';
 
         const isSelf = currentAdmin && (parseInt(currentAdmin.id) === parseInt(a.admin_id));
         const statusActive = a.aktif == 1;

@@ -52,6 +52,9 @@ $adminId = Auth::getAdminId();
 
 try {
     Database::transaction(function (PDO $pdo) use ($nama, $tglMulai, $tglSelesai, $prog1, $prog5, $angkatanEligible, $copyFromPeriodeId, $adminId) {
+        // Tutup periode lain yang sedang dibuka atau persiapan (hanya 1 periode yang boleh aktif)
+        $pdo->query("UPDATE periode SET status = 'ditutup' WHERE status IN ('dibuka', 'persiapan')");
+
         $stmt = $pdo->prepare("
             INSERT INTO periode (nama, tanggal_mulai, tanggal_selesai, status, program_1_bulan, program_5_bulan, angkatan_eligible) 
             VALUES (?, ?, ?, 'persiapan', ?, ?, ?)

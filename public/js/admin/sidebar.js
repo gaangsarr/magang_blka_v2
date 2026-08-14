@@ -1,6 +1,6 @@
 /**
  * public/js/admin/sidebar.js
- * Modular Dynamic Sidebar Component for BLKA Admin Portal
+ * Modular Dynamic Sidebar Component for REMATE Admin Portal
  */
 
 export const SIDEBAR_MENU_SECTIONS = [
@@ -110,7 +110,7 @@ export const SIDEBAR_MENU_SECTIONS = [
                 path: '/admin/kelola-admin.html',
                 aliases: ['/admin/kelola-admin.html'],
                 superAdminOnly: true,
-                icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`
+                icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`
             },
             {
                 id: 'menu-pengaturan',
@@ -206,13 +206,12 @@ export function initSidebar() {
         <!-- Sidebar Brand Header -->
         <div class="sidebar-header">
             <a href="/admin/index.html" class="sidebar-brand-link">
-                <img src="/img/logo-pln.png" alt="PLN Logo" class="sidebar-logo" onerror="this.style.display='none'" />
+                <img src="/assets/img/logo_itpln.png" alt="Logo ITPLN" class="sidebar-logo" onerror="this.style.display='none'" />
                 <div class="sidebar-brand-info">
                     <div class="sidebar-brand-title">
-                        <span>BLKA Portal</span>
-                        <span class="sidebar-version-pill">v2.0</span>
+                        <span>REMATE</span>
                     </div>
-                    <span class="sidebar-subtitle">Magang ITPLN × PLN</span>
+                    <span class="sidebar-subtitle">Rekrutmen Magang Talenta Energi</span>
                 </div>
             </a>
         </div>
@@ -227,7 +226,7 @@ export function initSidebar() {
             <div class="sidebar-user-card">
                 <div class="sidebar-avatar" id="sidebar-admin-avatar">A</div>
                 <div class="sidebar-user-meta">
-                    <div class="sidebar-user-name" id="sidebar-admin-name">Admin BLKA</div>
+                    <div class="sidebar-user-name" id="sidebar-admin-name">Admin REMATE</div>
                     <div class="sidebar-user-role" id="sidebar-admin-role">Administrator</div>
                 </div>
                 <a href="/api/admin/logout.php" class="btn-sidebar-logout" title="Keluar dari Sistem">
@@ -271,7 +270,7 @@ export function updateSidebarProfile(adminData) {
     const avatarEl = document.getElementById('sidebar-admin-avatar') || document.getElementById('admin-avatar');
 
     if (nameEl) nameEl.innerText = adminData.nama || 'Admin';
-    if (roleEl) roleEl.innerText = adminData.role_label || (adminData.role === 'super_admin' ? 'Super Admin' : 'Admin BLKA');
+    if (roleEl) roleEl.innerText = adminData.role_label || (adminData.role === 'super_admin' ? 'Super Admin REMATE' : 'Admin REMATE');
     if (avatarEl) {
         const initial = adminData.nama ? adminData.nama.trim().charAt(0).toUpperCase() : 'A';
         avatarEl.innerText = initial;

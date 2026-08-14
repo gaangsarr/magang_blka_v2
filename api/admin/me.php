@@ -22,7 +22,7 @@ try {
     }
 
     $isSuperAdmin = ($admin['role'] === 'super_admin' || $admin['role'] === 'superadmin');
-    $roleLabel = $isSuperAdmin ? 'Super Admin BLKA' : 'Admin BLKA';
+    $roleLabel = $isSuperAdmin ? 'Super Admin REMATE' : 'Admin REMATE';
 
     echo json_encode([
         'ok'             => true,

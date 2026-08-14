@@ -335,7 +335,7 @@ async function handleMicrosoftLogin() {
       return;
     }
     console.error('[auth.js] Login error:', err);
-    showError('Terjadi kesalahan saat login. Coba lagi atau hubungi BLKA.');
+    showError('Terjadi kesalahan saat login. Coba lagi atau hubungi Tim REMATE ITPLN.');
   }
 }
 
