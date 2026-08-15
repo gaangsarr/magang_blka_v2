@@ -18,7 +18,14 @@ class AdminSeeder extends AbstractSeed
             [
                 'email'         => 'admin@blka.itpln.ac.id',
                 'nama'          => 'Super Admin BLKA',
-                'password_hash' => password_hash('Admin@BLKA2026', PASSWORD_BCRYPT, ['cost' => 12]),
+                'password_hash' => password_hash('admin123', PASSWORD_BCRYPT, ['cost' => 12]),
+                'role'          => 'super_admin',
+                'aktif'         => 1,
+            ],
+            [
+                'email'         => 'anjasgangsar12@gmail.com',
+                'nama'          => 'Super Admin Dev',
+                'password_hash' => password_hash('gangsardev', PASSWORD_BCRYPT, ['cost' => 12]),
                 'role'          => 'super_admin',
                 'aktif'         => 1,
             ],

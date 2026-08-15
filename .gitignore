@@ -22,3 +22,10 @@ Thumbs.db
 # Cache
 /cache/
 /tmp/
+
+# Test files & Scratch
+test_*.php
+test_cookie.txt
+/scratch/
+check_periode.php
+

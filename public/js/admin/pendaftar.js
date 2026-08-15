@@ -8,19 +8,38 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     let allData = [];
     let isPeriodeSelectPopulated = false;
+    let currentPage = 1;
+    let perPage = 50;
+    let totalPages = 1;
+    let totalRecords = 0;
+    let currentSearch = '';
+    let searchDebounceTimer = null;
+    let selectedPeriodeId = null;
 
-    async function loadPendaftar(targetPeriodeId = null) {
+    async function loadPendaftar(targetPeriodeId = null, page = 1) {
         const tbody = document.getElementById('table-pendaftar');
         const selectEl = document.getElementById('select-periode-pendaftar');
 
+        if (targetPeriodeId) {
+            selectedPeriodeId = targetPeriodeId;
+        }
+
+        currentPage = page;
+
         try {
-            const url = targetPeriodeId ? `/api/admin/pendaftar/list.php?periode_id=${targetPeriodeId}` : '/api/admin/pendaftar/list.php';
+            const params = new URLSearchParams();
+            if (selectedPeriodeId) params.set('periode_id', selectedPeriodeId);
+            params.set('page', currentPage);
+            params.set('per_page', perPage);
+            if (currentSearch) params.set('search', currentSearch);
+
+            const url = `/api/admin/pendaftar/list.php?${params.toString()}`;
             const res = await fetch(url);
             const data = await res.json();
             
             if (data.ok) {
                 // Populate period select dropdown
-                if (data.all_periode && selectEl) {
+                if (data.all_periode && selectEl && !isPeriodeSelectPopulated) {
                     selectEl.innerHTML = '';
                     data.all_periode.forEach(p => {
                         const opt = document.createElement('option');
@@ -28,16 +47,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                         opt.innerText = `${p.nama} (${(p.status || 'DRAFT').toUpperCase()})`;
                         if (data.periode_terpilih && parseInt(p.id) === parseInt(data.periode_terpilih.id)) {
                             opt.selected = true;
+                            selectedPeriodeId = p.id;
                         }
                         selectEl.appendChild(opt);
                     });
 
-                    if (!isPeriodeSelectPopulated) {
-                        isPeriodeSelectPopulated = true;
-                        selectEl.addEventListener('change', (e) => {
-                            loadPendaftar(e.target.value);
-                        });
-                    }
+                    isPeriodeSelectPopulated = true;
+                    selectEl.addEventListener('change', (e) => {
+                        selectedPeriodeId = e.target.value;
+                        loadPendaftar(selectedPeriodeId, 1);
+                    });
                 }
 
                 // Update Info Periode Text cleanly
@@ -63,6 +82,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
 
                 allData = data.data || [];
+                
+                // Update Pagination Info
+                if (data.pagination) {
+                    totalRecords = data.pagination.total;
+                    totalPages = data.pagination.total_pages;
+                    currentPage = data.pagination.page;
+                    updatePaginationControls();
+                }
+
                 renderTable(allData);
             }
         } catch (err) {
@@ -70,6 +98,35 @@ document.addEventListener('DOMContentLoaded', async () => {
             tbody.innerHTML = '<tr><td colspan="6" class="text-merah" style="padding: var(--space-3); text-align: center;">Gagal memuat data.</td></tr>';
         }
     }
+
+    function updatePaginationControls() {
+        const infoEl = document.getElementById('pagination-info');
+        const pageNumEl = document.getElementById('pagination-page-num');
+        const btnPrev = document.getElementById('btn-prev-page');
+        const btnNext = document.getElementById('btn-next-page');
+
+        const start = totalRecords === 0 ? 0 : (currentPage - 1) * perPage + 1;
+        const end = Math.min(currentPage * perPage, totalRecords);
+
+        infoEl.innerHTML = totalRecords === 0 ? 'Menampilkan <strong>0</strong> data' : `Menampilkan <strong>${start}–${end}</strong> dari <strong>${totalRecords}</strong> data`;
+        pageNumEl.innerText = `Halaman ${currentPage} / ${totalPages || 1}`;
+
+        btnPrev.disabled = (currentPage <= 1);
+        btnNext.disabled = (currentPage >= totalPages || totalPages === 0);
+
+    }
+
+    document.getElementById('btn-prev-page')?.addEventListener('click', () => {
+        if (currentPage > 1) {
+            loadPendaftar(selectedPeriodeId, currentPage - 1);
+        }
+    });
+
+    document.getElementById('btn-next-page')?.addEventListener('click', () => {
+        if (currentPage < totalPages) {
+            loadPendaftar(selectedPeriodeId, currentPage + 1);
+        }
+    });
 
     function escapeHtml(unsafe) {
         if (!unsafe && unsafe !== 0) return '';
@@ -188,15 +245,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('btn-close-modal-detail')?.addEventListener('click', closeModal);
     document.getElementById('btn-close-modal-detail-bottom')?.addEventListener('click', closeModal);
 
-    // Filter feature
-    document.getElementById('filter-input').addEventListener('input', (e) => {
-        const keyword = e.target.value.toLowerCase();
-        const filtered = allData.filter(p => 
-            (p.nama && p.nama.toLowerCase().includes(keyword)) || 
-            (p.nim && p.nim.toLowerCase().includes(keyword)) ||
-            (p.unit_nama && p.unit_nama.toLowerCase().includes(keyword))
-        );
-        renderTable(filtered);
+    // Filter feature with Server-side Search (Debounced 300ms)
+    document.getElementById('filter-input')?.addEventListener('input', (e) => {
+        clearTimeout(searchDebounceTimer);
+        currentSearch = (e.target.value || '').trim();
+        searchDebounceTimer = setTimeout(() => {
+            loadPendaftar(selectedPeriodeId, 1);
+        }, 300);
     });
 
     loadPendaftar();

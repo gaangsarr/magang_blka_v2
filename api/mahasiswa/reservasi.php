@@ -44,8 +44,13 @@ try {
             $pdo->prepare("UPDATE unit_pelaksana_periode SET kuota_tersisa = kuota_tersisa + 1 WHERE id = :upp_id")->execute([':upp_id' => $old['unit_pelaksana_periode_id']]);
         }
 
-        // 2. Kunci row unit_pelaksana_periode untuk cek kuota (SELECT ... FOR UPDATE)
-        $stmtUpp = $pdo->prepare("SELECT kuota_tersisa FROM unit_pelaksana_periode WHERE id = :upp_id FOR UPDATE");
+        // 2. Kunci row unit_pelaksana_periode untuk cek kuota dan periode
+        $stmtUpp = $pdo->prepare("
+            SELECT upp.kuota_tersisa, upp.periode_id, pr.nama AS nama_periode, pr.status AS status_periode, pr.angkatan_eligible
+            FROM unit_pelaksana_periode upp 
+            JOIN periode pr ON upp.periode_id = pr.id
+            WHERE upp.id = :upp_id FOR UPDATE
+        ");
         $stmtUpp->execute([':upp_id' => $uppId]);
         $upp = $stmtUpp->fetch(PDO::FETCH_ASSOC);
 
@@ -53,9 +58,24 @@ try {
             throw new \Exception('Unit pelaksana tidak ditemukan.');
         }
 
+        if ($upp['status_periode'] !== 'dibuka') {
+            throw new \Exception('Periode magang untuk unit ini tidak sedang dibuka.');
+        }
+
+        if (!empty($upp['angkatan_eligible'])) {
+            $mhsData = Auth::getMahasiswa();
+            $mhsAngkatan = (int)($mhsData['angkatan'] ?? 0);
+            $fullAngkatan = $mhsAngkatan < 100 ? (2000 + $mhsAngkatan) : $mhsAngkatan;
+            $eligibleList = array_map('trim', explode(',', $upp['angkatan_eligible']));
+            if (!in_array((string)$fullAngkatan, $eligibleList, true) && !in_array((string)$mhsAngkatan, $eligibleList, true)) {
+                throw new \Exception("Pendaftaran periode {$upp['nama_periode']} dikhususkan untuk Angkatan " . implode(', ', $eligibleList) . ".");
+            }
+        }
+
         if ((int)$upp['kuota_tersisa'] <= 0) {
             throw new \Exception('Maaf, kuota untuk unit pelaksana ini sudah habis atau sedang direservasi orang lain.');
         }
+
 
         // 3. Kurangi kuota
         $pdo->prepare("UPDATE unit_pelaksana_periode SET kuota_tersisa = kuota_tersisa - 1, updated_at = NOW() WHERE id = :upp_id")->execute([':upp_id' => $uppId]);

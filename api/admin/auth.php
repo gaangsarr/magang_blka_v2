@@ -26,13 +26,17 @@ if (!isset($body['email'], $body['password'])) {
     exit;
 }
 
+// Rate limiting: max 5 login attempts per minute per IP
+Auth::rateLimitByIp('login_admin', 5, 60);
+
 $email = trim($body['email']);
 $password = trim($body['password']);
 
 try {
     $pdo = Database::getInstance();
     
-    $stmt = $pdo->prepare("SELECT id, nama, password_hash FROM admin WHERE email = :email LIMIT 1");
+    // Wajib cek aktif = 1 agar admin yang dicabut aksesnya tidak bisa login
+    $stmt = $pdo->prepare("SELECT id, nama, role, password_hash, aktif FROM admin WHERE email = :email AND aktif = 1 LIMIT 1");
     $stmt->execute([':email' => $email]);
     $admin = $stmt->fetch(PDO::FETCH_ASSOC);
     
@@ -42,8 +46,8 @@ try {
         exit;
     }
     
-    // Set admin session
-    Auth::setAdminSession((int)$admin['id'], $admin['nama']);
+    // Set admin session dengan role yang benar dari database
+    Auth::setAdminSession((int)$admin['id'], $admin['nama'], $admin['role'] ?? 'admin_blka');
     
     echo json_encode([
         'ok' => true,
@@ -53,5 +57,6 @@ try {
 
 } catch (\Throwable $e) {
     http_response_code(500);
-    echo json_encode(['error' => 'Terjadi kesalahan sistem.']);
+    echo json_encode(['error' => Auth::safeErrorMessage($e, 'Terjadi kesalahan sistem saat login.')]);
 }
+

@@ -328,16 +328,96 @@ class Auth
     }
 
     // ============================================================
-    // RATE LIMITING
+    // RATE LIMITING & IP TRACKING
     // ============================================================
 
     /**
-     * Membatasi jumlah request berbasis session.
-     * Throws 429 Too Many Requests jika melebihi batas.
+     * Dapatkan IP address client yang valid.
+     */
+    public static function getClientIp(): string
+    {
+        $headers = [
+            'HTTP_CF_CONNECTING_IP', // Cloudflare
+            'HTTP_X_FORWARDED_FOR',  // Load balancer / Reverse proxy
+            'HTTP_X_REAL_IP',
+            'REMOTE_ADDR'
+        ];
+
+        foreach ($headers as $header) {
+            if (!empty($_SERVER[$header])) {
+                $ips = explode(',', $_SERVER[$header]);
+                $ip = trim($ips[0]);
+                if (filter_var($ip, FILTER_VALIDATE_IP)) {
+                    return $ip;
+                }
+            }
+        }
+
+        return $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+    }
+
+    /**
+     * Membatasi jumlah request berbasis IP Address (disimpan di tabel rate_limits).
+     * Lebih aman daripada session-based karena tidak bisa di-bypass dengan menghapus cookie.
      *
-     * @param string $action           Nama aksi (mis: 'reservasi', 'submit')
-     * @param int    $maxRequests      Batas maksimal request
+     * @param string $action            Nama aksi (mis: 'login_admin', 'verify_mahasiswa')
+     * @param int    $maxRequests       Batas maksimal request dalam jendela waktu
      * @param int    $timeWindowSeconds Jendela waktu (dalam detik)
+     */
+    public static function rateLimitByIp(string $action, int $maxRequests = 10, int $timeWindowSeconds = 60): void
+    {
+        $ip = self::getClientIp();
+        $pdo = Database::getInstance();
+
+        // 1. Cek jumlah percobaan dalam jendela waktu
+        $stmt = $pdo->prepare("
+            SELECT COUNT(*) 
+            FROM rate_limits 
+            WHERE ip_address = :ip 
+              AND action = :action 
+              AND attempted_at >= DATE_SUB(NOW(), INTERVAL :window SECOND)
+        ");
+        $stmt->bindValue(':ip', $ip);
+        $stmt->bindValue(':action', $action);
+        $stmt->bindValue(':window', $timeWindowSeconds, PDO::PARAM_INT);
+        $stmt->execute();
+
+        $attempts = (int) $stmt->fetchColumn();
+
+        if ($attempts >= $maxRequests) {
+            http_response_code(429);
+            header('Content-Type: application/json; charset=utf-8');
+            header('Retry-After: ' . $timeWindowSeconds);
+            echo json_encode([
+                'error' => "Terlalu banyak permintaan untuk aksi '{$action}'. Silakan tunggu beberapa saat."
+            ], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
+        // 2. Catat percobaan ini
+        $stmtIns = $pdo->prepare("INSERT INTO rate_limits (ip_address, action, attempted_at) VALUES (:ip, :action, NOW())");
+        $stmtIns->execute([':ip' => $ip, ':action' => $action]);
+
+        // 3. Bersihkan log lama secara probabilistik (1% chance per request)
+        if (random_int(1, 100) === 1) {
+            $pdo->query("DELETE FROM rate_limits WHERE attempted_at < DATE_SUB(NOW(), INTERVAL 2 HOUR)");
+        }
+    }
+
+    /**
+     * Sanitasi error message agar tidak membocorkan detail query/tabel di production.
+     */
+    public static function safeErrorMessage(\Throwable $e, string $genericMsg = 'Terjadi kesalahan sistem.'): string
+    {
+        $debug = ($_ENV['APP_DEBUG'] ?? 'false') === 'true';
+        if ($debug) {
+            return $genericMsg . ' [DEBUG: ' . $e->getMessage() . ']';
+        }
+        return $genericMsg;
+    }
+
+    /**
+     * Membatasi jumlah request berbasis session (fallback).
      */
     public static function rateLimit(string $action, int $maxRequests = 5, int $timeWindowSeconds = 60): void
     {

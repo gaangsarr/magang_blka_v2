@@ -1,0 +1,37 @@
+# ========================================================
+# Apache Security & Access Protection — REMATE ITPLN
+# ========================================================
+
+Options -Indexes
+
+# 1. Lindungi file sensitif (.env, .git, .json, .lock, .php config)
+<FilesMatch "^(\.env|\.git|\.gitignore|composer\.(json|lock)|phinx\.php|seed\.php|test_.*\.php|.*\.sql)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order deny,allow
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# 2. Lindungi direktori internal sistem
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Blokir akses ke direktori terlarang
+    RewriteRule ^(migrations|seeds|scripts|scratch|src|vendor|cache)/ - [F,L,NC]
+    
+    # Blokir akses langsung ke file tersembunyi
+    RewriteRule (^\.|/\.) - [F,L]
+</IfModule>
+
+# 3. Security Headers
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+    Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net https://*.firebaseapp.com https://apis.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://fonts.googleapis.com; img-src 'self' data: https://*.tile.openstreetmap.org https://unpkg.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://unpkg.com https://cdn.jsdelivr.net https://*.googleapis.com https://*.firebaseio.com https://nominatim.openstreetmap.org https://photon.komoot.io https://wilayah.web.id; frame-src 'self' https://*.firebaseapp.com;"
+</IfModule>
+

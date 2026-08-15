@@ -221,5 +221,6 @@ try {
 } catch (\Throwable $e) {
     http_response_code(500);
     header('Content-Type: text/plain; charset=utf-8');
-    echo 'Gagal mengekspor laporan eksekutif: ' . $e->getMessage();
+    echo Auth::safeErrorMessage($e, 'Gagal mengekspor laporan eksekutif.');
 }
+

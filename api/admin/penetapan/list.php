@@ -56,7 +56,72 @@ try {
 
     $periodeId = (int)$periode['id'];
 
-    // 3. Fetch data pendaftaran beserta jurusan, unit asal & unit baru
+    // Pagination parameters
+    $page = max(1, (int)($_GET['page'] ?? 1));
+    $perPage = min(200, max(1, (int)($_GET['per_page'] ?? 50)));
+    $offset = ($page - 1) * $perPage;
+
+    // Filter parameters
+    $search = trim((string)($_GET['search'] ?? ''));
+    $filterJurusan = isset($_GET['filter_jurusan_id']) && $_GET['filter_jurusan_id'] !== '' ? (int)$_GET['filter_jurusan_id'] : null;
+    $filterUnit = isset($_GET['filter_unit_id']) && $_GET['filter_unit_id'] !== '' ? (int)$_GET['filter_unit_id'] : null;
+    $filterProgram = trim((string)($_GET['filter_program'] ?? ''));
+    $filterStatus = trim((string)($_GET['filter_status'] ?? ''));
+
+    $whereClauses = ['p.periode_id = :pid'];
+    $params = [':pid' => $periodeId];
+
+    if ($search !== '') {
+        $whereClauses[] = '(m.nim LIKE :s_nim OR p.nama_snapshot LIKE :s_nama OR m.email LIKE :s_email OR e.nama LIKE :s_unit)';
+        $searchWildcard = '%' . $search . '%';
+        $params[':s_nim'] = $searchWildcard;
+        $params[':s_nama'] = $searchWildcard;
+        $params[':s_email'] = $searchWildcard;
+        $params[':s_unit'] = $searchWildcard;
+    }
+
+
+    if ($filterJurusan !== null && $filterJurusan > 0) {
+        $whereClauses[] = 'm.jurusan_id = :jurusan_id';
+        $params[':jurusan_id'] = $filterJurusan;
+    }
+
+    if ($filterUnit !== null && $filterUnit > 0) {
+        $whereClauses[] = 'p.unit_pelaksana_periode_id = :unit_id';
+        $params[':unit_id'] = $filterUnit;
+    }
+
+    if ($filterProgram !== '') {
+        $whereClauses[] = 'p.program = :program';
+        $params[':program'] = $filterProgram;
+    }
+
+    if ($filterStatus !== '') {
+        if ($filterStatus === 'dipindahkan') {
+            $whereClauses[] = '(p.status = "dipindahkan" OR p.is_dipindahkan = 1)';
+        } else {
+            $whereClauses[] = 'p.status = :status';
+            $params[':status'] = $filterStatus;
+        }
+    }
+
+    $whereSQL = implode(' AND ', $whereClauses);
+
+    // 1. Total Count
+    $countSql = "
+        SELECT COUNT(*)
+        FROM pendaftaran p
+        JOIN mahasiswa m ON p.mahasiswa_id = m.id
+        LEFT JOIN jurusan j ON m.jurusan_id = j.id
+        JOIN unit_pelaksana_periode upp ON p.unit_pelaksana_periode_id = upp.id
+        JOIN entitas_perusahaan e ON upp.entitas_id = e.id
+        WHERE $whereSQL
+    ";
+    $stmtCount = $pdo->prepare($countSql);
+    $stmtCount->execute($params);
+    $totalRecords = (int)$stmtCount->fetchColumn();
+
+    // 2. Fetch data pendaftaran beserta jurusan, unit asal & unit baru
     $sql = "
         SELECT 
             p.id AS pendaftaran_id,
@@ -83,12 +148,18 @@ try {
         JOIN entitas_perusahaan e ON upp.entitas_id = e.id
         LEFT JOIN unit_pelaksana_periode upp_asal ON p.unit_pelaksana_periode_asal_id = upp_asal.id
         LEFT JOIN entitas_perusahaan e_asal ON upp_asal.entitas_id = e_asal.id
-        WHERE p.periode_id = :pid
+        WHERE $whereSQL
         ORDER BY p.id DESC
+        LIMIT :limit OFFSET :offset
     ";
 
     $stmt = $pdo->prepare($sql);
-    $stmt->execute([':pid' => $periodeId]);
+    foreach ($params as $k => $v) {
+        $stmt->bindValue($k, $v);
+    }
+    $stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+    $stmt->execute();
     $list = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     echo json_encode([
@@ -98,9 +169,16 @@ try {
         'periode_nama' => $periode['nama'],
         'all_periode' => $allPeriode,
         'jurusan_list' => $jurusanList,
-        'data' => $list
+        'data' => $list,
+        'pagination' => [
+            'total' => $totalRecords,
+            'page' => $page,
+            'per_page' => $perPage,
+            'total_pages' => $perPage > 0 ? (int)ceil($totalRecords / $perPage) : 1
+        ]
     ]);
 } catch (\Throwable $e) {
     http_response_code(500);
-    echo json_encode(['error' => 'Gagal mengambil data penetapan: ' . $e->getMessage()]);
+    echo json_encode(['error' => Auth::safeErrorMessage($e, 'Gagal mengambil data penetapan.')]);
 }
+

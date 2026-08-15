@@ -44,9 +44,14 @@ if (Auth::isLoggedInMahasiswa()) {
     $stmt->execute([':mid' => $mid]);
     $sudahMendaftar = (int) $stmt->fetchColumn() > 0;
 
-    // 2. Cek kelayakan angkatan (eligible cohorts)
+    // 1b. Cek apakah pernah mendaftar di periode manapun (riwayat)
+    $stmtRiwayat = $pdo->prepare("SELECT COUNT(*) FROM pendaftaran WHERE mahasiswa_id = :mid");
+    $stmtRiwayat->execute([':mid' => $mid]);
+    $hasRiwayat = (int) $stmtRiwayat->fetchColumn() > 0;
+
+    // 2. Cek kelayakan angkatan (eligible cohorts) & status periode dibuka
     $stmtP = $pdo->query("SELECT id, nama, angkatan_eligible FROM periode WHERE status = 'dibuka' LIMIT 1");
-    $activePeriode = $stmtP->fetch(PDO::FETCH_ASSOC);
+    $activePeriode = $stmtP->fetch(PDO::FETCH_ASSOC) ?: null;
 
     $isEligibleAngkatan = true;
     $angkatanEligibleText = null;
@@ -74,15 +79,23 @@ if (Auth::isLoggedInMahasiswa()) {
     $activeReservasi = $stmtActiveRes->fetch(PDO::FETCH_ASSOC) ?: null;
 
     echo json_encode([
-        'authenticated'        => true,
-        'role'                 => 'mahasiswa',
-        'sudah_mendaftar'      => $sudahMendaftar,
-        'is_eligible_angkatan' => $isEligibleAngkatan,
-        'angkatan_eligible'    => $angkatanEligibleText,
-        'mhs_angkatan'         => $fullAngkatan,
-        'active_reservasi'     => $activeReservasi,
-        'csrf_token'           => $csrfToken,
-        'user'                 => [
+        'authenticated'          => true,
+        'role'                   => 'mahasiswa',
+        'ada_periode_dibuka'     => (bool)$activePeriode,
+        'periode_aktif'          => $activePeriode ? [
+            'id'   => (int)$activePeriode['id'],
+            'nama' => $activePeriode['nama'],
+        ] : null,
+        'sudah_mendaftar'        => $sudahMendaftar,
+        'has_riwayat_pendaftaran'=> $hasRiwayat,
+        'is_eligible_pendaftaran_aktif' => $isEligibleAngkatan,
+        'is_eligible_angkatan'   => $isEligibleAngkatan,
+        'angkatan_eligible'      => $angkatanEligibleText,
+        'mhs_angkatan'           => $fullAngkatan,
+
+        'active_reservasi'       => $activeReservasi,
+        'csrf_token'             => $csrfToken,
+        'user'                   => [
             'nama'     => $mahasiswa['nama'] ?? '-',
             'nim'      => $mahasiswa['nim'] ?? '-',
             'email'    => $mahasiswa['email'] ?? '-',
@@ -91,6 +104,7 @@ if (Auth::isLoggedInMahasiswa()) {
         ]
     ]);
     exit;
+
 }
 
 if (Auth::isLoggedInAdmin()) {

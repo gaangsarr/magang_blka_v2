@@ -3,16 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pengumuman & Status — REMATE (Rekrutmen Magang Talenta Energi)</title>
+    <title>Riwayat & Pengumuman — REMATE (Rekrutmen Magang Talenta Energi)</title>
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/assets/img/logo_itpln.png">
     <link rel="apple-touch-icon" href="/assets/img/logo_itpln.png">
     <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/admin.css">
 </head>
 <style>
     /* Modern UI Refinements */
     .status-container {
-        max-width: 800px;
+        max-width: 1140px;
+        width: 100%;
         margin: 0 auto 60px;
         padding: 0 20px;
     }
@@ -20,16 +22,16 @@
     .card {
         background: #ffffff;
         border-radius: 20px;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0,0,0,0.05);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
         border: 1px solid rgba(226, 232, 240, 0.95);
-        padding: 40px;
+        padding: 32px;
         position: relative;
         overflow: hidden;
     }
 
     .btn {
         border-radius: 10px;
-        padding: 12px 24px;
+        padding: 10px 20px;
         font-weight: 600;
         transition: transform 0.1s, box-shadow 0.2s;
     }
@@ -37,22 +39,161 @@
     .btn:active:not(:disabled) {
         transform: scale(0.98);
     }
-    
-    .status-section {
-        background: rgba(11, 61, 107, 0.03);
-        border: 1px solid rgba(11, 61, 107, 0.08);
-        border-radius: 12px;
-        padding: 24px;
-        margin-bottom: 24px;
-    }
-    /* --- Responsive Styling --- */
-    @media (max-width: 768px) {
-        .card { padding: 24px 20px; }
+
+    .table-history-wrapper {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
-    @media (max-width: 640px) {
-        .status-section { padding: 16px; }
-        .btn { width: 100%; min-width: 0; }
+    .table-history {
+        width: 100%;
+        min-width: 800px;
+        border-collapse: collapse;
+        text-align: left;
+    }
+
+    .table-history th {
+        background: #f8fafc;
+        padding: 14px 18px;
+        font-size: 0.775rem;
+        font-weight: 700;
+        color: #475569;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 1px solid #e2e8f0;
+        white-space: nowrap;
+    }
+
+    .table-history td {
+        padding: 16px 18px;
+        font-size: 0.875rem;
+        color: #1e293b;
+        border-bottom: 1px solid #f1f5f9;
+        vertical-align: middle;
+    }
+
+    .table-history tr:last-child td {
+        border-bottom: none;
+    }
+
+    .table-history tr:hover td {
+        background: #fafbfc;
+    }
+
+    .badge-result {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 12px;
+        border-radius: 9999px;
+        font-size: 0.775rem;
+        font-weight: 700;
+        white-space: nowrap;
+        line-height: 1.2;
+    }
+
+    .badge-result svg {
+        flex-shrink: 0;
+    }
+
+    .badge-result.diterima {
+        background: #ecfdf5;
+        color: #047857;
+        border: 1px solid #a7f3d0;
+    }
+
+    .badge-result.dipindahkan {
+        background: #fffbebf5;
+        color: #b45309;
+        border: 1px solid #fde68a;
+    }
+
+    .badge-result.ditolak {
+        background: #fef2f2;
+        color: #b91c1c;
+        border: 1px solid #fecaca;
+    }
+
+    .badge-result.pending {
+        background: #f0f9ff;
+        color: #0369a1;
+        border: 1px solid #bae6fd;
+    }
+
+
+    .btn-view-detail {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 14px;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #0b3d6b;
+        background: rgba(11, 61, 107, 0.06);
+        border: 1px solid rgba(11, 61, 107, 0.12);
+        cursor: pointer;
+        transition: all 0.15s ease;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    .btn-view-detail:hover {
+        background: #0b3d6b;
+        color: #ffffff;
+        border-color: #0b3d6b;
+        transform: translateY(-1px);
+    }
+
+    /* Modal Styling */
+    .modal-detail-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        z-index: 99999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s ease;
+        padding: 16px;
+    }
+
+    .modal-detail-overlay.active {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .modal-detail-card {
+        background: #ffffff;
+        border-radius: 20px;
+        width: 100%;
+        max-width: 600px;
+        max-height: 90vh;
+        overflow-y: auto;
+        padding: 32px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        transform: scale(0.94);
+        transition: transform 0.25s ease;
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        text-align: left;
+    }
+
+    .modal-detail-overlay.active .modal-detail-card {
+        transform: scale(1);
+    }
+
+    @media (max-width: 768px) {
+        .card { padding: 20px; }
+        .modal-detail-card { padding: 24px 20px; }
+        .table-history th, .table-history td { padding: 12px 14px; }
     }
 </style>
 <body class="dot-bg">
@@ -67,7 +208,7 @@
       <ul class="navbar-menu">
         <li><a href="/login.html">Beranda</a></li>
         <li><a href="/daftar.html">Pendaftaran</a></li>
-        <li><a href="/status.html" class="active">Pengumuman</a></li>
+        <li><a href="/status.html" class="active">Riwayat & Pengumuman</a></li>
       </ul>
 
       <!-- Navbar Profile Dropdown Menu Trigger -->
@@ -141,7 +282,7 @@
       <ul class="mobile-menu-links">
         <li><a href="/login.html">Beranda</a></li>
         <li><a href="/daftar.html">Pendaftaran</a></li>
-        <li><a href="/status.html" class="active">Pengumuman</a></li>
+        <li><a href="/status.html" class="active">Riwayat & Pengumuman</a></li>
       </ul>
       <div class="mobile-menu-action" style="margin-top: 10px;">
         <button type="button" class="btn-mobile-masuk" style="background:#dc2626;" id="btnMobileLogout">
@@ -152,62 +293,117 @@
 
     <!-- Page Title Header -->
     <div class="page-header" style="padding: 28px 20px 20px; text-align: center;">
-      <h1 style="font-size: 2rem; color: #0b3d6b; margin-bottom: 6px;">Status Pendaftaran & Pengumuman</h1>
-      <p class="text-abu" style="color: #64748b; font-size: 0.95rem;">Informasi pendaftaran magang Anda pada periode aktif.</p>
+      <h1 style="font-size: 2rem; color: #0b3d6b; margin-bottom: 6px;">Riwayat Pendaftaran & Pengumuman</h1>
+      <p class="text-abu" style="color: #64748b; font-size: 0.95rem;">Daftar periode magang yang Anda ikuti dan status hasil penetapan resmi.</p>
     </div>
 
     <div class="status-container">
-        <div class="card" id="status-card">
-            <div id="loading" class="text-abu" style="text-align: center; padding: 20px;">Memuat data pendaftaran... <div class="spinner"></div></div>
-            
-            <div id="content" class="hidden">
-                <!-- Dynamic Status Alert Box -->
-                <div id="status-alert-box" style="margin-bottom: 24px;"></div>
-                
-                <div class="status-section">
-                    <div class="form-row" style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 16px;">
-                        <div class="form-group" style="flex: 1; min-width: 200px;">
-                            <label class="form-label" style="font-size: 0.825rem; color: #64748b; font-weight: 500;">Nama Mahasiswa</label>
-                            <div id="mhs-nama" style="font-weight: 700; color: #0f172a; font-size: 1.05rem; margin-top: 4px;">-</div>
-                        </div>
-                        <div class="form-group" style="flex: 1; min-width: 200px;">
-                            <label class="form-label" style="font-size: 0.825rem; color: #64748b; font-weight: 500;">NIM Mahasiswa</label>
-                            <div id="mhs-nim" style="font-weight: 700; font-family: monospace; color: #0b3d6b; font-size: 1.05rem; margin-top: 4px;">-</div>
-                        </div>
-                    </div>
+        <!-- Dynamic New Period Available Banner -->
+        <div id="new-period-banner" class="hidden"></div>
 
-                    <div class="form-row" style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 16px;">
-                        <div class="form-group" style="flex: 1; min-width: 200px;">
-                            <label class="form-label" style="font-size: 0.825rem; color: #64748b; font-weight: 500;">Unit Pelaksana Penempatan</label>
-                            <div id="unit-name" style="font-weight: 700; color: #0b3d6b; font-size: 1.1rem; margin-top: 4px;">-</div>
-                        </div>
-                        <div class="form-group" style="flex: 1; min-width: 200px;">
-                            <label class="form-label" style="font-size: 0.825rem; color: #64748b; font-weight: 500;">Program</label>
-                            <div id="program-name" style="font-weight: 600; color: #0f172a; font-size: 1rem; margin-top: 4px;">-</div>
-                        </div>
+        <!-- Empty State Card (Belum Pernah Daftar Sama Sekali) -->
+        <div class="card hidden" id="empty-state-card" style="text-align: center; padding: 48px 24px;">
+            <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(11, 61, 107, 0.06); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; color: #0b3d6b;">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </div>
+            <h3 style="color: #0b3d6b; font-size: 1.25rem; margin-bottom: 8px;">Belum Ada Riwayat Pendaftaran</h3>
+            <p style="color: #64748b; font-size: 0.9rem; max-width: 480px; margin: 0 auto 24px; line-height: 1.6;" id="empty-state-desc">
+                Anda belum pernah mendaftar pada program magang REMATE ITPLN.
+            </p>
+            <div id="empty-state-action">
+                <a href="/login.html" class="btn" style="background: #0b3d6b; color: #ffffff; text-decoration: none; padding: 10px 24px; font-size: 0.875rem; border-radius: 8px; font-weight: 600; display: inline-block;">Kembali ke Beranda</a>
+            </div>
+        </div>
+
+        <!-- Main History Card -->
+        <div class="card" id="history-card" style="padding: 0; overflow: hidden;">
+            <div style="padding: 20px 24px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; background: #ffffff;">
+                <div>
+                    <h3 style="color: #0b3d6b; font-size: 1.15rem; font-weight: 700; margin: 0;">Daftar Pendaftaran Saya</h3>
+                    <p style="color: #64748b; font-size: 0.85rem; margin: 4px 0 0 0;" id="history-subtitle">Memuat data pendaftaran...</p>
+                </div>
+            </div>
+
+            <div class="table-history-wrapper">
+                <table class="table-history">
+                    <thead>
+                        <tr>
+                            <th style="min-width: 170px;">Periode Magang</th>
+                            <th style="min-width: 130px;">Program</th>
+                            <th style="min-width: 140px;">Tanggal Daftar</th>
+                            <th style="min-width: 220px;">Unit Penempatan</th>
+                            <th style="min-width: 170px;">Status Seleksi</th>
+                            <th style="text-align: center; width: 110px;">Aksi</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="table-history-body">
+                        <tr>
+                            <td colspan="6" style="text-align: center; color: #64748b; padding: 32px;">Memuat riwayat pendaftaran...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DETAIL HASIL PENGUMUMAN RESMI -->
+    <div id="modal-detail-hasil" class="modal-detail-overlay" role="dialog" aria-modal="true">
+        <div class="modal-detail-card">
+            <!-- Modal Header -->
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 16px;">
+                <div>
+                    <span id="modal-periode-badge" style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #0b3d6b; background: #f0f4f8; padding: 3px 8px; border-radius: 6px; display: inline-block; margin-bottom: 6px;">Periode</span>
+                    <h3 id="modal-periode-nama" style="font-size: 1.35rem; color: #0b3d6b; margin: 0; font-weight: 800;">-</h3>
+                </div>
+                <button type="button" id="btn-close-modal" style="background: transparent; border: none; font-size: 1.6rem; color: #94a3b8; cursor: pointer; padding: 0 4px; line-height: 1;">&times;</button>
+            </div>
+
+            <!-- Modal Decision Box (Injected dynamically) -->
+            <div id="modal-alert-box" style="margin-bottom: 20px;"></div>
+
+            <!-- Section: Detail Penempatan & Catatan -->
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; margin-bottom: 20px;">
+                <h4 style="font-size: 0.825rem; color: #64748b; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700;">Rincian Penempatan</h4>
+                
+                <div style="display: grid; gap: 10px; font-size: 0.9rem;">
+                    <div>
+                        <span style="color: #64748b; font-size: 0.825rem;">Unit Pelaksana:</span>
+                        <div id="modal-unit-nama" style="font-weight: 700; color: #0b3d6b; font-size: 1rem; margin-top: 2px;">-</div>
                     </div>
                     
-                    <div class="form-row" style="display: flex; gap: 20px; flex-wrap: wrap;">
-                        <div class="form-group" style="flex: 1; min-width: 200px; margin-bottom: 0;">
-                            <label class="form-label" style="font-size: 0.825rem; color: #64748b; font-weight: 500;">Status Seleksi</label>
-                            <div id="status-badge" class="badge badge-primary" style="display: inline-block; padding: 6px 14px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; margin-top: 4px;">-</div>
-                        </div>
-                        <div class="form-group" style="flex: 1; min-width: 200px; margin-bottom: 0;">
-                            <label class="form-label" style="font-size: 0.825rem; color: #64748b; font-weight: 500;">Tanggal Pengajuan</label>
-                            <div id="submit-date" style="font-family: monospace; color: #4b5563; font-size: 0.9rem; margin-top: 4px;">-</div>
-                        </div>
+                    <div id="modal-unit-asal-row" class="hidden">
+                        <span style="color: #64748b; font-size: 0.825rem;">Pilihan Awal Anda:</span>
+                        <div id="modal-unit-asal" style="color: #94a3b8; text-decoration: line-through; font-weight: 600; margin-top: 2px;">-</div>
+                    </div>
+
+                    <div>
+                        <span style="color: #64748b; font-size: 0.825rem;">Program Magang:</span>
+                        <div id="modal-program-nama" style="font-weight: 600; color: #1e293b; margin-top: 2px;">-</div>
+                    </div>
+
+                    <div id="modal-catatan-row" class="hidden" style="margin-top: 6px; padding-top: 10px; border-top: 1px dashed #e2e8f0;">
+                        <span style="color: #92400e; font-size: 0.825rem; font-weight: 700;">Catatan Administrator BLKA:</span>
+                        <div id="modal-catatan-text" style="color: #78350f; font-size: 0.875rem; line-height: 1.5; margin-top: 2px; font-style: italic;">-</div>
                     </div>
                 </div>
-                
-                <div style="height: 1px; background: #e2e8f0; margin: 24px 0;"></div>
-                
-                <p id="status-footer-note" style="font-size: 0.875rem; color: #64748b; line-height: 1.5; margin-bottom: 24px;">
-                    Tim BLKA ITPLN melakukan verifikasi terhadap data dan kelayakan Anda. Pantau terus halaman ini untuk pembaruan pengumuman.
-                </p>
+            </div>
 
-                <div>
-                    <button type="button" class="btn btn-secondary" onclick="logout()" style="background: #f8fafc; border: 1px solid #e2e8f0; color: #dc2626; font-weight: 600;">Keluar (Logout)</button>
+            <!-- Section: Data Akademik Snapshot -->
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-bottom: 24px;">
+                <h4 style="font-size: 0.825rem; color: #64748b; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700;">Data Akademik Pendaftar</h4>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 0.85rem;">
+                    <div><span style="color: #64748b;">Nama:</span> <strong id="modal-mhs-nama" style="color: #0f172a; display: block;">-</strong></div>
+                    <div><span style="color: #64748b;">NIM:</span> <strong id="modal-mhs-nim" style="color: #0b3d6b; font-family: monospace; display: block;">-</strong></div>
+                    <div><span style="color: #64748b;">Jurusan:</span> <span id="modal-mhs-jurusan" style="color: #0f172a; font-weight: 600; display: block;">-</span></div>
+                    <div><span style="color: #64748b;">Waktu Pengajuan:</span> <span id="modal-submit-date" style="color: #475569; font-family: monospace; display: block;">-</span></div>
                 </div>
+            </div>
+
+            <!-- Modal Footer Button -->
+            <div style="text-align: right;">
+                <button type="button" id="btn-close-modal-footer" class="btn" style="background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; font-size: 0.875rem;">Tutup</button>
             </div>
         </div>
     </div>
@@ -234,7 +430,7 @@
             <ul class="footer-links">
               <li><a href="/login.html">Beranda</a></li>
               <li><a href="/daftar.html">Pendaftaran</a></li>
-              <li><a href="/status.html">Pengumuman</a></li>
+              <li><a href="/status.html">Riwayat & Pengumuman</a></li>
             </ul>
           </div>
 
@@ -267,40 +463,14 @@
       </div>
     </footer>
 
-    <!-- COMPONENT: INELIGIBLE ANGKATAN MODAL -->
-    <div class="auth-modal-backdrop hidden" id="modalIneligibleAngkatan" role="dialog" aria-modal="true" style="z-index: 9999;">
-        <div class="auth-modal-card">
-            <div class="auth-modal-icon">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"/>
-                    <line x1="12" y1="8" x2="12" y2="12"/>
-                    <line x1="12" y1="16" x2="12.01" y2="16"/>
-                </svg>
-            </div>
-
-            <h3 class="auth-modal-title">Akses Pengumuman Dibatasi</h3>
-            <p class="auth-modal-desc">
-                Mohon maaf, periode magang aktif saat ini diperuntukkan khusus untuk mahasiswa <strong>Angkatan <span id="textModalEligibleAngkatan">-</span></strong>.<br><br>
-                Angkatan Anda (<strong><span id="textModalMhsAngkatan">-</span></strong>) belum / tidak diizinkan mengakses pendaftaran dan pengumuman gelombang ini.
-            </p>
-
-            <div class="auth-modal-actions" style="justify-content: center; margin-top: 16px;">
-                <button type="button" id="btnModalLogoutIneligible" onclick="logout();" class="btn-profile-logout" style="max-width: 220px; margin: 0 auto;">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                        <polyline points="16 17 21 12 16 7"/>
-                        <line x1="21" y1="12" x2="9" y2="12"/>
-                    </svg>
-                    <span>Keluar (Logout)</span>
-                </button>
-            </div>
-        </div>
-    </div>
-
     <script>
+
         // Set dynamic copyright year
         const yearElem = document.getElementById('current-year');
         if (yearElem) yearElem.textContent = new Date().getFullYear();
+
+        // Global State for Registrations
+        let registrationsList = [];
 
         // Mobile Hamburger Drawer Toggle
         const navToggle = document.getElementById('navbar-toggle');
@@ -339,6 +509,137 @@
           });
         }
 
+        // Modal Controls
+        const modalDetail = document.getElementById('modal-detail-hasil');
+        const btnCloseModal = document.getElementById('btn-close-modal');
+        const btnCloseModalFooter = document.getElementById('btn-close-modal-footer');
+
+        function openModalDetail(pendaftaranId) {
+            const item = registrationsList.find(r => r.pendaftaran_id === pendaftaranId);
+            if (!item) return;
+
+            // Fill Modal Data
+            const modalBadge = document.getElementById('modal-periode-badge');
+            if (modalBadge) {
+                if (item.periode_status === 'dibuka') {
+                    modalBadge.innerHTML = `<span style="display: inline-flex; align-items: center; gap: 5px; color: #047857; background: #e6f4ea; border: 1px solid #a7f3d0; padding: 3px 8px; border-radius: 6px; font-weight: 700; font-size: 0.75rem;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #10b981; display: inline-block;"></span>Periode Dibuka</span>`;
+                } else {
+                    modalBadge.innerHTML = `<span style="display: inline-flex; align-items: center; gap: 5px; color: #64748b; background: #f1f3f4; border: 1px solid #cbd5e1; padding: 3px 8px; border-radius: 6px; font-weight: 600; font-size: 0.75rem;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #94a3b8; display: inline-block;"></span>Periode Ditutup</span>`;
+                }
+            }
+            document.getElementById('modal-periode-nama').innerText = item.periode_nama;
+            document.getElementById('modal-unit-nama').innerText = item.nama_unit;
+
+
+            document.getElementById('modal-program-nama').innerText = item.program === '1_bulan' ? 'Magang 1 Bulan' : 'Magang 5 Bulan (KRS)';
+            document.getElementById('modal-mhs-nama').innerText = item.nama;
+            document.getElementById('modal-mhs-nim').innerText = item.nim;
+            document.getElementById('modal-mhs-jurusan').innerText = item.jurusan || '-';
+            document.getElementById('modal-submit-date').innerText = item.submitted_at;
+
+            // Unit Asal
+            const unitAsalRow = document.getElementById('modal-unit-asal-row');
+            const unitAsalEl = document.getElementById('modal-unit-asal');
+            if (item.is_dipindahkan && item.nama_unit_asal) {
+                unitAsalEl.innerText = item.nama_unit_asal;
+                unitAsalRow.classList.remove('hidden');
+            } else {
+                unitAsalRow.classList.add('hidden');
+            }
+
+            // Catatan Admin
+            const catatanRow = document.getElementById('modal-catatan-row');
+            const catatanText = document.getElementById('modal-catatan-text');
+            if (item.catatan_admin) {
+                catatanText.innerText = `"${item.catatan_admin}"`;
+                catatanRow.classList.remove('hidden');
+            } else {
+                catatanRow.classList.add('hidden');
+            }
+
+            // Alert Decision Box
+            const alertBox = document.getElementById('modal-alert-box');
+            const st = item.status;
+            const isMoved = item.is_dipindahkan;
+            const isPub = item.pengumuman_dibuka === true;
+
+            if (!isPub || st === 'menunggu_pengumuman') {
+                alertBox.innerHTML = `
+                    <div style="padding: 16px 20px; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 12px; color: #0369a1;">
+                        <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; display: flex; align-items: center; gap: 8px;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            <span>Dalam Proses Peninjauan & Seleksi</span>
+                        </div>
+                        <p style="margin: 0; font-size: 0.85rem; line-height: 1.5; color: #0369a1;">
+                            Berkas pendaftaran Anda telah berhasil direkam. Tim BLKA ITPLN saat ini sedang melakukan verifikasi dan penataan kuota penempatan. Pengumuman resmi belum dipublikasikan oleh admin.
+                        </p>
+                    </div>
+                `;
+            } else if (st === 'dipindahkan' || isMoved) {
+                alertBox.innerHTML = `
+                    <div style="padding: 16px 20px; background: #fffbebf5; border: 1px solid #fde68a; border-radius: 12px; color: #92400e;">
+                        <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; display: flex; align-items: center; gap: 8px;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                            <span>Ditetapkan (Dipindahkan ke Unit Lain)</span>
+                        </div>
+                        <p style="margin: 0; font-size: 0.85rem; line-height: 1.5; color: #78350f;">
+                            Berdasarkan hasil verifikasi dan penataan kuota operasional, penempatan Anda dialokasikan ke <strong>${escapeHtml(item.nama_unit)}</strong>.
+                        </p>
+                    </div>
+                `;
+            } else if (st === 'diterima') {
+                alertBox.innerHTML = `
+                    <div style="padding: 16px 20px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; color: #065f46;">
+                        <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; display: flex; align-items: center; gap: 8px;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                            <span>Selamat! Pengajuan Magang Anda Diterima</span>
+                        </div>
+                        <p style="margin: 0; font-size: 0.85rem; line-height: 1.5; color: #065f46;">
+                            Anda telah resmi diterima dan ditetapkan pada <strong>${escapeHtml(item.nama_unit)}</strong> untuk periode ${escapeHtml(item.periode_nama)}.
+                        </p>
+                    </div>
+                `;
+            } else if (st === 'ditolak') {
+                alertBox.innerHTML = `
+                    <div style="padding: 16px 20px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; color: #991b1b;">
+                        <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; display: flex; align-items: center; gap: 8px;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                            <span>Pengajuan Belum Dapat Diterima</span>
+                        </div>
+                        <p style="margin: 0; font-size: 0.85rem; line-height: 1.5; color: #991b1b;">
+                            Mohon maaf, pengajuan magang Anda belum dapat disetujui pada periode ${escapeHtml(item.periode_nama)}.
+                        </p>
+                    </div>
+                `;
+            } else {
+                alertBox.innerHTML = `
+                    <div style="padding: 16px 20px; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 12px; color: #0369a1;">
+                        <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; display: flex; align-items: center; gap: 8px;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                            <span>Pendaftaran Berhasil Disimpan</span>
+                        </div>
+                        <p style="margin: 0; font-size: 0.85rem; line-height: 1.5; color: #0369a1;">
+                            Data pendaftaran Anda telah tercatat dan sedang dalam peninjauan oleh BLKA ITPLN.
+                        </p>
+                    </div>
+                `;
+            }
+
+            modalDetail.classList.add('active');
+        }
+
+        function closeModalDetail() {
+            modalDetail.classList.remove('active');
+        }
+
+        if (btnCloseModal) btnCloseModal.addEventListener('click', closeModalDetail);
+        if (btnCloseModalFooter) btnCloseModalFooter.addEventListener('click', closeModalDetail);
+        if (modalDetail) {
+            modalDetail.addEventListener('click', (e) => {
+                if (e.target === modalDetail) closeModalDetail();
+            });
+        }
+
         // Load Status & Profile
         async function fetchStatusAndProfile() {
             try {
@@ -370,144 +671,175 @@
                     if (cardEmail) cardEmail.textContent = u.email;
                 }
 
-                if (authData.is_eligible_angkatan === false) {
-                    const modal = document.getElementById('modalIneligibleAngkatan');
-                    const textEligible = document.getElementById('textModalEligibleAngkatan');
-                    const textMhs = document.getElementById('textModalMhsAngkatan');
-                    if (textEligible) textEligible.innerText = authData.angkatan_eligible || '-';
-                    if (textMhs) textMhs.innerText = authData.mhs_angkatan || '-';
+                // Fetch Registration History
+                const res = await fetch('/api/mahasiswa/status_pendaftaran.php');
+                const json = await res.json();
+                
+                const newPeriodBanner = document.getElementById('new-period-banner');
+                const historyCard = document.getElementById('history-card');
+                const emptyStateCard = document.getElementById('empty-state-card');
+                const tableBody = document.getElementById('table-history-body');
+                const historySubtitle = document.getElementById('history-subtitle');
 
-                    document.getElementById('loading').classList.add('hidden');
-                    if (modal) {
-                        modal.classList.remove('hidden');
-                    } else {
-                        alert(`Mohon maaf, Anda (Angkatan ${authData.mhs_angkatan}) tidak diizinkan mengakses halaman pengumuman karena periode aktif saat ini khusus untuk Angkatan (${authData.angkatan_eligible}).`);
-                        window.location.href = '/index.html';
+                if (!res.ok || !json.ok || !json.has_registrations || !json.data || json.data.length === 0) {
+                    // Kasus: Belum pernah daftar di periode manapun
+                    if (historyCard) historyCard.classList.add('hidden');
+                    if (emptyStateCard) {
+                        emptyStateCard.classList.remove('hidden');
+                        const emptyDesc = document.getElementById('empty-state-desc');
+                        const emptyAction = document.getElementById('empty-state-action');
+
+                        if (json.ada_periode_dibuka && json.periode_aktif_saat_ini && authData.is_eligible_pendaftaran_aktif !== false) {
+                            if (emptyDesc) emptyDesc.innerHTML = `Pendaftaran untuk <strong>Periode ${escapeHtml(json.periode_aktif_saat_ini.nama)}</strong> sedang dibuka. Segera lengkapi formulir pendaftaran Anda.`;
+                            if (emptyAction) emptyAction.innerHTML = `
+                                <a href="/daftar.html" class="btn" style="background: #0b3d6b; color: #ffffff; text-decoration: none; padding: 10px 24px; font-size: 0.875rem; border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;">
+                                    <span>Daftar Periode ${escapeHtml(json.periode_aktif_saat_ini.nama)} Sekarang</span>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                                </a>
+                            `;
+                        } else {
+                            if (emptyDesc) emptyDesc.innerText = 'Saat ini belum ada periode pendaftaran magang yang aktif untuk angkatan Anda. Silakan pantau pengumuman pembukaan gelombang berikutnya.';
+                            if (emptyAction) emptyAction.innerHTML = `
+                                <a href="/login.html" class="btn" style="background: #0b3d6b; color: #ffffff; text-decoration: none; padding: 10px 24px; font-size: 0.875rem; border-radius: 8px; font-weight: 600;">Kembali ke Beranda</a>
+                            `;
+                        }
                     }
                     return;
                 }
 
-                // Fetch Registration Status
-                const res = await fetch('/api/mahasiswa/status_pendaftaran.php');
-                const json = await res.json();
-                
-                document.getElementById('loading').classList.add('hidden');
-                
-                if (!res.ok || !json.ok || !json.terdaftar) {
-                    window.location.href = '/daftar.html';
-                    return;
-                }
-                
-                document.getElementById('content').classList.remove('hidden');
-                document.getElementById('mhs-nama').innerText = json.data.nama || (authData.user ? authData.user.nama : '-');
-                document.getElementById('mhs-nim').innerText = json.data.nim || (authData.user ? authData.user.nim : '-');
-                document.getElementById('unit-name').innerText = json.data.nama_unit;
-                document.getElementById('program-name').innerText = json.data.program === '1_bulan' ? 'Magang 1 Bulan' : 'Magang 5 Bulan (KRS)';
-                document.getElementById('submit-date').innerText = json.data.submitted_at;
+                // Kasus: Memiliki riwayat pendaftaran
+                registrationsList = json.data;
+                if (historyCard) historyCard.classList.remove('hidden');
+                if (emptyStateCard) emptyStateCard.classList.add('hidden');
+                if (historySubtitle) historySubtitle.innerText = `Menampilkan ${registrationsList.length} riwayat gelombang pendaftaran`;
 
-                const alertBox = document.getElementById('status-alert-box');
-                const statusBadge = document.getElementById('status-badge');
-                const st = json.data.status;
-                const isMoved = json.data.is_dipindahkan;
-                const unitAsal = json.data.nama_unit_asal || 'Unit Pilihan Awal';
-                const catatanAdmin = json.data.catatan_admin ? json.data.catatan_admin : '';
-                const isPengumumanBuka = json.pengumuman_dibuka === true;
+                // Banner Ajakan Jika Ada Periode Baru yang Belum Didaftari & Eligible
+                if (newPeriodBanner) {
+                    if (json.ada_periode_dibuka && !json.sudah_mendaftar_periode_aktif && json.periode_aktif_saat_ini && authData.is_eligible_pendaftaran_aktif !== false) {
 
-                if (!isPengumumanBuka || st === 'menunggu_pengumuman') {
-                    statusBadge.innerText = 'MENUNGGU PENGUMUMAN';
-                    statusBadge.style.background = '#0284c7';
-                    statusBadge.style.color = '#ffffff';
-
-                    alertBox.innerHTML = `
-                        <div style="padding: 20px; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 16px; color: #0369a1;">
-                            <div style="font-size: 1.05rem; font-weight: 800; color: #0284c7; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
-                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                                <span>Pendaftaran Sedang Ditinjau & Menunggu Pengumuman</span>
-                            </div>
-                            <p style="margin: 0; font-size: 0.9rem; line-height: 1.6; color: #0369a1;">
-                                Data pendaftaran Anda telah berhasil direkam. Tim BLKA ITPLN saat ini sedang melakukan proses verifikasi berkas dan penetapan unit penempatan magang. Hasil penetapan resmi belum diumumkan oleh admin. Silakan pantau halaman ini secara berkala.
-                            </p>
-                        </div>
-                    `;
-                } else if (st === 'dipindahkan' || isMoved) {
-                    statusBadge.innerText = 'DITETAPKAN (DIPINDAHKAN)';
-                    statusBadge.style.background = '#d97706';
-                    statusBadge.style.color = '#ffffff';
-
-                    alertBox.innerHTML = `
-                        <div style="padding: 20px; background: #fffbebf5; border: 1px solid #fde68a; border-radius: 16px; color: #92400e;">
-                            <div style="font-size: 1.05rem; font-weight: 800; color: #b45309; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
-                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                                <span>Pemberitahuan Pemindahan Unit Pelaksana</span>
-                            </div>
-                            <p style="margin: 0 0 12px 0; font-size: 0.9rem; line-height: 1.5; color: #78350f;">
-                                Berdasarkan hasil verifikasi dan penataan kuota operasional oleh Administrator BLKA ITPLN, penempatan magang Anda telah dialokasikan / dipindahkan ke unit pelaksana baru:
-                            </p>
-                            <div style="background: #ffffff; border: 1px solid #fef3c7; border-radius: 12px; padding: 14px; margin-bottom: 10px;">
-                                <div style="font-size: 0.85rem; color: #64748b;">Pilihan Awal Anda: <span style="text-decoration: line-through; color: #94a3b8; font-weight: 600;">${unitAsal}</span></div>
-                                <div style="font-size: 1rem; font-weight: 800; color: #0b3d6b; margin-top: 4px; display: flex; align-items: center; gap: 6px;">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-                                    <span>Unit Penetapan Baru: ${json.data.nama_unit}</span>
+                        newPeriodBanner.innerHTML = `
+                            <div class="card" style="margin-bottom: 24px; padding: 20px 24px; border: 1px solid #e2e8f0; border-left: 4px solid #0b3d6b; background: #ffffff;">
+                                <div style="display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;">
+                                    <div style="flex: 1; min-width: 260px;">
+                                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0b3d6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                            <span style="font-size: 0.95rem; font-weight: 700; color: #0b3d6b;">Pendaftaran Periode Baru Telah Dibuka</span>
+                                        </div>
+                                        <p style="margin: 0; color: #64748b; font-size: 0.875rem; line-height: 1.5;">
+                                            Pendaftaran untuk <strong>Periode ${escapeHtml(json.periode_aktif_saat_ini.nama)}</strong> saat ini sedang aktif dan dapat Anda daftari.
+                                        </p>
+                                    </div>
+                                    <a href="/daftar.html" class="btn" style="background: #0b3d6b; color: #ffffff; padding: 10px 20px; font-size: 0.875rem; font-weight: 600; text-decoration: none; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;">
+                                        <span>Daftar di Periode ${escapeHtml(json.periode_aktif_saat_ini.nama)}</span>
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                                    </a>
                                 </div>
                             </div>
-                            ${catatanAdmin ? `<div style="font-size: 0.85rem; color: #92400e;"><strong>Catatan Admin:</strong> "${catatanAdmin}"</div>` : ''}
-                        </div>
-                    `;
-                } else if (st === 'diterima') {
-                    statusBadge.innerText = 'DITERIMA';
-                    statusBadge.style.background = '#10b981';
-                    statusBadge.style.color = '#ffffff';
-
-                    alertBox.innerHTML = `
-                        <div style="padding: 20px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 16px; color: #065f46;">
-                            <div style="font-size: 1.05rem; font-weight: 800; color: #047857; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
-                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                                <span>Selamat! Pengajuan Magang Anda Diterima</span>
-                            </div>
-                            <p style="margin: 0; font-size: 0.9rem; line-height: 1.5;">
-                                Anda telah resmi ditetapkan pada <strong>${json.data.nama_unit}</strong>. ${catatanAdmin ? `<br><em>Catatan: "${catatanAdmin}"</em>` : ''}
-                            </p>
-                        </div>
-                    `;
-                } else if (st === 'ditolak') {
-                    statusBadge.innerText = 'DITOLAK';
-                    statusBadge.style.background = '#ef4444';
-                    statusBadge.style.color = '#ffffff';
-
-                    alertBox.innerHTML = `
-                        <div style="padding: 20px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 16px; color: #991b1b;">
-                            <div style="font-size: 1.05rem; font-weight: 800; color: #b91c1c; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
-                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-                                <span>Pengajuan Belum Dapat Diterima</span>
-                            </div>
-                            <p style="margin: 0; font-size: 0.9rem; line-height: 1.5;">
-                                Mohon maaf, pengajuan magang Anda belum dapat disetujui untuk periode ini. ${catatanAdmin ? `<br><strong>Alasan:</strong> "${catatanAdmin}"` : ''}
-                            </p>
-                        </div>
-                    `;
-                } else {
-                    statusBadge.innerText = 'BERKAS DIAJUKAN';
-                    statusBadge.style.background = '#0b3d6b';
-                    statusBadge.style.color = '#ffffff';
-
-                    alertBox.innerHTML = `
-                        <div style="padding: 20px; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 16px; color: #0369a1;">
-                            <div style="font-size: 1.05rem; font-weight: 800; color: #0284c7; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
-                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-                                <span>Pendaftaran Berhasil Disimpan</span>
-                            </div>
-                            <p style="margin: 0; font-size: 0.9rem; line-height: 1.5;">
-                                Data Anda telah berhasil direkam ke dalam sistem kami. BLKA ITPLN sedang melakukan proses peninjauan dan penetapan.
-                            </p>
-                        </div>
-                    `;
+                        `;
+                        newPeriodBanner.classList.remove('hidden');
+                    } else {
+                        newPeriodBanner.classList.add('hidden');
+                    }
                 }
+
+                // Render Table Rows
+                renderHistoryTable(registrationsList);
                 
             } catch (err) {
-                document.getElementById('loading').innerText = 'Gagal memuat status.';
+                console.error(err);
+                const tableBody = document.getElementById('table-history-body');
+                if (tableBody) tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #ef4444; padding: 24px;">Gagal memuat riwayat pendaftaran.</td></tr>';
             }
         }
-        
+
+        function renderHistoryTable(list) {
+            const tbody = document.getElementById('table-history-body');
+            if (!tbody) return;
+
+            if (list.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #64748b; padding: 32px;">Tidak ada riwayat pendaftaran.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = list.map(item => {
+                const isPub = item.pengumuman_dibuka === true;
+                const progName = item.program === '1_bulan' ? '1 Bulan' : '5 Bulan (KRS)';
+                
+                // Status Badge with SVG icons (No Emoticons)
+                let badgeHtml = '';
+                if (!isPub || item.status === 'menunggu_pengumuman') {
+                    badgeHtml = `<span class="badge-result pending">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        <span>Menunggu Pengumuman</span>
+                    </span>`;
+                } else if (item.status === 'dipindahkan' || item.is_dipindahkan) {
+                    badgeHtml = `<span class="badge-result dipindahkan">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                        <span>Dipindahkan</span>
+                    </span>`;
+                } else if (item.status === 'diterima') {
+                    badgeHtml = `<span class="badge-result diterima">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        <span>Diterima</span>
+                    </span>`;
+                } else if (item.status === 'ditolak') {
+                    badgeHtml = `<span class="badge-result ditolak">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                        <span>Tidak Lolos</span>
+                    </span>`;
+                } else {
+                    badgeHtml = `<span class="badge-result pending">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        <span>Diajukan</span>
+                    </span>`;
+                }
+
+                // Periode Status Pill with dot indicator
+                let periodeStatusHtml = item.periode_status === 'dibuka'
+                    ? `<span style="display: inline-flex; align-items: center; gap: 5px; font-size: 0.725rem; font-weight: 700; color: #047857; background: #e6f4ea; border: 1px solid #a7f3d0; padding: 2px 8px; border-radius: 6px; margin-top: 4px; width: fit-content;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #10b981; display: inline-block;"></span>Dibuka</span>`
+                    : `<span style="display: inline-flex; align-items: center; gap: 5px; font-size: 0.725rem; font-weight: 600; color: #64748b; background: #f1f3f4; border: 1px solid #cbd5e1; padding: 2px 8px; border-radius: 6px; margin-top: 4px; width: fit-content;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #94a3b8; display: inline-block;"></span>Ditutup</span>`;
+
+                return `
+                    <tr>
+                        <td style="min-width: 170px;">
+                            <strong style="color: #0b3d6b; font-size: 0.925rem; display: block;">${escapeHtml(item.periode_nama)}</strong>
+                            ${periodeStatusHtml}
+                        </td>
+                        <td style="min-width: 130px;">
+                            <span style="font-weight: 600; color: #1e293b;">${progName}</span>
+                        </td>
+                        <td style="min-width: 140px;">
+                            <span style="font-family: monospace; font-size: 0.85rem; color: #475569;">${escapeHtml(item.submitted_at)}</span>
+                        </td>
+                        <td style="min-width: 220px;">
+                            <span style="font-weight: 600; color: #0b3d6b;">${escapeHtml(item.nama_unit)}</span>
+                            ${item.is_dipindahkan && isPub ? `<div style="font-size: 0.75rem; color: #d97706; font-weight: 600; margin-top: 2px;">(Penetapan Baru)</div>` : ''}
+                        </td>
+                        <td style="min-width: 170px;">
+                            ${badgeHtml}
+                        </td>
+                        <td style="text-align: center; width: 110px;">
+                            <button type="button" class="btn-view-detail" onclick="openModalDetail(${item.pendaftaran_id})">
+                                <span>Lihat Hasil</span>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+
+        function escapeHtml(unsafe) {
+            if (!unsafe && unsafe !== 0) return '';
+            return String(unsafe)
+                 .replace(/&/g, "&amp;")
+                 .replace(/</g, "&lt;")
+                 .replace(/>/g, "&gt;")
+                 .replace(/"/g, "&quot;")
+                 .replace(/'/g, "&#039;");
+        }
+
         // Real Logout
         async function logout() {
             try {
@@ -525,6 +857,9 @@
         const btnMobileLogout = document.getElementById('btnMobileLogout');
         if (btnProfileLogout) btnProfileLogout.addEventListener('click', () => logout());
         if (btnMobileLogout) btnMobileLogout.addEventListener('click', () => logout());
+
+        // Make openModalDetail accessible globally
+        window.openModalDetail = openModalDetail;
 
         fetchStatusAndProfile();
     </script>

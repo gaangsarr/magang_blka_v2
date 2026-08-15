@@ -62,6 +62,55 @@ try {
     $stmtCheckAktif = $pdo->query("SELECT COUNT(*) FROM periode WHERE status IN ('dibuka', 'persiapan')");
     $hasPeriodeAktif = ((int)$stmtCheckAktif->fetchColumn()) > 0;
     
+    // Pagination parameters
+    $page = max(1, (int)($_GET['page'] ?? 1));
+    $perPage = min(200, max(1, (int)($_GET['per_page'] ?? 50)));
+    $offset = ($page - 1) * $perPage;
+
+    // Search and filter parameters
+    $search = trim((string)($_GET['search'] ?? ''));
+    $filterStatus = trim((string)($_GET['filter_status'] ?? ''));
+    $filterProgram = trim((string)($_GET['filter_program'] ?? ''));
+
+    $whereClauses = ['p.periode_id = :periode_id'];
+    $params = [':periode_id' => $periodeId];
+
+    if ($search !== '') {
+        $whereClauses[] = '(m.nim LIKE :s_nim OR p.nama_snapshot LIKE :s_nama OR m.email LIKE :s_email OR ep.nama LIKE :s_unit)';
+        $searchWildcard = '%' . $search . '%';
+        $params[':s_nim'] = $searchWildcard;
+        $params[':s_nama'] = $searchWildcard;
+        $params[':s_email'] = $searchWildcard;
+        $params[':s_unit'] = $searchWildcard;
+    }
+
+
+    if ($filterStatus !== '') {
+        $whereClauses[] = 'p.status = :status';
+        $params[':status'] = $filterStatus;
+    }
+
+    if ($filterProgram !== '') {
+        $whereClauses[] = 'p.program = :program';
+        $params[':program'] = $filterProgram;
+    }
+
+    $whereSQL = implode(' AND ', $whereClauses);
+
+    // 1. Count Total
+    $countSql = "
+        SELECT COUNT(*) 
+        FROM pendaftaran p
+        JOIN mahasiswa m ON p.mahasiswa_id = m.id
+        JOIN unit_pelaksana_periode upp ON p.unit_pelaksana_periode_id = upp.id
+        JOIN entitas_perusahaan ep ON upp.entitas_id = ep.id
+        WHERE $whereSQL
+    ";
+    $stmtCount = $pdo->prepare($countSql);
+    $stmtCount->execute($params);
+    $totalRecords = (int)$stmtCount->fetchColumn();
+
+    // 2. Fetch Paginated Records
     $query = "
         SELECT 
             p.id,
@@ -107,12 +156,17 @@ try {
         LEFT JOIN jurusan j ON m.jurusan_id = j.id
         JOIN unit_pelaksana_periode upp ON p.unit_pelaksana_periode_id = upp.id
         JOIN entitas_perusahaan ep ON upp.entitas_id = ep.id
-        WHERE p.periode_id = :periode_id
+        WHERE $whereSQL
         ORDER BY p.submitted_at DESC
+        LIMIT :limit OFFSET :offset
     ";
     
     $stmt = $pdo->prepare($query);
-    $stmt->bindValue(':periode_id', $periodeId, PDO::PARAM_INT);
+    foreach ($params as $k => $v) {
+        $stmt->bindValue($k, $v);
+    }
+    $stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
     $stmt->execute();
     
     $pendaftar = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -122,9 +176,16 @@ try {
         'has_periode_aktif' => $hasPeriodeAktif,
         'periode_terpilih' => $periode,
         'all_periode' => $allPeriode,
-        'data' => $pendaftar
+        'data' => $pendaftar,
+        'pagination' => [
+            'total' => $totalRecords,
+            'page' => $page,
+            'per_page' => $perPage,
+            'total_pages' => $perPage > 0 ? (int)ceil($totalRecords / $perPage) : 1
+        ]
     ]);
 } catch (\Throwable $e) {
     http_response_code(500);
-    echo json_encode(['error' => 'Terjadi kesalahan sistem: ' . $e->getMessage()]);
+    echo json_encode(['error' => Auth::safeErrorMessage($e, 'Gagal mengambil data pendaftar.')]);
 }
+

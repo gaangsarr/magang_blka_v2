@@ -60,67 +60,138 @@ async function checkExistingSession() {
   } catch (_) {}
 }
 
+function escapeHtml(str) {
+
+  if (!str && str !== 0) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 function updateLandingPageForLoggedInUser(data) {
   window.isLoggedInUser = true;
 
   const user = data.user;
   const shortName = user && user.nama ? user.nama.split(' ')[0] : 'Mahasiswa';
   const initial = user && user.nama ? user.nama.charAt(0).toUpperCase() : 'M';
-  const isEligible = data.is_eligible_angkatan !== false;
+  const isEligible = data.is_eligible_pendaftaran_aktif !== false && data.is_eligible_angkatan !== false;
+  const adaPeriodeDibuka = data.ada_periode_dibuka === true;
+  const sudahMendaftar = data.sudah_mendaftar === true;
+  const hasRiwayat = data.has_riwayat_pendaftaran === true;
 
-  const targetUrl = data.sudah_mendaftar ? '/status.html' : '/daftar.html';
-  const labelText = data.sudah_mendaftar ? 'Lihat Status Pendaftaran' : 'Lanjut ke Pendaftaran';
+  let targetUrl = '/daftar.html';
+  let labelText = 'Lanjut ke Pendaftaran';
+
+
+  if (!adaPeriodeDibuka) {
+    if (hasRiwayat) {
+      targetUrl = '/status.html';
+      labelText = 'Lihat Riwayat & Pengumuman';
+    } else {
+      targetUrl = '#';
+      labelText = 'Pendaftaran Belum Dibuka';
+    }
+  } else {
+    if (sudahMendaftar) {
+      targetUrl = '/status.html';
+      labelText = 'Lihat Status Pendaftaran';
+    } else {
+      targetUrl = '/daftar.html';
+      labelText = 'Lanjut ke Pendaftaran (' + (data.periode_aktif ? data.periode_aktif.nama : 'Periode Baru') + ')';
+    }
+  }
 
   // Update navbar links
   document.querySelectorAll('a').forEach(link => {
     const text = link.textContent.trim();
     if (text === 'Pendaftaran') {
-      if (!isEligible) {
+      if (!adaPeriodeDibuka && !hasRiwayat) {
         link.href = '#';
         link.addEventListener('click', (e) => {
           e.preventDefault();
-          alertIneligibleAngkatan(data);
+          alert('Saat ini belum ada periode pendaftaran magang yang dibuka.');
         });
-      } else {
-        link.href = targetUrl;
-      }
-    } else if (text === 'Pengumuman') {
-      if (!isEligible) {
-        link.href = '#';
-        link.addEventListener('click', (e) => {
-          e.preventDefault();
-          alertIneligibleAngkatan(data);
-        });
-      } else {
+      } else if (sudahMendaftar) {
         link.href = '/status.html';
+      } else {
+        link.href = '/daftar.html';
       }
+    } else if (text === 'Pengumuman' || text === 'Riwayat & Pengumuman') {
+      link.href = '/status.html';
     }
   });
 
   // Update Hero Button
   if (btnLogin) {
-    if (!isEligible) {
-      btnLogin.innerHTML = `
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-        <span>Pendaftaran Belum Dibuka Untuk Angkatan Anda (${data.mhs_angkatan})</span>
-      `;
-      btnLogin.style.background = '#64748b';
-      
-      const newBtn = btnLogin.cloneNode(true);
-      btnLogin.parentNode.replaceChild(newBtn, btnLogin);
-      newBtn.addEventListener('click', () => alertIneligibleAngkatan(data));
+    if (!adaPeriodeDibuka) {
+      if (hasRiwayat) {
+        btnLogin.innerHTML = `
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          <span>Lihat Riwayat & Pengumuman</span>
+        `;
+        btnLogin.style.background = '';
+        const newBtn = btnLogin.cloneNode(true);
+        btnLogin.parentNode.replaceChild(newBtn, btnLogin);
+        newBtn.addEventListener('click', () => { window.location.href = '/status.html'; });
+      } else {
+        btnLogin.innerHTML = `
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span>Belum Ada Periode Pendaftaran Dibuka</span>
+        `;
+        btnLogin.style.background = '#64748b';
+        const newBtn = btnLogin.cloneNode(true);
+        btnLogin.parentNode.replaceChild(newBtn, btnLogin);
+        newBtn.addEventListener('click', () => {
+          alert('Saat ini belum ada periode pendaftaran magang yang dibuka. Silakan tunggu informasi selanjutnya.');
+        });
+      }
     } else {
-      btnLogin.innerHTML = `
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-        <span>${labelText}</span>
-      `;
-      const newBtn = btnLogin.cloneNode(true);
-      btnLogin.parentNode.replaceChild(newBtn, btnLogin);
-      newBtn.addEventListener('click', () => {
-        window.location.href = targetUrl;
-      });
+      if (sudahMendaftar) {
+        btnLogin.innerHTML = `
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          <span>Lihat Status Pendaftaran</span>
+        `;
+        btnLogin.style.background = '';
+        const newBtn = btnLogin.cloneNode(true);
+        btnLogin.parentNode.replaceChild(newBtn, btnLogin);
+        newBtn.addEventListener('click', () => { window.location.href = '/status.html'; });
+      } else if (!isEligible) {
+        if (hasRiwayat) {
+          btnLogin.innerHTML = `
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            <span>Lihat Riwayat & Pengumuman</span>
+          `;
+          btnLogin.style.background = '';
+          const newBtn = btnLogin.cloneNode(true);
+          btnLogin.parentNode.replaceChild(newBtn, btnLogin);
+          newBtn.addEventListener('click', () => { window.location.href = '/status.html'; });
+        } else {
+          btnLogin.innerHTML = `
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span>Pendaftaran Khusus Angkatan ${data.angkatan_eligible || ''}</span>
+          `;
+          btnLogin.style.background = '#0b3d6b';
+          const newBtn = btnLogin.cloneNode(true);
+          btnLogin.parentNode.replaceChild(newBtn, btnLogin);
+          newBtn.addEventListener('click', () => { window.location.href = '/daftar.html'; });
+        }
+      } else {
+        btnLogin.innerHTML = `
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          <span>Lanjut ke Pendaftaran (${data.periode_aktif ? data.periode_aktif.nama : 'Periode Baru'})</span>
+        `;
+        btnLogin.style.background = '';
+        const newBtn = btnLogin.cloneNode(true);
+        btnLogin.parentNode.replaceChild(newBtn, btnLogin);
+        newBtn.addEventListener('click', () => { window.location.href = '/daftar.html'; });
+      }
     }
   }
+
+
 
   // Profile Dropdown
   const navbarAction = document.querySelector('.navbar-action');
@@ -210,20 +281,24 @@ function updateLandingPageForLoggedInUser(data) {
   // Mobile Action
   const mobileMenuAction = document.querySelector('.mobile-menu-action');
   if (mobileMenuAction) {
-    if (!isEligible) {
-      mobileMenuAction.innerHTML = `
-        <button type="button" class="btn-mobile-masuk" style="background:#64748b;" onclick="alert('Pendaftaran periode saat ini khusus untuk Angkatan ${data.angkatan_eligible}');">
-          Angkatan Tidak Memenuhi Syarat
-        </button>
-      `;
-    } else {
-      mobileMenuAction.innerHTML = `
-        <button type="button" class="btn-mobile-masuk" onclick="window.location.href='${targetUrl}';">
-          ${labelText}
-        </button>
-      `;
+    mobileMenuAction.innerHTML = `
+      <button type="button" class="btn-mobile-masuk" style="background:#dc2626;" id="btnMobileLandingLogout">
+        Keluar (${escapeHtml(shortName)})
+      </button>
+    `;
+    const btnMobileLandingLogout = document.getElementById('btnMobileLandingLogout');
+    if (btnMobileLandingLogout) {
+      btnMobileLandingLogout.addEventListener('click', async () => {
+        try {
+          await fetch('/api/auth/logout.php', { method: 'POST', credentials: 'same-origin' });
+        } catch (_) {}
+        sessionStorage.clear();
+        localStorage.clear();
+        window.location.reload();
+      });
     }
   }
+
 }
 
 function alertIneligibleAngkatan(data) {

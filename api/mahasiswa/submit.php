@@ -69,12 +69,30 @@ if ($body['program'] === '5_bulan') {
 
 try {
     Database::transaction(function (PDO $pdo) use ($mahasiswaId, $periodeId, $reservasiId, $uppId, $body, $peminatanIds) {
-        // 1. Validasi belum pernah submit di periode ini
+        // 1. Validasi periode dibuka dan angkatan eligible
+        $stmtP = $pdo->prepare("SELECT angkatan_eligible, nama, status FROM periode WHERE id = :pid");
+        $stmtP->execute([':pid' => $periodeId]);
+        $periodeData = $stmtP->fetch(PDO::FETCH_ASSOC);
+        if (!$periodeData || $periodeData['status'] !== 'dibuka') {
+            throw new \Exception("Periode magang ini tidak sedang dibuka.");
+        }
+        if (!empty($periodeData['angkatan_eligible'])) {
+            $mhsData = Auth::getMahasiswa();
+            $mhsAngkatan = (int)($mhsData['angkatan'] ?? 0);
+            $fullAngkatan = $mhsAngkatan < 100 ? (2000 + $mhsAngkatan) : $mhsAngkatan;
+            $eligibleList = array_map('trim', explode(',', $periodeData['angkatan_eligible']));
+            if (!in_array((string)$fullAngkatan, $eligibleList, true) && !in_array((string)$mhsAngkatan, $eligibleList, true)) {
+                throw new \Exception("Mohon maaf, pendaftaran periode {$periodeData['nama']} dikhususkan untuk Angkatan " . implode(', ', $eligibleList) . ".");
+            }
+        }
+
+        // 1b. Validasi belum pernah submit di periode ini
         $stmtCek = $pdo->prepare("SELECT id FROM pendaftaran WHERE mahasiswa_id = :mid AND periode_id = :pid");
         $stmtCek->execute([':mid' => $mahasiswaId, ':pid' => $periodeId]);
         if ($stmtCek->fetch()) {
             throw new \Exception("Anda sudah terdaftar pada periode ini.");
         }
+
 
         // 2. Validasi reservasi
         $stmtRes = $pdo->prepare("SELECT status, expired_at FROM reservasi WHERE id = :id AND mahasiswa_id = :mid FOR UPDATE");

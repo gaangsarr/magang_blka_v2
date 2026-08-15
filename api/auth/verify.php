@@ -90,6 +90,9 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     respond(['error' => 'Method tidak diizinkan.'], 405);
 }
 
+// Rate limiting: max 15 verifikasi per menit per IP
+Auth::rateLimitByIp('verify_mahasiswa', 15, 60);
+
 // ── Baca Body JSON ────────────────────────────────────────────────────────────
 $body = json_decode(file_get_contents('php://input'), true);
 
@@ -102,6 +105,7 @@ $idTokenString = trim($body['id_token']);
 if (!is_string($idTokenString) || strlen($idTokenString) < 100) {
     respond(['error' => 'Format token tidak valid.'], 400);
 }
+
 
 // ── Verifikasi Firebase ID Token ─────────────────────────────────────────────
 $projectId = $_ENV['FIREBASE_PROJECT_ID'] ?? '';
@@ -173,7 +177,7 @@ if ($nimData === null) {
         'error' => sprintf(
             'Email "%s" terdeteksi sebagai akun Dosen/Staf ITPLN dan belum diberikan hak akses Admin. '
             . 'Jika kamu Mahasiswa, pastikan login dengan email mahasiswa (mis. nama231234@itpln.ac.id). '
-            . 'Jika kamu Staf/Dosen, silakan hubungi Super Admin REMATE.',
+            . 'Jika kamu Staf/Dosen, silakan hubungi Super Admin BLKA.',
             htmlspecialchars($email, ENT_QUOTES, 'UTF-8')
         )
     ], 403);

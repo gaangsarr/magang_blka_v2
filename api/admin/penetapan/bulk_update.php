@@ -106,7 +106,7 @@ try {
                     $stmtUpd->execute([
                         ':new_upp'  => $targetUppId,
                         ':asal_upp' => $asalToSave,
-                        ':catatan'  => $catatanAdmin ?: 'Dipindahkan ke unit pelaksana lain secara massal oleh Admin REMATE.',
+                        ':catatan'  => $catatanAdmin ?: 'Dipindahkan ke unit pelaksana lain secara massal oleh Admin BLKA.',
                         ':id'        => $pendaftaranId
                     ]);
 

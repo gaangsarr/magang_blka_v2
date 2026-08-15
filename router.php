@@ -14,7 +14,8 @@
 $uri = urldecode(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
 
 // CSP Header for security
-header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net https://*.firebaseapp.com https://apis.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://fonts.googleapis.com; img-src 'self' data: https://*.tile.openstreetmap.org https://unpkg.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://cdn.jsdelivr.net https://*.googleapis.com https://*.firebaseio.com https://nominatim.openstreetmap.org https://photon.komoot.io https://wilayah.web.id; frame-src 'self' https://*.firebaseapp.com;");
+header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net https://*.firebaseapp.com https://apis.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://fonts.googleapis.com; img-src 'self' data: https://*.tile.openstreetmap.org https://unpkg.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://unpkg.com https://cdn.jsdelivr.net https://*.googleapis.com https://*.firebaseio.com https://nominatim.openstreetmap.org https://photon.komoot.io https://wilayah.web.id; frame-src 'self' https://*.firebaseapp.com;");
+
 
 // ── 1. Route /api/* ───────────────────────────────────────────────────────────
 // return false → PHP built-in server eksekusi file PHP dari document root (v1/)

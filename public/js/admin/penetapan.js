@@ -13,6 +13,13 @@ let selectedIds = new Set();
 let currentPeriodeData = null;
 let isPeriodeSelectPopulated = false;
 
+let currentPage = 1;
+let perPage = 50;
+let totalPages = 1;
+let totalRecords = 0;
+let searchDebounceTimer = null;
+let selectedPeriodeId = null;
+
 window.showModal = function(id) {
     const el = document.getElementById(id);
     if (el) el.classList.remove('hidden');
@@ -56,14 +63,33 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadUnitList();
 
     // 3. Load Penetapan Data
-    await loadPenetapanData();
+    await loadPenetapanData(null, 1);
 
-    // 4. Multi-Filter Event Listeners
-    document.getElementById('filter-search').addEventListener('input', applyFilters);
-    document.getElementById('filter-jurusan').addEventListener('change', applyFilters);
-    document.getElementById('filter-unit').addEventListener('change', applyFilters);
-    document.getElementById('filter-program').addEventListener('change', applyFilters);
-    document.getElementById('filter-status').addEventListener('change', applyFilters);
+    // 4. Multi-Filter Event Listeners with Server-Side Trigger
+    document.getElementById('filter-search')?.addEventListener('input', () => {
+        clearTimeout(searchDebounceTimer);
+        searchDebounceTimer = setTimeout(() => {
+            loadPenetapanData(selectedPeriodeId, 1);
+        }, 300);
+    });
+
+    document.getElementById('filter-jurusan')?.addEventListener('change', () => loadPenetapanData(selectedPeriodeId, 1));
+    document.getElementById('filter-unit')?.addEventListener('change', () => loadPenetapanData(selectedPeriodeId, 1));
+    document.getElementById('filter-program')?.addEventListener('change', () => loadPenetapanData(selectedPeriodeId, 1));
+    document.getElementById('filter-status')?.addEventListener('change', () => loadPenetapanData(selectedPeriodeId, 1));
+
+    // Pagination Button Listeners
+    document.getElementById('btn-prev-penetapan')?.addEventListener('click', () => {
+        if (currentPage > 1) {
+            loadPenetapanData(selectedPeriodeId, currentPage - 1);
+        }
+    });
+
+    document.getElementById('btn-next-penetapan')?.addEventListener('click', () => {
+        if (currentPage < totalPages) {
+            loadPenetapanData(selectedPeriodeId, currentPage + 1);
+        }
+    });
 
     // 5. Toggle Pengumuman Button Listener
     const btnTogglePengumuman = document.getElementById('btn-toggle-pengumuman');
@@ -91,12 +117,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // 7. Bulk Actions Setup
-    document.getElementById('btn-bulk-approve').addEventListener('click', handleBulkApprove);
-    document.getElementById('btn-bulk-relocate').addEventListener('click', handleBulkRelocateOpen);
-    document.getElementById('btn-bulk-reject').addEventListener('click', handleBulkReject);
+    document.getElementById('btn-bulk-approve')?.addEventListener('click', handleBulkApprove);
+    document.getElementById('btn-bulk-relocate')?.addEventListener('click', handleBulkRelocateOpen);
+    document.getElementById('btn-bulk-reject')?.addEventListener('click', handleBulkReject);
 
     // Form Bulk Relocate Submit
-    document.getElementById('form-bulk-relocate').addEventListener('submit', async (e) => {
+    document.getElementById('form-bulk-relocate')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = document.getElementById('btn-submit-bulk-relocate');
         btn.disabled = true;
@@ -121,7 +147,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 hideModal('modal-bulk-relocate');
                 selectedIds.clear();
                 updateBulkToolbar();
-                loadPenetapanData(currentPeriodeData ? currentPeriodeData.id : null);
+                loadPenetapanData(selectedPeriodeId, currentPage);
             } else {
                 showAdminAlert(data.error || 'Gagal memproses pemindahan massal.', 'error');
             }
@@ -134,7 +160,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // 8. Individual Modals Submit Handlers
-    document.getElementById('form-relocate').addEventListener('submit', async (e) => {
+    document.getElementById('form-relocate')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = document.getElementById('btn-submit-relocate');
         btn.disabled = true;
@@ -158,7 +184,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 showAdminAlert(data.message || 'Mahasiswa berhasil dipindahkan ke unit baru.', 'success');
                 hideModal('modal-relocate');
                 e.target.reset();
-                loadPenetapanData(currentPeriodeData ? currentPeriodeData.id : null);
+                loadPenetapanData(selectedPeriodeId, currentPage);
             } else {
                 showAdminAlert(data.error || 'Gagal memindahkan unit.', 'error');
             }
@@ -170,7 +196,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         btn.innerText = 'Pindahkan Paksa Unit';
     });
 
-    document.getElementById('form-approve').addEventListener('submit', async (e) => {
+    document.getElementById('form-approve')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = document.getElementById('btn-submit-approve');
         btn.disabled = true;
@@ -190,10 +216,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
             const data = await res.json();
             if (res.ok) {
-                showAdminAlert(data.message || 'Penetapan disetujui.', 'success');
+                showAdminAlert(data.message || 'Penetapan mahasiswa berhasil disetujui.', 'success');
                 hideModal('modal-approve');
                 e.target.reset();
-                loadPenetapanData(currentPeriodeData ? currentPeriodeData.id : null);
+                loadPenetapanData(selectedPeriodeId, currentPage);
             } else {
                 showAdminAlert(data.error || 'Gagal menyetujui penetapan.', 'error');
             }
@@ -205,7 +231,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         btn.innerText = 'Setujui Penetapan';
     });
 
-    document.getElementById('form-reject').addEventListener('submit', async (e) => {
+    document.getElementById('form-reject')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = document.getElementById('btn-submit-reject');
         btn.disabled = true;
@@ -228,7 +254,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 showAdminAlert(data.message || 'Pendaftaran ditolak.', 'success');
                 hideModal('modal-reject');
                 e.target.reset();
-                loadPenetapanData(currentPeriodeData ? currentPeriodeData.id : null);
+                loadPenetapanData(selectedPeriodeId, currentPage);
             } else {
                 showAdminAlert(data.error || 'Gagal menolak pendaftaran.', 'error');
             }
@@ -262,7 +288,7 @@ async function loadUnitList() {
                 const optHtml = `<option value="${u.upp_id}" ${sisa <= 0 ? 'disabled' : ''}>${escapeHtml(u.nama)} (Sisa Kuota: ${sisa})</option>`;
                 if (selectElem) selectElem.innerHTML += optHtml;
                 if (bulkSelect) bulkSelect.innerHTML += optHtml;
-                if (filterUnit) filterUnit.innerHTML += `<option value="${escapeHtml(u.nama)}">${escapeHtml(u.nama)}</option>`;
+                if (filterUnit && u.upp_id) filterUnit.innerHTML += `<option value="${u.upp_id}">${escapeHtml(u.nama)}</option>`;
             });
         }
     } catch (e) {
@@ -270,16 +296,35 @@ async function loadUnitList() {
     }
 }
 
-async function loadPenetapanData(targetPeriodeId = null) {
+async function loadPenetapanData(targetPeriodeId = null, page = 1) {
     const tbody = document.getElementById('table-penetapan');
     if (tbody) {
         tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #64748b; padding: 24px;">Memuat data pendaftaran & penetapan...</td></tr>';
     }
     
     const selectEl = document.getElementById('select-periode-penetapan');
+    if (targetPeriodeId) selectedPeriodeId = targetPeriodeId;
+    currentPage = page;
+
+    // Baca filter saat ini
+    const searchVal = document.getElementById('filter-search')?.value.trim() || '';
+    const jurusanVal = document.getElementById('filter-jurusan')?.value || '';
+    const unitVal = document.getElementById('filter-unit')?.value || '';
+    const programVal = document.getElementById('filter-program')?.value || '';
+    const statusVal = document.getElementById('filter-status')?.value || '';
 
     try {
-        const url = targetPeriodeId ? `/api/admin/penetapan/list.php?periode_id=${targetPeriodeId}` : '/api/admin/penetapan/list.php';
+        const params = new URLSearchParams();
+        if (selectedPeriodeId) params.set('periode_id', selectedPeriodeId);
+        params.set('page', currentPage);
+        params.set('per_page', perPage);
+        if (searchVal) params.set('search', searchVal);
+        if (jurusanVal) params.set('filter_jurusan_id', jurusanVal);
+        if (unitVal) params.set('filter_unit_id', unitVal);
+        if (programVal) params.set('filter_program', programVal);
+        if (statusVal) params.set('filter_status', statusVal);
+
+        const url = `/api/admin/penetapan/list.php?${params.toString()}`;
         const res = await fetch(url);
         const data = await res.json();
 
@@ -287,7 +332,7 @@ async function loadPenetapanData(targetPeriodeId = null) {
             currentPeriodeData = data.periode_terpilih;
 
             // Populate period select dropdown
-            if (data.all_periode && selectEl) {
+            if (data.all_periode && selectEl && !isPeriodeSelectPopulated) {
                 selectEl.innerHTML = '';
                 data.all_periode.forEach(p => {
                     const opt = document.createElement('option');
@@ -295,16 +340,16 @@ async function loadPenetapanData(targetPeriodeId = null) {
                     opt.innerText = `${p.nama} (${(p.status || 'DRAFT').toUpperCase()})`;
                     if (currentPeriodeData && parseInt(p.id) === parseInt(currentPeriodeData.id)) {
                         opt.selected = true;
+                        selectedPeriodeId = p.id;
                     }
                     selectEl.appendChild(opt);
                 });
 
-                if (!isPeriodeSelectPopulated) {
-                    isPeriodeSelectPopulated = true;
-                    selectEl.addEventListener('change', (e) => {
-                        loadPenetapanData(e.target.value);
-                    });
-                }
+                isPeriodeSelectPopulated = true;
+                selectEl.addEventListener('change', (e) => {
+                    selectedPeriodeId = e.target.value;
+                    loadPenetapanData(selectedPeriodeId, 1);
+                });
             }
 
             // Update Info Periode Text cleanly
@@ -334,7 +379,7 @@ async function loadPenetapanData(targetPeriodeId = null) {
             // Update Announcement Banner UI
             updateAnnouncementBanner(currentPeriodeData);
 
-            if (data.jurusan_list) {
+            if (data.jurusan_list && jurusanList.length === 0) {
                 jurusanList = data.jurusan_list;
                 const selectJurusan = document.getElementById('filter-jurusan');
                 if (selectJurusan) {
@@ -346,12 +391,43 @@ async function loadPenetapanData(targetPeriodeId = null) {
             }
 
             allPenetapanData = data.data || [];
-            applyFilters();
+
+            // Update Pagination
+            if (data.pagination) {
+                totalRecords = data.pagination.total;
+                totalPages = data.pagination.total_pages;
+                currentPage = data.pagination.page;
+                updatePenetapanPagination();
+            }
+
+            const badgeElem = document.getElementById('filtered-count-badge');
+            if (badgeElem) badgeElem.innerText = `${allPenetapanData.length} Baris (${totalRecords} Total)`;
+
+            renderTable(allPenetapanData);
         }
     } catch (err) {
         console.error(err);
         if (tbody) tbody.innerHTML = '<tr><td colspan="8" style="color: #ef4444; text-align: center; padding: 24px;">Gagal memuat data penetapan.</td></tr>';
     }
+}
+
+function updatePenetapanPagination() {
+    const infoEl = document.getElementById('pagination-penetapan-info');
+    const pageNumEl = document.getElementById('pagination-penetapan-num');
+    const btnPrev = document.getElementById('btn-prev-penetapan');
+    const btnNext = document.getElementById('btn-next-penetapan');
+
+    if (!infoEl || !btnPrev || !btnNext) return;
+
+    const start = totalRecords === 0 ? 0 : (currentPage - 1) * perPage + 1;
+    const end = Math.min(currentPage * perPage, totalRecords);
+
+    infoEl.innerHTML = totalRecords === 0 ? 'Menampilkan <strong>0</strong> data' : `Menampilkan <strong>${start}–${end}</strong> dari <strong>${totalRecords}</strong> data`;
+    if (pageNumEl) pageNumEl.innerText = `Halaman ${currentPage} / ${totalPages || 1}`;
+
+    btnPrev.disabled = (currentPage <= 1);
+    btnNext.disabled = (currentPage >= totalPages || totalPages === 0);
+
 }
 
 function updateAnnouncementBanner(periode) {
@@ -437,7 +513,7 @@ async function handleTogglePengumuman() {
         const data = await res.json();
         if (res.ok && data.ok) {
             showAdminAlert(data.message, 'success');
-            await loadPenetapanData(currentPeriodeData.id);
+            await loadPenetapanData(currentPeriodeData.id, currentPage);
         } else {
             showAdminAlert(data.error || 'Gagal mengubah status pengumuman.', 'error');
         }
@@ -449,34 +525,6 @@ async function handleTogglePengumuman() {
             btn.style.opacity = '1';
         }
     }
-}
-
-function applyFilters() {
-    const search = document.getElementById('filter-search').value.toLowerCase().trim();
-    const jurusanId = document.getElementById('filter-jurusan').value;
-    const unitNama = document.getElementById('filter-unit').value;
-    const program = document.getElementById('filter-program').value;
-    const status = document.getElementById('filter-status').value;
-
-    const filtered = allPenetapanData.filter(item => {
-        const matchesSearch = !search || 
-            item.nama.toLowerCase().includes(search) || 
-            item.nim.toLowerCase().includes(search) ||
-            item.email.toLowerCase().includes(search) ||
-            (item.unit_nama && item.unit_nama.toLowerCase().includes(search));
-
-        const matchesJurusan = !jurusanId || item.jurusan_id == jurusanId;
-        const matchesUnit = !unitNama || (item.unit_nama && item.unit_nama === unitNama);
-        const matchesProgram = !program || item.program === program;
-        const matchesStatus = !status || item.status === status;
-
-        return matchesSearch && matchesJurusan && matchesUnit && matchesProgram && matchesStatus;
-    });
-
-    const badgeElem = document.getElementById('filtered-count-badge');
-    if (badgeElem) badgeElem.innerText = `${filtered.length} Data Ditampilkan (${allPenetapanData.length} Total)`;
-
-    renderTable(filtered);
 }
 
 function renderTable(dataArray) {
@@ -604,7 +652,7 @@ async function handleBulkApprove() {
             showAdminAlert(data.message || 'Berhasil menyetujui mahasiswa terpilih.', 'success');
             selectedIds.clear();
             updateBulkToolbar();
-            loadPenetapanData(currentPeriodeData ? currentPeriodeData.id : null);
+            loadPenetapanData(selectedPeriodeId, currentPage);
         } else {
             showAdminAlert(data.error || 'Gagal memproses penetapan massal.', 'error');
         }
@@ -640,7 +688,7 @@ async function handleBulkReject() {
             showAdminAlert(data.message || 'Berhasil menolak pendaftaran mahasiswa terpilih.', 'success');
             selectedIds.clear();
             updateBulkToolbar();
-            loadPenetapanData(currentPeriodeData ? currentPeriodeData.id : null);
+            loadPenetapanData(selectedPeriodeId, currentPage);
         } else {
             showAdminAlert(data.error || 'Gagal memproses penolakan massal.', 'error');
         }

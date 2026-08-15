@@ -3,6 +3,18 @@ let minIpk5Bulan = 3.00;
 let minSks5Bulan = 110;
 import { initMap, searchLocation, invalidateMapSize } from './map.js';
 
+
+function escapeHtml(str) {
+    if (!str && str !== 0) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+
 let currentStep = 1;
 const maxSteps = 5;
 
@@ -51,7 +63,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        if (statusData.is_eligible_angkatan === false) {
+        window.statusAuthData = statusData;
+        window.isEligibleCohort = (statusData.is_eligible_pendaftaran_aktif !== false && statusData.is_eligible_angkatan !== false);
+
+        window.showIneligibleCohortModal = function() {
             const modal = document.getElementById('modalIneligibleAngkatan');
             const textEligible = document.getElementById('textModalEligibleAngkatan');
             const textMhs = document.getElementById('textModalMhsAngkatan');
@@ -62,15 +77,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 modal.classList.remove('hidden');
             } else {
                 alert(`Mohon maaf, pendaftaran magang periode saat ini hanya dibuka untuk mahasiswa Angkatan (${statusData.angkatan_eligible}).\n\nAngkatan Anda (${statusData.mhs_angkatan}) belum / tidak diizinkan mendaftar.`);
-                window.location.href = '/index.html';
             }
-            return;
-        }
+        };
 
         if (statusData.sudah_mendaftar) {
             window.location.href = '/status.html';
             return;
         }
+
 
         // Fill User Profile Data in Profile Dropdown & Header
         if (statusData.user) {
@@ -127,10 +141,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         const periodeRes = await fetch('/api/periode/aktif.php');
         const periodeData = await periodeRes.json();
         if (!periodeRes.ok || periodeData.error) {
-            showError(periodeData.error || 'Gagal memuat periode pendaftaran.');
-            disableNav();
+            const noPeriodBox = document.getElementById('no-periode-box');
+            const wizardForm = document.getElementById('wizard-form');
+            const wizardHeaderEl = document.getElementById('wizard-header');
+            if (noPeriodBox && wizardForm && wizardHeaderEl) {
+                noPeriodBox.classList.remove('hidden');
+                wizardForm.classList.add('hidden');
+                wizardHeaderEl.classList.add('hidden');
+            } else {
+                showError(periodeData.error || 'Saat ini tidak ada periode pendaftaran yang dibuka.');
+                disableNav();
+            }
             return;
         }
+
         formData.periode_id = periodeData.periode.id;
         formData.periode_nama = periodeData.periode.nama;
         setupProgramOptions(periodeData.periode);
@@ -227,38 +251,137 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 function setupProgramOptions(periode) {
-    const container = document.getElementById('program-options');
-    container.innerHTML = '';
+    const banner = document.getElementById('ineligible-program-banner');
+    const tableBody = document.getElementById('program-options-table-body');
+    if (!tableBody) return;
     
-    const getOptionHTML = (val, label) => `
-        <label class="checkbox-item program-radio" style="padding: 16px; border: 1px solid #E5E7EB; border-radius: 12px; transition: all 0.2s; user-select: none; display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-            <input type="radio" name="program" value="${val}" class="custom-radio" required> 
-            <span style="font-weight: 600; color: #111827;">${label}</span>
-        </label>`;
+    tableBody.innerHTML = '';
+    
+    // 1. Render Banner if Ineligible
+    if (!window.isEligibleCohort && window.statusAuthData) {
+        if (banner) {
+            banner.classList.remove('hidden');
+            banner.innerHTML = `
+                <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 16px 20px; margin-bottom: 24px; display: flex; align-items: flex-start; gap: 14px;">
+                    <div style="flex-shrink: 0; color: #d97706; margin-top: 2px;">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    </div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 700; font-size: 0.95rem; color: #92400e; margin-bottom: 4px;">
+                            Pendaftaran Periode Ini Dibatasi (Khusus Angkatan ${escapeHtml(window.statusAuthData.angkatan_eligible || '-')})
+                        </div>
+                        <p style="margin: 0; font-size: 0.85rem; line-height: 1.5; color: #78350f;">
+                            Pendaftaran periode <strong>${escapeHtml(periode.nama)}</strong> dibuka khusus untuk mahasiswa <strong>Angkatan ${escapeHtml(window.statusAuthData.angkatan_eligible || '-')}</strong>. Angkatan Anda saat ini (<strong>${window.statusAuthData.mhs_angkatan || '-'}</strong>) tidak dapat mendaftar pada gelombang ini.
+                        </p>
+                        <div style="margin-top: 10px;">
+                            <a href="/status.html" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.825rem; font-weight: 700; color: #0b3d6b; text-decoration: underline;">
+                                <span>Lihat Riwayat & Pengumuman Saya</span>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    } else {
+        if (banner) {
+            banner.classList.add('hidden');
+            banner.innerHTML = '';
+        }
+    }
 
+    // 2. Prepare Programs List
+    const programs = [];
     if (periode.program_1_bulan) {
-        container.innerHTML += getOptionHTML("1_bulan", `Magang 1 Bulan (${periode.nama})`);
+        programs.push({
+            id: '1_bulan',
+            title: 'Magang 1 Bulan'
+        });
     }
     if (periode.program_5_bulan) {
-        container.innerHTML += getOptionHTML("5_bulan", `Magang 5 Bulan / KRS (${periode.nama})`);
+        programs.push({
+            id: '5_bulan',
+            title: 'Magang 5 Bulan (KRS)'
+        });
     }
 
-    // Add visual toggling
-    container.querySelectorAll('input[name="program"]').forEach(radio => {
-        radio.addEventListener('change', () => {
-            container.querySelectorAll('.program-radio').forEach(lbl => {
-                lbl.style.borderColor = '#E5E7EB';
-                lbl.style.backgroundColor = 'transparent';
-                lbl.style.boxShadow = 'none';
-            });
-            if (radio.checked) {
-                radio.parentElement.style.borderColor = 'var(--clr-biru-grid)';
-                radio.parentElement.style.backgroundColor = 'rgba(11, 61, 107, 0.03)';
-                radio.parentElement.style.boxShadow = '0 2px 8px rgba(11, 61, 107, 0.05)';
+    if (programs.length === 0) {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="5" style="padding: 24px; text-align: center; color: #94a3b8;">Tidak ada program magang yang tersedia pada periode ini.</td>
+            </tr>
+        `;
+        return;
+    }
+
+    const angkatanBadge = window.statusAuthData && window.statusAuthData.angkatan_eligible
+        ? `<span style="display: inline-block; font-weight: 700; font-size: 0.775rem; color: #0369a1; background: #e0f2fe; border: 1px solid #bae6fd; padding: 3px 8px; border-radius: 6px;">Angkatan ${escapeHtml(window.statusAuthData.angkatan_eligible)}</span>`
+        : `<span style="display: inline-block; font-weight: 600; font-size: 0.775rem; color: #047857; background: #e6f4ea; padding: 3px 8px; border-radius: 6px;">Semua Angkatan</span>`;
+
+    const statusBadge = window.isEligibleCohort
+        ? `<span style="display: inline-flex; align-items: center; gap: 4px; font-weight: 700; font-size: 0.75rem; color: #047857; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 4px 10px; border-radius: 20px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Memenuhi Syarat</span>`
+        : `<span style="display: inline-flex; align-items: center; gap: 4px; font-weight: 700; font-size: 0.75rem; color: #991b1b; background: #fef2f2; border: 1px solid #fecaca; padding: 4px 10px; border-radius: 20px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> Tidak Memenuhi Syarat</span>`;
+
+    programs.forEach(prog => {
+        const tr = document.createElement('tr');
+        tr.className = window.isEligibleCohort ? 'selectable' : '';
+        tr.style.cursor = window.isEligibleCohort ? 'pointer' : 'default';
+
+        tr.innerHTML = `
+            <td style="text-align: center; vertical-align: middle;">
+                <input type="radio" name="program" value="${prog.id}" class="custom-radio program-radio-btn" ${!window.isEligibleCohort ? 'disabled' : ''} style="width: 18px; height: 18px; cursor: ${window.isEligibleCohort ? 'pointer' : 'not-allowed'}; accent-color: #0b3d6b;">
+            </td>
+            <td>
+                <div style="font-weight: 700; color: #0f172a; font-size: 0.9rem;">${escapeHtml(periode.nama)}</div>
+            </td>
+            <td>
+                <div style="font-weight: 700; color: #0b3d6b; font-size: 0.925rem;">${prog.title}</div>
+            </td>
+            <td>
+                ${angkatanBadge}
+            </td>
+            <td style="text-align: center;">
+                ${statusBadge}
+            </td>
+        `;
+
+
+        const radio = tr.querySelector('input[name="program"]');
+
+        tr.addEventListener('click', (e) => {
+            if (e.target.tagName.toLowerCase() === 'input') return;
+            if (!window.isEligibleCohort) {
+                if (typeof window.showIneligibleCohortModal === 'function') window.showIneligibleCohortModal();
+                return;
+            }
+            radio.checked = true;
+            radio.dispatchEvent(new Event('change'));
+        });
+
+        radio.addEventListener('click', (e) => {
+            if (!window.isEligibleCohort) {
+                e.preventDefault();
+                radio.checked = false;
+                if (typeof window.showIneligibleCohortModal === 'function') window.showIneligibleCohortModal();
+                return false;
             }
         });
+
+        radio.addEventListener('change', () => {
+            if (!window.isEligibleCohort) {
+                radio.checked = false;
+                if (typeof window.showIneligibleCohortModal === 'function') window.showIneligibleCohortModal();
+                return;
+            }
+            tableBody.querySelectorAll('tr').forEach(r => r.classList.remove('selected'));
+            tr.classList.add('selected');
+        });
+
+        tableBody.appendChild(tr);
     });
 }
+
+
 
 function setupPeminatanOptions(peminatanList) {
     const container = document.getElementById('peminatan-options');
@@ -477,12 +600,18 @@ function handlePrev() {
 
 function validateStep(step) {
     if (step === 1) {
-        const prog = document.querySelector('input[name="program"]:checked');
-        if (!prog) {
-            showError('Silakan pilih salah satu program magang yang tersedia.', 'program-options', 'Program Belum Dipilih');
+        if (!window.isEligibleCohort) {
+            if (typeof window.showIneligibleCohortModal === 'function') window.showIneligibleCohortModal();
             return false;
         }
+        const prog = document.querySelector('input[name="program"]:checked');
+        if (!prog) {
+            showError('Silakan pilih salah satu program magang yang tersedia pada tabel.', 'program-options-table-body', 'Program Belum Dipilih');
+            return false;
+        }
+
     } else if (step === 2) {
+
         const fields = [
             { id: 'nama', label: 'Nama Lengkap' },
             { id: 'jenis_kelamin', label: 'Jenis Kelamin' },

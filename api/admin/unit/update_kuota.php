@@ -103,11 +103,12 @@ try {
         'message' => 'Kuota berhasil diperbarui.'
     ]);
 } catch (\Throwable $e) {
-    if ($e->getMessage() === "Kuota tersisa akan menjadi negatif. Tidak bisa mengurangi kuota melebihi yang sudah terpakai.") {
+    if (str_contains($e->getMessage(), "Kuota tersisa akan menjadi negatif")) {
         http_response_code(400);
         echo json_encode(['error' => $e->getMessage()]);
     } else {
         http_response_code(500);
-        echo json_encode(['error' => 'Terjadi kesalahan sistem: ' . $e->getMessage()]);
+        echo json_encode(['error' => Auth::safeErrorMessage($e, 'Gagal memperbarui kuota unit.')]);
     }
 }
+

@@ -101,5 +101,6 @@ try {
 
 } catch (\Throwable $e) {
     http_response_code(500);
-    echo json_encode(['error' => 'Terjadi kesalahan sistem: ' . $e->getMessage()]);
+    echo json_encode(['error' => Auth::safeErrorMessage($e, 'Gagal mengubah status pengumuman.')]);
 }
+

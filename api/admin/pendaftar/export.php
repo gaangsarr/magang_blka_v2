@@ -166,5 +166,7 @@ try {
 
 } catch (\Throwable $e) {
     http_response_code(500);
-    echo "Gagal membuat file export: " . $e->getMessage();
+    header('Content-Type: text/plain; charset=utf-8');
+    echo Auth::safeErrorMessage($e, 'Gagal membuat file export pendaftar.');
 }
+
