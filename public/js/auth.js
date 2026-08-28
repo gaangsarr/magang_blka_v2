@@ -112,7 +112,7 @@ function updateLandingPageForLoggedInUser(data) {
         link.href = '#';
         link.addEventListener('click', (e) => {
           e.preventDefault();
-          alert('Saat ini belum ada periode pendaftaran magang yang dibuka.');
+          showNoPeriodeModal();
         });
       } else if (sudahMendaftar) {
         link.href = '/status.html';
@@ -145,10 +145,11 @@ function updateLandingPageForLoggedInUser(data) {
         const newBtn = btnLogin.cloneNode(true);
         btnLogin.parentNode.replaceChild(newBtn, btnLogin);
         newBtn.addEventListener('click', () => {
-          alert('Saat ini belum ada periode pendaftaran magang yang dibuka. Silakan tunggu informasi selanjutnya.');
+          showNoPeriodeModal();
         });
       }
-    } else {
+    }
+ else {
       if (sudahMendaftar) {
         btnLogin.innerHTML = `
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
@@ -301,7 +302,17 @@ function updateLandingPageForLoggedInUser(data) {
 
 }
 
+function showNoPeriodeModal() {
+  const modal = document.getElementById('modalNoPeriode');
+  if (modal) {
+    modal.classList.remove('hidden');
+  } else {
+    alert('Saat ini belum ada periode pendaftaran magang yang dibuka.');
+  }
+}
+
 function alertIneligibleAngkatan(data) {
+
   const modal = document.getElementById('modalIneligibleAngkatan');
   const textEligible = document.getElementById('textModalEligibleAngkatan');
   const textMhs = document.getElementById('textModalMhsAngkatan');
