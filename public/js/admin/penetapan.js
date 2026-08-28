@@ -3,7 +3,7 @@
  * Manajemen Penetapan Unit, Pemindahan Paksa, & Publikasi Pengumuman Mahasiswa
  */
 
-import { showAdminAlert, showAdminConfirm } from './common.js';
+import { showAdminAlert, showAdminConfirm, showAdminToast } from './common.js';
 
 let csrfToken = null;
 let allPenetapanData = [];
@@ -98,25 +98,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // 6. Check All Toggle
-    const checkAll = document.getElementById('check-all');
-    if (checkAll) {
-        checkAll.addEventListener('change', (e) => {
-            const isChecked = e.target.checked;
-            const checkboxes = document.querySelectorAll('.chk-mhs');
-            checkboxes.forEach(chk => {
-                chk.checked = isChecked;
-                const pid = parseInt(chk.value);
-                if (isChecked) {
-                    selectedIds.add(pid);
-                } else {
-                    selectedIds.delete(pid);
-                }
-            });
-            updateBulkToolbar();
+    document.getElementById('check-all')?.addEventListener('change', (e) => {
+        const isChecked = e.target.checked;
+        selectedIds.clear();
+        document.querySelectorAll('.chk-mhs').forEach(chk => {
+            chk.checked = isChecked;
+            if (isChecked) {
+                selectedIds.add(parseInt(chk.value));
+            }
         });
-    }
+        updateBulkToolbar();
+    });
 
-    // 7. Bulk Actions Setup
+    // 7. Bulk Action Buttons Listeners
     document.getElementById('btn-bulk-approve')?.addEventListener('click', handleBulkApprove);
     document.getElementById('btn-bulk-relocate')?.addEventListener('click', handleBulkRelocateOpen);
     document.getElementById('btn-bulk-reject')?.addEventListener('click', handleBulkReject);
@@ -143,7 +137,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
             const data = await res.json();
             if (res.ok) {
-                showAdminAlert(data.message || 'Berhasil memindahkan mahasiswa terpilih.', 'success');
+                showAdminToast(data.message || 'Berhasil memindahkan mahasiswa terpilih.', 'success');
                 hideModal('modal-bulk-relocate');
                 selectedIds.clear();
                 updateBulkToolbar();
@@ -181,7 +175,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
             const data = await res.json();
             if (res.ok) {
-                showAdminAlert(data.message || 'Mahasiswa berhasil dipindahkan ke unit baru.', 'success');
+                showAdminToast(data.message || 'Mahasiswa berhasil dipindahkan ke unit baru.', 'success');
                 hideModal('modal-relocate');
                 e.target.reset();
                 loadPenetapanData(selectedPeriodeId, currentPage);
@@ -216,7 +210,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
             const data = await res.json();
             if (res.ok) {
-                showAdminAlert(data.message || 'Penetapan mahasiswa berhasil disetujui.', 'success');
+                showAdminToast(data.message || 'Penetapan mahasiswa berhasil disetujui.', 'success');
                 hideModal('modal-approve');
                 e.target.reset();
                 loadPenetapanData(selectedPeriodeId, currentPage);
@@ -251,7 +245,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
             const data = await res.json();
             if (res.ok) {
-                showAdminAlert(data.message || 'Pendaftaran ditolak.', 'success');
+                showAdminToast(data.message || 'Pendaftaran ditolak.', 'success');
                 hideModal('modal-reject');
                 e.target.reset();
                 loadPenetapanData(selectedPeriodeId, currentPage);
@@ -512,7 +506,7 @@ async function handleTogglePengumuman() {
 
         const data = await res.json();
         if (res.ok && data.ok) {
-            showAdminAlert(data.message, 'success');
+            showAdminToast(data.message, 'success');
             await loadPenetapanData(currentPeriodeData.id, currentPage);
         } else {
             showAdminAlert(data.error || 'Gagal mengubah status pengumuman.', 'error');
@@ -649,7 +643,7 @@ async function handleBulkApprove() {
         });
         const data = await res.json();
         if (res.ok) {
-            showAdminAlert(data.message || 'Berhasil menyetujui mahasiswa terpilih.', 'success');
+            showAdminToast(data.message || 'Berhasil menyetujui mahasiswa terpilih.', 'success');
             selectedIds.clear();
             updateBulkToolbar();
             loadPenetapanData(selectedPeriodeId, currentPage);
@@ -685,7 +679,7 @@ async function handleBulkReject() {
         });
         const data = await res.json();
         if (res.ok) {
-            showAdminAlert(data.message || 'Berhasil menolak pendaftaran mahasiswa terpilih.', 'success');
+            showAdminToast(data.message || 'Berhasil menolak pendaftaran mahasiswa terpilih.', 'success');
             selectedIds.clear();
             updateBulkToolbar();
             loadPenetapanData(selectedPeriodeId, currentPage);

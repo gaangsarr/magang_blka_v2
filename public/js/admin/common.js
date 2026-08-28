@@ -189,9 +189,50 @@ export function showAdminConfirm(message, title = 'Konfirmasi Aksi', type = 'war
     });
 }
 
+export function showAdminToast(message, type = 'info', duration = 3500) {
+    let container = document.getElementById('admin-toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'admin-toast-container';
+        document.body.appendChild(container);
+    }
+    container.className = 'admin-toast-container';
+    container.style.cssText = 'position: fixed !important; top: 24px !important; right: 24px !important; z-index: 999999 !important; display: flex !important; flex-direction: column !important; gap: 10px !important; pointer-events: none !important; max-width: calc(100vw - 48px) !important;';
+
+    const icons = {
+        success: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`,
+        error: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`,
+        warning: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+        info: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>`
+    };
+
+    const bgColors = {
+        success: '#047857',
+        error: '#b91c1c',
+        warning: '#d97706',
+        info: '#0b3d6b'
+    };
+    const bg = bgColors[type] || '#0b3d6b';
+    const iconSvg = icons[type] || icons.info;
+
+    const toast = document.createElement('div');
+    toast.className = `admin-toast ${type}`;
+    toast.style.cssText = `background: ${bg}; color: #ffffff; padding: 12px 18px; border-radius: 12px; font-size: 0.875rem; font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,0.18); pointer-events: auto; animation: adminToastSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); display: flex; align-items: center; gap: 10px; border: 1px solid rgba(255,255,255,0.2);`;
+    toast.innerHTML = `<span style="display: inline-flex; align-items: center; flex-shrink: 0;">${iconSvg}</span><span style="flex: 1; line-height: 1.4;">${message}</span>`;
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-12px) scale(0.95)';
+        toast.style.transition = 'all 0.25s ease';
+        setTimeout(() => toast.remove(), 260);
+    }, duration);
+}
+
 // Expose globally on window so legacy / existing scripts can use them seamlessly
 window.showAdminAlert = showAdminAlert;
 window.showAdminConfirm = showAdminConfirm;
+window.showAdminToast = showAdminToast;
 window.showAlert = showAdminAlert;
 window.showConfirm = showAdminConfirm;
 
@@ -204,4 +245,5 @@ window.confirm = function(message) {
     console.warn('[common.js] Legacy confirm() called synchronously. Use await showAdminConfirm() for proper promise resolution.');
     return true; // Fallback for un-awaited legacy sync confirm calls
 };
+
 

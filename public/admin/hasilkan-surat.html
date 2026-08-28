@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hasilkan Surat Penempatan Unit — REMATE Admin</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/assets/img/logo_itpln.png">
+    <link rel="apple-touch-icon" href="/assets/img/logo_itpln.png">
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/admin.css">
+    <style>
+        .period-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .period-select-card {
+            background: #ffffff;
+            border: 2px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 16px 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+        }
+        .period-select-card:hover {
+            border-color: #3b82f6;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.12);
+        }
+        .period-select-card.active {
+            border-color: #0b3d6b;
+            background: #f0f7ff;
+            box-shadow: 0 8px 24px rgba(11, 61, 107, 0.15);
+        }
+        .period-card-badge {
+            font-size: 0.725rem;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-block;
+        }
+        .config-form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        .form-full-width {
+            grid-column: 1 / -1;
+        }
+        .helper-note {
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .helper-note code {
+            background: #e2e8f0;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: #0f172a;
+            font-weight: 700;
+        }
+        .unit-prodi-tag {
+            display: inline-block;
+            font-size: 0.75rem;
+            background: #e0f2fe;
+            color: #0369a1;
+            padding: 3px 8px;
+            border-radius: 6px;
+            margin: 2px 4px 2px 0;
+            font-weight: 600;
+        }
+        .public-link-box {
+            background: #f8fafc;
+            border: 1px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body class="admin-body">
+    <div class="admin-layout">
+        <!-- Dynamic Sidebar Navigation -->
+        <aside id="admin-sidebar" class="admin-sidebar"></aside>
+
+        <!-- Main Content Area -->
+        <main class="admin-main">
+            <!-- Topbar Header -->
+            <header class="admin-topbar">
+                <div class="topbar-title-group">
+                    <h1>Hasilkan Surat Penempatan Unit</h1>
+                    <p>Terbitkan dan download surat resmi penempatan mahasiswa magang per kantor unit PLN Group</p>
+                </div>
+
+                <div class="admin-profile-badge">
+                    <div class="admin-avatar" id="admin-avatar">A</div>
+                    <div class="admin-user-info">
+                        <span class="admin-user-name" id="admin-name">Administrator</span>
+                        <span class="admin-user-role" id="admin-role">Admin REMATE</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content Container -->
+            <div class="admin-content">
+                
+                <!-- Section 1: Pemilihan Periode Magang -->
+                <div style="margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <h2 style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin: 0; display: flex; align-items: center; gap: 8px;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>
+                            <span>1. Pilih Periode Magang</span>
+                        </h2>
+                        <span style="font-size: 0.825rem; color: #64748b;" id="period-status-info">Memuat periode...</span>
+                    </div>
+
+                    <div id="period-cards-container" class="period-cards-grid">
+                        <div style="padding: 24px; text-align: center; color: #64748b; background: #fff; border-radius: 12px; grid-column: 1 / -1;">
+                            Memuat daftar periode...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 2: Form Kustomisasi Surat Per Periode -->
+                <div class="admin-card" style="margin-bottom: 24px;">
+                    <div class="admin-card-header" style="border-bottom: 1px solid #f1f5f9; padding-bottom: 16px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                        <div>
+                            <h3 class="admin-card-title" style="display: flex; align-items: center; gap: 8px;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                <span>2. Formulir Kustomisasi Dokumen Surat</span>
+                            </h3>
+                            <p style="font-size: 0.85rem; color: #64748b; margin-top: 4px;">Data ini akan dicetak ke dalam seluruh dokumen surat penempatan Word (.docx) untuk periode yang dipilih</p>
+                        </div>
+
+                        <button type="button" id="btn-save-config" class="btn-primary" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 22px; background: #0b3d6b; color: #ffffff; border-radius: 10px; font-weight: 700; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(11, 61, 107, 0.2);">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                            <span>Simpan Konfigurasi Surat</span>
+                        </button>
+                    </div>
+
+                    <form id="form-surat-config">
+                        <input type="hidden" id="cfg-periode-id">
+                        
+                        <div class="config-form-grid">
+                            <!-- Template Nomor Surat -->
+                            <div>
+                                <label class="admin-input-label" for="cfg-nomor-template">
+                                    Format Template Nomor Surat <span style="color: #ef4444;">*</span>
+                                </label>
+                                <input type="text" id="cfg-nomor-template" class="admin-input-field" placeholder="{nomor}/Srt/1/D0/08/2026" required>
+                                <div class="helper-note">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                                    <span>Gunakan kode <code>{nomor}</code> untuk penomoran urut otomatis (mis. 001, 002, dst).</span>
+                                </div>
+                            </div>
+
+                            <!-- Angka Awal Nomor Surat -->
+                            <div>
+                                <label class="admin-input-label" for="cfg-nomor-start">
+                                    Nomor Awal / Mulai Dari <span style="color: #ef4444;">*</span>
+                                </label>
+                                <input type="number" id="cfg-nomor-start" class="admin-input-field" min="1" value="1" required>
+                                <div class="helper-note">
+                                    <span>Nomor urutan awal untuk unit pertama dalam daftar.</span>
+                                </div>
+                            </div>
+
+                            <!-- Tanggal Surat -->
+                            <div>
+                                <label class="admin-input-label" for="cfg-tanggal-surat">
+                                    Tanggal Terbit Surat <span style="color: #ef4444;">*</span>
+                                </label>
+                                <input type="text" id="cfg-tanggal-surat" class="admin-input-field" placeholder="Jakarta, 29 Agustus 2026" required>
+                                <div class="helper-note">
+                                    <span>Dicetak di kanan atas surat (misal: Jakarta, 29 Agustus 2026).</span>
+                                </div>
+                            </div>
+
+                            <!-- Tahun Akademik -->
+                            <div>
+                                <label class="admin-input-label" for="cfg-tahun-akademik">
+                                    Tahun Akademik <span style="color: #ef4444;">*</span>
+                                </label>
+                                <input type="text" id="cfg-tahun-akademik" class="admin-input-field" placeholder="2026/2027" required>
+                                <div class="helper-note">
+                                    <span>Tahun ajaran/akademik program magang (misal: 2026/2027).</span>
+                                </div>
+                            </div>
+
+                            <!-- Perihal Surat -->
+                            <div class="form-full-width">
+                                <label class="admin-input-label" for="cfg-perihal">
+                                    Perihal Surat <span style="color: #ef4444;">*</span>
+                                </label>
+                                <textarea id="cfg-perihal" class="admin-input-field" rows="2" style="min-height: 60px; padding-left: 14px;" placeholder="Penyampaian Penempatan Mahasiswa&#10;Magang 5 Bulan PLN Group Tahun Ajaran 2026/2027" required></textarea>
+                            </div>
+
+                            <!-- Jabatan Penandatangan -->
+                            <div>
+                                <label class="admin-input-label" for="cfg-jabatan-ttd">
+                                    Jabatan Penandatangan <span style="color: #ef4444;">*</span>
+                                </label>
+                                <input type="text" id="cfg-jabatan-ttd" class="admin-input-field" placeholder="Wakil Rektor III Bidang Kemahasiswaan" required>
+                            </div>
+
+                            <!-- Nama Pejabat Penandatangan -->
+                            <div>
+                                <label class="admin-input-label" for="cfg-nama-ttd">
+                                    Nama & Gelar Pejabat Penandatangan <span style="color: #ef4444;">*</span>
+                                </label>
+                                <input type="text" id="cfg-nama-ttd" class="admin-input-field" placeholder="Ir. Purnomo, S.T., M.T." required>
+                            </div>
+
+                            <!-- Tembusan -->
+                            <div class="form-full-width">
+                                <label class="admin-input-label" for="cfg-tembusan">
+                                    Daftar Tembusan Surat (1 baris per tembusan)
+                                </label>
+                                <textarea id="cfg-tembusan" class="admin-input-field" rows="2" style="min-height: 60px; padding-left: 14px;" placeholder="1.  HTD PLN Pusat"></textarea>
+                            </div>
+
+                            <!-- Link Data Publik & Token -->
+                            <div class="form-full-width">
+                                <label class="admin-input-label" for="cfg-link-publik">
+                                    Tautan Aman Rekapitulasi Data Publik (Dilengkapi Token Otentikasi Periode)
+                                </label>
+                                <input type="text" id="cfg-link-publik" class="admin-input-field" placeholder="https://domain-anda.com/penempatan.html?token=..." readonly style="background: #f8fafc; font-family: var(--font-mono, monospace); font-size: 0.85rem;">
+                                
+                                <div class="public-link-box">
+                                    <div style="font-size: 0.85rem; color: #334155; display: flex; align-items: center; gap: 8px;">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0b3d6b" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                                        <span>Tautan ini menggunakan token rahasia agar data periode ini tidak dapat diakses atau ditebak secara acak oleh pihak luar.</span>
+                                    </div>
+                                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                        <button type="button" id="btn-copy-link" style="padding: 6px 12px; font-size: 0.8rem; background: #e2e8f0; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; color: #334155; display: inline-flex; align-items: center; gap: 6px;">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                                            <span>Salin Tautan</span>
+                                        </button>
+                                        <a id="btn-open-link" href="#" target="_blank" style="padding: 6px 12px; font-size: 0.8rem; background: #0b3d6b; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                                            <span>Buka Halaman Publik</span>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Section 3: Daftar Hasil Surat Per Kantor Unit & Tombol Download -->
+                <div class="admin-card">
+                    <div class="admin-card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 20px;">
+                        <div>
+                            <h3 class="admin-card-title" style="display: flex; align-items: center; gap: 8px;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                                <span>3. Daftar Dokumen Surat Penempatan Per-Kantor Unit</span>
+                            </h3>
+                            <p style="font-size: 0.85rem; color: #64748b; margin-top: 4px;" id="units-count-info">Memuat unit...</p>
+                        </div>
+
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <button type="button" id="btn-download-all-zip" class="btn-primary" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 22px; background: #047857; border-radius: 10px; font-weight: 700; color: #ffffff; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(4, 120, 87, 0.2);">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                <span>Download Semua Surat (.ZIP)</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Table Container -->
+                    <div class="admin-table-container custom-scrollbar">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 50px; text-align: center;">No</th>
+                                    <th style="width: 230px;">Nomor Surat Terbit</th>
+                                    <th>Kantor Unit PLN</th>
+                                    <th>Alamat Kantor</th>
+                                    <th style="width: 140px; text-align: center;">Jumlah Peserta</th>
+                                    <th style="width: 170px; text-align: center;">Aksi Download</th>
+                                </tr>
+                            </thead>
+                            <tbody id="units-table-body">
+                                <tr>
+                                    <td colspan="6" style="text-align: center; padding: 40px; color: #94a3b8;">
+                                        Memuat data unit penempatan...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script type="module" src="/js/admin/common.js"></script>
+    <script type="module" src="/js/admin/hasilkan-surat.js"></script>
+</body>
+</html>

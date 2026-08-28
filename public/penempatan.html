@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Rekapitulasi Penempatan Magang — ITPLN x PLN Group</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/assets/img/logo_itpln.png">
+    <link rel="apple-touch-icon" href="/assets/img/logo_itpln.png">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #0b3d6b;
+            --primary-dark: #072744;
+            --primary-light: #1e5a96;
+            --surface-bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+            --font-mono: 'IBM Plex Mono', monospace;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--surface-bg);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* --- Clean Navbar --- */
+        .public-navbar {
+            background: #ffffff;
+            border-bottom: 1px solid var(--border-color);
+            padding: 14px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+
+        .navbar-inner {
+            max-width: 1280px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--text-main);
+        }
+
+        .navbar-logo {
+            height: 36px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .brand-text h1 {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin: 0;
+            letter-spacing: -0.2px;
+        }
+
+        .brand-text p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            margin: 0;
+        }
+
+        .navbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .period-badge-nav {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #eff6ff;
+            color: #1d4ed8;
+            font-weight: 700;
+            font-size: 0.8rem;
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 1px solid #bfdbfe;
+        }
+
+        /* --- Main Layout --- */
+        .main-wrapper {
+            max-width: 1280px;
+            width: 100%;
+            margin: 20px auto 40px auto;
+            padding: 0 16px;
+            flex: 1;
+        }
+
+        /* --- Table Container Card --- */
+        .content-card {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            overflow: hidden;
+        }
+
+        /* --- Filter Panel --- */
+        .filter-panel {
+            padding: 18px 20px;
+            border-bottom: 1px solid var(--border-color);
+            background: #fafbfc;
+        }
+
+        .filter-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+
+        .filter-title {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-export {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #047857;
+            color: #ffffff;
+            font-size: 0.825rem;
+            font-weight: 700;
+            padding: 8px 14px;
+            border-radius: 8px;
+            text-decoration: none;
+            box-shadow: 0 2px 4px rgba(4, 120, 87, 0.15);
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-export:hover {
+            background: #065f46;
+        }
+
+        .filter-controls-grid {
+            display: grid;
+            grid-template-columns: 2fr 1.2fr 1.2fr 1fr;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .search-container {
+            position: relative;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        .input-control, .select-control {
+            width: 100%;
+            height: 38px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-family: inherit;
+            color: var(--text-main);
+            background-color: #ffffff;
+            padding: 0 12px;
+            outline: none;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+
+        .input-control:focus, .select-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(11, 61, 107, 0.1);
+        }
+
+        .search-control {
+            padding-left: 36px;
+            padding-right: 32px;
+        }
+
+        .clear-search-btn {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: none;
+            line-height: 1;
+            padding: 4px;
+        }
+
+        .clear-search-btn:hover {
+            color: #ef4444;
+        }
+
+        /* --- Table Styling --- */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .penempatan-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.875rem;
+        }
+
+        .penempatan-table thead {
+            background-color: #f1f5f9;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .penempatan-table th {
+            padding: 12px 14px;
+            font-weight: 700;
+            color: #334155;
+            font-size: 0.775rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        .penempatan-table td {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+            color: var(--text-main);
+        }
+
+        .penempatan-table tbody tr:hover {
+            background-color: #f8fafc;
+        }
+
+        .penempatan-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .badge-nim {
+            font-family: var(--font-mono);
+            font-weight: 600;
+            background: #f1f5f9;
+            color: #334155;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+
+        .badge-prog {
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 6px;
+            white-space: nowrap;
+        }
+
+        .badge-prog-1 {
+            background: #e0f2fe;
+            color: #0369a1;
+        }
+
+        .badge-prog-5 {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .unit-name-text {
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        /* --- Pagination Footer --- */
+        .pagination-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 20px;
+            background: #fafbfc;
+            border-top: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .page-info-text {
+            font-size: 0.825rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .page-nav-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-page-nav {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            background: #ffffff;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-page-nav:hover:not(:disabled) {
+            background: #f1f5f9;
+            border-color: #94a3b8;
+        }
+
+        .btn-page-nav:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .page-current-badge {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            padding: 0 6px;
+        }
+
+        /* --- Error / No Token State --- */
+        .error-state-card {
+            background: #ffffff;
+            border-radius: var(--radius-lg);
+            padding: 60px 24px;
+            text-align: center;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-color);
+            max-width: 540px;
+            margin: 40px auto;
+        }
+
+        .error-icon-circle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #fee2e2;
+            color: #dc2626;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px auto;
+        }
+
+        /* --- Footer --- */
+        .public-site-footer {
+            background: #ffffff;
+            border-top: 1px solid var(--border-color);
+            padding: 16px 20px;
+            text-align: center;
+            font-size: 0.775rem;
+            color: var(--text-muted);
+            margin-top: auto;
+        }
+
+        /* --- Responsiveness --- */
+        @media (max-width: 860px) {
+            .filter-controls-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .search-container {
+                grid-column: 1 / -1;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .filter-controls-grid {
+                grid-template-columns: 1fr;
+            }
+            .filter-header-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .btn-export {
+                justify-content: center;
+                width: 100%;
+            }
+            .pagination-footer {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <header class="public-navbar">
+        <div class="navbar-inner">
+            <a href="/" class="navbar-brand">
+                <img src="/assets/img/logo_itpln.png" alt="Logo ITPLN" class="navbar-logo" onerror="this.style.display='none'">
+                <div class="brand-text">
+                    <h1>Rekapitulasi Penempatan Magang</h1>
+                    <p>Bagian Layanan Karir dan Alumni (BLKA) — Institut Teknologi PLN</p>
+                </div>
+            </a>
+
+            <div class="navbar-actions">
+                <span class="period-badge-nav" id="nav-period-badge">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    <span id="nav-period-text">Memuat periode...</span>
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div id="page-content">
+        <main class="main-wrapper">
+            <div class="content-card">
+                <!-- Filter Panel -->
+                <div class="filter-panel">
+                    <div class="filter-header-row">
+                        <div class="filter-title">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                            <span>Daftar Mahasiswa Diterima</span>
+                            <span id="filter-result-count" style="font-size: 0.8rem; font-weight: 500; color: var(--text-muted);">(Memuat...)</span>
+                        </div>
+                        <div>
+                            <a id="btn-export-excel" href="#" class="btn-export">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                <span>Export Excel (.xlsx)</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Filter Controls Grid -->
+                    <div class="filter-controls-grid">
+                        <div class="search-container">
+                            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                            <input type="text" id="input-search" class="input-control search-control" placeholder="Cari NIM, Nama Mahasiswa, atau Unit...">
+                            <button type="button" id="btn-clear-search" class="clear-search-btn" title="Hapus Pencarian">&times;</button>
+                        </div>
+
+                        <div>
+                            <select id="select-unit" class="select-control">
+                                <option value="">Semua Kantor Unit PLN</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <select id="select-jurusan" class="select-control">
+                                <option value="">Semua Program Studi</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <select id="select-program" class="select-control">
+                                <option value="">Semua Program</option>
+                                <option value="5_bulan">Magang 5 Bulan</option>
+                                <option value="1_bulan">Magang 1 Bulan</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div class="table-responsive">
+                    <table class="penempatan-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px; text-align: center;">No</th>
+                                <th style="width: 120px;">NIM</th>
+                                <th>Nama Mahasiswa</th>
+                                <th>Program Studi</th>
+                                <th style="text-align: center; width: 130px;">Program</th>
+                                <th>Unit Penempatan PLN</th>
+                                <th>Peminatan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body">
+                            <tr>
+                                <td colspan="7" style="text-align: center; padding: 48px 16px; color: #94a3b8;">
+                                    Memuat data rekapitulasi penempatan...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination Footer -->
+                <div class="pagination-footer">
+                    <div class="page-info-text" id="pagination-info">
+                        Menampilkan 0 data
+                    </div>
+                    <div class="page-nav-group">
+                        <button type="button" id="btn-prev" class="btn-page-nav" disabled>
+                            &larr; Sebelumnya
+                        </button>
+                        <span class="page-current-badge" id="page-badge">Hal 1 / 1</span>
+                        <button type="button" id="btn-next" class="btn-page-nav" disabled>
+                            Berikutnya &rarr;
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="public-site-footer">
+        <div>&copy; 2026 Bagian Layanan Karir dan Alumni (BLKA) — Institut Teknologi PLN</div>
+    </footer>
+
+    <!-- Client Script -->
+    <script>
+        let currentToken = '';
+        let currentPage = 1;
+        let totalPages = 1;
+        let searchTimeout = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            currentToken = urlParams.get('token') || '';
+
+            if (!currentToken) {
+                renderErrorState('Akses Memerlukan Token Resmi', 'Tautan ini tidak menyertakan token otentikasi resmi surat penempatan. Pastikan Anda membuka tautan lengkap yang tertera pada surat resmi ITPLN.');
+                return;
+            }
+
+            initEvents();
+            loadPlacementData(1, true);
+        });
+
+        function initEvents() {
+            const searchInput = document.getElementById('input-search');
+            const clearSearchBtn = document.getElementById('btn-clear-search');
+            const unitSelect = document.getElementById('select-unit');
+            const jurusanSelect = document.getElementById('select-jurusan');
+            const progSelect = document.getElementById('select-program');
+
+            searchInput.addEventListener('input', () => {
+                clearSearchBtn.style.display = searchInput.value ? 'block' : 'none';
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    currentPage = 1;
+                    loadPlacementData(1, false);
+                }, 300);
+            });
+
+            clearSearchBtn.addEventListener('click', () => {
+                searchInput.value = '';
+                clearSearchBtn.style.display = 'none';
+                currentPage = 1;
+                loadPlacementData(1, false);
+            });
+
+            unitSelect.addEventListener('change', () => {
+                currentPage = 1;
+                loadPlacementData(1, false);
+            });
+
+            jurusanSelect.addEventListener('change', () => {
+                currentPage = 1;
+                loadPlacementData(1, false);
+            });
+
+            progSelect.addEventListener('change', () => {
+                currentPage = 1;
+                loadPlacementData(1, false);
+            });
+
+            document.getElementById('btn-prev').addEventListener('click', () => {
+                if (currentPage > 1) {
+                    loadPlacementData(currentPage - 1, false);
+                }
+            });
+
+            document.getElementById('btn-next').addEventListener('click', () => {
+                if (currentPage < totalPages) {
+                    loadPlacementData(currentPage + 1, false);
+                }
+            });
+        }
+
+        async function loadPlacementData(page = 1, isInitial = false) {
+            const tbody = document.getElementById('table-body');
+            const searchVal = document.getElementById('input-search').value.trim();
+            const unitVal = document.getElementById('select-unit').value;
+            const jurusanVal = document.getElementById('select-jurusan').value;
+            const progVal = document.getElementById('select-program').value;
+
+            const params = new URLSearchParams();
+            params.append('token', currentToken);
+            params.append('page', page);
+            if (searchVal) params.append('search', searchVal);
+            if (unitVal) params.append('unit_id', unitVal);
+            if (jurusanVal) params.append('jurusan_id', jurusanVal);
+            if (progVal) params.append('program', progVal);
+
+            // Update Export Link
+            document.getElementById('btn-export-excel').href = `/api/public/penempatan_export.php?${params.toString()}`;
+
+            try {
+                const res = await fetch(`/api/public/penempatan.php?${params.toString()}`);
+                const data = await res.json();
+
+                if (!data.ok) {
+                    renderErrorState('Tautan Tidak Ditemukan', data.error || 'Token surat penempatan tidak valid atau sudah tidak aktif.');
+                    return;
+                }
+
+                // Update Header Period Info
+                if (data.periode) {
+                    const navText = document.getElementById('nav-period-text');
+                    if (navText) {
+                        navText.innerText = `${data.periode.nama} (${data.periode.tahun_akademik || '2026/2027'})`;
+                    }
+                    document.title = `Rekapitulasi Penempatan — ${data.periode.nama}`;
+                }
+
+                // Populate Dropdown Filters on initial load
+                if (isInitial) {
+                    if (data.unit_list && data.unit_list.length > 0) {
+                        const unitSelect = document.getElementById('select-unit');
+                        data.unit_list.forEach(u => {
+                            const opt = document.createElement('option');
+                            opt.value = u.id;
+                            opt.textContent = u.nama;
+                            unitSelect.appendChild(opt);
+                        });
+                    }
+
+                    if (data.jurusan_list && data.jurusan_list.length > 0) {
+                        const jurSelect = document.getElementById('select-jurusan');
+                        data.jurusan_list.forEach(j => {
+                            const opt = document.createElement('option');
+                            opt.value = j.id;
+                            opt.textContent = j.nama;
+                            jurSelect.appendChild(opt);
+                        });
+                    }
+                }
+
+                // Render Table Rows
+                renderTable(data.data, data.pagination, (page - 1) * (data.pagination.per_page || 25));
+
+            } catch (err) {
+                console.error('[penempatan.html] Fetch error:', err);
+                renderErrorState('Gangguan Koneksi', 'Gagal memuat data dari server. Silakan muat ulang halaman beberapa saat lagi.');
+            }
+        }
+
+        function renderTable(rows, pagination, offset) {
+            const tbody = document.getElementById('table-body');
+            const resultCount = document.getElementById('filter-result-count');
+            if (!tbody) return;
+
+            if (!rows || rows.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 48px 16px; color: #94a3b8;">
+                            <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                                <span style="font-weight: 600; font-size: 0.95rem;">Tidak ada data mahasiswa yang cocok dengan kriteria pencarian.</span>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                if (resultCount) resultCount.innerText = `(0 Mahasiswa)`;
+                updatePagination(0, 1, 1, 25);
+                return;
+            }
+
+            let html = '';
+            rows.forEach((row, idx) => {
+                const noUrut = offset + idx + 1;
+                const progBadge = row.program === '1_bulan' 
+                    ? `<span class="badge-prog badge-prog-1">1 Bulan</span>`
+                    : `<span class="badge-prog badge-prog-5">5 Bulan</span>`;
+
+                html += `
+                    <tr>
+                        <td style="text-align: center; font-weight: 600; color: #64748b;">${noUrut}</td>
+                        <td><span class="badge-nim">${escapeHtml(row.nim || '-')}</span></td>
+                        <td><strong style="color: #0f172a;">${escapeHtml(row.nama || '-')}</strong></td>
+                        <td style="color: #475569;">${escapeHtml(row.prodi || '-')}</td>
+                        <td style="text-align: center;">${progBadge}</td>
+                        <td><span class="unit-name-text">${escapeHtml(row.unit_penempatan || '-')}</span></td>
+                        <td style="color: #475569; font-size: 0.825rem;">${escapeHtml(row.peminatan || '-')}</td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+
+            const total = pagination.total || rows.length;
+            if (resultCount) resultCount.innerText = `(${total} Mahasiswa Diterima)`;
+            updatePagination(total, pagination.page || 1, pagination.total_pages || 1, pagination.per_page || 25);
+        }
+
+        function updatePagination(total, page, totalPageCount, perPage) {
+            currentPage = page;
+            totalPages = totalPageCount;
+
+            const infoEl = document.getElementById('pagination-info');
+            const badgeEl = document.getElementById('page-badge');
+            const prevBtn = document.getElementById('btn-prev');
+            const nextBtn = document.getElementById('btn-next');
+
+            const start = total === 0 ? 0 : (page - 1) * perPage + 1;
+            const end = Math.min(page * perPage, total);
+
+            if (infoEl) infoEl.innerText = `Menampilkan ${start} - ${end} dari total ${total} mahasiswa`;
+            if (badgeEl) badgeEl.innerText = `Hal ${page} / ${totalPageCount || 1}`;
+
+            if (prevBtn) prevBtn.disabled = page <= 1;
+            if (nextBtn) nextBtn.disabled = page >= totalPages;
+        }
+
+        function renderErrorState(title, message) {
+            const pageContent = document.getElementById('page-content');
+            if (!pageContent) return;
+
+            pageContent.innerHTML = `
+                <main class="main-wrapper">
+                    <div class="error-state-card">
+                        <div class="error-icon-circle">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        </div>
+                        <h2 style="font-size: 1.35rem; font-weight: 800; color: #0f172a; margin-bottom: 8px;">${escapeHtml(title)}</h2>
+                        <p style="font-size: 0.9rem; color: #64748b; line-height: 1.6; margin-bottom: 24px;">${escapeHtml(message)}</p>
+                        <a href="/" style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; background: var(--primary); color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 0.875rem;">
+                            Kembali ke Beranda
+                        </a>
+                    </div>
+                </main>
+            `;
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+    </script>
+</body>
+</html>

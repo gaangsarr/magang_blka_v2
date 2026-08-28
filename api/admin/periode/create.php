@@ -76,11 +76,14 @@ try {
 
         $stmtLog = $pdo->prepare("INSERT INTO log_aktivitas (admin_id, aksi, entitas_tipe, entitas_id, detail_json, ip_address) VALUES (?, 'buat_periode', 'periode', ?, ?, '127.0.0.1')");
         $stmtLog->execute([$adminId, $periodeId, json_encode(['nama' => $nama, 'angkatan_eligible' => $angkatanEligible, 'copied_from' => $copyFromPeriodeId])]);
+
+        // Inisialisasi token & konfigurasi surat otomatis untuk periode baru
+        \App\SuratGenerator::getConfig($pdo, (int)$periodeId);
     });
     
     echo json_encode([
         'ok' => true,
-        'message' => 'Periode berhasil dibuat (status draft).'
+        'message' => 'Periode berhasil dibuat (status persiapan).'
     ]);
 } catch (\Throwable $e) {
     http_response_code(500);
