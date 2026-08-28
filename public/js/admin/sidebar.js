@@ -88,14 +88,19 @@ export const SIDEBAR_MENU_SECTIONS = [
                         aliases: ['/admin/anak-perusahaan.html']
                     },
                     {
-                        label: 'Unit Induk (UP3/UID)',
+                        label: 'Unit Induk (UID/UIW)',
                         path: '/admin/unit-induk.html',
                         aliases: ['/admin/unit-induk.html']
                     },
                     {
-                        label: 'Unit Pelaksana (ULP)',
+                        label: 'Unit Pelaksana (UP3/UPDL)',
                         path: '/admin/unit-pelaksana.html',
                         aliases: ['/admin/unit-pelaksana.html']
+                    },
+                    {
+                        label: 'Unit Layanan (ULP)',
+                        path: '/admin/unit-layanan.html',
+                        aliases: ['/admin/unit-layanan.html']
                     }
                 ]
             }

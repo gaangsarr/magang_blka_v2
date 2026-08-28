@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Unit Pelaksana PLN (ULP) — REMATE Admin</title>
+    <title>Unit Pelaksana PLN (UP3 / UPDL) — REMATE Admin</title>
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/assets/img/logo_itpln.png">
     <link rel="apple-touch-icon" href="/assets/img/logo_itpln.png">
@@ -19,8 +19,8 @@
         <main class="admin-main">
             <header class="admin-topbar">
                 <div class="topbar-title-group">
-                    <h1>Hierarki: Unit Pelaksana (ULP / Unit Layanan Pelanggan)</h1>
-                    <p>Tingkat unit teknis operasional lapangan di bawah naungan Unit Induk (UP3)</p>
+                    <h1>Hierarki: Unit Pelaksana (UP3 / UPDL / UPT)</h1>
+                    <p>Unit Pelaksana Pelayanan Pelanggan (UP3), Unit Diklat (UPDL), atau Unit Transmisi (UPT) di bawah naungan Unit Induk (UID / UIW / Pusat)</p>
                 </div>
 
                 <div class="admin-profile-badge">
@@ -37,17 +37,17 @@
                     <div class="admin-card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
                         <div>
                             <div style="display: flex; align-items: center; gap: 10px;">
-                                <h3 class="admin-card-title" style="margin: 0;">Daftar Unit Pelaksana (ULP)</h3>
-                                <span class="badge-status badge-unit_pelaksana" id="total-count-badge">0 ULP</span>
+                                <h3 class="admin-card-title" style="margin: 0;">Daftar Unit Pelaksana</h3>
+                                <span class="badge-status badge-unit_pelaksana" id="total-count-badge">0 Unit Pelaksana</span>
                             </div>
-                            <p style="font-size: 0.85rem; color: #64748b; margin: 4px 0 0 0;">Unit Layanan Pelanggan terdekat dengan area tinggal mahasiswa</p>
+                            <p style="font-size: 0.85rem; color: #64748b; margin: 4px 0 0 0;">Contoh: PLN UP3 Bekasi, PLN UP3 Bogor, PLN UP3 Depok, PLN UP3 Cengkareng, PLN UPDL Bogor</p>
                         </div>
 
                         <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-                            <input type="text" id="search-input" placeholder="Cari ULP..." style="padding: 8px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.875rem; width: 220px;" />
+                            <input type="text" id="search-input" placeholder="Cari unit pelaksana..." style="padding: 8px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.875rem; width: 220px;" />
                             <button type="button" id="btn-add-entitas" class="btn-primary" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; background: #0b3d6b; color: #ffffff; border: none; border-radius: 10px; font-weight: 700; font-size: 0.875rem; cursor: pointer; box-shadow: 0 4px 12px rgba(11, 61, 107, 0.2);">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                                <span>Tambah ULP</span>
+                                <span>Tambah Unit Pelaksana</span>
                             </button>
                         </div>
                     </div>
@@ -57,7 +57,7 @@
                             <thead>
                                 <tr>
                                     <th>Nama Unit Pelaksana</th>
-                                    <th>Unit Induk (UP3) Induk</th>
+                                    <th>Unit Induk (UID/UIW) Induk</th>
                                     <th>Alamat & Koordinat</th>
                                     <th>Peminatan Tersedia</th>
                                     <th>Buka Magang</th>
@@ -78,7 +78,7 @@
     <div id="modal-entitas" class="modal-overlay hidden" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 20px;">
         <div class="modal-card" style="background: #ffffff; border-radius: 16px; width: 100%; max-width: 600px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); overflow: hidden; max-height: 90vh; display: flex; flex-direction: column;">
             <div style="padding: 20px 24px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
-                <h3 id="modal-entitas-title" style="margin: 0; font-size: 1.15rem; font-weight: 800; color: #0b3d6b;">Tambah ULP Baru</h3>
+                <h3 id="modal-entitas-title" style="margin: 0; font-size: 1.15rem; font-weight: 800; color: #0b3d6b;">Tambah Unit Pelaksana Baru</h3>
                 <button type="button" id="btn-close-modal" style="background: none; border: none; font-size: 1.5rem; line-height: 1; cursor: pointer; color: #64748b;">&times;</button>
             </div>
 
@@ -86,35 +86,35 @@
                 <input type="hidden" id="entitas-id" value="" />
 
                 <div>
-                    <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 6px;">Unit Induk (UP3) Induk <span style="color: #ef4444;">*</span></label>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 6px;">Unit Induk (UID/UIW) Induk <span style="color: #ef4444;">*</span></label>
                     <select id="entitas-parent-id" required style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem;">
-                        <option value="">-- Pilih Unit Induk (UP3) --</option>
+                        <option value="">-- Pilih Unit Induk (UID/UIW) --</option>
                     </select>
                 </div>
 
                 <div>
-                    <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 6px;">Nama Unit Pelaksana (ULP) <span style="color: #ef4444;">*</span></label>
-                    <input type="text" id="entitas-nama" required placeholder="Contoh: PLN ULP Bekasi Kota" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem;" />
+                    <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 6px;">Nama Unit Pelaksana (UP3/UPDL) <span style="color: #ef4444;">*</span></label>
+                    <input type="text" id="entitas-nama" required placeholder="Contoh: PLN UP3 Bekasi" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem;" />
                 </div>
 
                 <div>
                     <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 6px;">Singkatan / Alias</label>
-                    <input type="text" id="entitas-singkatan" placeholder="Contoh: ULP Bekasi Kota" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem;" />
+                    <input type="text" id="entitas-singkatan" placeholder="Contoh: UP3 Bekasi" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem;" />
                 </div>
 
                 <div>
                     <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 6px;">Alamat Kantor</label>
-                    <textarea id="entitas-alamat" rows="2" placeholder="Jl. Hasanudin No. 1, Bekasi" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; resize: vertical;"></textarea>
+                    <textarea id="entitas-alamat" rows="2" placeholder="Jl. Veteran No. 9, Bekasi" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; resize: vertical;"></textarea>
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                     <div>
                         <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 6px;">Latitude</label>
-                        <input type="number" step="any" id="entitas-latitude" placeholder="-6.2389" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem;" />
+                        <input type="number" step="any" id="entitas-latitude" placeholder="-6.2349" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem;" />
                     </div>
                     <div>
                         <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 6px;">Longitude</label>
-                        <input type="number" step="any" id="entitas-longitude" placeholder="107.0001" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem;" />
+                        <input type="number" step="any" id="entitas-longitude" placeholder="106.9896" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem;" />
                     </div>
                 </div>
 
@@ -122,7 +122,7 @@
                 <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between;">
                     <div>
                         <div style="font-weight: 700; color: #166534; font-size: 0.9rem;">Membuka Kesempatan Magang?</div>
-                        <div style="font-size: 0.775rem; color: #15803d; margin-top: 2px;">Jika aktif, kantor ULP ini dapat diset kuota pada periode magang dan dipilih mahasiswa.</div>
+                        <div style="font-size: 0.775rem; color: #15803d; margin-top: 2px;">Jika aktif, kantor UP3 ini dapat diset kuota pada periode magang dan dipilih mahasiswa.</div>
                     </div>
                     <label class="switch">
                         <input type="checkbox" id="entitas-menerima-magang" checked />
@@ -156,7 +156,7 @@
             label: 'Unit Pelaksana',
             hasParent: true,
             parentTipes: ['unit_induk'],
-            parentLabel: 'Unit Induk (UP3) Induk'
+            parentLabel: 'Unit Induk (UID/UIW) Induk'
         });
     </script>
 </body>

@@ -30,8 +30,11 @@ function getTipeBadge(tipe) {
         case 'unit_induk':
             return '<span class="badge-status badge-unit_induk">Unit Induk</span>';
         case 'unit_pelaksana':
-        default:
             return '<span class="badge-status badge-unit_pelaksana">Unit Pelaksana</span>';
+        case 'unit_layanan':
+            return '<span class="badge-status badge-unit_layanan">Unit Layanan</span>';
+        default:
+            return `<span class="badge-status badge-secondary">${escapeHtml(tipe || 'Unit')}</span>`;
     }
 }
 

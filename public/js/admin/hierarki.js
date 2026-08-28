@@ -393,7 +393,7 @@ export function initHierarkiPage(config) {
         // Default menerima magang state
         const chkMagang = document.getElementById('entitas-menerima-magang');
         if (chkMagang) {
-            chkMagang.checked = (tipe === 'unit_pelaksana');
+            chkMagang.checked = (tipe === 'unit_pelaksana' || tipe === 'unit_layanan');
             updatePeminatanSectionState(chkMagang.checked);
         }
 

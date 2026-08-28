@@ -168,8 +168,9 @@ try {
         'holding' => 'Holding (Pusat)',
         'subholding' => 'Subholding',
         'anak_perusahaan' => 'Anak Perusahaan',
-        'unit_induk' => 'Unit Induk (UP3/UID)',
-        'unit_pelaksana' => 'Unit Pelaksana (ULP)'
+        'unit_induk' => 'Unit Induk (UID/UIW)',
+        'unit_pelaksana' => 'Unit Pelaksana (UP3/UPDL)',
+        'unit_layanan' => 'Unit Layanan (ULP)'
     ];
 
     $sebaranHierarki = [];

@@ -34,9 +34,10 @@ try {
         // daripada seed.php ini. Biarkan seed.php hanya untuk periode & user jika perlu.
         $pdo->exec("
             INSERT INTO entitas_perusahaan (tipe, parent_id, nama, singkatan, alamat, latitude, longitude, aktif, menerima_magang) VALUES 
-            ('holding',       NULL, 'PT PLN (Persero)',       'PLN',     'Jl. Trunojoyo Blok M-I No. 135, Jakarta Selatan', -6.2433, 106.8019, 1, 1),
-            ('unit_induk',    1,    'PLN UID Jakarta Raya',   'UID JKT', 'Jl. M.I. Ridwan Rais No.1, Jakarta',             -6.1804, 106.8336, 1, 0),
-            ('unit_pelaksana',2,    'PLN UP3 Cengkareng',     'UP3 CGK', 'Jl. Daan Mogot KM 16, Tangerang',                -6.1697, 106.7295, 1, 1)
+            ('holding',        NULL, 'PT PLN (Persero)',                     'PLN',     'Jl. Trunojoyo Blok M-I No. 135, Jakarta Selatan', -6.2433, 106.8019, 1, 1),
+            ('unit_induk',     1,    'PLN Unit Induk Distribusi Jakarta Raya', 'UID JKT', 'Jl. M.I. Ridwan Rais No.1, Jakarta',             -6.1804, 106.8336, 1, 0),
+            ('unit_pelaksana', 2,    'PLN UP3 Cengkareng',                   'UP3 CGK', 'Jl. Daan Mogot KM 16, Tangerang',                -6.1697, 106.7295, 1, 1),
+            ('unit_layanan',   3,    'PLN ULP Kalideres',                    'ULP KLD', 'Jl. Peta Selatan No. 8, Kalideres',              -6.1550, 106.7050, 1, 1)
         ");
         echo "Entitas perusahaan ditambahkan.\n";
     }

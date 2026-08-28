@@ -30,13 +30,13 @@ $alamat         = trim($body['alamat'] ?? '') ?: null;
 $lat            = isset($body['latitude'])  && $body['latitude']  !== '' ? (float)$body['latitude']  : null;
 $lng            = isset($body['longitude']) && $body['longitude'] !== '' ? (float)$body['longitude'] : null;
 $aktif          = isset($body['aktif']) ? (int)(bool)$body['aktif'] : 1;
-$menerimaMagang = isset($body['menerima_magang']) ? (int)(bool)$body['menerima_magang'] : ($tipe === 'unit_pelaksana' ? 1 : 0);
+$menerimaMagang = isset($body['menerima_magang']) ? (int)(bool)$body['menerima_magang'] : (in_array($tipe, ['unit_pelaksana', 'unit_layanan'], true) ? 1 : 0);
 $peminatanIds   = isset($body['peminatan_ids']) && is_array($body['peminatan_ids'])
     ? array_values(array_unique(array_filter(array_map('intval', $body['peminatan_ids']))))
     : [];
 
 // ── Validasi tipe ────────────────────────────────────────────────────────────
-$validTipe = ['holding', 'subholding', 'anak_perusahaan', 'unit_induk', 'unit_pelaksana'];
+$validTipe = ['holding', 'subholding', 'anak_perusahaan', 'unit_induk', 'unit_pelaksana', 'unit_layanan'];
 if (!in_array($tipe, $validTipe, true)) {
     http_response_code(400);
     echo json_encode(['error' => 'Tipe tidak valid. Pilih: ' . implode(', ', $validTipe)]);
@@ -67,8 +67,9 @@ if ($tipe === 'holding' && $parentId !== null) {
 $parentRules = [
     'subholding'      => ['holding'],
     'anak_perusahaan' => ['holding', 'subholding'],
-    'unit_induk'      => ['anak_perusahaan', 'holding', 'subholding'],
+    'unit_induk'      => ['holding', 'subholding', 'anak_perusahaan'],
     'unit_pelaksana'  => ['unit_induk'],
+    'unit_layanan'    => ['unit_pelaksana'],
 ];
 
 // ── Validasi peminatan jika menerima_magang = 1 ──────────────────────────────

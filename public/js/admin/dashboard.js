@@ -279,9 +279,10 @@ function renderHierarkiChart(dataList) {
                 backgroundColor: [
                     '#0b3d6b', // Holding
                     '#0284c7', // Subholding
-                    '#8b5cf6', // Anak Perusahaan
-                    '#10b981', // Unit Induk
-                    '#f59e0b'  // Unit Pelaksana
+                    '#7c3aed', // Anak Perusahaan
+                    '#0d9488', // Unit Induk
+                    '#d97706', // Unit Pelaksana
+                    '#16a34a'  // Unit Layanan
                 ],
                 borderWidth: 2,
                 borderColor: '#ffffff',
@@ -434,7 +435,8 @@ function formatHierarchyType(tipe) {
         'subholding': 'Subholding',
         'anak_perusahaan': 'Anak Perusahaan',
         'unit_induk': 'Unit Induk',
-        'unit_pelaksana': 'Unit Pelaksana'
+        'unit_pelaksana': 'Unit Pelaksana',
+        'unit_layanan': 'Unit Layanan'
     };
     return map[tipe] || tipe;
 }

@@ -50,7 +50,10 @@ $stmt = $pdo->query("SELECT COUNT(*) FROM entitas_perusahaan WHERE tipe = 'holdi
 test("Holding terdaftar", (int)$stmt->fetchColumn() >= 1);
 
 $stmt = $pdo->query("SELECT COUNT(*) FROM entitas_perusahaan WHERE tipe = 'unit_pelaksana'");
-test("Unit Pelaksana terdaftar", (int)$stmt->fetchColumn() >= 7);
+test("Unit Pelaksana terdaftar", (int)$stmt->fetchColumn() >= 3);
+
+$stmt = $pdo->query("SELECT COUNT(*) FROM entitas_perusahaan WHERE tipe = 'unit_layanan'");
+test("Unit Layanan terdaftar", (int)$stmt->fetchColumn() >= 7);
 
 $stmt = $pdo->query("SELECT COUNT(*) FROM entitas_perusahaan WHERE menerima_magang = 1");
 $totalMagang = (int)$stmt->fetchColumn();
@@ -64,6 +67,7 @@ test("subholding.html ada",       file_exists(__DIR__ . '/public/admin/subholdin
 test("anak-perusahaan.html ada",  file_exists(__DIR__ . '/public/admin/anak-perusahaan.html'));
 test("unit-induk.html ada",       file_exists(__DIR__ . '/public/admin/unit-induk.html'));
 test("unit-pelaksana.html ada",   file_exists(__DIR__ . '/public/admin/unit-pelaksana.html'));
+test("unit-layanan.html ada",     file_exists(__DIR__ . '/public/admin/unit-layanan.html'));
 test("peminatan.html ada",        file_exists(__DIR__ . '/public/admin/peminatan.html'));
 test("hierarki.js ada",           file_exists(__DIR__ . '/public/js/admin/hierarki.js'));
 test("peminatan.js ada",          file_exists(__DIR__ . '/public/js/admin/peminatan.js'));

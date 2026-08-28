@@ -1059,9 +1059,9 @@ input:checked + .slider:before {
 }
 
 .badge-subholding {
-  background: #f0fdf4;
-  color: #15803d;
-  border: 1px solid #bbf7d0;
+  background: #f0f9ff;
+  color: #0284c7;
+  border: 1px solid #bae6fd;
 }
 
 .badge-anak_perusahaan {
@@ -1071,15 +1071,21 @@ input:checked + .slider:before {
 }
 
 .badge-unit_induk {
+  background: #f0fdfa;
+  color: #0f766e;
+  border: 1px solid #99f6e4;
+}
+
+.badge-unit_pelaksana {
   background: #fffbeb;
   color: #b45309;
   border: 1px solid #fde68a;
 }
 
-.badge-unit_pelaksana {
-  background: #f0fdfa;
-  color: #0f766e;
-  border: 1px solid #99f6e4;
+.badge-unit_layanan {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
 }
 
 .badge-magang-ya {

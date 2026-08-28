@@ -798,10 +798,11 @@ function renderUnitsTable(page = 1) {
 
         tr.innerHTML = `
             <td data-label="No" style="text-align: center; font-weight: 600; color: #64748b;">${noUrut}</td>
-            <td data-label="Unit Pelaksana">
+            <td data-label="Unit Magang">
                 <div>
-                    <strong style="color: #0b3d6b;">${escapeHtml(u.nama_unit)}</strong><br>
-                    <span class="text-sm text-abu">${escapeHtml(u.alamat || '-')}</span>
+                    <strong style="color: #0b3d6b;">${escapeHtml(u.nama_unit)}</strong>
+                    ${u.nama_parent ? `<div style="font-size: 0.75rem; color: #64748b; font-weight: 600; margin-top: 1px;">Induk: ${escapeHtml(u.nama_parent)}</div>` : ''}
+                    <span class="text-sm text-abu" style="display: block; margin-top: 2px;">${escapeHtml(u.alamat || '-')}</span>
                 </div>
             </td>
             <td data-label="Jarak">${u.jarak !== null ? u.jarak + ' km' : '-'}</td>
@@ -817,7 +818,7 @@ function renderUnitsTable(page = 1) {
     const start = offset + 1;
     const end = Math.min(offset + unitPerPage, total);
 
-    if (infoEl) infoEl.innerText = `Menampilkan ${start}–${end} dari ${total} unit pelaksana`;
+    if (infoEl) infoEl.innerText = `Menampilkan ${start}–${end} dari ${total} unit magang`;
     if (badgeEl) badgeEl.innerText = `Hal ${unitCurrentPage} / ${totalPages}`;
     if (prevBtn) prevBtn.disabled = (unitCurrentPage <= 1);
     if (nextBtn) nextBtn.disabled = (unitCurrentPage >= totalPages);

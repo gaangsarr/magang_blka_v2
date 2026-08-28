@@ -5,23 +5,13 @@ declare(strict_types=1);
 use Phinx\Seed\AbstractSeed;
 
 /**
- * Seed hierarki PLN dan peminatan contoh.
- * Berisi struktur nyata yang bisa langsung dipakai untuk demo/testing.
- *
- * Hierarki:
- *   PLN Holding (Menerima Magang)
- *     └─ PLN Nusantara Power (Subholding)
- *     └─ PLN Unit Induk Distribusi Jawa Barat (Anak Perusahaan)
- *         └─ UP3 Bekasi (Unit Induk)
- *             └─ ULP Bekasi Kota (Unit Pelaksana - Menerima Magang)
- *             └─ ULP Bekasi Utara (Unit Pelaksana - Menerima Magang)
- *             └─ ULP Cikarang (Unit Pelaksana - Menerima Magang)
- *         └─ UP3 Bogor (Unit Induk)
- *             └─ ULP Bogor Kota (Unit Pelaksana - Menerima Magang)
- *             └─ ULP Cibinong (Unit Pelaksana - Menerima Magang)
- *         └─ UP3 Depok (Unit Induk)
- *             └─ ULP Depok (Unit Pelaksana - Menerima Magang)
- *             └─ ULP Cinere (Unit Pelaksana - Menerima Magang)
+ * Seed hierarki PLN dan peminatan contoh untuk 6 tingkatan lengkap:
+ * 1. Holding (Pusat)
+ * 2. Subholding
+ * 3. Anak Perusahaan
+ * 4. Unit Induk (UID/UIW)
+ * 5. Unit Pelaksana (UP3/UPDL)
+ * 6. Unit Layanan (ULP)
  */
 class DemoDataSeeder extends AbstractSeed
 {
@@ -78,19 +68,32 @@ class DemoDataSeeder extends AbstractSeed
         $ep->insert([
             'tipe'             => 'anak_perusahaan',
             'parent_id'        => $holdingId,
+            'nama'             => 'PT Haleyora Power',
+            'singkatan'        => 'PLN HP',
+            'alamat'           => 'Jl. Laboratorium No. 1, Duren Tiga, Jakarta Selatan',
+            'latitude'         => -6.2570,
+            'longitude'        => 106.8375,
+            'aktif'            => 1,
+            'menerima_magang'  => 1,
+        ])->saveData();
+
+        // 4. Unit Induk (UID Jabar)
+        $ep->insert([
+            'tipe'             => 'unit_induk',
+            'parent_id'        => $holdingId,
             'nama'             => 'PLN Unit Induk Distribusi Jawa Barat',
             'singkatan'        => 'UID Jabar',
             'alamat'           => 'Jl. Asia Afrika No.63, Bandung',
             'latitude'         => -6.9217,
             'longitude'        => 107.6073,
             'aktif'            => 1,
-            'menerima_magang'  => 0,
+            'menerima_magang'  => 1,
         ])->saveData();
         $uidJabarId = $this->query('SELECT LAST_INSERT_ID() as id')->fetch()['id'];
 
-        // 4. Unit Induk (UP3)
+        // 5. Unit Pelaksana (UP3)
         $ep->insert([
-            'tipe'             => 'unit_induk',
+            'tipe'             => 'unit_pelaksana',
             'parent_id'        => $uidJabarId,
             'nama'             => 'PLN UP3 Bekasi',
             'singkatan'        => 'UP3 Bekasi',
@@ -98,12 +101,12 @@ class DemoDataSeeder extends AbstractSeed
             'latitude'         => -6.2349,
             'longitude'        => 106.9896,
             'aktif'            => 1,
-            'menerima_magang'  => 0,
+            'menerima_magang'  => 1,
         ])->saveData();
         $up3BekId = $this->query('SELECT LAST_INSERT_ID() as id')->fetch()['id'];
 
         $ep->insert([
-            'tipe'             => 'unit_induk',
+            'tipe'             => 'unit_pelaksana',
             'parent_id'        => $uidJabarId,
             'nama'             => 'PLN UP3 Bogor',
             'singkatan'        => 'UP3 Bogor',
@@ -116,7 +119,7 @@ class DemoDataSeeder extends AbstractSeed
         $up3BogId = $this->query('SELECT LAST_INSERT_ID() as id')->fetch()['id'];
 
         $ep->insert([
-            'tipe'             => 'unit_induk',
+            'tipe'             => 'unit_pelaksana',
             'parent_id'        => $uidJabarId,
             'nama'             => 'PLN UP3 Depok',
             'singkatan'        => 'UP3 Depok',
@@ -128,52 +131,52 @@ class DemoDataSeeder extends AbstractSeed
         ])->saveData();
         $up3DepId = $this->query('SELECT LAST_INSERT_ID() as id')->fetch()['id'];
 
-        // 5. Unit Pelaksana (ULP) — menerima magang
-        $unitPelaksana = [
+        // 6. Unit Layanan (ULP) — menerima magang
+        $unitLayanan = [
             [
-                'tipe' => 'unit_pelaksana', 'parent_id' => $up3BekId,
+                'tipe' => 'unit_layanan', 'parent_id' => $up3BekId,
                 'nama' => 'PLN ULP Bekasi Kota', 'singkatan' => 'ULP Bekasi Kota',
                 'alamat' => 'Jl. Hasanudin No. 1, Bekasi',
                 'latitude' => -6.2389, 'longitude' => 107.0001,
                 'menerima_magang' => 1,
             ],
             [
-                'tipe' => 'unit_pelaksana', 'parent_id' => $up3BekId,
+                'tipe' => 'unit_layanan', 'parent_id' => $up3BekId,
                 'nama' => 'PLN ULP Bekasi Utara', 'singkatan' => 'ULP Bekasi Utara',
                 'alamat' => 'Jl. Raya Kelapa Gading, Bekasi Utara',
                 'latitude' => -6.1701, 'longitude' => 106.9965,
                 'menerima_magang' => 1,
             ],
             [
-                'tipe' => 'unit_pelaksana', 'parent_id' => $up3BekId,
+                'tipe' => 'unit_layanan', 'parent_id' => $up3BekId,
                 'nama' => 'PLN ULP Cikarang', 'singkatan' => 'ULP Cikarang',
                 'alamat' => 'Jl. Industri Selatan, Cikarang',
                 'latitude' => -6.3550, 'longitude' => 107.1519,
                 'menerima_magang' => 1,
             ],
             [
-                'tipe' => 'unit_pelaksana', 'parent_id' => $up3BogId,
+                'tipe' => 'unit_layanan', 'parent_id' => $up3BogId,
                 'nama' => 'PLN ULP Bogor Kota', 'singkatan' => 'ULP Bogor Kota',
                 'alamat' => 'Jl. Suryakencana No. 87, Bogor',
                 'latitude' => -6.5966, 'longitude' => 106.7999,
                 'menerima_magang' => 1,
             ],
             [
-                'tipe' => 'unit_pelaksana', 'parent_id' => $up3BogId,
+                'tipe' => 'unit_layanan', 'parent_id' => $up3BogId,
                 'nama' => 'PLN ULP Cibinong', 'singkatan' => 'ULP Cibinong',
                 'alamat' => 'Jl. Raya Bogor KM 44, Cibinong',
                 'latitude' => -6.4878, 'longitude' => 106.8545,
                 'menerima_magang' => 1,
             ],
             [
-                'tipe' => 'unit_pelaksana', 'parent_id' => $up3DepId,
+                'tipe' => 'unit_layanan', 'parent_id' => $up3DepId,
                 'nama' => 'PLN ULP Depok', 'singkatan' => 'ULP Depok',
                 'alamat' => 'Jl. Margonda Raya No. 200, Depok',
                 'latitude' => -6.3862, 'longitude' => 106.8219,
                 'menerima_magang' => 1,
             ],
             [
-                'tipe' => 'unit_pelaksana', 'parent_id' => $up3DepId,
+                'tipe' => 'unit_layanan', 'parent_id' => $up3DepId,
                 'nama' => 'PLN ULP Cinere', 'singkatan' => 'ULP Cinere',
                 'alamat' => 'Jl. Cinere Raya No. 5, Depok',
                 'latitude' => -6.3618, 'longitude' => 106.7819,
@@ -181,13 +184,13 @@ class DemoDataSeeder extends AbstractSeed
             ],
         ];
 
-        foreach ($unitPelaksana as $row) {
+        foreach ($unitLayanan as $row) {
             $ep->insert(array_merge($row, ['aktif' => 1]))->saveData();
         }
 
-        echo "  ✓ Seeded hierarki PLN: 1 holding, 1 subholding, 1 anak perusahaan, 3 unit induk, " . count($unitPelaksana) . " unit pelaksana\n";
+        echo "  ✓ Seeded hierarki PLN: 1 holding, 1 subholding, 1 anak perusahaan, 1 unit induk, 3 unit pelaksana, " . count($unitLayanan) . " unit layanan\n";
 
-        // 6. Seed unit_peminatan
+        // 7. Seed unit_peminatan
         $this->seedUnitPeminatan();
     }
 

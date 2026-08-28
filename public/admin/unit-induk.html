@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Unit Induk PLN (UP3 / UID) — REMATE Admin</title>
+    <title>Unit Induk PLN (UID / UIW) — REMATE Admin</title>
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/assets/img/logo_itpln.png">
     <link rel="apple-touch-icon" href="/assets/img/logo_itpln.png">
@@ -19,8 +19,8 @@
         <main class="admin-main">
             <header class="admin-topbar">
                 <div class="topbar-title-group">
-                    <h1>Hierarki: Unit Induk PLN (UP3 / Kantor Induk)</h1>
-                    <p>Unit Pelaksana Pelayanan Pelanggan (UP3) atau Unit Pelaksana Transmisi/Pembangkitan</p>
+                    <h1>Hierarki: Unit Induk PLN (UID / UIW / Pusat)</h1>
+                    <p>Unit Induk Distribusi, Unit Induk Wilayah, Unit Induk Transmisi, atau Pusat di bawah Holding, Subholding, atau Anak Perusahaan</p>
                 </div>
 
                 <div class="admin-profile-badge">
@@ -40,7 +40,7 @@
                                 <h3 class="admin-card-title" style="margin: 0;">Daftar Unit Induk</h3>
                                 <span class="badge-status badge-unit_induk" id="total-count-badge">0 Unit Induk</span>
                             </div>
-                            <p style="font-size: 0.85rem; color: #64748b; margin: 4px 0 0 0;">Contoh: PLN UP3 Bekasi, PLN UP3 Bogor, PLN UP3 Depok, PLN UP3 Cengkareng</p>
+                            <p style="font-size: 0.85rem; color: #64748b; margin: 4px 0 0 0;">Contoh: PLN Unit Induk Distribusi Jawa Barat (UID Jabar), PLN UID Jakarta Raya, PLN UIW Sumut</p>
                         </div>
 
                         <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
@@ -57,7 +57,7 @@
                             <thead>
                                 <tr>
                                     <th>Nama Unit Induk</th>
-                                    <th>Anak Perusahaan / UID Induk</th>
+                                    <th>Holding / Subholding / AP Induk</th>
                                     <th>Alamat & Koordinat</th>
                                     <th>Peminatan Tersedia</th>
                                     <th>Buka Magang</th>
@@ -86,35 +86,35 @@
                 <input type="hidden" id="entitas-id" value="" />
 
                 <div>
-                    <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 6px;">Anak Perusahaan / UID Induk <span style="color: #ef4444;">*</span></label>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 6px;">Holding / Subholding / AP Induk <span style="color: #ef4444;">*</span></label>
                     <select id="entitas-parent-id" required style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem;">
-                        <option value="">-- Pilih Induk Wilayah --</option>
+                        <option value="">-- Pilih Induk Organisasi --</option>
                     </select>
                 </div>
 
                 <div>
-                    <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 6px;">Nama Unit Induk (UP3) <span style="color: #ef4444;">*</span></label>
-                    <input type="text" id="entitas-nama" required placeholder="Contoh: PLN UP3 Bekasi" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem;" />
+                    <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 6px;">Nama Unit Induk (UID/UIW) <span style="color: #ef4444;">*</span></label>
+                    <input type="text" id="entitas-nama" required placeholder="Contoh: PLN Unit Induk Distribusi Jawa Barat" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem;" />
                 </div>
 
                 <div>
                     <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 6px;">Singkatan / Alias</label>
-                    <input type="text" id="entitas-singkatan" placeholder="Contoh: UP3 Bekasi" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem;" />
+                    <input type="text" id="entitas-singkatan" placeholder="Contoh: UID Jabar" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem;" />
                 </div>
 
                 <div>
                     <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 6px;">Alamat Kantor</label>
-                    <textarea id="entitas-alamat" rows="2" placeholder="Jl. Veteran No. 9, Bekasi" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; resize: vertical;"></textarea>
+                    <textarea id="entitas-alamat" rows="2" placeholder="Jl. Asia Afrika No. 63, Bandung" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; resize: vertical;"></textarea>
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                     <div>
                         <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 6px;">Latitude</label>
-                        <input type="number" step="any" id="entitas-latitude" placeholder="-6.2349" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem;" />
+                        <input type="number" step="any" id="entitas-latitude" placeholder="-6.9214" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem;" />
                     </div>
                     <div>
                         <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 6px;">Longitude</label>
-                        <input type="number" step="any" id="entitas-longitude" placeholder="106.9896" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem;" />
+                        <input type="number" step="any" id="entitas-longitude" placeholder="107.6106" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem;" />
                     </div>
                 </div>
 
@@ -122,7 +122,7 @@
                 <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between;">
                     <div>
                         <div style="font-weight: 700; color: #166534; font-size: 0.9rem;">Membuka Kesempatan Magang?</div>
-                        <div style="font-size: 0.775rem; color: #15803d; margin-top: 2px;">Jika aktif, kantor UP3 ini dapat diset kuota pada periode magang dan dipilih mahasiswa.</div>
+                        <div style="font-size: 0.775rem; color: #15803d; margin-top: 2px;">Jika aktif, kantor Unit Induk ini dapat diset kuota pada periode magang dan dipilih mahasiswa.</div>
                     </div>
                     <label class="switch">
                         <input type="checkbox" id="entitas-menerima-magang" />
@@ -155,8 +155,8 @@
             tipe: 'unit_induk',
             label: 'Unit Induk',
             hasParent: true,
-            parentTipes: ['anak_perusahaan', 'holding', 'subholding'],
-            parentLabel: 'Anak Perusahaan / UID Induk'
+            parentTipes: ['holding', 'subholding', 'anak_perusahaan'],
+            parentLabel: 'Holding / Subholding / AP Induk'
         });
     </script>
 </body>

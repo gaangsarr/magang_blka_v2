@@ -22,7 +22,7 @@ Auth::requireAdminApi();
 
 $filterTipe     = isset($_GET['tipe']) && in_array(
     $_GET['tipe'],
-    ['holding', 'subholding', 'anak_perusahaan', 'unit_induk', 'unit_pelaksana'],
+    ['holding', 'subholding', 'anak_perusahaan', 'unit_induk', 'unit_pelaksana', 'unit_layanan'],
     true
 ) ? $_GET['tipe'] : null;
 
