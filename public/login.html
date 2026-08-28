@@ -62,44 +62,106 @@
 
       <!-- Mobile Hamburger Menu Button -->
       <button type="button" class="navbar-toggle" id="navbar-toggle" aria-label="Buka Menu Navigasi" aria-expanded="false">
-        <svg class="hamburger-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="4" y1="6" x2="20" y2="6"/>
-          <line x1="4" y1="12" x2="20" y2="12"/>
-          <line x1="4" y1="18" x2="20" y2="18"/>
-        </svg>
+        <span class="hamburger-line line-1"></span>
+        <span class="hamburger-line line-2"></span>
+        <span class="hamburger-line line-3"></span>
       </button>
     </nav>
 
+    <!-- Mobile Drawer Backdrop Overlay -->
+    <div class="mobile-menu-backdrop" id="mobile-menu-backdrop"></div>
+
     <!-- Mobile Navigation Drawer Dropdown -->
     <div class="mobile-menu-drawer" id="mobile-menu-drawer">
+      <div class="mobile-drawer-header">
+        <div class="navbar-brand">
+          <img src="assets/img/logo_itpln.png" alt="Logo ITPLN" class="navbar-logo-img" />
+          <span class="navbar-brand-title">REMATE</span>
+        </div>
+        <button type="button" class="mobile-drawer-close" id="mobile-drawer-close" aria-label="Tutup Menu">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
       <ul class="mobile-menu-links">
-        <li><a href="#" class="active">Beranda</a></li>
-        <li><a href="#" data-auth-required="true">Pendaftaran</a></li>
-        <li><a href="#" data-auth-required="true">Riwayat & Pengumuman</a></li>
+        <li>
+          <a href="#" class="active">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            <span>Beranda</span>
+          </a>
+        </li>
+        <li>
+          <a href="#" data-auth-required="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            <span>Pendaftaran</span>
+          </a>
+        </li>
+        <li>
+          <a href="#" data-auth-required="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+            <span>Riwayat & Pengumuman</span>
+          </a>
+        </li>
       </ul>
 
       <div class="mobile-menu-action">
         <button type="button" class="btn-mobile-masuk" onclick="document.getElementById('btn-login-microsoft').click(); return false;">
-          Masuk dengan Akun ITPLN
+          <svg width="18" height="18" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="1" y="1" width="9" height="9" fill="#F25022"/>
+            <rect x="11" y="1" width="9" height="9" fill="#7FBA00"/>
+            <rect x="1" y="11" width="9" height="9" fill="#00A4EF"/>
+            <rect x="11" y="11" width="9" height="9" fill="#FFB900"/>
+          </svg>
+          <span>Masuk dengan Akun ITPLN</span>
         </button>
       </div>
     </div>
 
     <!-- Hero Content Layout (Centered in 100vh) -->
     <main class="hero-component">
-      <!-- Hero Left: Content & Auth (Placed BELOW illustration on mobile) -->
+      <!-- Hero Left: Content & Auth -->
       <div class="hero-left">
+
         <h1 class="hero-title">
           Mulai Kariermu<br />
-          Bersama PT. PLN (Persero)
+          <span class="hero-title-highlight">Bersama PT. PLN (Persero)</span>
         </h1>
+
+        <!-- Mobile-Only Hero Illustration (Positioned between Title and Description) -->
+        <div class="hero-illustration-wrapper hero-visual-mobile" id="heroVisualComponentMobile">
+          <div class="hero-visual-glow"></div>
+          <!-- Main Hero Image (REMATEHero.png) -->
+          <img 
+            src="assets/img/REMATEHero.png" 
+            alt="Ilustrasi Magang ITPLN & PT. PLN (Persero)" 
+            class="hero-illustration-img"
+            onerror="this.style.display='none'; document.getElementById('folderVisualComponentMobile').style.display='block';"
+          />
+
+          <!-- Fallback 3-Layer Interactive Folder Component for Mobile -->
+          <div class="folder-component" id="folderVisualComponentMobile" style="display: none;">
+            <div class="folder-layer folder-layer-blue">
+              <img src="assets/img/folder_blue.png" alt="Folder Background" onerror="this.src='assets/img/folder_blue_back.png'" />
+            </div>
+            <div class="folder-layer folder-layer-kertas">
+              <img src="assets/img/kertas.png" alt="Dokumen Kertas" onerror="this.src='assets/img/folder_paper_sheets.png'" />
+            </div>
+            <div class="folder-layer folder-layer-kaca">
+              <img src="assets/img/folder_kaca.png" alt="Folder Kaca" onerror="this.src='assets/img/folder_glass_front.png'" />
+              <div class="folder-glass-info">
+                <h4 class="folder-glass-title">Magang ITPLN & PT. PLN (Persero)</h4>
+                <p class="folder-glass-sub">170 Files</p>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <p class="hero-desc">
           Program magang profesional untuk mahasiswa ITPLN — belajar langsung di unit pelaksana PLN yang tersebar di seluruh Indonesia.
         </p>
 
         <!-- Error Box (Populated by js/auth.js if login fails) -->
-        <div class="error-box" id="error-box" role="alert" aria-live="polite" style="margin-bottom: 20px; width: 100%; max-width: 440px;"></div>
+        <div class="error-box" id="error-box" role="alert" aria-live="polite"></div>
 
         <!-- Microsoft Login Action Button -->
         <button
@@ -119,15 +181,18 @@
         </button>
 
         <!-- Account Requirement Info Hint -->
-        <p class="hero-login-hint">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+        <div class="hero-login-hint">
+          <div class="hint-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+          </div>
           <span>Wajib menggunakan akun email resmi kampus <strong>@itpln.ac.id</strong></span>
-        </p>
+        </div>
       </div>
 
-      <!-- Hero Right: REMATEHero Illustration Component (Placed ON TOP on mobile) -->
+      <!-- Hero Right: REMATEHero Illustration Component -->
       <div class="hero-right">
         <div class="hero-illustration-wrapper" id="heroVisualComponent">
+          <div class="hero-visual-glow"></div>
           <!-- Main Hero Image (REMATEHero.png) -->
           <img 
             src="assets/img/REMATEHero.png" 
@@ -313,24 +378,49 @@
     const yearElem = document.getElementById('current-year');
     if (yearElem) yearElem.textContent = new Date().getFullYear();
 
-    // Mobile Hamburger Drawer Toggle
+    // Mobile Hamburger Drawer & Backdrop Toggle
     const navToggle = document.getElementById('navbar-toggle');
     const navDrawer = document.getElementById('mobile-menu-drawer');
-    if (navToggle && navDrawer) {
-      navToggle.addEventListener('click', () => {
-        const expanded = navToggle.getAttribute('aria-expanded') === 'true';
-        navToggle.setAttribute('aria-expanded', !expanded);
-        navDrawer.classList.toggle('open');
-      });
+    const drawerBackdrop = document.getElementById('mobile-menu-backdrop');
+    const drawerCloseBtn = document.getElementById('mobile-drawer-close');
 
-      // Close drawer when clicking outside
-      document.addEventListener('click', (e) => {
-        if (!navToggle.contains(e.target) && !navDrawer.contains(e.target)) {
-          navDrawer.classList.remove('open');
-          navToggle.setAttribute('aria-expanded', 'false');
-        }
+    function openMobileDrawer() {
+      if (navToggle) {
+        navToggle.setAttribute('aria-expanded', 'true');
+        navToggle.classList.add('active');
+      }
+      if (navDrawer) navDrawer.classList.add('open');
+      if (drawerBackdrop) drawerBackdrop.classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeMobileDrawer() {
+      if (navToggle) {
+        navToggle.setAttribute('aria-expanded', 'false');
+        navToggle.classList.remove('active');
+      }
+      if (navDrawer) navDrawer.classList.remove('open');
+      if (drawerBackdrop) drawerBackdrop.classList.remove('show');
+      document.body.style.overflow = '';
+    }
+
+    if (navToggle) {
+      navToggle.addEventListener('click', () => {
+        const isOpen = navDrawer && navDrawer.classList.contains('open');
+        if (isOpen) closeMobileDrawer();
+        else openMobileDrawer();
       });
     }
+
+    if (drawerCloseBtn) drawerCloseBtn.addEventListener('click', closeMobileDrawer);
+    if (drawerBackdrop) drawerBackdrop.addEventListener('click', closeMobileDrawer);
+
+    // Close drawer when clicking outside
+    document.addEventListener('click', (e) => {
+      if (navToggle && navDrawer && !navToggle.contains(e.target) && !navDrawer.contains(e.target) && navDrawer.classList.contains('open')) {
+        closeMobileDrawer();
+      }
+    });
 
     // Auth Required Modal Handler
     const modalBackdrop = document.getElementById('authModalBackdrop');
@@ -340,7 +430,7 @@
 
     function openAuthModal() {
       if (modalBackdrop) modalBackdrop.classList.remove('hidden');
-      if (navDrawer) navDrawer.classList.remove('open');
+      closeMobileDrawer();
     }
 
     function closeAuthModal() {
