@@ -435,6 +435,59 @@
         .header-center { order: 1; }
         .header-right { order: 3; }
     }
+
+    /* Unit Pagination Styles */
+    .unit-pagination-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 14px;
+        padding-top: 14px;
+        border-top: 1px solid #f1f5f9;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .unit-pagination-info {
+        font-size: 0.825rem;
+        color: #64748b;
+        font-weight: 500;
+    }
+    .unit-pagination-controls {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .btn-unit-page {
+        padding: 5px 12px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        color: #334155;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .btn-unit-page:hover:not(:disabled) {
+        background: #f8fafc;
+        border-color: #cbd5e1;
+        color: var(--clr-biru-grid, #0b3d6b);
+    }
+    .btn-unit-page:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+    }
+    .unit-page-indicator {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--clr-biru-grid, #0b3d6b);
+        padding: 4px 10px;
+        background: #f0f7ff;
+        border-radius: 6px;
+    }
 </style>
 <body class="dot-bg">
     <!-- Navbar Component -->
@@ -782,17 +835,34 @@
                         <table class="data-table" id="table-unit">
                             <thead>
                                 <tr>
+                                    <th style="width: 45px; text-align: center;">No</th>
                                     <th>Unit Pelaksana</th>
                                     <th>Jarak</th>
                                     <th>Peminatan</th>
                                     <th class="table-monospace" style="text-align: right;">Kuota Tersisa</th>
-                                    <th>Aksi</th>
+                                    <th style="text-align: center; width: 90px;">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody id="tbody-unit">
                                 <!-- Injected by daftar.js -->
                             </tbody>
                         </table>
+                    </div>
+
+                    <!-- Unit Pagination Controls -->
+                    <div class="unit-pagination-container" id="unit-pagination-bar">
+                        <div class="unit-pagination-info" id="unit-page-info">
+                            Menampilkan 0 unit
+                        </div>
+                        <div class="unit-pagination-controls">
+                            <button type="button" class="btn-unit-page" id="btn-unit-prev" disabled>
+                                &larr; Sebelumnya
+                            </button>
+                            <span class="unit-page-indicator" id="unit-page-indicator">Hal 1 / 1</span>
+                            <button type="button" class="btn-unit-page" id="btn-unit-next" disabled>
+                                Berikutnya &rarr;
+                            </button>
+                        </div>
                     </div>
                 </div>
 

@@ -752,45 +752,75 @@ function updateUI() {
 }
 
 let currentUnitsData = [];
+let filteredUnitsData = [];
+let unitCurrentPage = 1;
+const unitPerPage = 10;
 
-function renderUnitsTable(units) {
+function renderUnitsTable(page = 1) {
     const tbody = document.getElementById('tbody-unit');
+    const infoEl = document.getElementById('unit-page-info');
+    const badgeEl = document.getElementById('unit-page-indicator');
+    const prevBtn = document.getElementById('btn-unit-prev');
+    const nextBtn = document.getElementById('btn-unit-next');
+
     if (!tbody) return;
     tbody.innerHTML = '';
     
-    if (!units || units.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 24px; color: #6B7280;">Tidak ada unit pelaksana yang cocok.</td></tr>';
+    const total = filteredUnitsData ? filteredUnitsData.length : 0;
+    const totalPages = Math.max(1, Math.ceil(total / unitPerPage));
+    unitCurrentPage = Math.min(Math.max(1, page), totalPages);
+
+    if (!filteredUnitsData || total === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 24px; color: #6B7280;">Tidak ada unit pelaksana yang cocok.</td></tr>';
+        if (infoEl) infoEl.innerText = 'Menampilkan 0 unit pelaksana';
+        if (badgeEl) badgeEl.innerText = 'Hal 1 / 1';
+        if (prevBtn) prevBtn.disabled = true;
+        if (nextBtn) nextBtn.disabled = true;
         return;
     }
 
-    units.forEach(u => {
+    const offset = (unitCurrentPage - 1) * unitPerPage;
+    const pageUnits = filteredUnitsData.slice(offset, offset + unitPerPage);
+
+    pageUnits.forEach((u, idx) => {
         const tr = document.createElement('tr');
         const isFull = u.kuota_tersisa <= 0;
         if (isFull) tr.classList.add('row-full');
         
         let actionHtml = '';
         if (isFull) {
-            actionHtml = `<span class="text-abu">Penuh</span>`;
+            actionHtml = `<span class="text-abu" style="font-weight: 600;">Penuh</span>`;
         } else {
-            actionHtml = `<button type="button" class="btn btn-primary" style="padding: 0.3rem 0.8rem; font-size: 0.875rem;" onclick="window.pilihUnit(${u.upp_id}, '${u.nama_unit.replace(/'/g, "\\'")}')">Pilih</button>`;
+            actionHtml = `<button type="button" class="btn btn-primary" style="padding: 0.35rem 0.9rem; font-size: 0.85rem; font-weight: 600;" onclick="window.pilihUnit(${u.upp_id}, '${escapeHtml(u.nama_unit).replace(/'/g, "\\'")}')">Pilih</button>`;
         }
 
+        const noUrut = offset + idx + 1;
+
         tr.innerHTML = `
+            <td data-label="No" style="text-align: center; font-weight: 600; color: #64748b;">${noUrut}</td>
             <td data-label="Unit Pelaksana">
                 <div>
-                    <strong>${u.nama_unit}</strong><br>
-                    <span class="text-sm text-abu">${u.alamat || '-'}</span>
+                    <strong style="color: #0b3d6b;">${escapeHtml(u.nama_unit)}</strong><br>
+                    <span class="text-sm text-abu">${escapeHtml(u.alamat || '-')}</span>
                 </div>
             </td>
             <td data-label="Jarak">${u.jarak !== null ? u.jarak + ' km' : '-'}</td>
             <td data-label="Peminatan"><span class="badge badge-gold">${u.kecocokan} Sesuai</span></td>
-            <td data-label="Kuota Tersisa" class="table-monospace ${isFull ? 'text-abu' : 'text-hijau'}">
+            <td data-label="Kuota Tersisa" class="table-monospace ${isFull ? 'text-abu' : 'text-hijau'}" style="text-align: right; font-weight: 700;">
                 ${String(u.kuota_tersisa).padStart(2, '0')} / ${String(u.kuota_total).padStart(2, '0')}
             </td>
-            <td data-label="Aksi">${actionHtml}</td>
+            <td data-label="Aksi" style="text-align: center;">${actionHtml}</td>
         `;
         tbody.appendChild(tr);
     });
+
+    const start = offset + 1;
+    const end = Math.min(offset + unitPerPage, total);
+
+    if (infoEl) infoEl.innerText = `Menampilkan ${start}–${end} dari ${total} unit pelaksana`;
+    if (badgeEl) badgeEl.innerText = `Hal ${unitCurrentPage} / ${totalPages}`;
+    if (prevBtn) prevBtn.disabled = (unitCurrentPage <= 1);
+    if (nextBtn) nextBtn.disabled = (unitCurrentPage >= totalPages);
 }
 
 // ----------------------------------------------------
@@ -799,7 +829,7 @@ function renderUnitsTable(units) {
 async function loadUnits() {
     const tbody = document.getElementById('tbody-unit');
     if (tbody) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">Memuat unit... <div class="spinner"></div></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px;">Memuat unit... <div class="spinner"></div></td></tr>';
     }
     
     try {
@@ -821,10 +851,12 @@ async function loadUnits() {
         }
         
         currentUnitsData = data.data || [];
+        filteredUnitsData = currentUnitsData;
+        unitCurrentPage = 1;
         const searchInput = document.getElementById('search-unit-input');
         if (searchInput) searchInput.value = '';
         
-        renderUnitsTable(currentUnitsData);
+        renderUnitsTable(1);
         return true;
     } catch (err) {
         console.error(err);
@@ -833,19 +865,34 @@ async function loadUnits() {
     }
 }
 
-// Listener Pencarian Live Unit
+// Listener Pencarian Live Unit & Pagination Buttons
 document.addEventListener('input', (e) => {
     if (e.target && e.target.id === 'search-unit-input') {
         const q = (e.target.value || '').toLowerCase().trim();
         if (!q) {
-            renderUnitsTable(currentUnitsData);
-            return;
+            filteredUnitsData = currentUnitsData;
+        } else {
+            filteredUnitsData = currentUnitsData.filter(u => 
+                (u.nama_unit && u.nama_unit.toLowerCase().includes(q)) || 
+                (u.alamat && u.alamat.toLowerCase().includes(q))
+            );
         }
-        const filtered = currentUnitsData.filter(u => 
-            (u.nama_unit && u.nama_unit.toLowerCase().includes(q)) || 
-            (u.alamat && u.alamat.toLowerCase().includes(q))
-        );
-        renderUnitsTable(filtered);
+        unitCurrentPage = 1;
+        renderUnitsTable(1);
+    }
+});
+
+document.addEventListener('click', (e) => {
+    if (e.target && (e.target.id === 'btn-unit-prev' || e.target.closest('#btn-unit-prev'))) {
+        if (unitCurrentPage > 1) {
+            renderUnitsTable(unitCurrentPage - 1);
+        }
+    } else if (e.target && (e.target.id === 'btn-unit-next' || e.target.closest('#btn-unit-next'))) {
+        const total = filteredUnitsData ? filteredUnitsData.length : 0;
+        const totalPages = Math.ceil(total / unitPerPage) || 1;
+        if (unitCurrentPage < totalPages) {
+            renderUnitsTable(unitCurrentPage + 1);
+        }
     }
 });
 
