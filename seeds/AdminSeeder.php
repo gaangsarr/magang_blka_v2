@@ -29,13 +29,6 @@ class AdminSeeder extends AbstractSeed
                 'role'          => 'super_admin',
                 'aktif'         => 1,
             ],
-            [
-                'email'         => 'gangsar2431170@itpln.ac.id',
-                'nama'          => 'Gentar',
-                'password_hash' => null, // SSO Microsoft Login
-                'role'          => 'super_admin',
-                'aktif'         => 1,
-            ],
         ];
 
         $table = $this->table('admin');
