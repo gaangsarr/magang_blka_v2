@@ -13,12 +13,16 @@ Dotenv::createImmutable($root)->safeLoad();
 header('Content-Type: application/json; charset=utf-8');
 Auth::requireAdminApi();
 
-// Filter opsional via query string
+// Filter opsional via query string:
 // ?tipe=unit_pelaksana          → filter per tipe
 // ?parent_id=5                  → filter per parent
 // ?aktif=1                      → filter status aktif/nonaktif
-// ?menerima_magang=1            → filter yang menerima magang
-// ?with_peminatan=1             → sertakan array peminatan_ids
+// ?menerima_magang=1            → filter yang menerima magang (1=ya, 0=tidak)
+// ?search=bandung               → pencarian nama/singkatan/alamat/parent
+// ?page=1                       → nomor halaman (default: 1)
+// ?limit=25                     → limit data per halaman (default: 25)
+// ?all=1                        → tanpa pagination (untuk select parent)
+// ?with_peminatan=1             → sertakan array peminatan_ids & peminatan_names
 
 $filterTipe     = isset($_GET['tipe']) && in_array(
     $_GET['tipe'],
@@ -28,8 +32,14 @@ $filterTipe     = isset($_GET['tipe']) && in_array(
 
 $filterParentId = isset($_GET['parent_id']) && $_GET['parent_id'] !== '' ? (int)$_GET['parent_id'] : null;
 $filterAktif    = isset($_GET['aktif']) && $_GET['aktif'] !== '' ? (int)(bool)$_GET['aktif'] : null;
-$filterMagang   = isset($_GET['menerima_magang']) && $_GET['menerima_magang'] !== '' ? (int)(bool)$_GET['menerima_magang'] : null;
+$filterMagang   = isset($_GET['menerima_magang']) && $_GET['menerima_magang'] !== '' ? (int)$_GET['menerima_magang'] : null;
+$search         = isset($_GET['search']) ? trim((string)$_GET['search']) : '';
+$noPaginate     = (isset($_GET['all']) && $_GET['all'] === '1') || (isset($_GET['no_paginate']) && $_GET['no_paginate'] === '1');
 $withPeminatan  = isset($_GET['with_peminatan']) && $_GET['with_peminatan'] === '1';
+
+$page  = max(1, isset($_GET['page']) ? (int)$_GET['page'] : 1);
+$limit = max(1, min(100, isset($_GET['limit']) ? (int)$_GET['limit'] : 25));
+$offset = ($page - 1) * $limit;
 
 try {
     $pdo = Database::getInstance();
@@ -53,9 +63,29 @@ try {
         $where[]  = 'e.menerima_magang = ?';
         $params[] = $filterMagang;
     }
+    if ($search !== '') {
+        $searchParam = '%' . $search . '%';
+        $where[] = '(e.nama LIKE ? OR e.singkatan LIKE ? OR e.alamat LIKE ? OR p.nama LIKE ?)';
+        $params[] = $searchParam;
+        $params[] = $searchParam;
+        $params[] = $searchParam;
+        $params[] = $searchParam;
+    }
 
     $whereSQL = implode(' AND ', $where);
 
+    // 1. Hitung total baris yang cocok
+    $countSql = "
+        SELECT COUNT(*) 
+        FROM entitas_perusahaan e
+        LEFT JOIN entitas_perusahaan p ON e.parent_id = p.id
+        WHERE $whereSQL
+    ";
+    $countStmt = $pdo->prepare($countSql);
+    $countStmt->execute($params);
+    $totalRows = (int)$countStmt->fetchColumn();
+
+    // 2. Ambil data dengan Pagination
     $sql = "
         SELECT
             e.id,
@@ -73,14 +103,18 @@ try {
         FROM entitas_perusahaan e
         LEFT JOIN entitas_perusahaan p ON e.parent_id = p.id
         WHERE $whereSQL
-        ORDER BY e.tipe ASC, e.nama ASC
+        ORDER BY p.nama ASC, e.tipe ASC, e.nama ASC
     ";
+
+    if (!$noPaginate) {
+        $sql .= " LIMIT $limit OFFSET $offset";
+    }
 
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
     $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Lampirkan peminatan_ids jika diminta
+    // 3. Lampirkan peminatan_ids jika diminta
     if ($withPeminatan && !empty($data)) {
         $ids = array_column($data, 'id');
         $placeholders = implode(',', array_fill(0, count($ids), '?'));
@@ -115,13 +149,24 @@ try {
     }
     unset($item);
 
+    $totalPages = $noPaginate ? 1 : (int)ceil($totalRows / $limit);
+    $from = $totalRows === 0 ? 0 : ($offset + 1);
+    $to = $noPaginate ? $totalRows : min($totalRows, $offset + count($data));
+
     echo json_encode([
-        'ok'   => true,
-        'data' => $data,
+        'ok'         => true,
+        'data'       => $data,
+        'pagination' => [
+            'total'       => $totalRows,
+            'page'        => $noPaginate ? 1 : $page,
+            'limit'       => $noPaginate ? $totalRows : $limit,
+            'total_pages' => $totalPages,
+            'from'        => $from,
+            'to'          => $to
+        ]
     ]);
 
 } catch (\Throwable $e) {
     http_response_code(500);
     echo json_encode(['error' => Auth::safeErrorMessage($e, 'Gagal memuat daftar entitas.')]);
 }
-

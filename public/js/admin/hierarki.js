@@ -1,7 +1,8 @@
 /**
  * public/js/admin/hierarki.js
  * Modul terpadu untuk CRUD dan manajemen hierarki entitas perusahaan PLN
- * (Holding, Subholding, Anak Perusahaan, Unit Induk, Unit Pelaksana)
+ * (Holding, Subholding, Anak Perusahaan, Unit Induk, Unit Pelaksana, Unit Layanan)
+ * Dilengkapi Server-Side Pagination (25 item/hal), Debounced Search, dan Toolbar Filtering.
  */
 
 import { showAdminAlert, showAdminConfirm } from './common.js';
@@ -20,6 +21,17 @@ export function initHierarkiPage(config) {
     let masterPeminatan = [];
     let parentOptions = [];
     let entitasList = [];
+
+    // State Pagination & Filter Server-Side
+    let currentPage = 1;
+    const pageSize = 25;
+    let currentSearch = '';
+    let currentParentFilter = '';
+    let currentMagangFilter = '';
+    let paginationMeta = null;
+    let searchDebounceTimer = null;
+
+    const collapsedGroupKeys = new Set();
 
     const {
         tipe,
@@ -69,11 +81,34 @@ export function initHierarkiPage(config) {
         // 4. Initial Load Table Data
         await loadData();
 
-        // 5. Setup Search Filter
+        // 5. Setup Toolbar Filter Listeners
         const searchInput = document.getElementById('search-input');
         if (searchInput) {
             searchInput.addEventListener('input', () => {
-                applySearchFilter(searchInput.value.trim().toLowerCase());
+                clearTimeout(searchDebounceTimer);
+                searchDebounceTimer = setTimeout(() => {
+                    currentSearch = searchInput.value.trim();
+                    currentPage = 1;
+                    loadData();
+                }, 300);
+            });
+        }
+
+        const filterParent = document.getElementById('filter-parent');
+        if (filterParent) {
+            filterParent.addEventListener('change', () => {
+                currentParentFilter = filterParent.value;
+                currentPage = 1;
+                loadData();
+            });
+        }
+
+        const filterMagang = document.getElementById('filter-magang');
+        if (filterMagang) {
+            filterMagang.addEventListener('change', () => {
+                currentMagangFilter = filterMagang.value;
+                currentPage = 1;
+                loadData();
             });
         }
 
@@ -115,11 +150,12 @@ export function initHierarkiPage(config) {
 
     async function loadParentCandidates() {
         try {
-            const res = await fetch('/api/admin/entitas/list.php?aktif=1');
+            const res = await fetch('/api/admin/entitas/list.php?aktif=1&all=1');
             const data = await res.json();
             if (data.ok && Array.isArray(data.data)) {
                 parentOptions = data.data.filter(e => parentTipes.includes(e.tipe));
                 populateParentSelect();
+                populateParentFilterDropdown();
             }
         } catch (err) {
             console.error('Error loading parents:', err);
@@ -135,6 +171,18 @@ export function initHierarkiPage(config) {
             opt.value = p.id;
             const tipeText = p.tipe.replace('_', ' ').toUpperCase();
             opt.innerText = `${p.nama} (${tipeText})`;
+            select.appendChild(opt);
+        });
+    }
+
+    function populateParentFilterDropdown() {
+        const select = document.getElementById('filter-parent');
+        if (!select) return;
+        select.innerHTML = `<option value="">Semua ${parentLabel}</option>`;
+        parentOptions.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p.id;
+            opt.innerText = p.nama;
             select.appendChild(opt);
         });
     }
@@ -211,31 +259,53 @@ export function initHierarkiPage(config) {
         }
 
         try {
-            const res = await fetch(`/api/admin/entitas/list.php?tipe=${tipe}&with_peminatan=1`);
+            let url = `/api/admin/entitas/list.php?tipe=${tipe}&with_peminatan=1&page=${currentPage}&limit=${pageSize}`;
+            if (currentSearch) {
+                url += `&search=${encodeURIComponent(currentSearch)}`;
+            }
+            if (currentParentFilter) {
+                url += `&parent_id=${encodeURIComponent(currentParentFilter)}`;
+            }
+            if (currentMagangFilter !== '') {
+                url += `&menerima_magang=${encodeURIComponent(currentMagangFilter)}`;
+            }
+
+            const res = await fetch(url);
             const data = await res.json();
             if (data.ok && Array.isArray(data.data)) {
                 entitasList = data.data;
-                renderTable(entitasList);
+                paginationMeta = data.pagination || {
+                    total: entitasList.length,
+                    page: currentPage,
+                    limit: pageSize,
+                    total_pages: 1,
+                    from: entitasList.length === 0 ? 0 : 1,
+                    to: entitasList.length
+                };
+                renderTable(entitasList, currentSearch !== '');
+                renderPagination(paginationMeta);
             } else {
-                if (tbody) tbody.innerHTML = `<tr><td colspan="${colSpan}" style="text-align: center; padding: 32px; color: #ef4444;">Gagal memuat data.</td></tr>`;
+                if (tbody) tbody.innerHTML = `<tr><td colspan="${colSpan}" style="text-align: center; padding: 32px; color: #ef4444;">${escapeHtml(data.error || 'Gagal memuat data.')}</td></tr>`;
+                renderPagination(null);
             }
         } catch (err) {
             if (tbody) tbody.innerHTML = `<tr><td colspan="${colSpan}" style="text-align: center; padding: 32px; color: #ef4444;">Kesalahan jaringan saat memuat data.</td></tr>`;
+            renderPagination(null);
         }
     }
 
-    function renderTable(dataArray) {
+    function renderTable(dataArray, isSearching = false) {
         const tbody = document.getElementById('table-entitas-body');
         const countBadge = document.getElementById('total-count-badge');
         const colSpan = hasParent ? 6 : 5;
         if (!tbody) return;
 
-        if (countBadge) {
-            countBadge.innerText = `${dataArray.length} ${label}`;
+        if (countBadge && paginationMeta) {
+            countBadge.innerText = `${paginationMeta.total} ${label}`;
         }
 
         if (dataArray.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="${colSpan}" style="text-align: center; padding: 36px; color: #64748b;">Belum ada data ${label}. Klik tombol "+ Tambah ${label}" untuk membuat baru.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="${colSpan}" style="text-align: center; padding: 36px; color: #64748b;">Tidak ada data ${label} yang cocok dengan filter atau pencarian.</td></tr>`;
             return;
         }
 
@@ -251,24 +321,78 @@ export function initHierarkiPage(config) {
             });
 
             for (const [parentName, items] of Object.entries(grouped)) {
+                const groupKey = parentName;
+                // If searching, keep expanded so matching results are visible
+                const isCollapsed = isSearching ? false : collapsedGroupKeys.has(groupKey);
+
                 // Group Header Row
                 const trGroup = document.createElement('tr');
-                trGroup.className = 'table-group-header';
+                trGroup.className = `table-group-header ${isCollapsed ? 'collapsed' : ''}`;
+                trGroup.setAttribute('role', 'button');
+                trGroup.setAttribute('tabindex', '0');
+                trGroup.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
+                trGroup.setAttribute('title', isCollapsed ? 'Klik untuk membuka daftar entitas' : 'Klik untuk menyembunyikan daftar entitas');
+
                 trGroup.innerHTML = `
                     <td colspan="${colSpan}">
                         <div class="table-group-title">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0b3d6b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-                            <span>${escapeHtml(parentName)}</span>
+                            <span class="group-chevron">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg>
+                            </span>
+                            <span style="font-weight: 700;">${escapeHtml(parentName)}</span>
                             <span class="table-group-count">${items.length} ${label}</span>
+                            <span class="table-group-hint">
+                                <span class="hint-text">${isCollapsed ? 'Tampilkan' : 'Sembunyikan'}</span>
+                            </span>
                         </div>
                     </td>
                 `;
-                tbody.appendChild(trGroup);
 
                 // Group Items
+                const itemRows = [];
                 items.forEach(item => {
-                    tbody.appendChild(createRow(item));
+                    const row = createRow(item);
+                    row.classList.add('table-group-item');
+                    if (isCollapsed) {
+                        row.classList.add('is-hidden');
+                    }
+                    itemRows.push(row);
                 });
+
+                // Toggle Collapsible Action
+                const toggleGroup = () => {
+                    const willCollapse = !trGroup.classList.contains('collapsed');
+                    if (willCollapse) {
+                        trGroup.classList.add('collapsed');
+                        trGroup.setAttribute('aria-expanded', 'false');
+                        trGroup.setAttribute('title', 'Klik untuk membuka daftar entitas');
+                        collapsedGroupKeys.add(groupKey);
+                        itemRows.forEach(r => r.classList.add('is-hidden'));
+                    } else {
+                        trGroup.classList.remove('collapsed');
+                        trGroup.setAttribute('aria-expanded', 'true');
+                        trGroup.setAttribute('title', 'Klik untuk menyembunyikan daftar entitas');
+                        collapsedGroupKeys.delete(groupKey);
+                        itemRows.forEach(r => r.classList.remove('is-hidden'));
+                    }
+                    const hintEl = trGroup.querySelector('.hint-text');
+                    if (hintEl) {
+                        hintEl.innerText = willCollapse ? 'Tampilkan' : 'Sembunyikan';
+                    }
+                };
+
+                trGroup.addEventListener('click', toggleGroup);
+                trGroup.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        toggleGroup();
+                    }
+                });
+
+                tbody.appendChild(trGroup);
+                itemRows.forEach(r => tbody.appendChild(r));
             }
         } else {
             // Flat List (Holding)
@@ -276,6 +400,102 @@ export function initHierarkiPage(config) {
                 tbody.appendChild(createRow(item));
             });
         }
+    }
+
+    function renderPagination(meta) {
+        let container = document.getElementById('admin-pagination-container');
+        if (!container) {
+            const card = document.querySelector('.admin-card');
+            if (card) {
+                container = document.createElement('div');
+                container.id = 'admin-pagination-container';
+                container.className = 'admin-pagination-container';
+                card.appendChild(container);
+            } else {
+                return;
+            }
+        }
+
+        if (!meta || meta.total === 0 || meta.total_pages <= 1) {
+            container.innerHTML = '';
+            container.style.display = meta && meta.total > 0 ? 'flex' : 'none';
+            if (meta && meta.total > 0) {
+                container.innerHTML = `<div class="admin-pagination-info">Menampilkan <strong>${meta.from}</strong> - <strong>${meta.to}</strong> dari <strong>${meta.total}</strong> ${escapeHtml(label)}</div>`;
+            }
+            return;
+        }
+
+        container.style.display = 'flex';
+
+        const { page, total, total_pages, from, to } = meta;
+
+        let buttonsHtml = '';
+
+        // Tombol Prev
+        const prevDisabled = page <= 1 ? 'disabled' : '';
+        buttonsHtml += `
+            <button type="button" class="admin-pagination-btn btn-page-nav" data-page="${page - 1}" ${prevDisabled} title="Halaman Sebelumnya">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="icon-prev"><path d="m15 18-6-6 6-6"/></svg>
+                <span>Prev</span>
+            </button>
+        `;
+
+        // Generasi angka halaman (dengan ellipsis jika banyak halaman)
+        const maxPills = 5;
+        let startP = Math.max(1, page - 2);
+        let endP = Math.min(total_pages, startP + maxPills - 1);
+        if (endP - startP < maxPills - 1) {
+            startP = Math.max(1, endP - maxPills + 1);
+        }
+
+        if (startP > 1) {
+            buttonsHtml += `<button type="button" class="admin-pagination-page-btn btn-page-nav" data-page="1">1</button>`;
+            if (startP > 2) {
+                buttonsHtml += `<span class="admin-pagination-page-btn ellipsis">...</span>`;
+            }
+        }
+
+        for (let p = startP; p <= endP; p++) {
+            const activeClass = p === page ? 'active' : '';
+            buttonsHtml += `<button type="button" class="admin-pagination-page-btn btn-page-nav ${activeClass}" data-page="${p}">${p}</button>`;
+        }
+
+        if (endP < total_pages) {
+            if (endP < total_pages - 1) {
+                buttonsHtml += `<span class="admin-pagination-page-btn ellipsis">...</span>`;
+            }
+            buttonsHtml += `<button type="button" class="admin-pagination-page-btn btn-page-nav" data-page="${total_pages}">${total_pages}</button>`;
+        }
+
+        // Tombol Next
+        const nextDisabled = page >= total_pages ? 'disabled' : '';
+        buttonsHtml += `
+            <button type="button" class="admin-pagination-btn btn-page-nav" data-page="${page + 1}" ${nextDisabled} title="Halaman Berikutnya">
+                <span>Next</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="icon-next"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+        `;
+
+        container.innerHTML = `
+            <div class="admin-pagination-info">
+                Menampilkan <strong>${from}</strong> - <strong>${to}</strong> dari <strong>${total}</strong> ${escapeHtml(label)}
+            </div>
+            <div class="admin-pagination-controls">
+                ${buttonsHtml}
+            </div>
+        `;
+
+        // Event listener navigasi halaman
+        container.querySelectorAll('.btn-page-nav:not(:disabled)').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetPage = parseInt(btn.dataset.page, 10);
+                if (targetPage && targetPage !== currentPage && targetPage >= 1 && targetPage <= total_pages) {
+                    currentPage = targetPage;
+                    loadData();
+                }
+            });
+        });
     }
 
     function createRow(item) {
@@ -353,25 +573,6 @@ export function initHierarkiPage(config) {
         }
 
         return tr;
-    }
-
-    function applySearchFilter(query) {
-        if (!query) {
-            renderTable(entitasList);
-            return;
-        }
-
-        const filtered = entitasList.filter(item => {
-            const nama = (item.nama || '').toLowerCase();
-            const singkatan = (item.singkatan || '').toLowerCase();
-            const parent = (item.nama_parent || '').toLowerCase();
-            const alamat = (item.alamat || '').toLowerCase();
-            const pem = (item.peminatan_names || []).join(' ').toLowerCase();
-
-            return nama.includes(query) || singkatan.includes(query) || parent.includes(query) || alamat.includes(query) || pem.includes(query);
-        });
-
-        renderTable(filtered);
     }
 
     async function openCreateModal() {
