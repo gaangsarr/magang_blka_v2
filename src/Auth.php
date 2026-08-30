@@ -47,6 +47,17 @@ class Auth
                 ]);
                 session_start();
             }
+
+            // QUALITY-03: Invalidasi session yang sudah expired
+            // Hanya invalidasi jika created_at sudah ada (safe untuk session lama)
+            if (isset($_SESSION['created_at']) && (time() - $_SESSION['created_at']) > self::SESSION_LIFETIME) {
+                self::logout();
+                return;
+            }
+            // Pastikan created_at selalu ada untuk session baru
+            if (!isset($_SESSION['created_at']) && isset($_SESSION['role'])) {
+                $_SESSION['created_at'] = time();
+            }
         }
     }
 
@@ -61,9 +72,12 @@ class Auth
     public static function setMahasiswaSession(int $mahasiswaId): void
     {
         self::startSession(startPHP: true);
+        session_regenerate_id(true); // QUALITY-07: Cegah Session Fixation Attack
         $_SESSION['mahasiswa_id'] = $mahasiswaId;
         $_SESSION['role']         = 'mahasiswa';
         $_SESSION['created_at']   = time();
+        // PERF-02: Hapus cache angkatan lama jika ada (akan di-refresh dari DB)
+        unset($_SESSION['mhs_angkatan']);
     }
 
     /**
@@ -72,6 +86,7 @@ class Auth
     public static function setAdminSession(int $adminId, string $nama, string $adminRole = 'admin_blka'): void
     {
         self::startSession(startPHP: true);
+        session_regenerate_id(true); // QUALITY-07: Cegah Session Fixation Attack
         $_SESSION['admin_id']   = $adminId;
         $_SESSION['admin_nama'] = $nama;
         $_SESSION['admin_role'] = $adminRole;
@@ -164,6 +179,11 @@ class Auth
         );
         $stmt->execute([':id' => $id]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        // PERF-02: Cache angkatan ke session agar request berikutnya tidak perlu query DB
+        if ($row && isset($row['angkatan'])) {
+            $_SESSION['mhs_angkatan'] = (int)$row['angkatan'];
+        }
 
         return $row ?: null;
     }

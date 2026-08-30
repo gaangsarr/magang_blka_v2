@@ -81,9 +81,11 @@ try {
         $pdo->prepare("UPDATE unit_pelaksana_periode SET kuota_tersisa = kuota_tersisa - 1, updated_at = NOW() WHERE id = :upp_id")->execute([':upp_id' => $uppId]);
 
         // 4. Buat reservasi baru (baca durasi dari .env, default 30 menit)
+        // ✅ BLOCKER-10: Hitung expired_at di PHP dan bind sebagai parameter, jangan interpolasi ke SQL
         $reservationMinutes = max(1, (int)($_ENV['RESERVATION_MINUTES'] ?? 30));
-        $stmtInsert = $pdo->prepare("INSERT INTO reservasi (mahasiswa_id, unit_pelaksana_periode_id, status, expired_at, created_at) VALUES (:mid, :upp_id, 'ditahan', DATE_ADD(NOW(), INTERVAL {$reservationMinutes} MINUTE), NOW())");
-        $stmtInsert->execute([':mid' => $mahasiswaId, ':upp_id' => $uppId]);
+        $expiredAt = date('Y-m-d H:i:s', strtotime("+{$reservationMinutes} minutes"));
+        $stmtInsert = $pdo->prepare("INSERT INTO reservasi (mahasiswa_id, unit_pelaksana_periode_id, status, expired_at, created_at) VALUES (:mid, :upp_id, 'ditahan', :expired_at, NOW())");
+        $stmtInsert->execute([':mid' => $mahasiswaId, ':upp_id' => $uppId, ':expired_at' => $expiredAt]);
         $reservasiId = (int)$pdo->lastInsertId();
 
         // Ambil waktu expired untuk UI

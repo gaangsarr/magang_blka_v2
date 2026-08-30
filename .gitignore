@@ -23,9 +23,11 @@ Thumbs.db
 /cache/
 /tmp/
 
-# Test files & Scratch
+# Test files & Scratch (BLOCKER-07 + QUALITY-06)
 test_*.php
 test_cookie.txt
 /scratch/
 check_periode.php
+# Test scripts di dalam direktori scripts/ juga diexclude
+scripts/test_*.php
 

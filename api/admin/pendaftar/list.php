@@ -12,11 +12,7 @@ Dotenv::createImmutable($root)->safeLoad();
 
 header('Content-Type: application/json; charset=utf-8');
 
-if (!Auth::isLoggedInAdmin()) {
-    http_response_code(401);
-    echo json_encode(['error' => 'Unauthorized']);
-    exit;
-}
+Auth::requireAdminApi(); // QUALITY-01: standardisasi auth guard admin
 
 try {
     $pdo = Database::getInstance();
@@ -145,17 +141,19 @@ try {
             p.status AS status_penetapan,
             p.submitted_at AS created_at,
             ep.nama AS unit_nama,
-            (
-                SELECT GROUP_CONCAT(mp.nama SEPARATOR ', ')
-                FROM pendaftaran_peminatan pp
-                JOIN peminatan mp ON pp.peminatan_id = mp.id
-                WHERE pp.pendaftaran_id = p.id
-            ) AS peminatan_list
+            -- PERF-03: Ganti correlated subquery (per-baris) dengan LEFT JOIN pre-aggregated
+            pem_agg.peminatan_list
         FROM pendaftaran p
         JOIN mahasiswa m ON p.mahasiswa_id = m.id
         LEFT JOIN jurusan j ON m.jurusan_id = j.id
         JOIN unit_pelaksana_periode upp ON p.unit_pelaksana_periode_id = upp.id
         JOIN entitas_perusahaan ep ON upp.entitas_id = ep.id
+        LEFT JOIN (
+            SELECT pp.pendaftaran_id, GROUP_CONCAT(mp.nama ORDER BY mp.nama SEPARATOR ', ') AS peminatan_list
+            FROM pendaftaran_peminatan pp
+            JOIN peminatan mp ON pp.peminatan_id = mp.id
+            GROUP BY pp.pendaftaran_id
+        ) pem_agg ON pem_agg.pendaftaran_id = p.id
         WHERE $whereSQL
         ORDER BY p.submitted_at DESC
         LIMIT :limit OFFSET :offset

@@ -12,11 +12,8 @@ Dotenv::createImmutable($root)->safeLoad();
 
 header('Content-Type: application/json; charset=utf-8');
 
-if (!Auth::isLoggedInAdmin()) {
-    http_response_code(401);
-    echo json_encode(['error' => 'Unauthorized']);
-    exit;
-}
+Auth::requireAdminApi(); // QUALITY-01: standardisasi auth guard
+Auth::requireCsrfApi();  // BLOCKER-05: CSRF protection
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);

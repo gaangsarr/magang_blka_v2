@@ -1,6 +1,19 @@
 import { showAdminAlert, showAdminConfirm } from './common.js';
 
-document.addEventListener('DOMContentLoaded', () => {
+let csrfToken = null; // BLOCKER-05: CSRF token untuk request mutasi
+
+document.addEventListener('DOMContentLoaded', async () => {
+    // Ambil CSRF token dari status endpoint (sama seperti JS admin lain)
+    try {
+        const statusRes = await fetch('/api/admin/status.php');
+        const statusData = await statusRes.json();
+        if (statusData.csrf_token) csrfToken = statusData.csrf_token;
+        if (!statusRes.ok || !statusData.authenticated) {
+            window.location.href = '/admin/login.html';
+            return;
+        }
+    } catch (_) {}
+
     initKelolaAdmin();
 });
 
@@ -20,7 +33,7 @@ function initKelolaAdmin() {
             try {
                 const res = await fetch('/api/admin/kelola/assign.php', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
                     body: JSON.stringify({ email: email, nama: nama, role: role })
                 });
                 const data = await res.json();
@@ -136,7 +149,7 @@ async function revokeAdmin(adminId, nama) {
     try {
         const res = await fetch('/api/admin/kelola/revoke.php', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
             body: JSON.stringify({ admin_id: adminId })
         });
         const data = await res.json();

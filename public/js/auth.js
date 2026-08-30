@@ -172,7 +172,7 @@ function updateLandingPageForLoggedInUser(data) {
         } else {
           btnLogin.innerHTML = `
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            <span>Pendaftaran Khusus Angkatan ${data.angkatan_eligible || ''}</span>
+            <span>Pendaftaran Khusus Angkatan ${escapeHtml(data.angkatan_eligible || '')}</span>
           `;
           btnLogin.style.background = '#0b3d6b';
           const newBtn = btnLogin.cloneNode(true);
@@ -182,7 +182,7 @@ function updateLandingPageForLoggedInUser(data) {
       } else {
         btnLogin.innerHTML = `
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-          <span>Lanjut ke Pendaftaran (${data.periode_aktif ? data.periode_aktif.nama : 'Periode Baru'})</span>
+          <span>Lanjut ke Pendaftaran (${escapeHtml(data.periode_aktif ? data.periode_aktif.nama : 'Periode Baru')})</span>
         `;
         btnLogin.style.background = '';
         const newBtn = btnLogin.cloneNode(true);

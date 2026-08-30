@@ -21,7 +21,10 @@ Options -Indexes
 
     # Blokir akses ke direktori terlarang
     RewriteRule ^(migrations|seeds|scripts|scratch|src|vendor|cache)/ - [F,L,NC]
-    
+
+    # BLOCKER-07 & QUALITY-06: Blokir akses ke file test di scripts/ (tidak dihapus, hanya diblok)
+    RewriteRule ^scripts/test_ - [F,L,NC]
+
     # Blokir akses langsung ke file tersembunyi
     RewriteRule (^\.|/\.) - [F,L]
 </IfModule>
@@ -33,5 +36,12 @@ Options -Indexes
     Header set X-XSS-Protection "1; mode=block"
     Header set Referrer-Policy "strict-origin-when-cross-origin"
     Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net https://*.firebaseapp.com https://apis.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://fonts.googleapis.com; img-src 'self' data: https://*.tile.openstreetmap.org https://unpkg.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://unpkg.com https://cdn.jsdelivr.net https://*.googleapis.com https://*.firebaseio.com https://nominatim.openstreetmap.org https://photon.komoot.io https://wilayah.web.id; frame-src 'self' https://*.firebaseapp.com;"
-</IfModule>
 
+    # BLOCKER-06: HSTS — Hanya aktif saat Apache + HTTPS production.
+    # PHP built-in server (php -S) mengabaikan .htaccess, jadi aman untuk dev lokal.
+    # Setelah deploy ke HTTPS, header ini otomatis aktif dan memaksa browser pakai HTTPS selama 1 tahun.
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+
+    # BLOCKER-06: Permissions Policy — batasi akses browser ke hardware sensitif
+    Header always set Permissions-Policy "geolocation=(), camera=(), microphone=()"
+</IfModule>

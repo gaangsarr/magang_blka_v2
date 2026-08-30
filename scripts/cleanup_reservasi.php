@@ -1,6 +1,18 @@
 <?php
 declare(strict_types=1);
 
+//
+// Script Cleanup Reservasi Kadaluarsa
+//
+// BLOCKER-08: Jalankan via cronjob server di production, BUKAN via PowerShell loop!
+//
+// Setup di Linux production:
+//   sudo nano /etc/cron.d/magang_cleanup
+//   Isi: */5 * * * * www-data /usr/bin/php /var/www/html/scripts/cleanup_reservasi.php >> /var/log/magang_cleanup.log 2>&1
+//
+// Alternatif: MySQL Event Scheduler (lihat scripts/setup_cronjob.md)
+//
+
 require_once dirname(__DIR__) . '/vendor/autoload.php';
 
 use Dotenv\Dotenv;
@@ -31,23 +43,24 @@ try {
         }
 
         $count = count($expired);
-        
-        // Update status menjadi kadaluarsa
-        $ids = array_column($expired, 'id');
+        $ids   = array_column($expired, 'id');
         $inQuery = implode(',', array_fill(0, count($ids), '?'));
-        
+
+        // Update status menjadi kadaluarsa (batch, 1 query)
         $pdo->prepare("UPDATE reservasi SET status = 'kadaluarsa' WHERE id IN ($inQuery)")->execute($ids);
-        
-        // Kembalikan kuota ke masing-masing unit
-        $stmtUpdateUnit = $pdo->prepare("
-            UPDATE unit_pelaksana_periode 
-            SET kuota_tersisa = kuota_tersisa + 1 
-            WHERE id = ?
-        ");
-        
-        foreach ($expired as $row) {
-            $stmtUpdateUnit->execute([$row['unit_pelaksana_periode_id']]);
-        }
+
+        // PERF-01: Kembalikan kuota ke unit — batch UPDATE dengan GROUP BY + COUNT
+        // Menggantikan loop N+1 yang lama (1 UPDATE per reservasi)
+        $pdo->prepare("
+            UPDATE unit_pelaksana_periode upp
+            JOIN (
+                SELECT unit_pelaksana_periode_id, COUNT(*) AS jumlah
+                FROM reservasi
+                WHERE id IN ($inQuery)
+                GROUP BY unit_pelaksana_periode_id
+            ) r ON upp.id = r.unit_pelaksana_periode_id
+            SET upp.kuota_tersisa = upp.kuota_tersisa + r.jumlah
+        ")->execute($ids);
         
         // Insert log
         $stmtLog = $pdo->prepare("
