@@ -262,11 +262,46 @@ export function initSidebar() {
         }
     });
 
+    // Handle Sidebar Scroll Position Retention & Active Item In-View
+    const navEl = aside.querySelector('.sidebar-nav');
+    const SCROLL_KEY = 'remate_admin_sidebar_scroll';
+
+    if (navEl) {
+        // Restore previous scroll position if available
+        const savedScroll = sessionStorage.getItem(SCROLL_KEY);
+        if (savedScroll !== null) {
+            navEl.scrollTop = parseInt(savedScroll, 10);
+        }
+
+        // Ensure active item is always visible within the sidebar viewport
+        const activeEl = aside.querySelector('.nav-link.active, .nav-sublink.active');
+        if (activeEl) {
+            const navRect = navEl.getBoundingClientRect();
+            const activeRect = activeEl.getBoundingClientRect();
+            if (activeRect.top < navRect.top || activeRect.bottom > navRect.bottom) {
+                activeEl.scrollIntoView({ block: 'nearest' });
+            }
+        }
+
+        // Save scroll position on scroll
+        navEl.addEventListener('scroll', () => {
+            sessionStorage.setItem(SCROLL_KEY, navEl.scrollTop);
+        }, { passive: true });
+
+        // Save scroll position when any link is clicked
+        aside.querySelectorAll('.nav-link, .nav-sublink, .sidebar-brand-link').forEach(link => {
+            link.addEventListener('click', () => {
+                sessionStorage.setItem(SCROLL_KEY, navEl.scrollTop);
+            });
+        });
+    }
+
     // Handle logout click cache clear
     const logoutBtn = aside.querySelector('.btn-sidebar-logout');
     if (logoutBtn) {
         logoutBtn.addEventListener('click', () => {
             sessionStorage.removeItem('admin_profile');
+            sessionStorage.removeItem('remate_admin_sidebar_scroll');
         });
     }
 }
