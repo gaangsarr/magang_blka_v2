@@ -109,21 +109,21 @@
 
     <!-- Modal Detail Pendaftar -->
     <div id="modal-detail-pendaftar" class="admin-modal-overlay">
-        <div class="admin-modal-card" style="max-width: 640px; text-align: left; max-height: 90vh; overflow-y: auto;">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 16px;">
+        <div class="admin-modal-card modal-card-structured" style="max-width: 640px;">
+            <div class="modal-card-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
                 <div>
-                    <h3 class="admin-modal-title" id="detail-mhs-nama" style="font-size: 1.35rem; margin-bottom: 4px;">Nama Mahasiswa</h3>
+                    <h3 class="admin-modal-title" id="detail-mhs-nama" style="font-size: 1.35rem; margin-bottom: 4px; color: #0b3d6b;">Nama Mahasiswa</h3>
                     <div style="font-size: 0.85rem; color: #64748b; display: flex; gap: 12px; align-items: center;">
                         <span id="detail-mhs-nim" style="font-family: monospace; font-weight: 700; color: #0b3d6b;">-</span>
                         <span>•</span>
                         <span id="detail-mhs-program">-</span>
                     </div>
                 </div>
-                <button type="button" id="btn-close-modal-detail" style="background: transparent; border: none; font-size: 1.5rem; color: #94a3b8; cursor: pointer; padding: 4px;">&times;</button>
+                <button type="button" id="btn-close-modal-detail" class="auth-modal-close" style="position: static;">&times;</button>
             </div>
 
             <!-- Detail Content Grid -->
-            <div style="display: grid; gap: 18px;">
+            <div class="modal-card-body" style="display: grid; gap: 18px;">
                 <!-- Section 1: Akademik & Kontak -->
                 <div style="background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0;">
                     <h4 style="font-size: 0.875rem; color: #0b3d6b; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 0.5px;">Informasi Akademik & Kontak</h4>
@@ -168,7 +168,7 @@
                 </div>
             </div>
 
-            <div style="margin-top: 24px; text-align: right;">
+            <div class="modal-card-footer">
                 <button type="button" id="btn-close-modal-detail-bottom" class="admin-modal-btn secondary" style="width: auto; padding: 10px 24px;">Tutup</button>
             </div>
         </div>

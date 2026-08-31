@@ -73,37 +73,39 @@
     </div>
 
     <!-- Modal Create / Edit Peminatan -->
-    <div id="modal-peminatan" class="modal-overlay hidden" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 20px;">
-        <div class="modal-card" style="background: #ffffff; border-radius: 16px; width: 100%; max-width: 500px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); overflow: hidden;">
-            <div style="padding: 20px 24px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
-                <h3 id="modal-peminatan-title" style="margin: 0; font-size: 1.15rem; font-weight: 800; color: #0b3d6b;">Tambah Peminatan Baru</h3>
-                <button type="button" id="btn-close-modal" style="background: none; border: none; font-size: 1.5rem; line-height: 1; cursor: pointer; color: #64748b;">&times;</button>
+    <div id="modal-peminatan" class="modal-overlay hidden" role="dialog" aria-modal="true">
+        <div class="modal-card modal-card-structured" style="max-width: 500px;">
+            <div class="modal-card-header">
+                <button type="button" id="btn-close-modal" class="auth-modal-close">&times;</button>
+                <h3 id="modal-peminatan-title" class="auth-modal-title" style="margin: 0; font-size: 1.15rem; font-weight: 800; color: #0b3d6b;">Tambah Peminatan Baru</h3>
             </div>
 
-            <form id="form-peminatan" style="padding: 24px; display: flex; flex-direction: column; gap: 16px;">
+            <form id="form-peminatan" style="display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; overflow: hidden; margin: 0;">
                 <input type="hidden" id="peminatan-id" value="" />
 
-                <div>
-                    <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 6px;">Nama Peminatan <span style="color: #ef4444;">*</span></label>
-                    <input type="text" id="peminatan-nama" required placeholder="Contoh: Teknologi Informasi & Sistem" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem;" />
+                <div class="modal-card-body" style="display: flex; flex-direction: column; gap: 16px;">
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 6px;">Nama Peminatan <span style="color: #ef4444;">*</span></label>
+                        <input type="text" id="peminatan-nama" required placeholder="Contoh: Teknologi Informasi & Sistem" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem;" />
+                    </div>
+
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 6px;">Deskripsi / Ruang Lingkup</label>
+                        <textarea id="peminatan-deskripsi" rows="3" placeholder="Software engineering, data analytics, jaringan, IT security" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; resize: vertical;"></textarea>
+                    </div>
+
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 6px;">Status</label>
+                        <select id="peminatan-aktif" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem;">
+                            <option value="1">Aktif</option>
+                            <option value="0">Nonaktif</option>
+                        </select>
+                    </div>
                 </div>
 
-                <div>
-                    <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 6px;">Deskripsi / Ruang Lingkup</label>
-                    <textarea id="peminatan-deskripsi" rows="3" placeholder="Software engineering, data analytics, jaringan, IT security" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; resize: vertical;"></textarea>
-                </div>
-
-                <div>
-                    <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 6px;">Status</label>
-                    <select id="peminatan-aktif" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem;">
-                        <option value="1">Aktif</option>
-                        <option value="0">Nonaktif</option>
-                    </select>
-                </div>
-
-                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 12px; border-top: 1px solid #e2e8f0; padding-top: 16px;">
-                    <button type="button" id="btn-cancel-modal" style="padding: 10px 18px; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: 600; cursor: pointer;">Batal</button>
-                    <button type="submit" id="btn-submit-peminatan" style="padding: 10px 22px; background: #0b3d6b; color: #ffffff; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">Simpan</button>
+                <div class="modal-card-footer">
+                    <button type="button" id="btn-cancel-modal" class="btn-modal-cancel" style="width: auto; padding: 10px 18px;">Batal</button>
+                    <button type="submit" id="btn-submit-peminatan" class="btn-modal-login" style="width: auto; padding: 10px 22px;">Simpan</button>
                 </div>
             </form>
         </div>
