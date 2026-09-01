@@ -10,6 +10,7 @@ let currentConfig = null;
 let currentUnits = [];
 let allPeriodeList = [];
 let csrfToken = null;
+let currentSearchQuery = '';
 
 export function escapeHtml(unsafe) {
     return (unsafe || '').toString()
@@ -40,6 +41,23 @@ function initEvents() {
         });
     }
 
+    // Toggle Section 2 Configuration Form Body
+    const btnToggleConfig = document.getElementById('btn-toggle-config');
+    const configBody = document.getElementById('config-form-body');
+    const toggleText = document.getElementById('toggle-config-text');
+    const toggleIcon = document.getElementById('toggle-config-icon');
+    if (btnToggleConfig && configBody) {
+        btnToggleConfig.addEventListener('click', () => {
+            const isCollapsed = configBody.classList.toggle('collapsed');
+            if (toggleText) {
+                toggleText.innerText = isCollapsed ? 'Buka Formulir' : 'Tutup Formulir';
+            }
+            if (toggleIcon) {
+                toggleIcon.style.transform = isCollapsed ? 'rotate(180deg)' : 'rotate(0deg)';
+            }
+        });
+    }
+
     // Live update preview nomor surat di tabel saat input nomor template / start berubah
     const inputTemplate = document.getElementById('cfg-nomor-template');
     const inputStart = document.getElementById('cfg-nomor-start');
@@ -58,6 +76,15 @@ function initEvents() {
     const btnZip = document.getElementById('btn-download-all-zip');
     if (btnZip) {
         btnZip.addEventListener('click', downloadAllZip);
+    }
+
+    // Filter search unit in real-time
+    const filterUnitSearch = document.getElementById('filter-unit-search');
+    if (filterUnitSearch) {
+        filterUnitSearch.addEventListener('input', (e) => {
+            currentSearchQuery = e.target.value.trim().toLowerCase();
+            renderUnitsTable(currentUnits, currentConfig, currentSearchQuery);
+        });
     }
 }
 
@@ -98,9 +125,9 @@ async function loadSuratData(periodeId = null) {
         currentConfig = data.config;
         currentUnits = data.units || [];
 
-        renderPeriodCards(allPeriodeList, currentPeriodeId);
+        renderPeriodSelector(allPeriodeList, currentPeriodeId, currentUnits);
         populateConfigForm(currentConfig, currentPeriodeId);
-        renderUnitsTable(currentUnits, currentConfig);
+        renderUnitsTable(currentUnits, currentConfig, currentSearchQuery);
 
     } catch (err) {
         console.error('[hasilkan-surat.js] Error:', err);
@@ -109,82 +136,129 @@ async function loadSuratData(periodeId = null) {
 }
 
 /**
- * Render kartu pemilihan periode
+ * Render Minimalist Period Selector Bar
  */
-function renderPeriodCards(periodes, selectedId) {
-    const container = document.getElementById('period-cards-container');
-    const statusInfo = document.getElementById('period-status-info');
-    if (!container) return;
+function renderPeriodSelector(periodes, selectedId, units = []) {
+    const selectorContainer = document.getElementById('period-selector-container');
+    const metaContainer = document.getElementById('period-meta-badges');
+    if (!selectorContainer) return;
 
     if (!periodes || periodes.length === 0) {
-        container.innerHTML = `
-            <div style="padding: 24px; text-align: center; color: #64748b; background: #fff; border-radius: 12px; grid-column: 1 / -1;">
-                Belum ada data periode magang terdaftar.
-            </div>
-        `;
-        if (statusInfo) statusInfo.innerText = '';
+        selectorContainer.innerHTML = `<span style="font-size: 0.85rem; color: #94a3b8; font-style: italic;">Belum ada data periode magang terdaftar.</span>`;
+        if (metaContainer) metaContainer.innerHTML = '';
         return;
     }
 
-    let cardsHtml = '';
-    let selectedName = '';
+    const selectedPeriod = periodes.find(p => p.id == selectedId) || periodes[0];
+    const activeId = selectedPeriod ? selectedPeriod.id : null;
 
-    periodes.forEach(p => {
-        const isSelected = p.id == selectedId;
-        if (isSelected) selectedName = p.nama;
+    // Hitung total mahasiswa diterima pada unit
+    const totalMhsAccepted = (units || []).reduce((acc, u) => acc + (parseInt(u.total_mahasiswa, 10) || 0), 0);
+    const totalUnitsCount = (units || []).length;
 
-        let badgeBg = '#e2e8f0';
-        let badgeColor = '#475569';
-        let statusLabel = p.status;
+    // Jika jumlah periode <= 4, buat tampilan Pill buttons yang responsif & cepat di-klik
+    // Jika > 4 periode, buat tampilan <select> dropdown yang rapi
+    if (periodes.length <= 4) {
+        let pillsHtml = `<div class="period-pills-list">`;
+        periodes.forEach(p => {
+            const isSelected = p.id == activeId;
+            let dotStatus = 'ditutup';
+            if (p.status === 'dibuka') {
+                dotStatus = 'dibuka';
+            } else if (p.status === 'persiapan') {
+                dotStatus = 'persiapan';
+            }
 
-        if (p.status === 'dibuka') {
-            badgeBg = '#dcfce7';
-            badgeColor = '#166534';
-            statusLabel = 'Pendaftaran Dibuka';
-        } else if (p.status === 'persiapan') {
-            badgeBg = '#fef3c7';
-            badgeColor = '#92400e';
-            statusLabel = 'Masa Persiapan';
-        } else if (p.status === 'ditutup') {
-            badgeBg = '#fee2e2';
-            badgeColor = '#991b1b';
-            statusLabel = 'Pendaftaran Ditutup';
+            pillsHtml += `
+                <button type="button" class="period-pill-btn ${isSelected ? 'active' : ''}" data-periode-id="${escapeHtml(p.id)}">
+                    <span class="status-indicator-dot ${dotStatus}"></span>
+                    <span>${escapeHtml(p.nama)}</span>
+                </button>
+            `;
+        });
+        pillsHtml += `</div>`;
+        selectorContainer.innerHTML = pillsHtml;
+
+        // Attach click listeners to pill buttons
+        selectorContainer.querySelectorAll('.period-pill-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const pid = btn.getAttribute('data-periode-id');
+                if (pid && pid != currentPeriodeId) {
+                    loadSuratData(pid);
+                }
+            });
+        });
+    } else {
+        // Tampilan Dropdown Select jika banyak periode
+        let selectHtml = `<select id="select-periode-surat" class="period-select-dropdown">`;
+        periodes.forEach(p => {
+            const isSelected = p.id == activeId;
+            let statusShort = p.status === 'dibuka' ? 'Dibuka' : (p.status === 'persiapan' ? 'Persiapan' : 'Ditutup');
+            selectHtml += `
+                <option value="${escapeHtml(p.id)}" ${isSelected ? 'selected' : ''}>
+                    ${escapeHtml(p.nama)} (${statusShort})
+                </option>
+            `;
+        });
+        selectHtml += `</select>`;
+        selectorContainer.innerHTML = selectHtml;
+
+        const selectEl = document.getElementById('select-periode-surat');
+        if (selectEl) {
+            selectEl.addEventListener('change', (e) => {
+                const pid = e.target.value;
+                if (pid && pid != currentPeriodeId) {
+                    loadSuratData(pid);
+                }
+            });
         }
-
-        const progLabel = p.program_1_bulan && p.program_5_bulan ? '1 & 5 Bulan' : (p.program_1_bulan ? '1 Bulan' : '5 Bulan');
-        const announcementHtml = p.pengumuman_dibuka == 1
-            ? `<span style="display: inline-flex; align-items: center; gap: 5px; color: #059669; font-weight: 600; font-size: 0.8rem;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg> Pengumuman Mahasiswa Dibuka</span>`
-            : `<span style="display: inline-flex; align-items: center; gap: 5px; color: #64748b; font-size: 0.8rem;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Pengumuman Mahasiswa Ditutup</span>`;
-
-        cardsHtml += `
-            <div class="period-select-card ${isSelected ? 'active' : ''}" data-periode-id="${escapeHtml(p.id)}">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
-                    <span class="period-card-badge" style="background: ${badgeBg}; color: ${badgeColor};">${escapeHtml(statusLabel)}</span>
-                    <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Program: ${escapeHtml(progLabel)}</span>
-                </div>
-                <h4 style="margin: 0 0 6px 0; font-size: 1.05rem; font-weight: 700; color: #0f172a;">${escapeHtml(p.nama)}</h4>
-                <p style="margin: 0; font-size: 0.8rem; color: #64748b;">
-                    ${announcementHtml}
-                </p>
-            </div>
-        `;
-    });
-
-    container.innerHTML = cardsHtml;
-
-    if (statusInfo) {
-        statusInfo.innerText = selectedName ? `Periode Terpilih: ${selectedName}` : '';
     }
 
-    // Attach click listener to each period card
-    document.querySelectorAll('.period-select-card').forEach(card => {
-        card.addEventListener('click', () => {
-            const pid = card.getAttribute('data-periode-id');
-            if (pid && pid != currentPeriodeId) {
-                loadSuratData(pid);
-            }
-        });
-    });
+    // Render metadata badges di sisi kanan bar
+    if (metaContainer && selectedPeriod) {
+        let statusBadgeClass = 'meta-chip-neutral';
+        let statusDotClass = 'ditutup';
+        let statusText = 'Pendaftaran Ditutup';
+        if (selectedPeriod.status === 'dibuka') {
+            statusBadgeClass = 'meta-chip-success';
+            statusDotClass = 'dibuka';
+            statusText = 'Pendaftaran Dibuka';
+        } else if (selectedPeriod.status === 'persiapan') {
+            statusBadgeClass = 'meta-chip-warning';
+            statusDotClass = 'persiapan';
+            statusText = 'Masa Persiapan';
+        }
+
+        const progLabel = selectedPeriod.program_1_bulan && selectedPeriod.program_5_bulan 
+            ? '1 & 5 Bulan' 
+            : (selectedPeriod.program_1_bulan ? '1 Bulan' : '5 Bulan');
+
+        const isAnnounced = selectedPeriod.pengumuman_dibuka == 1;
+        const announcementChipClass = isAnnounced ? 'meta-chip-announcement-open' : 'meta-chip-announcement-closed';
+        const announcementText = isAnnounced ? 'Pengumuman Dibuka' : 'Pengumuman Ditutup';
+        const announcementIcon = isAnnounced
+            ? `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>`
+            : `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`;
+
+        metaContainer.innerHTML = `
+            <span class="meta-chip ${statusBadgeClass}">
+                <span class="status-indicator-dot ${statusDotClass}"></span>
+                <span>${escapeHtml(statusText)}</span>
+            </span>
+            <span class="meta-chip meta-chip-info">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>
+                <span>Program: ${escapeHtml(progLabel)}</span>
+            </span>
+            <span class="meta-chip ${announcementChipClass}">
+                ${announcementIcon}
+                <span>${escapeHtml(announcementText)}</span>
+            </span>
+            <span class="meta-chip meta-chip-stat">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M8 10h.01"/><path d="M16 10h.01"/><path d="M8 14h.01"/><path d="M16 14h.01"/></svg>
+                <span>${totalUnitsCount} Unit (${totalMhsAccepted} Mahasiswa)</span>
+            </span>
+        `;
+    }
 }
 
 /**
@@ -246,9 +320,9 @@ function updateTableNomorSuratPreview() {
 }
 
 /**
- * Render tabel daftar kantor unit
+ * Render tabel daftar kantor unit dengan dukungan pencarian real-time
  */
-function renderUnitsTable(units, config) {
+function renderUnitsTable(units, config, filterText = '') {
     const tbody = document.getElementById('units-table-body');
     const infoCount = document.getElementById('units-count-info');
     if (!tbody) return;
@@ -272,14 +346,44 @@ function renderUnitsTable(units, config) {
     const template = config?.nomor_surat_template || '{nomor}/Srt/1/D0/08/2026';
     const startNum = parseInt(config?.nomor_surat_start || 1, 10);
 
-    let totalMhsAllUnits = 0;
+    // Filter daftar unit jika ada pencarian
+    let displayUnits = units;
+    if (filterText) {
+        displayUnits = units.filter(u => {
+            const nama = (u.unit_nama || '').toLowerCase();
+            const alamat = (u.unit_alamat || '').toLowerCase();
+            return nama.includes(filterText) || alamat.includes(filterText);
+        });
+    }
+
+    if (displayUnits.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" style="text-align: center; padding: 32px; color: #64748b;">
+                    <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;">
+                        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.8"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                        <span style="font-weight: 600;">Tidak ditemukan unit yang cocok dengan pencarian "${escapeHtml(filterText)}"</span>
+                        <span style="font-size: 0.8rem; color: #94a3b8;">Coba gunakan kata kunci nama kantor atau kota lainnya.</span>
+                    </div>
+                </td>
+            </tr>
+        `;
+        if (infoCount) {
+            infoCount.innerText = `Menampilkan 0 dari ${units.length} Kantor Unit PLN`;
+        }
+        return;
+    }
+
+    let totalMhsDisplay = 0;
     let rowsHtml = '';
 
-    units.forEach((u, idx) => {
-        const seq = startNum + idx;
+    displayUnits.forEach((u, idx) => {
+        // Cari index asli unit di currentUnits untuk urutan nomor surat yang konsisten
+        const origIdx = units.findIndex(orig => orig.unit_id === u.unit_id);
+        const seq = startNum + (origIdx >= 0 ? origIdx : idx);
         const noSurat = formatNomorSuratJs(template, seq);
         const mhsCount = parseInt(u.total_mahasiswa, 10) || 0;
-        totalMhsAllUnits += mhsCount;
+        totalMhsDisplay += mhsCount;
 
         const alamat = u.unit_alamat ? escapeHtml(u.unit_alamat) : '<span style="color: #94a3b8; font-style: italic;">Alamat belum diatur di Master Unit</span>';
 
@@ -312,7 +416,11 @@ function renderUnitsTable(units, config) {
 
     tbody.innerHTML = rowsHtml;
     if (infoCount) {
-        infoCount.innerText = `Menampilkan ${units.length} Kantor Unit PLN (${totalMhsAllUnits} Total Mahasiswa Diterima)`;
+        if (filterText) {
+            infoCount.innerText = `Menampilkan ${displayUnits.length} dari ${units.length} Kantor Unit PLN (${totalMhsDisplay} Mahasiswa Diterima)`;
+        } else {
+            infoCount.innerText = `Menampilkan ${units.length} Kantor Unit PLN (${totalMhsDisplay} Total Mahasiswa Diterima)`;
+        }
     }
 }
 
@@ -417,3 +525,4 @@ function downloadAllZip() {
 
     window.location.href = `/api/admin/surat/download_all.php?periode_id=${currentPeriodeId}`;
 }
+
