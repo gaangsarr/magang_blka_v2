@@ -151,7 +151,7 @@ export function showAdminAlert(message, type = 'info', title = null) {
         iconWrapper.className = `admin-modal-icon-wrapper ${type}`;
         iconWrapper.innerHTML = getIconSvg(type);
         titleEl.innerText = title || defaultTitles[type] || 'Informasi';
-        msgEl.innerText = message;
+        msgEl.innerHTML = message;
 
         const btnClass = type === 'error' ? 'danger' : 'primary';
         actionsEl.innerHTML = `<button type="button" class="admin-modal-btn ${btnClass}" id="btn-modal-ok">OK</button>`;
@@ -179,7 +179,7 @@ export function showAdminConfirm(message, title = 'Konfirmasi Aksi', type = 'war
         iconWrapper.className = `admin-modal-icon-wrapper ${type}`;
         iconWrapper.innerHTML = getIconSvg(type);
         titleEl.innerText = title;
-        msgEl.innerText = message;
+        msgEl.innerHTML = message;
 
         const confirmBtnClass = type === 'danger' || type === 'error' ? 'danger' : 'primary';
 
