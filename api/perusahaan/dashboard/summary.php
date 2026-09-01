@@ -105,11 +105,11 @@ try {
         // Ambil data prodi & peminatan yang dipilih pada periode ini
         if ($uppId) {
             $stmtJ = $pdo->prepare("
-                SELECT j.id, j.nama_jurusan, j.kode
+                SELECT j.id, j.nama_jurusan, j.kode, j.jenjang
                 FROM unit_periode_jurusan upj
                 JOIN jurusan j ON upj.jurusan_id = j.id
                 WHERE upj.unit_pelaksana_periode_id = ?
-                ORDER BY j.nama_jurusan ASC
+                ORDER BY j.jenjang ASC, j.nama_jurusan ASC
             ");
             $stmtJ->execute([$uppId]);
             $selectedJurusan = $stmtJ->fetchAll(PDO::FETCH_ASSOC);

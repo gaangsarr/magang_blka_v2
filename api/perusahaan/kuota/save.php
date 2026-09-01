@@ -78,6 +78,12 @@ try {
         exit;
     }
 
+    if ($menerimaMagang && empty($peminatanIds)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Silakan pilih minimal 1 Bidang Peminatan / Penempatan yang dibuka di unit Anda.']);
+        exit;
+    }
+
     $pdo->beginTransaction();
 
     // 2. Update master entitas_perusahaan

@@ -103,7 +103,7 @@ try {
     $uppAktif = $menerimaMagangDefault && ($upp ? (bool)$upp['aktif'] : true);
 
     // 4. Ambil semua jurusan aktif & tandai yang terpilih
-    $stmtJAll = $pdo->query("SELECT id, kode, nama_jurusan FROM jurusan WHERE aktif = 1 ORDER BY nama_jurusan ASC");
+    $stmtJAll = $pdo->query("SELECT id, kode, jenjang, nama_jurusan FROM jurusan WHERE aktif = 1 ORDER BY jenjang ASC, nama_jurusan ASC");
     $allJurusan = $stmtJAll->fetchAll(PDO::FETCH_ASSOC);
 
     $selectedJurusanIds = [];
@@ -129,7 +129,7 @@ try {
             'id'           => $jId,
             'kode_jurusan' => $j['kode'] ?? '',
             'nama_jurusan' => $j['nama_jurusan'],
-            'jenjang'      => 'S1',
+            'jenjang'      => $j['jenjang'] ?: 'S1',
             'is_selected'  => in_array($jId, array_map('intval', $selectedJurusanIds), true),
         ];
     }

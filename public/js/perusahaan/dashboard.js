@@ -481,6 +481,11 @@ function initKuotaModule() {
                 return;
             }
 
+            if (menerima && peminatanIds.length === 0) {
+                await showAdminAlert('Silakan pilih minimal 1 Bidang Peminatan / Penempatan yang dibuka di unit Anda.', 'warning', 'Pilih Peminatan');
+                return;
+            }
+
             const btnSave = document.getElementById('btn-save-kuota');
             btnSave.disabled = true;
             btnSave.innerHTML = `
@@ -666,17 +671,18 @@ async function loadKuotaData(periodeId = 0) {
                 inputKuota.value = k ? k.kuota_total : 0;
             }
 
-            // Render Prodi Checkboxes (Hanya Nama Prodi)
+            // Render Prodi Checkboxes (Jenjang - Nama Prodi)
             const prodiGrid = document.getElementById('prodi-checkboxes');
             if (prodiGrid && k?.jurusan_list) {
                 prodiGrid.innerHTML = '';
                 k.jurusan_list.forEach(j => {
                     const checkedClass = j.is_selected ? 'checked' : '';
+                    const labelProdi = (j.jenjang ? `${j.jenjang} - ` : '') + j.nama_jurusan;
                     const card = document.createElement('label');
                     card.className = `custom-checkbox-card ${checkedClass}`;
                     card.innerHTML = `
                         <input type="checkbox" class="chk-prodi" value="${j.id}" ${j.is_selected ? 'checked' : ''}>
-                        <span style="font-size: 0.875rem; font-weight: 600; color: #1e293b;">${escapeHtml(j.nama_jurusan)}</span>
+                        <span style="font-size: 0.875rem; font-weight: 600; color: #1e293b;">${escapeHtml(labelProdi)}</span>
                     `;
                     card.querySelector('input').addEventListener('change', (e) => {
                         if (e.target.checked) card.classList.add('checked');

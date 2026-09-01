@@ -733,11 +733,11 @@
                                 </div>
                             </div>
 
-                            <!-- Pilihan Peminatan (Opsional) -->
+                            <!-- Pilihan Peminatan (Wajib) -->
                             <div style="margin-bottom: 24px;">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                                     <label class="admin-input-label" style="font-size: 0.875rem; margin-bottom: 0;">
-                                        Peminatan / Bidang Penempatan yang Dibuka (Opsional)
+                                        Peminatan / Bidang Penempatan yang Dibuka <span style="color: red;">*</span>
                                     </label>
                                     <div style="display: flex; gap: 8px;">
                                         <button type="button" id="btn-select-all-pem" class="btn-portal-outline" style="padding: 4px 10px; font-size: 0.75rem;">Pilih Semua</button>
@@ -843,7 +843,7 @@
                         </div>
                         <div style="margin-bottom: 14px;">
                             <label class="admin-input-label" for="prof-alamat">Alamat Lengkap Kantor <span style="color: red;">*</span></label>
-                            <textarea id="prof-alamat" class="admin-input-field" rows="3" placeholder="Masukkan alamat lengkap kantor unit..." required></textarea>
+                            <textarea id="prof-alamat" class="admin-input-field" rows="3" placeholder="Masukkan alamat lengkap kantor unit..." required maxlength="500" style="resize: none; font-family: inherit; line-height: 1.5; min-height: 75px;"></textarea>
                         </div>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
                             <div>

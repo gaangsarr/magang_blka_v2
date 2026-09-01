@@ -158,6 +158,7 @@ try {
             j.id AS jurusan_id,
             j.nama_jurusan,
             j.kode AS kode_jurusan,
+            j.jenjang,
             e.nama AS unit_tujuan_nama,
             p.unit_pelaksana_periode_asal_id,
             e_asal.nama AS unit_asal_nama
@@ -212,6 +213,7 @@ try {
         $alamatLengkap = implode(', ', $domisiliParts);
 
         $isMoved = ((int)$r['is_dipindahkan'] === 1) || ($r['status'] === 'dipindahkan');
+        $namaJurusanLengkap = $r['nama_jurusan'] ? (($r['jenjang'] ? "{$r['jenjang']} - " : '') . $r['nama_jurusan']) : '-';
 
         $formattedData[] = [
             'id'               => $pId,
@@ -222,8 +224,9 @@ try {
             'jenis_kelamin'    => $r['jenis_kelamin'],
             'ipk'              => $r['ipk'] ? number_format((float)$r['ipk'], 2) : '-',
             'jumlah_sks'       => $r['jumlah_sks'] ? (int)$r['jumlah_sks'] : '-',
-            'jurusan_nama'     => $r['nama_jurusan'] ?? '-',
+            'jurusan_nama'     => $namaJurusanLengkap,
             'kode_jurusan'     => $r['kode_jurusan'] ?? '',
+            'jenjang'          => $r['jenjang'] ?? 'S1',
             'angkatan'         => $r['angkatan'] ?? '-',
             'program'          => $r['program'] === '5_bulan' ? '5 Bulan' : '1 Bulan',
             'status'           => $r['status'],
