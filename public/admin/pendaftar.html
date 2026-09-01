@@ -9,6 +9,67 @@
     <link rel="apple-touch-icon" href="/assets/img/logo_itpln.png">
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/admin.css">
+    <style>
+        .admin-modal-card.modal-card-structured {
+            padding: 0 !important;
+            text-align: left !important;
+            display: flex !important;
+            flex-direction: column !important;
+            overflow: hidden !important;
+        }
+        .detail-info-card {
+            background: #f8fafc;
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+        .detail-info-card.success-card {
+            background: #ecfdf5;
+            border-color: #a7f3d0;
+        }
+        .detail-grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px 18px;
+            font-size: 0.875rem;
+        }
+        .detail-item-group {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .detail-item-label {
+            font-size: 0.775rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+        .detail-item-value {
+            font-size: 0.875rem;
+            color: #0f172a;
+            font-weight: 600;
+        }
+        .detail-pill-tag {
+            display: inline-block;
+            background: #e0f2fe;
+            color: #0369a1;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin: 2px 4px 2px 0;
+        }
+        .modal-section-title {
+            font-size: 0.825rem;
+            color: #0b3d6b;
+            margin: 0 0 12px 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 700;
+        }
+        .modal-section-title.success-title {
+            color: #047857;
+        }
+    </style>
 </head>
 <body class="admin-body">
     <div class="admin-layout">
@@ -110,56 +171,77 @@
     <!-- Modal Detail Pendaftar -->
     <div id="modal-detail-pendaftar" class="admin-modal-overlay">
         <div class="admin-modal-card modal-card-structured" style="max-width: 640px;">
-            <div class="modal-card-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div class="modal-card-header" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;">
                 <div>
-                    <h3 class="admin-modal-title" id="detail-mhs-nama" style="font-size: 1.35rem; margin-bottom: 4px; color: #0b3d6b;">Nama Mahasiswa</h3>
-                    <div style="font-size: 0.85rem; color: #64748b; display: flex; gap: 12px; align-items: center;">
+                    <h3 class="admin-modal-title" id="detail-mhs-nama" style="font-size: 1.3rem; margin-bottom: 4px; color: #0b3d6b; text-align: left;">Nama Mahasiswa</h3>
+                    <div style="font-size: 0.85rem; color: #64748b; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                         <span id="detail-mhs-nim" style="font-family: monospace; font-weight: 700; color: #0b3d6b;">-</span>
                         <span>•</span>
                         <span id="detail-mhs-program">-</span>
                     </div>
                 </div>
-                <button type="button" id="btn-close-modal-detail" class="auth-modal-close" style="position: static;">&times;</button>
+                <button type="button" id="btn-close-modal-detail" class="auth-modal-close" style="position: static; flex-shrink: 0;" aria-label="Tutup modal">&times;</button>
             </div>
 
             <!-- Detail Content Grid -->
-            <div class="modal-card-body" style="display: grid; gap: 18px;">
+            <div class="modal-card-body" style="display: flex; flex-direction: column; gap: 16px;">
                 <!-- Section 1: Akademik & Kontak -->
-                <div style="background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0;">
-                    <h4 style="font-size: 0.875rem; color: #0b3d6b; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 0.5px;">Informasi Akademik & Kontak</h4>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 0.875rem;">
-                        <div><span style="color: #64748b;">Jurusan:</span> <strong id="detail-jurusan" style="color: #0f172a;">-</strong></div>
-                        <div><span style="color: #64748b;">Angkatan:</span> <strong id="detail-angkatan" style="color: #0f172a;">-</strong></div>
-                        <div><span style="color: #64748b;">IPK Terakhir:</span> <strong id="detail-ipk" style="color: #0b3d6b;">-</strong></div>
-                        <div><span style="color: #64748b;">SKS Ditempuh:</span> <strong id="detail-sks" style="color: #0b3d6b;">-</strong></div>
-                        <div><span style="color: #64748b;">Email Kampus:</span> <div id="detail-email" style="font-family: monospace; color: #0f172a; font-weight: 600;">-</div></div>
-                        <div><span style="color: #64748b;">No. Handphone/WA:</span> <div id="detail-nohp" style="font-weight: 600; color: #0f172a;">-</div></div>
+                <div class="detail-info-card">
+                    <h4 class="modal-section-title">Informasi Akademik & Kontak</h4>
+                    <div class="detail-grid-2">
+                        <div class="detail-item-group">
+                            <span class="detail-item-label">Program Studi / Jurusan</span>
+                            <span class="detail-item-value" id="detail-jurusan">-</span>
+                        </div>
+                        <div class="detail-item-group">
+                            <span class="detail-item-label">Angkatan</span>
+                            <span class="detail-item-value" id="detail-angkatan">-</span>
+                        </div>
+                        <div class="detail-item-group">
+                            <span class="detail-item-label">IPK Terakhir</span>
+                            <span class="detail-item-value" id="detail-ipk" style="color: #0b3d6b;">-</span>
+                        </div>
+                        <div class="detail-item-group">
+                            <span class="detail-item-label">SKS Ditempuh</span>
+                            <span class="detail-item-value" id="detail-sks" style="color: #0b3d6b;">-</span>
+                        </div>
+                        <div class="detail-item-group">
+                            <span class="detail-item-label">Email Kampus</span>
+                            <span class="detail-item-value" id="detail-email" style="font-family: monospace; font-size: 0.825rem; word-break: break-all;">-</span>
+                        </div>
+                        <div class="detail-item-group">
+                            <span class="detail-item-label">No. Handphone / WhatsApp</span>
+                            <span class="detail-item-value" id="detail-nohp">-</span>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Section 2: Peminatan Keahlian -->
-                <div style="background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0;">
-                    <h4 style="font-size: 0.875rem; color: #0b3d6b; margin: 0 0 8px 0; text-transform: uppercase; letter-spacing: 0.5px;">Bidang Peminatan Keahlian</h4>
-                    <div id="detail-peminatan" style="font-size: 0.875rem; color: #334155; font-weight: 600;">-</div>
+                <div class="detail-info-card">
+                    <h4 class="modal-section-title">Bidang Peminatan Keahlian</h4>
+                    <div id="detail-peminatan" style="display: flex; flex-wrap: wrap; gap: 4px;">-</div>
                 </div>
 
-                <!-- Section 3: Domisili & Peta Interaktif -->
-                <div style="background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0;">
-                    <h4 style="font-size: 0.875rem; color: #0b3d6b; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 0.5px;">Alamat Domisili & Koordinat</h4>
-                    <div id="detail-alamat" style="font-size: 0.875rem; color: #1e293b; margin-bottom: 8px; line-height: 1.5;">-</div>
-                    <div style="font-size: 0.8rem; color: #64748b; font-family: monospace; display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                <!-- Section 3: Domisili & Koordinat Peta -->
+                <div class="detail-info-card">
+                    <h4 class="modal-section-title">Alamat Domisili & Koordinat</h4>
+                    <div id="detail-alamat" style="font-size: 0.875rem; color: #1e293b; margin-bottom: 10px; line-height: 1.5; font-weight: 500;">-</div>
+                    <div style="font-size: 0.8rem; color: #64748b; font-family: monospace; display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; flex-wrap: wrap; gap: 8px;">
                         <span>Lat: <strong id="detail-lat">-</strong>, Lng: <strong id="detail-lng">-</strong></span>
-                        <a id="detail-map-link" href="#" target="_blank" style="color: #0284c7; text-decoration: none; font-weight: 700; font-family: sans-serif; font-size: 0.8rem;">Buka di OpenStreetMap &rarr;</a>
+                        <a id="detail-map-link" href="#" target="_blank" style="color: #0284c7; text-decoration: none; font-weight: 700; font-family: sans-serif; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 4px;">
+                            <span>Buka di OpenStreetMap</span>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                        </a>
                     </div>
                 </div>
 
                 <!-- Section 4: Unit Penempatan PLN & Status -->
-                <div style="background: #ecfdf5; padding: 16px; border-radius: 12px; border: 1px solid #a7f3d0;">
-                    <h4 style="font-size: 0.875rem; color: #047857; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 0.5px;">Penetapan Unit Pelaksana PLN</h4>
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div class="detail-info-card success-card">
+                    <h4 class="modal-section-title success-title">Penetapan Unit Pelaksana PLN</h4>
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
                         <div>
                             <div id="detail-unit-nama" style="font-size: 1rem; font-weight: 700; color: #065f46;">-</div>
-                            <div style="font-size: 0.8rem; color: #047857; margin-top: 2px;">Jarak Domisili: <strong id="detail-jarak">-</strong> km</div>
+                            <div style="font-size: 0.8rem; color: #047857; margin-top: 3px;">Jarak Domisili ke Unit: <strong id="detail-jarak">-</strong></div>
                         </div>
                         <div id="detail-status-badge">
                             <span class="badge-status badge-dibuka">Status: -</span>
@@ -169,7 +251,7 @@
             </div>
 
             <div class="modal-card-footer">
-                <button type="button" id="btn-close-modal-detail-bottom" class="admin-modal-btn secondary" style="width: auto; padding: 10px 24px;">Tutup</button>
+                <button type="button" id="btn-close-modal-detail-bottom" class="admin-modal-btn secondary" style="width: auto; padding: 10px 24px; flex: none;">Tutup</button>
             </div>
         </div>
     </div>

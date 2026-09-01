@@ -189,13 +189,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('detail-mhs-program').innerText = p.program === '1_bulan' ? 'Program 1 Bulan' : 'Program 5 Bulan (KRS)';
         
         document.getElementById('detail-jurusan').innerText = p.nama_jurusan || '-';
-        document.getElementById('detail-angkatan').innerText = p.angkatan || '-';
-        document.getElementById('detail-ipk').innerText = p.ipk || '-';
-        document.getElementById('detail-sks').innerText = p.jumlah_sks || '-';
+        document.getElementById('detail-angkatan').innerText = p.angkatan ? `Angkatan 20${p.angkatan}` : '-';
+        document.getElementById('detail-ipk').innerText = p.ipk ? `${p.ipk} / 4.00` : '-';
+        document.getElementById('detail-sks').innerText = p.jumlah_sks ? `${p.jumlah_sks} SKS` : '-';
         document.getElementById('detail-email').innerText = p.email || '-';
         document.getElementById('detail-nohp').innerText = p.no_hp || '-';
 
-        document.getElementById('detail-peminatan').innerText = p.peminatan_list || 'Tidak ada peminatan khusus';
+        // Peminatan tags
+        const pemContainer = document.getElementById('detail-peminatan');
+        if (p.peminatan_list) {
+            const pems = p.peminatan_list.split(',').map(s => s.trim()).filter(Boolean);
+            pemContainer.innerHTML = pems.map(pem => `<span class="detail-pill-tag">${escapeHtml(pem)}</span>`).join('');
+        } else {
+            pemContainer.innerHTML = '<span style="color: #94a3b8; font-style: italic; font-size: 0.85rem;">Tidak ada peminatan khusus yang dipilih</span>';
+        }
 
         const fullAlamat = [
             p.alamat_domisili,
@@ -207,29 +214,38 @@ document.addEventListener('DOMContentLoaded', async () => {
             p.provinsi
         ].filter(Boolean).join(', ');
 
-        document.getElementById('detail-alamat').innerText = fullAlamat || 'Alamat tidak diisi';
+        document.getElementById('detail-alamat').innerText = fullAlamat || 'Alamat domisili belum diisi';
         document.getElementById('detail-lat').innerText = p.latitude || '-';
         document.getElementById('detail-lng').innerText = p.longitude || '-';
 
         const mapLink = document.getElementById('detail-map-link');
-        if (p.latitude && p.longitude) {
+        if (p.latitude && p.longitude && parseFloat(p.latitude) !== 0 && parseFloat(p.longitude) !== 0) {
             mapLink.href = `https://www.openstreetmap.org/?mlat=${p.latitude}&mlon=${p.longitude}#map=16/${p.latitude}/${p.longitude}`;
-            mapLink.style.display = 'inline-block';
+            mapLink.style.display = 'inline-flex';
         } else {
             mapLink.style.display = 'none';
         }
 
-        document.getElementById('detail-unit-nama').innerText = p.unit_nama || '-';
-        document.getElementById('detail-jarak').innerText = p.jarak_km ? parseFloat(p.jarak_km).toFixed(2) : '-';
+        document.getElementById('detail-unit-nama').innerText = p.unit_nama || 'Belum Ditetapkan';
+        
+        const jarakEl = document.getElementById('detail-jarak');
+        if (p.jarak_km !== null && p.jarak_km !== undefined && !isNaN(parseFloat(p.jarak_km))) {
+            jarakEl.innerText = `${parseFloat(p.jarak_km).toFixed(2)} km`;
+        } else {
+            jarakEl.innerText = '-';
+        }
 
         const badgeContainer = document.getElementById('detail-status-badge');
-        let statusBadge = '<span class="badge-status badge-dibuka">Diajukan</span>';
-        if (p.status_penetapan === 'diterima') {
-            statusBadge = '<span class="badge-status badge-dibuka" style="background: #ecfdf5; color: #10b981; border: 1px solid #a7f3d0;">Diterima</span>';
-        } else if (p.status_penetapan === 'dipindahkan') {
+        let statusBadge = '<span class="badge-status" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1;">Diajukan</span>';
+        const st = (p.status_penetapan || '').toLowerCase().trim();
+        if (st === 'diterima') {
+            statusBadge = '<span class="badge-status badge-dibuka">Diterima</span>';
+        } else if (st === 'dipindahkan') {
             statusBadge = '<span class="badge-status" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;">Dipindahkan</span>';
-        } else if (p.status_penetapan === 'ditolak') {
-            statusBadge = '<span class="badge-status" style="background: #fef2f2; color: #ef4444; border: 1px solid #fecaca;">Ditolak</span>';
+        } else if (st === 'ditolak') {
+            statusBadge = '<span class="badge-status" style="background: #fef2f2; color: #dc2626; border: 1px solid #fecaca;">Ditolak</span>';
+        } else if (st === 'diverifikasi') {
+            statusBadge = '<span class="badge-status badge-persiapan">Diverifikasi</span>';
         }
         badgeContainer.innerHTML = statusBadge;
 
@@ -244,6 +260,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.getElementById('btn-close-modal-detail')?.addEventListener('click', closeModal);
     document.getElementById('btn-close-modal-detail-bottom')?.addEventListener('click', closeModal);
+
+    // Close on clicking modal backdrop outside card
+    const modalOverlay = document.getElementById('modal-detail-pendaftar');
+    if (modalOverlay) {
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) {
+                closeModal();
+            }
+        });
+    }
+
+    // Close on pressing Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeModal();
+        }
+    });
 
     // Filter feature with Server-side Search (Debounced 300ms)
     document.getElementById('filter-input')?.addEventListener('input', (e) => {
