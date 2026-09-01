@@ -39,6 +39,20 @@ if ($lat === null || $lng === null || !$periodeId) {
 try {
     $pdo = Database::getInstance();
     
+    // Auto-cleanup reservasi kadaluarsa agar kuota yang ditampilkan selalu fresh & akurat
+    $pdo->exec("
+        UPDATE unit_pelaksana_periode upp
+        JOIN (
+            SELECT unit_pelaksana_periode_id, COUNT(*) AS jumlah
+            FROM reservasi
+            WHERE status = 'ditahan' AND expired_at < NOW()
+            GROUP BY unit_pelaksana_periode_id
+        ) r ON upp.id = r.unit_pelaksana_periode_id
+        SET upp.kuota_tersisa = LEAST(upp.kuota_total, upp.kuota_tersisa + r.jumlah);
+        
+        UPDATE reservasi SET status = 'kadaluarsa' WHERE status = 'ditahan' AND expired_at < NOW();
+    ");
+    
     // Validasi periode aktif & angkatan eligible
     $stmtP = $pdo->prepare("SELECT angkatan_eligible, nama, status FROM periode WHERE id = :pid");
     $stmtP->execute([':pid' => $periodeId]);

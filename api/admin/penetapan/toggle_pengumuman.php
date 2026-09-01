@@ -23,12 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 // 3. CSRF Guard
-$csrfHeader = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
-if (!Auth::validateCsrfToken($csrfHeader)) {
-    http_response_code(403);
-    echo json_encode(['error' => 'CSRF token tidak valid atau telah kedaluwarsa.']);
-    exit;
-}
+Auth::requireCsrfApi();
 
 // 4. Parse JSON Body
 $body = json_decode(file_get_contents('php://input'), true);

@@ -32,6 +32,20 @@ $mahasiswaId = Auth::getMahasiswaId();
 
 try {
     $result = Database::transaction(function (PDO $pdo) use ($mahasiswaId, $uppId) {
+        // 0. Auto-cleanup reservasi kadaluarsa di sistem agar kuota yang tertahan lama otomatis kembali
+        $pdo->exec("
+            UPDATE unit_pelaksana_periode upp
+            JOIN (
+                SELECT unit_pelaksana_periode_id, COUNT(*) AS jumlah
+                FROM reservasi
+                WHERE status = 'ditahan' AND expired_at < NOW()
+                GROUP BY unit_pelaksana_periode_id
+            ) r ON upp.id = r.unit_pelaksana_periode_id
+            SET upp.kuota_tersisa = LEAST(upp.kuota_total, upp.kuota_tersisa + r.jumlah);
+            
+            UPDATE reservasi SET status = 'kadaluarsa' WHERE status = 'ditahan' AND expired_at < NOW();
+        ");
+
         // 1. Batalkan reservasi sebelumnya milik mahasiswa ini yang masih 'ditahan'
         $stmtCekRes = $pdo->prepare("SELECT id, unit_pelaksana_periode_id FROM reservasi WHERE mahasiswa_id = :mid AND status = 'ditahan' AND expired_at > NOW()");
         $stmtCekRes->execute([':mid' => $mahasiswaId]);
@@ -40,13 +54,13 @@ try {
         foreach ($oldReservations as $old) {
             // Batalkan
             $pdo->prepare("UPDATE reservasi SET status = 'dibatalkan' WHERE id = :id")->execute([':id' => $old['id']]);
-            // Kembalikan kuota
-            $pdo->prepare("UPDATE unit_pelaksana_periode SET kuota_tersisa = kuota_tersisa + 1 WHERE id = :upp_id")->execute([':upp_id' => $old['unit_pelaksana_periode_id']]);
+            // Kembalikan kuota (tidak boleh melebihi kuota_total)
+            $pdo->prepare("UPDATE unit_pelaksana_periode SET kuota_tersisa = LEAST(kuota_total, kuota_tersisa + 1) WHERE id = :upp_id")->execute([':upp_id' => $old['unit_pelaksana_periode_id']]);
         }
 
         // 2. Kunci row unit_pelaksana_periode untuk cek kuota dan periode
         $stmtUpp = $pdo->prepare("
-            SELECT upp.kuota_tersisa, upp.periode_id, pr.nama AS nama_periode, pr.status AS status_periode, pr.angkatan_eligible
+            SELECT upp.kuota_tersisa, upp.kuota_total, upp.periode_id, pr.nama AS nama_periode, pr.status AS status_periode, pr.angkatan_eligible
             FROM unit_pelaksana_periode upp 
             JOIN periode pr ON upp.periode_id = pr.id
             WHERE upp.id = :upp_id FOR UPDATE
@@ -76,26 +90,23 @@ try {
             throw new \Exception('Maaf, kuota untuk unit pelaksana ini sudah habis atau sedang direservasi orang lain.');
         }
 
+        // 3. Kurangi kuota (dijaga tidak boleh kurang dari 0)
+        $pdo->prepare("UPDATE unit_pelaksana_periode SET kuota_tersisa = GREATEST(0, kuota_tersisa - 1), updated_at = NOW() WHERE id = :upp_id")->execute([':upp_id' => $uppId]);
 
-        // 3. Kurangi kuota
-        $pdo->prepare("UPDATE unit_pelaksana_periode SET kuota_tersisa = kuota_tersisa - 1, updated_at = NOW() WHERE id = :upp_id")->execute([':upp_id' => $uppId]);
+        // 4. Buat reservasi baru (baca durasi dari .env, default 10 menit jika belum diset)
+        $reservationMinutes = max(1, (int)($_ENV['RESERVATION_MINUTES'] ?? 10));
+        $expiredTimestamp = time() + ($reservationMinutes * 60);
+        $expiredAt = date('Y-m-d H:i:s', $expiredTimestamp);
 
-        // 4. Buat reservasi baru (baca durasi dari .env, default 30 menit)
-        // ✅ BLOCKER-10: Hitung expired_at di PHP dan bind sebagai parameter, jangan interpolasi ke SQL
-        $reservationMinutes = max(1, (int)($_ENV['RESERVATION_MINUTES'] ?? 30));
-        $expiredAt = date('Y-m-d H:i:s', strtotime("+{$reservationMinutes} minutes"));
         $stmtInsert = $pdo->prepare("INSERT INTO reservasi (mahasiswa_id, unit_pelaksana_periode_id, status, expired_at, created_at) VALUES (:mid, :upp_id, 'ditahan', :expired_at, NOW())");
         $stmtInsert->execute([':mid' => $mahasiswaId, ':upp_id' => $uppId, ':expired_at' => $expiredAt]);
         $reservasiId = (int)$pdo->lastInsertId();
 
-        // Ambil waktu expired untuk UI
-        $stmtExpire = $pdo->prepare("SELECT expired_at FROM reservasi WHERE id = :id");
-        $stmtExpire->execute([':id' => $reservasiId]);
-        $expiredAt = $stmtExpire->fetchColumn();
-
         return [
-            'reservasi_id' => $reservasiId,
-            'expired_at' => $expiredAt
+            'reservasi_id'   => $reservasiId,
+            'expired_at'     => date('c', $expiredTimestamp), // Format ISO 8601 (e.g. 2026-09-01T23:25:00+07:00)
+            'expired_at_ms'  => $expiredTimestamp * 1000,
+            'expired_at_raw' => $expiredAt
         ];
     });
 

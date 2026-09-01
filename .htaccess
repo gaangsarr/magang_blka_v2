@@ -4,8 +4,8 @@
 
 Options -Indexes
 
-# 1. Lindungi file sensitif (.env, .git, .json, .lock, .php config)
-<FilesMatch "^(\.env|\.git|\.gitignore|composer\.(json|lock)|phinx\.php|seed\.php|test_.*\.php|.*\.sql)$">
+# 1. Lindungi file sensitif (.env, .git, .json, .lock, .php config, .sql, .sql.gz)
+<FilesMatch "^(\.env|\.git|\.gitignore|composer\.(json|lock)|phinx\.php|seed\.php|test_.*\.php|.*\.sql(\.gz)?)$">
     <IfModule mod_authz_core.c>
         Require all denied
     </IfModule>
@@ -20,7 +20,7 @@ Options -Indexes
     RewriteEngine On
 
     # Blokir akses ke direktori terlarang
-    RewriteRule ^(migrations|seeds|scripts|scratch|src|vendor|cache)/ - [F,L,NC]
+    RewriteRule ^(migrations|seeds|scripts|scratch|src|vendor|cache|backups)/ - [F,L,NC]
 
     # BLOCKER-07 & QUALITY-06: Blokir akses ke file test di scripts/ (tidak dihapus, hanya diblok)
     RewriteRule ^scripts/test_ - [F,L,NC]

@@ -196,6 +196,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         await initWilayahDropdowns(draftParsed);
 
+        // Real-time numeric-only sanitizer untuk No HP, RT, dan RW
+        ['no_hp', 'rt', 'rw'].forEach(id => {
+            const inputEl = document.getElementById(id);
+            if (inputEl) {
+                inputEl.addEventListener('input', (e) => {
+                    e.target.value = e.target.value.replace(/\D/g, '');
+                });
+            }
+        });
+
         // Navigasi Event Listener
         btnNext.addEventListener('click', handleNext);
         btnPrev.addEventListener('click', handlePrev);
@@ -204,7 +214,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Cek jika ada reservasi aktif yang belum kadaluarsa (mis. saat refresh halaman)
         if (statusData.active_reservasi && statusData.active_reservasi.reservasi_id) {
             const activeRes = statusData.active_reservasi;
-            const expireMs = new Date(activeRes.expired_at).getTime();
+            const expireMs = activeRes.expired_at_ms || new Date(activeRes.expired_at_iso || activeRes.expired_at).getTime();
             if (expireMs > Date.now()) {
                 if (draftParsed) {
                     try {
@@ -628,6 +638,21 @@ function validateStep(step) {
             }
         }
 
+        // Validasi Format No. HP / WhatsApp (Hanya angka, 10–14 digit, diawali 08 atau 628)
+        const noHpVal = (document.getElementById('no_hp')?.value || '').trim();
+        if (!/^[0-9]+$/.test(noHpVal)) {
+            showError('Nomor Handphone / WhatsApp hanya boleh berisi angka (tanpa huruf atau simbol).', 'no_hp', 'Format Nomor HP Tidak Valid');
+            return false;
+        }
+        if (noHpVal.length < 10 || noHpVal.length > 14) {
+            showError('Nomor Handphone / WhatsApp harus terdiri dari 10 hingga 14 digit angka.', 'no_hp', 'Panjang Nomor HP Tidak Sesuai');
+            return false;
+        }
+        if (!noHpVal.startsWith('08') && !noHpVal.startsWith('628')) {
+            showError('Nomor Handphone / WhatsApp harus diawali dengan 08 (contoh: 081234567890).', 'no_hp', 'Awalan Nomor HP Tidak Sesuai');
+            return false;
+        }
+
         // Syarat Program 5 Bulan
         const selectedProg = document.querySelector('input[name="program"]:checked')?.value || formData.program;
         if (selectedProg === '5_bulan') {
@@ -659,13 +684,23 @@ function validateStep(step) {
             return false;
         }
 
-        if (!document.getElementById('rt').value.trim()) {
+        const rtVal = (document.getElementById('rt')?.value || '').trim();
+        if (!rtVal) {
             showError('Mohon isi nomor RT tempat tinggal Anda.', 'rt', 'RT Wajib Diisi');
             return false;
         }
+        if (!/^[0-9]+$/.test(rtVal)) {
+            showError('Nomor RT hanya boleh berisi angka (contoh: 01 atau 005).', 'rt', 'Format RT Tidak Valid');
+            return false;
+        }
 
-        if (!document.getElementById('rw').value.trim()) {
+        const rwVal = (document.getElementById('rw')?.value || '').trim();
+        if (!rwVal) {
             showError('Mohon isi nomor RW tempat tinggal Anda.', 'rw', 'RW Wajib Diisi');
+            return false;
+        }
+        if (!/^[0-9]+$/.test(rwVal)) {
+            showError('Nomor RW hanya boleh berisi angka (contoh: 01 atau 005).', 'rw', 'Format RW Tidak Valid');
             return false;
         }
 
@@ -924,7 +959,8 @@ window.pilihUnit = function(upp_id, nama_unit) {
                 sessionStorage.setItem('magang_draft_form', JSON.stringify(formData));
             } catch (e) {}
 
-            startTimer(new Date(data.data.expired_at).getTime());
+            const expireMs = data.data.expired_at_ms || new Date(data.data.expired_at).getTime();
+            startTimer(expireMs);
             
             // Pindah ke step 5
             currentStep = 5;
@@ -970,14 +1006,30 @@ function startTimer(expireTimeMs) {
     }, 1000);
 }
 
-function handleExpiredReservation() {
-    showToast('Batas waktu reservasi unit telah habis. Silakan pilih kembali unit yang tersedia.', 'warning', 'Waktu Reservasi Habis');
-    showError('Batas waktu konfirmasi reservasi unit telah habis. Silakan pilih kembali unit pelaksana.', null, 'Waktu Reservasi Habis');
-    currentStep = 4;
+async function handleExpiredReservation() {
+    const expiredResId = formData.reservasi_id;
+    if (reservasiTimerInterval) clearInterval(reservasiTimerInterval);
+    
     formData.reservasi_id = null;
     formData.upp_id = null;
     formData.nama_unit_dipilih = null;
     try { sessionStorage.removeItem('magang_draft_form'); } catch(e){}
+
+    if (expiredResId) {
+        try {
+            await fetch('/api/mahasiswa/batal_reservasi.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+                body: JSON.stringify({ reservasi_id: expiredResId })
+            });
+        } catch (e) {
+            console.warn('[daftar.js] Gagal auto-cancel expired reservation:', e);
+        }
+    }
+
+    showToast('Batas waktu reservasi unit telah habis. Silakan pilih kembali unit yang tersedia.', 'warning', 'Waktu Reservasi Habis');
+    showError('Batas waktu konfirmasi reservasi unit telah habis. Silakan pilih kembali unit pelaksana.', null, 'Waktu Reservasi Habis');
+    currentStep = 4;
     loadUnits();
     updateUI();
 }

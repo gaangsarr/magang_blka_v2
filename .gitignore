@@ -19,9 +19,11 @@ Thumbs.db
 /logs/
 *.log
 
-# Cache
+# Cache & Backups
 /cache/
 /tmp/
+/backups/
+*.sql.gz
 
 # Test files & Scratch (BLOCKER-07 + QUALITY-06)
 test_*.php

@@ -20,6 +20,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+Auth::requireCsrfApi();
+
 $input = json_decode(file_get_contents('php://input'), true);
 if (!$input || !isset($input['periode_id'])) {
     http_response_code(400);

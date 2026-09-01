@@ -43,6 +43,40 @@ $reservasiId = (int)$body['reservasi_id'];
 $uppId = (int)$body['upp_id'];
 $peminatanIds = isset($body['peminatan']) && is_array($body['peminatan']) ? array_map('intval', $body['peminatan']) : [];
 
+// Validasi & Sanitasi Ketat Nomor Handphone / WhatsApp (hanya angka, diawali 08/628, 10-14 digit)
+$rawNoHp = trim((string)($body['no_hp'] ?? ''));
+$cleanHp = preg_replace('/[^\d]/', '', $rawNoHp);
+
+if (str_starts_with($cleanHp, '628')) {
+    $cleanHp = '08' . substr($cleanHp, 3);
+}
+
+if (!preg_match('/^08[0-9]{8,12}$/', $cleanHp)) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Nomor Handphone / WhatsApp tidak valid. Harus berupa angka 10-14 digit dan diawali dengan 08 (contoh: 081234567890).']);
+    exit;
+}
+$body['no_hp'] = $cleanHp;
+
+// Validasi & Sanitasi Ketat RT & RW (hanya angka 1-5 digit)
+$cleanRt = preg_replace('/[^\d]/', '', trim((string)($body['rt'] ?? '')));
+$cleanRw = preg_replace('/[^\d]/', '', trim((string)($body['rw'] ?? '')));
+
+if ($cleanRt === '' || !preg_match('/^[0-9]{1,5}$/', $cleanRt)) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Nomor RT tidak valid. Harus berupa angka (contoh: 01 atau 005).']);
+    exit;
+}
+
+if ($cleanRw === '' || !preg_match('/^[0-9]{1,5}$/', $cleanRw)) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Nomor RW tidak valid. Harus berupa angka (contoh: 01 atau 005).']);
+    exit;
+}
+
+$body['rt'] = $cleanRt;
+$body['rw'] = $cleanRw;
+
 // Validasi Syarat Program 5 Bulan jika dipilih
 if ($body['program'] === '5_bulan') {
     $pdo = Database::getInstance();

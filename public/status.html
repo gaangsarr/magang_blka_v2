@@ -11,12 +11,31 @@
     <link rel="stylesheet" href="/css/admin.css">
 </head>
 <style>
-    /* Modern UI Refinements */
+    /* Full Screen Viewport Layout */
+    html {
+        height: 100%;
+    }
+
+    body.dot-bg {
+        min-height: 100vh;
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        margin: 0;
+    }
+
+    .page-header {
+        flex-shrink: 0;
+    }
+
     .status-container {
         max-width: 1140px;
         width: 100%;
-        margin: 0 auto 60px;
-        padding: 0 20px;
+        margin: 0 auto;
+        padding: 0 20px 48px;
+        flex: 1 0 auto;
+        display: flex;
+        flex-direction: column;
     }
 
     .card {
@@ -27,6 +46,23 @@
         padding: 32px;
         position: relative;
         overflow: hidden;
+    }
+
+    #history-card {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 480px;
+        background: #ffffff;
+    }
+
+    #empty-state-card {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        min-height: 440px;
     }
 
     .btn {
@@ -42,8 +78,17 @@
 
     .table-history-wrapper {
         width: 100%;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
+        background: #ffffff;
+    }
+
+    footer.footer-component {
+        margin-top: auto !important;
+        flex-shrink: 0;
     }
 
     .table-history {
@@ -414,7 +459,7 @@
     </div>
 
     <!-- COMPONENT: FOOTER -->
-    <footer class="footer-component" aria-label="Footer Website" style="margin-top: 60px;">
+    <footer class="footer-component" aria-label="Footer Website">
       <div class="footer-container">
         <div class="footer-grid">
           <!-- Col 1: Brand & Logo -->

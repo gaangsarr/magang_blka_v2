@@ -34,6 +34,11 @@ class Database
                     PDO::ATTR_EMULATE_PREPARES   => false,
                     PDO::MYSQL_ATTR_FOUND_ROWS   => true,
                 ]);
+
+                // Pastikan timezone PHP dan MySQL selaras di Asia/Jakarta (WIB)
+                $tz = $_ENV['APP_TIMEZONE'] ?? 'Asia/Jakarta';
+                date_default_timezone_set($tz);
+                self::$instance->exec("SET time_zone = '+07:00'");
             } catch (PDOException $e) {
                 // Lempar exception agar caller bisa menangkap dan return JSON yang proper
                 // Jangan die() langsung — itu akan menghasilkan body kosong jika ob_end_clean() sudah dipanggil

@@ -9,6 +9,16 @@ let currentPeriodeId = null;
 let currentConfig = null;
 let currentUnits = [];
 let allPeriodeList = [];
+let csrfToken = null;
+
+export function escapeHtml(unsafe) {
+    return (unsafe || '').toString()
+         .replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"/g, "&quot;")
+         .replace(/'/g, "&#039;");
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     initEvents();
@@ -56,9 +66,22 @@ function initEvents() {
  */
 async function loadSuratData(periodeId = null) {
     try {
+        // Fetch status & CSRF token jika belum ada
+        if (!csrfToken) {
+            try {
+                const statusRes = await fetch('/api/admin/status.php');
+                const statusData = await statusRes.json();
+                if (statusData && statusData.csrf_token) {
+                    csrfToken = statusData.csrf_token;
+                }
+            } catch (e) {
+                console.warn('[hasilkan-surat.js] Gagal memuat CSRF token:', e);
+            }
+        }
+
         let url = '/api/admin/surat/config.php';
         if (periodeId) {
-            url += `?periode_id=${periodeId}`;
+            url += `?periode_id=${encodeURIComponent(periodeId)}`;
         }
 
         const res = await fetch(url);
@@ -134,12 +157,12 @@ function renderPeriodCards(periodes, selectedId) {
             : `<span style="display: inline-flex; align-items: center; gap: 5px; color: #64748b; font-size: 0.8rem;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Pengumuman Mahasiswa Ditutup</span>`;
 
         cardsHtml += `
-            <div class="period-select-card ${isSelected ? 'active' : ''}" data-periode-id="${p.id}">
+            <div class="period-select-card ${isSelected ? 'active' : ''}" data-periode-id="${escapeHtml(p.id)}">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
-                    <span class="period-card-badge" style="background: ${badgeBg}; color: ${badgeColor};">${statusLabel}</span>
-                    <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Program: ${progLabel}</span>
+                    <span class="period-card-badge" style="background: ${badgeBg}; color: ${badgeColor};">${escapeHtml(statusLabel)}</span>
+                    <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Program: ${escapeHtml(progLabel)}</span>
                 </div>
-                <h4 style="margin: 0 0 6px 0; font-size: 1.05rem; font-weight: 700; color: #0f172a;">${p.nama}</h4>
+                <h4 style="margin: 0 0 6px 0; font-size: 1.05rem; font-weight: 700; color: #0f172a;">${escapeHtml(p.nama)}</h4>
                 <p style="margin: 0; font-size: 0.8rem; color: #64748b;">
                     ${announcementHtml}
                 </p>
@@ -148,16 +171,17 @@ function renderPeriodCards(periodes, selectedId) {
     });
 
     container.innerHTML = cardsHtml;
+
     if (statusInfo) {
-        statusInfo.innerText = `Periode Terpilih: ${selectedName}`;
+        statusInfo.innerText = selectedName ? `Periode Terpilih: ${selectedName}` : '';
     }
 
-    // Bind click events
-    container.querySelectorAll('.period-select-card').forEach(card => {
+    // Attach click listener to each period card
+    document.querySelectorAll('.period-select-card').forEach(card => {
         card.addEventListener('click', () => {
-            const pId = card.getAttribute('data-periode-id');
-            if (pId && pId != currentPeriodeId) {
-                loadSuratData(pId);
+            const pid = card.getAttribute('data-periode-id');
+            if (pid && pid != currentPeriodeId) {
+                loadSuratData(pid);
             }
         });
     });
@@ -180,11 +204,11 @@ function populateConfigForm(config, periodeId) {
     document.getElementById('cfg-tembusan').value = config.tembusan || '1.  HTD PLN Pusat';
 
     const linkInput = document.getElementById('cfg-link-publik');
-    const openLinkBtn = document.getElementById('btn-open-link');
-
     if (linkInput) {
         linkInput.value = config.link_data_publik || '';
     }
+
+    const openLinkBtn = document.getElementById('btn-open-link');
     if (openLinkBtn) {
         openLinkBtn.href = config.link_data_publik || '#';
     }
@@ -194,6 +218,7 @@ function populateConfigForm(config, periodeId) {
  * Format string nomor surat dengan nomor urut
  */
 function formatNomorSuratJs(template, number) {
+    if (!template) return String(number);
     const padded = String(number).padStart(3, '0');
     if (template.includes('{nomor}')) {
         return template.replace('{nomor}', padded);
@@ -256,16 +281,16 @@ function renderUnitsTable(units, config) {
         const mhsCount = parseInt(u.total_mahasiswa, 10) || 0;
         totalMhsAllUnits += mhsCount;
 
-        const alamat = u.unit_alamat ? u.unit_alamat : '<span style="color: #94a3b8; font-style: italic;">Alamat belum diatur di Master Unit</span>';
+        const alamat = u.unit_alamat ? escapeHtml(u.unit_alamat) : '<span style="color: #94a3b8; font-style: italic;">Alamat belum diatur di Master Unit</span>';
 
         rowsHtml += `
             <tr>
                 <td style="text-align: center; font-weight: 600; color: #64748b;">${idx + 1}</td>
                 <td>
-                    <code class="preview-nomor-cell" style="background: #f1f5f9; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; color: #0f172a;">${noSurat}</code>
+                    <code class="preview-nomor-cell" style="background: #f1f5f9; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; color: #0f172a;">${escapeHtml(noSurat)}</code>
                 </td>
                 <td>
-                    <strong style="color: #0b3d6b; font-size: 0.925rem;">${u.unit_nama}</strong>
+                    <strong style="color: #0b3d6b; font-size: 0.925rem;">${escapeHtml(u.unit_nama)}</strong>
                 </td>
                 <td style="font-size: 0.825rem; color: #475569; max-width: 320px;">
                     ${alamat}
@@ -276,7 +301,7 @@ function renderUnitsTable(units, config) {
                     </span>
                 </td>
                 <td style="text-align: center;">
-                    <a href="/api/admin/surat/download.php?periode_id=${currentPeriodeId}&unit_id=${u.unit_id}" class="btn-primary" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; font-size: 0.8rem; background: #0b3d6b; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 700; white-space: nowrap; box-shadow: 0 2px 6px rgba(11, 61, 107, 0.15);">
+                    <a href="/api/admin/surat/download.php?periode_id=${encodeURIComponent(currentPeriodeId)}&unit_id=${encodeURIComponent(u.unit_id)}" class="btn-primary" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; font-size: 0.8rem; background: #0b3d6b; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 700; white-space: nowrap; box-shadow: 0 2px 6px rgba(11, 61, 107, 0.15);">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                         <span>Download DOCX</span>
                     </a>
@@ -324,9 +349,14 @@ async function saveSuratConfig() {
     btnSave.innerHTML = `<span>Menyimpan...</span>`;
 
     try {
+        const headers = { 'Content-Type': 'application/json' };
+        if (csrfToken) {
+            headers['X-CSRF-Token'] = csrfToken;
+        }
+
         const res = await fetch('/api/admin/surat/save_config.php', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: headers,
             body: JSON.stringify(payload)
         });
 

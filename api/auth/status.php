@@ -78,6 +78,12 @@ if (Auth::isLoggedInMahasiswa()) {
     $stmtActiveRes->execute([':mid' => $mid]);
     $activeReservasi = $stmtActiveRes->fetch(PDO::FETCH_ASSOC) ?: null;
 
+    if ($activeReservasi && !empty($activeReservasi['expired_at'])) {
+        $expTs = strtotime($activeReservasi['expired_at']);
+        $activeReservasi['expired_at_iso'] = date('c', $expTs);
+        $activeReservasi['expired_at_ms']  = $expTs * 1000;
+    }
+
     echo json_encode([
         'authenticated'          => true,
         'role'                   => 'mahasiswa',
