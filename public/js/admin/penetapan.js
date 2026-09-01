@@ -156,14 +156,34 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 8. Individual Modals Submit Handlers
     document.getElementById('form-relocate')?.addEventListener('submit', async (e) => {
         e.preventDefault();
+        
+        const pendaftaranId = parseInt(document.getElementById('relocate-pendaftaran-id').value);
+        const targetUppId = parseInt(document.getElementById('relocate-new-unit').value);
+        const targetUnit = unitList.find(u => parseInt(u.upp_id) === targetUppId);
+        const mhsItem = allPenetapanData.find(item => parseInt(item.pendaftaran_id) === pendaftaranId);
+
+        if (targetUnit && mhsItem && Array.isArray(targetUnit.prodi_ids) && targetUnit.prodi_ids.length > 0) {
+            const mhsJurId = parseInt(mhsItem.jurusan_id);
+            if (!targetUnit.prodi_ids.includes(mhsJurId)) {
+                const proceed = await showAdminConfirm(
+                    `Unit tujuan (${targetUnit.nama}) tidak membuka alokasi untuk Program Studi ${mhsItem.jurusan_nama || 'mahasiswa ini'}. Apakah Anda yakin tetap ingin memindahkan paksa?`,
+                    'Peringatan Kesesuaian Prodi',
+                    'warning',
+                    'Ya, Tetap Pindahkan',
+                    'Batal'
+                );
+                if (!proceed) return;
+            }
+        }
+
         const btn = document.getElementById('btn-submit-relocate');
         btn.disabled = true;
         btn.innerText = 'Memproses...';
 
         const payload = {
-            pendaftaran_id: parseInt(document.getElementById('relocate-pendaftaran-id').value),
+            pendaftaran_id: pendaftaranId,
             status: 'dipindahkan',
-            new_unit_pelaksana_periode_id: parseInt(document.getElementById('relocate-new-unit').value),
+            new_unit_pelaksana_periode_id: targetUppId,
             catatan_admin: document.getElementById('relocate-catatan').value
         };
 

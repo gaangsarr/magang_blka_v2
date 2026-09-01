@@ -77,13 +77,114 @@ try {
     $stmt->execute();
     
     $units = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
+
+    // Ambil Master Jurusan & Master Peminatan
+    $allJurusan = $pdo->query("SELECT id, kode, nama_jurusan, aktif FROM jurusan ORDER BY nama_jurusan ASC")->fetchAll(PDO::FETCH_ASSOC);
+    $jurusanById = [];
+    foreach ($allJurusan as $j) {
+        $jurusanById[(int)$j['id']] = $j;
+    }
+
+    $allPeminatan = $pdo->query("SELECT id, nama, deskripsi, aktif FROM peminatan ORDER BY nama ASC")->fetchAll(PDO::FETCH_ASSOC);
+    $peminatanById = [];
+    foreach ($allPeminatan as $p) {
+        $peminatanById[(int)$p['id']] = $p;
+    }
+
+    // Kumpulkan IDs
+    $entitasIds = [];
+    $uppIds = [];
+    foreach ($units as $u) {
+        $entitasIds[] = (int)$u['entitas_id'];
+        if (!empty($u['upp_id'])) {
+            $uppIds[] = (int)$u['upp_id'];
+        }
+    }
+
+    // Map Master Template
+    $masterJurusanByEntitas = [];
+    if (!empty($entitasIds)) {
+        $inEntitas = implode(',', $entitasIds);
+        $stmtUj = $pdo->query("SELECT entitas_id, jurusan_id FROM unit_jurusan WHERE entitas_id IN ($inEntitas)");
+        while ($row = $stmtUj->fetch(PDO::FETCH_ASSOC)) {
+            $masterJurusanByEntitas[(int)$row['entitas_id']][] = (int)$row['jurusan_id'];
+        }
+    }
+
+    $masterPeminatanByEntitas = [];
+    if (!empty($entitasIds)) {
+        $inEntitas = implode(',', $entitasIds);
+        $stmtUp = $pdo->query("SELECT entitas_id, peminatan_id FROM unit_peminatan WHERE entitas_id IN ($inEntitas)");
+        while ($row = $stmtUp->fetch(PDO::FETCH_ASSOC)) {
+            $masterPeminatanByEntitas[(int)$row['entitas_id']][] = (int)$row['peminatan_id'];
+        }
+    }
+
+    // Map Periode Snapshot
+    $periodeJurusanByUpp = [];
+    $periodePeminatanByUpp = [];
+    if (!empty($uppIds)) {
+        $inUpp = implode(',', $uppIds);
+        $stmtUpj = $pdo->query("SELECT unit_pelaksana_periode_id, jurusan_id FROM unit_periode_jurusan WHERE unit_pelaksana_periode_id IN ($inUpp)");
+        while ($row = $stmtUpj->fetch(PDO::FETCH_ASSOC)) {
+            $periodeJurusanByUpp[(int)$row['unit_pelaksana_periode_id']][] = (int)$row['jurusan_id'];
+        }
+
+        $stmtUppem = $pdo->query("SELECT unit_pelaksana_periode_id, peminatan_id FROM unit_periode_peminatan WHERE unit_pelaksana_periode_id IN ($inUpp)");
+        while ($row = $stmtUppem->fetch(PDO::FETCH_ASSOC)) {
+            $periodePeminatanByUpp[(int)$row['unit_pelaksana_periode_id']][] = (int)$row['peminatan_id'];
+        }
+    }
+
+    // Pasangkan ke setiap item unit
+    foreach ($units as &$u) {
+        $eid = (int)$u['entitas_id'];
+        $uppId = !empty($u['upp_id']) ? (int)$u['upp_id'] : null;
+
+        // Tentukan prodi_ids: jika ada di periode snapshot gunakan itu; jika tidak ada upp_id atau snapshot belum ada, gunakan default master
+        $hasCustomProdi = ($uppId !== null && array_key_exists($uppId, $periodeJurusanByUpp));
+        $prodiIds = $hasCustomProdi ? ($periodeJurusanByUpp[$uppId] ?? []) : ($masterJurusanByEntitas[$eid] ?? []);
+
+        // Tentukan peminatan_ids: jika ada di periode snapshot gunakan itu; jika tidak ada, gunakan master
+        $hasCustomPeminatan = ($uppId !== null && array_key_exists($uppId, $periodePeminatanByUpp));
+        $peminatanIds = $hasCustomPeminatan ? ($periodePeminatanByUpp[$uppId] ?? []) : ($masterPeminatanByEntitas[$eid] ?? []);
+
+        $prodiDetails = [];
+        foreach ($prodiIds as $jid) {
+            if (isset($jurusanById[$jid])) {
+                $prodiDetails[] = [
+                    'id' => $jid,
+                    'kode' => $jurusanById[$jid]['kode'],
+                    'nama_jurusan' => $jurusanById[$jid]['nama_jurusan']
+                ];
+            }
+        }
+
+        $peminatanDetails = [];
+        foreach ($peminatanIds as $pid) {
+            if (isset($peminatanById[$pid])) {
+                $peminatanDetails[] = [
+                    'id' => $pid,
+                    'nama' => $peminatanById[$pid]['nama']
+                ];
+            }
+        }
+
+        $u['prodi_ids'] = $prodiIds;
+        $u['prodi_details'] = $prodiDetails;
+        $u['peminatan_ids'] = $peminatanIds;
+        $u['peminatan_details'] = $peminatanDetails;
+    }
+    unset($u);
+
     echo json_encode([
         'ok' => true,
         'has_periode_aktif' => $hasPeriodeAktif,
         'periode_terpilih' => $periode,
         'periode_aktif' => $periode,
         'all_periode' => $allPeriode,
+        'all_jurusan' => $allJurusan,
+        'all_peminatan' => $allPeminatan,
         'data' => $units
     ]);
 } catch (\Throwable $e) {

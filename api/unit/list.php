@@ -62,8 +62,16 @@ try {
         echo json_encode(['error' => 'Periode magang ini tidak sedang dibuka.']);
         exit;
     }
+    $mhsData = Auth::getMahasiswa();
+    $mhsId = Auth::getMahasiswaId();
+    $mhsJurusanId = (int)($mhsData['jurusan_id'] ?? 0);
+    if (!$mhsJurusanId && $mhsId) {
+        $stmtM = $pdo->prepare("SELECT jurusan_id FROM mahasiswa WHERE id = ?");
+        $stmtM->execute([$mhsId]);
+        $mhsJurusanId = (int)$stmtM->fetchColumn();
+    }
+
     if (!empty($periodeData['angkatan_eligible'])) {
-        $mhsData = Auth::getMahasiswa();
         $mhsAngkatan = (int)($mhsData['angkatan'] ?? 0);
         $fullAngkatan = $mhsAngkatan < 100 ? (2000 + $mhsAngkatan) : $mhsAngkatan;
         $eligibleList = array_map('trim', explode(',', $periodeData['angkatan_eligible']));
@@ -75,7 +83,6 @@ try {
     }
 
     // Siapkan klausa IN untuk peminatan
-
     $inClause = '0';
     if (!empty($peminatanIds)) {
         $inClause = implode(',', $peminatanIds);
@@ -93,8 +100,8 @@ try {
     $lngMin = $lng - $lngDelta;
     $lngMax = $lng + $lngDelta;
 
-    // Helper function query
-    $runQuery = function(bool $useBoundingBox) use ($pdo, $lat, $lng, $periodeId, $inClause, $latMin, $latMax, $lngMin, $lngMax) {
+    // Helper function query dengan filter prodi
+    $runQuery = function(bool $useBoundingBox) use ($pdo, $lat, $lng, $periodeId, $inClause, $mhsJurusanId, $latMin, $latMax, $lngMin, $lngMax) {
         $bboxWhere = $useBoundingBox ? "AND (e.latitude BETWEEN :latMin AND :latMax) AND (e.longitude BETWEEN :lngMin AND :lngMax)" : "";
         
         $sql = "
@@ -120,9 +127,12 @@ try {
                     )
                 ) AS jarak,
                 (
-                    SELECT COUNT(*) FROM unit_peminatan up 
-                    WHERE up.entitas_id = e.id 
-                    AND up.peminatan_id IN ($inClause)
+                    CASE 
+                        WHEN EXISTS (SELECT 1 FROM unit_periode_peminatan uppem WHERE uppem.unit_pelaksana_periode_id = upp.id) THEN
+                            (SELECT COUNT(*) FROM unit_periode_peminatan uppem2 WHERE uppem2.unit_pelaksana_periode_id = upp.id AND uppem2.peminatan_id IN ($inClause))
+                        ELSE
+                            (SELECT COUNT(*) FROM unit_peminatan up WHERE up.entitas_id = e.id AND up.peminatan_id IN ($inClause))
+                    END
                 ) AS kecocokan
             FROM unit_pelaksana_periode upp
             JOIN entitas_perusahaan e ON upp.entitas_id = e.id
@@ -130,6 +140,19 @@ try {
             WHERE upp.periode_id = :periode_id 
               AND upp.aktif = 1 
               AND e.aktif = 1
+              AND (
+                  -- Unit menerima prodi spesifik mahasiswa
+                  EXISTS (
+                      SELECT 1 FROM unit_periode_jurusan upj
+                      WHERE upj.unit_pelaksana_periode_id = upp.id
+                        AND upj.jurusan_id = :mhs_jurusan_id
+                  )
+                  -- ATAU unit tidak membatasi prodi (menerima semua prodi / All Majors)
+                  OR NOT EXISTS (
+                      SELECT 1 FROM unit_periode_jurusan upj2
+                      WHERE upj2.unit_pelaksana_periode_id = upp.id
+                  )
+              )
               $bboxWhere
             ORDER BY kecocokan DESC, jarak ASC
             LIMIT 100
@@ -139,7 +162,8 @@ try {
             ':lat1' => $lat,
             ':lat2' => $lat,
             ':lng' => $lng,
-            ':periode_id' => $periodeId
+            ':periode_id' => $periodeId,
+            ':mhs_jurusan_id' => $mhsJurusanId
         ];
 
         if ($useBoundingBox) {

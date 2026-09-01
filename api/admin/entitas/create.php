@@ -34,6 +34,9 @@ $menerimaMagang = isset($body['menerima_magang']) ? (int)(bool)$body['menerima_m
 $peminatanIds   = isset($body['peminatan_ids']) && is_array($body['peminatan_ids'])
     ? array_values(array_unique(array_filter(array_map('intval', $body['peminatan_ids']))))
     : [];
+$prodiIds       = isset($body['prodi_ids']) && is_array($body['prodi_ids'])
+    ? array_values(array_unique(array_filter(array_map('intval', $body['prodi_ids']))))
+    : [];
 
 // ── Validasi tipe ────────────────────────────────────────────────────────────
 $validTipe = ['holding', 'subholding', 'anak_perusahaan', 'unit_induk', 'unit_pelaksana', 'unit_layanan'];
@@ -78,9 +81,9 @@ if ($menerimaMagang === 1 && empty($peminatanIds)) {
     echo json_encode(['error' => 'Entitas yang menerima magang wajib memiliki minimal 1 peminatan.']);
     exit;
 }
-if ($menerimaMagang === 0 && !empty($peminatanIds)) {
-    // Abaikan peminatan jika tidak menerima magang
+if ($menerimaMagang === 0) {
     $peminatanIds = [];
+    $prodiIds = [];
 }
 
 try {
@@ -112,7 +115,7 @@ try {
 
     $newId = 0;
     Database::transaction(function (PDO $pdo) use (
-        $tipe, $parentId, $nama, $singkatan, $alamat, $lat, $lng, $aktif, $menerimaMagang, $peminatanIds, &$newId
+        $tipe, $parentId, $nama, $singkatan, $alamat, $lat, $lng, $aktif, $menerimaMagang, $peminatanIds, $prodiIds, &$newId
     ) {
         $stmt = $pdo->prepare("
             INSERT INTO entitas_perusahaan
@@ -129,6 +132,16 @@ try {
             );
             foreach ($peminatanIds as $pid) {
                 $stmtPem->execute([$newId, $pid]);
+            }
+        }
+
+        // Insert default prodi jika ada
+        if ($menerimaMagang === 1 && !empty($prodiIds)) {
+            $stmtJur = $pdo->prepare(
+                "INSERT INTO unit_jurusan (entitas_id, jurusan_id) VALUES (?, ?)"
+            );
+            foreach ($prodiIds as $jid) {
+                $stmtJur->execute([$newId, $jid]);
             }
         }
     });

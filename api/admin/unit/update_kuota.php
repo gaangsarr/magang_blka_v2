@@ -35,6 +35,16 @@ $aktif = isset($body['aktif']) ? (int)(bool)$body['aktif'] : 1;
 $requestedPeriodeId = isset($body['periode_id']) ? (int)$body['periode_id'] : 0;
 $adminId = Auth::getAdminId();
 
+$hasProdiPayload = isset($body['prodi_ids']) && is_array($body['prodi_ids']);
+$prodiIds = $hasProdiPayload
+    ? array_values(array_unique(array_filter(array_map('intval', $body['prodi_ids']))))
+    : null;
+
+$hasPeminatanPayload = isset($body['peminatan_ids']) && is_array($body['peminatan_ids']);
+$peminatanIds = $hasPeminatanPayload
+    ? array_values(array_unique(array_filter(array_map('intval', $body['peminatan_ids']))))
+    : null;
+
 try {
     $pdo = Database::getInstance();
     
@@ -65,12 +75,16 @@ try {
 
     $periodeId = (int)$periodeId;
     
-    Database::transaction(function (PDO $pdo) use ($entitasId, $periodeId, $kuotaBaru, $aktif, $adminId) {
+    Database::transaction(function (PDO $pdo) use (
+        $entitasId, $periodeId, $kuotaBaru, $aktif, $adminId, 
+        $hasProdiPayload, $prodiIds, $hasPeminatanPayload, $peminatanIds
+    ) {
         // Cek apakah sudah ada di unit_pelaksana_periode
         $stmtCek = $pdo->prepare("SELECT id, kuota_total, kuota_tersisa FROM unit_pelaksana_periode WHERE entitas_id = ? AND periode_id = ? FOR UPDATE");
         $stmtCek->execute([$entitasId, $periodeId]);
         $existing = $stmtCek->fetch(PDO::FETCH_ASSOC);
         
+        $isNew = false;
         if ($existing) {
             // Update
             $selisih = $kuotaBaru - $existing['kuota_total'];
@@ -82,17 +96,90 @@ try {
             
             $stmtUpdate = $pdo->prepare("UPDATE unit_pelaksana_periode SET kuota_total = ?, kuota_tersisa = ?, aktif = ? WHERE id = ?");
             $stmtUpdate->execute([$kuotaBaru, $kuotaTersisaBaru, $aktif, $existing['id']]);
-            $uppId = $existing['id'];
+            $uppId = (int)$existing['id'];
         } else {
             // Insert
             $stmtInsert = $pdo->prepare("INSERT INTO unit_pelaksana_periode (entitas_id, periode_id, kuota_total, kuota_tersisa, aktif) VALUES (?, ?, ?, ?, ?)");
             $stmtInsert->execute([$entitasId, $periodeId, $kuotaBaru, $kuotaBaru, $aktif]);
-            $uppId = $pdo->lastInsertId();
+            $uppId = (int)$pdo->lastInsertId();
+            $isNew = true;
+        }
+
+        // 1. Sync Prodi (unit_periode_jurusan & master unit_jurusan)
+        if ($hasProdiPayload) {
+            $stmtDel = $pdo->prepare("DELETE FROM unit_periode_jurusan WHERE unit_pelaksana_periode_id = ?");
+            $stmtDel->execute([$uppId]);
+
+            if (!empty($prodiIds)) {
+                $stmtIns = $pdo->prepare("INSERT INTO unit_periode_jurusan (unit_pelaksana_periode_id, jurusan_id) VALUES (?, ?)");
+                foreach ($prodiIds as $jid) {
+                    $stmtIns->execute([$uppId, $jid]);
+                }
+            }
+
+            // Sync Master unit_jurusan
+            $stmtDelMasterJur = $pdo->prepare("DELETE FROM unit_jurusan WHERE entitas_id = ?");
+            $stmtDelMasterJur->execute([$entitasId]);
+
+            if (!empty($prodiIds)) {
+                $stmtInsMasterJur = $pdo->prepare("INSERT INTO unit_jurusan (entitas_id, jurusan_id) VALUES (?, ?)");
+                foreach ($prodiIds as $jid) {
+                    $stmtInsMasterJur->execute([$entitasId, $jid]);
+                }
+            }
+        } elseif ($isNew) {
+            // Jika row baru dan payload prodi tidak dikirim, copy default dari master unit_jurusan
+            $stmtCopyJur = $pdo->prepare("
+                INSERT IGNORE INTO unit_periode_jurusan (unit_pelaksana_periode_id, jurusan_id)
+                SELECT ?, jurusan_id FROM unit_jurusan WHERE entitas_id = ?
+            ");
+            $stmtCopyJur->execute([$uppId, $entitasId]);
+        }
+
+        // 2. Sync Peminatan (unit_periode_peminatan & master unit_peminatan)
+        if ($hasPeminatanPayload) {
+            $stmtDel = $pdo->prepare("DELETE FROM unit_periode_peminatan WHERE unit_pelaksana_periode_id = ?");
+            $stmtDel->execute([$uppId]);
+
+            if (!empty($peminatanIds)) {
+                $stmtIns = $pdo->prepare("INSERT INTO unit_periode_peminatan (unit_pelaksana_periode_id, peminatan_id) VALUES (?, ?)");
+                foreach ($peminatanIds as $pid) {
+                    $stmtIns->execute([$uppId, $pid]);
+                }
+            }
+
+            // Sync Master unit_peminatan
+            $stmtDelMasterPem = $pdo->prepare("DELETE FROM unit_peminatan WHERE entitas_id = ?");
+            $stmtDelMasterPem->execute([$entitasId]);
+
+            if (!empty($peminatanIds)) {
+                $stmtInsMasterPem = $pdo->prepare("INSERT INTO unit_peminatan (entitas_id, peminatan_id) VALUES (?, ?)");
+                foreach ($peminatanIds as $pid) {
+                    $stmtInsMasterPem->execute([$entitasId, $pid]);
+                }
+            }
+        } elseif ($isNew) {
+            // Jika row baru dan payload peminatan tidak dikirim, copy default dari master unit_peminatan
+            $stmtCopyPem = $pdo->prepare("
+                INSERT IGNORE INTO unit_periode_peminatan (unit_pelaksana_periode_id, peminatan_id)
+                SELECT ?, peminatan_id FROM unit_peminatan WHERE entitas_id = ?
+            ");
+            $stmtCopyPem->execute([$uppId, $entitasId]);
         }
         
         // Log Aktivitas
         $stmtLog = $pdo->prepare("INSERT INTO log_aktivitas (admin_id, aksi, entitas_tipe, entitas_id, detail_json, ip_address) VALUES (?, 'ubah_kuota_unit', 'unit_pelaksana_periode', ?, ?, '127.0.0.1')");
-        $stmtLog->execute([$adminId, $uppId, json_encode(['kuota_baru' => $kuotaBaru, 'aktif' => $aktif, 'periode_id' => $periodeId])]);
+        $stmtLog->execute([
+            $adminId, 
+            $uppId, 
+            json_encode([
+                'kuota_baru' => $kuotaBaru, 
+                'aktif' => $aktif, 
+                'periode_id' => $periodeId,
+                'prodi_ids' => $prodiIds,
+                'peminatan_ids' => $peminatanIds
+            ])
+        ]);
     });
     
     echo json_encode([

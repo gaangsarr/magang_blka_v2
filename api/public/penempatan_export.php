@@ -42,7 +42,7 @@ try {
     $jurusanFilter = (int)($_GET['jurusan_id'] ?? 0);
     $programFilter = trim((string)($_GET['program'] ?? ''));
 
-    $where = ["p.periode_id = :pid", "p.status = 'diterima'"];
+    $where = ["p.periode_id = :pid", "p.status IN ('diterima', 'dipindahkan')"];
     $params = [':pid' => $periodeId];
 
     if ($unitFilter > 0) {

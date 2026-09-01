@@ -7,6 +7,8 @@ import { showAdminAlert } from './common.js';
 
 let csrfToken = null;
 let allUnitKuota = [];
+let allJurusanList = [];
+let allPeminatanList = [];
 let currentPeriodData = null;
 let isPeriodeSelectPopulated = false;
 
@@ -72,13 +74,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // 4. Form Kuota Submit
+    // 4. Modal Quick Action Buttons
+    document.getElementById('btn-select-all-prodi')?.addEventListener('click', () => {
+        document.querySelectorAll('.chk-modal-prodi').forEach(cb => cb.checked = true);
+    });
+    document.getElementById('btn-clear-prodi')?.addEventListener('click', () => {
+        document.querySelectorAll('.chk-modal-prodi').forEach(cb => cb.checked = false);
+    });
+
+    document.getElementById('btn-select-all-pem')?.addEventListener('click', () => {
+        document.querySelectorAll('.chk-modal-pem').forEach(cb => cb.checked = true);
+    });
+    document.getElementById('btn-clear-pem')?.addEventListener('click', () => {
+        document.querySelectorAll('.chk-modal-pem').forEach(cb => cb.checked = false);
+    });
+
+    // 5. Form Kuota Submit
     const formKuota = document.getElementById('form-kuota');
     if (formKuota) {
         formKuota.addEventListener('submit', handleFormKuotaSubmit);
     }
 
-    // 5. Initial Load
+    // 6. Initial Load
     await loadUnit();
 });
 
@@ -86,7 +103,7 @@ async function loadUnit(targetPeriodeId = null) {
     const tbody = document.getElementById('table-unit');
     const infoEl = document.getElementById('info-periode');
     if (tbody) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #64748b; padding: 28px;">Memuat alokasi kuota...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: #64748b; padding: 28px;">Memuat alokasi kuota...</td></tr>';
     }
 
     try {
@@ -101,6 +118,8 @@ async function loadUnit(targetPeriodeId = null) {
         if (data.ok) {
             currentPeriodData = data.periode_terpilih;
             allUnitKuota = data.data || [];
+            allJurusanList = data.all_jurusan || [];
+            allPeminatanList = data.all_peminatan || [];
 
             // Populate Dropdown if not done yet or reload requested
             if (!isPeriodeSelectPopulated && Array.isArray(data.all_periode)) {
@@ -138,10 +157,10 @@ async function loadUnit(targetPeriodeId = null) {
 
             renderKuotaTable(allUnitKuota);
         } else {
-            if (tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #ef4444; padding: 24px;">Gagal memuat data alokasi kuota.</td></tr>';
+            if (tbody) tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: #ef4444; padding: 24px;">Gagal memuat data alokasi kuota.</td></tr>';
         }
     } catch (err) {
-        if (tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #ef4444; padding: 24px;">Kesalahan jaringan saat memuat kuota.</td></tr>';
+        if (tbody) tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: #ef4444; padding: 24px;">Kesalahan jaringan saat memuat kuota.</td></tr>';
     }
 }
 
@@ -150,7 +169,7 @@ function renderKuotaTable(dataArray) {
     if (!tbody) return;
 
     if (!dataArray || dataArray.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #64748b; padding: 32px;">Belum ada kantor/unit yang membuka magang. Aktifkan toggle "Buka Magang" pada menu Hierarki PLN terlebih dahulu.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: #64748b; padding: 32px;">Belum ada kantor/unit yang membuka magang. Aktifkan toggle "Buka Magang" pada menu Hierarki PLN terlebih dahulu.</td></tr>';
         return;
     }
 
@@ -164,29 +183,53 @@ function renderKuotaTable(dataArray) {
                 : '<span class="badge-status badge-ditutup">Disembunyikan</span>';
         }
 
-        const totalK = isAssigned ? `<strong>${u.kuota_total}</strong> slot` : '<span style="color: #94a3b8;">-</span>';
-        const sisaK = isAssigned ? `<span style="font-weight: 700; color: ${u.kuota_tersisa > 0 ? '#10b981' : '#ef4444'};">${u.kuota_tersisa}</span> slot` : '<span style="color: #94a3b8;">-</span>';
+        const totalK = isAssigned ? `<span style="font-weight: 700; color: #0f172a; font-size: 0.8125rem;">${u.kuota_total}</span> <span style="font-size: 0.75rem; color: #64748b;">slot</span>` : '<span style="color: #94a3b8; font-size: 0.8rem;">-</span>';
+        const sisaK = isAssigned ? `<span style="font-weight: 700; color: ${u.kuota_tersisa > 0 ? '#10b981' : '#ef4444'}; font-size: 0.8125rem;">${u.kuota_tersisa}</span> <span style="font-size: 0.75rem; color: #64748b;">slot</span>` : '<span style="color: #94a3b8; font-size: 0.8rem;">-</span>';
+
+        // Render Prodi Tags
+        let prodiHtml = '';
+        const totalJurusan = allJurusanList.length;
+        const selectedJurCount = Array.isArray(u.prodi_details) ? u.prodi_details.length : 0;
+
+        if (selectedJurCount === 0 || (totalJurusan > 0 && selectedJurCount >= totalJurusan)) {
+            prodiHtml = '<span class="badge-status" style="background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; font-size: 0.725rem;">Semua Prodi (Umum)</span>';
+        } else {
+            const tags = u.prodi_details.map(p => 
+                `<span class="badge-status" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; font-size: 0.725rem; margin: 2px 2px; display: inline-flex;" title="${escapeHtml(p.nama_jurusan)}">${escapeHtml(p.nama_jurusan)}</span>`
+            ).join('');
+            prodiHtml = `<div style="max-width: 260px; display: flex; flex-wrap: wrap; gap: 2px;">${tags}</div>`;
+        }
+
+        // Render Peminatan Tags
+        let peminatanHtml = '';
+        if (Array.isArray(u.peminatan_details) && u.peminatan_details.length > 0) {
+            peminatanHtml = `<span class="badge-status" style="background: #fefce8; color: #a16207; border: 1px solid #fef08a; font-size: 0.725rem; font-weight: 700;">${u.peminatan_details.length} Peminatan</span>`;
+        } else {
+            peminatanHtml = '<span style="color: #94a3b8; font-size: 0.8rem;">-</span>';
+        }
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>
-                <div style="font-weight: 700; color: #0b3d6b; font-size: 0.925rem;">${escapeHtml(u.nama)}</div>
-                ${u.singkatan ? `<div style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Singkatan: ${escapeHtml(u.singkatan)}</div>` : ''}
+                <div style="font-weight: 700; color: #0b3d6b; font-size: 0.85rem; line-height: 1.35;">${escapeHtml(u.nama)}</div>
+                ${u.singkatan ? `<div style="font-size: 0.725rem; color: #64748b; font-weight: 500; margin-top: 2px;">Singkatan: ${escapeHtml(u.singkatan)}</div>` : ''}
             </td>
             <td>${getTipeBadge(u.tipe)}</td>
-            <td style="color: #475569; font-size: 0.875rem;">${escapeHtml(u.nama_parent || '-')}</td>
+            <td style="color: #475569; font-size: 0.8125rem;">${escapeHtml(u.nama_parent || '-')}</td>
+            <td>${prodiHtml}</td>
+            <td>${peminatanHtml}</td>
             <td>${totalK}</td>
             <td>${sisaK}</td>
             <td>${statusHtml}</td>
             <td>
-                <button type="button" class="btn-set-kuota" style="padding: 6px 14px; font-size: 0.8rem; background: #0b3d6b; color: #ffffff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
-                    Atur Kuota
+                <button type="button" class="btn-set-kuota" style="padding: 5px 12px; font-size: 0.75rem; background: #0b3d6b; color: #ffffff; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; white-space: nowrap;">
+                    Atur Alokasi
                 </button>
             </td>
         `;
 
         tr.querySelector('.btn-set-kuota').addEventListener('click', () => {
-            openKuotaModal(u.entitas_id, u.nama, u.kuota_total || 0, isAssigned ? (u.aktif || 1) : 1);
+            openKuotaModal(u);
         });
 
         tbody.appendChild(tr);
@@ -210,11 +253,46 @@ function applyKuotaFilter() {
     renderKuotaTable(filtered);
 }
 
-function openKuotaModal(entitasId, nama, currentKuota, currentAktif) {
-    document.getElementById('entitas-id').value = entitasId;
-    document.getElementById('kuota-unit-nama').innerText = nama;
-    document.getElementById('kuota_total').value = currentKuota;
-    document.getElementById('aktif').value = currentAktif;
+function openKuotaModal(unit) {
+    document.getElementById('entitas-id').value = unit.entitas_id;
+    document.getElementById('kuota-unit-nama').innerText = unit.nama;
+    document.getElementById('kuota_total').value = unit.kuota_total || 0;
+    document.getElementById('aktif').value = (unit.upp_id ? (unit.aktif || 1) : 1);
+
+    // Render Checkboxes Prodi
+    const prodiContainer = document.getElementById('container-checkbox-prodi');
+    if (prodiContainer) {
+        prodiContainer.innerHTML = '';
+        const assignedProdiIds = Array.isArray(unit.prodi_ids) ? unit.prodi_ids : [];
+        allJurusanList.forEach(j => {
+            const isChecked = assignedProdiIds.includes(parseInt(j.id));
+            const lbl = document.createElement('label');
+            lbl.style.cssText = 'display: flex; align-items: center; gap: 8px; font-size: 0.825rem; color: #334155; cursor: pointer; user-select: none; padding: 4px 6px; border-radius: 6px;';
+            lbl.innerHTML = `
+                <input type="checkbox" value="${j.id}" class="chk-modal-prodi" ${isChecked ? 'checked' : ''} style="cursor: pointer;">
+                <span title="${escapeHtml(j.nama_jurusan)}">${escapeHtml(j.nama_jurusan)}</span>
+            `;
+            prodiContainer.appendChild(lbl);
+        });
+    }
+
+    // Render Checkboxes Peminatan
+    const peminatanContainer = document.getElementById('container-checkbox-peminatan');
+    if (peminatanContainer) {
+        peminatanContainer.innerHTML = '';
+        const assignedPemIds = Array.isArray(unit.peminatan_ids) ? unit.peminatan_ids : [];
+        allPeminatanList.forEach(p => {
+            const isChecked = assignedPemIds.includes(parseInt(p.id));
+            const lbl = document.createElement('label');
+            lbl.style.cssText = 'display: flex; align-items: center; gap: 8px; font-size: 0.825rem; color: #334155; cursor: pointer; user-select: none; padding: 4px 6px; border-radius: 6px;';
+            lbl.innerHTML = `
+                <input type="checkbox" value="${p.id}" class="chk-modal-pem" ${isChecked ? 'checked' : ''} style="cursor: pointer;">
+                <span>${escapeHtml(p.nama)}</span>
+            `;
+            peminatanContainer.appendChild(lbl);
+        });
+    }
+
     document.getElementById('modal-kuota').classList.remove('hidden');
 }
 
@@ -231,6 +309,12 @@ async function handleFormKuotaSubmit(e) {
         showAdminAlert('Tidak ada periode aktif yang dipilih!', 'error');
         return;
     }
+
+    // Kumpulkan prodi_ids terpilih
+    const prodiIds = Array.from(document.querySelectorAll('.chk-modal-prodi:checked')).map(cb => parseInt(cb.value, 10));
+
+    // Kumpulkan peminatan_ids terpilih
+    const peminatanIds = Array.from(document.querySelectorAll('.chk-modal-pem:checked')).map(cb => parseInt(cb.value, 10));
 
     const submitBtn = document.getElementById('btn-submit-kuota');
     if (submitBtn) {
@@ -249,14 +333,16 @@ async function handleFormKuotaSubmit(e) {
                 entitas_id: entitasId,
                 periode_id: periodeId,
                 kuota_total: kuotaTotal,
-                aktif: aktif
+                aktif: aktif,
+                prodi_ids: prodiIds,
+                peminatan_ids: peminatanIds
             })
         });
 
         const data = await res.json();
         if (res.ok && data.ok) {
             document.getElementById('modal-kuota').classList.add('hidden');
-            showAdminAlert('Kuota unit berhasil disimpan!', 'success');
+            showAdminAlert('Alokasi kuota unit berhasil disimpan!', 'success');
             await loadUnit(periodeId);
         } else {
             showAdminAlert(data.error || 'Gagal menyimpan kuota unit.', 'error');
@@ -266,7 +352,8 @@ async function handleFormKuotaSubmit(e) {
     } finally {
         if (submitBtn) {
             submitBtn.disabled = false;
-            submitBtn.innerText = 'Simpan Kuota';
+            submitBtn.innerText = 'Simpan Alokasi';
         }
     }
 }
+

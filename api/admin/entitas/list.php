@@ -114,10 +114,12 @@ try {
     $stmt->execute($params);
     $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // 3. Lampirkan peminatan_ids jika diminta
+    // 3. Lampirkan peminatan_ids & prodi_ids jika diminta
     if ($withPeminatan && !empty($data)) {
         $ids = array_column($data, 'id');
         $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        
+        // Peminatan
         $stmtPem = $pdo->prepare("
             SELECT up.entitas_id, up.peminatan_id, p.nama AS nama_peminatan
             FROM unit_peminatan up
@@ -133,9 +135,77 @@ try {
             $pemMap[$row['entitas_id']][] = (int)$row['peminatan_id'];
             $pemNamesMap[$row['entitas_id']][] = $row['nama_peminatan'];
         }
+
+        // Prodi / Jurusan
+        $stmtJur = $pdo->prepare("
+            SELECT uj.entitas_id, uj.jurusan_id, j.nama_jurusan, j.kode
+            FROM unit_jurusan uj
+            JOIN jurusan j ON uj.jurusan_id = j.id
+            WHERE uj.entitas_id IN ($placeholders)
+        ");
+        $stmtJur->execute($ids);
+        $jurRows = $stmtJur->fetchAll(PDO::FETCH_ASSOC);
+
+        $jurMap = [];
+        $jurNamesMap = [];
+        foreach ($jurRows as $row) {
+            $jurMap[$row['entitas_id']][] = (int)$row['jurusan_id'];
+            $jurNamesMap[$row['entitas_id']][] = $row['nama_jurusan'];
+        }
+
+        // Fallback prodi dari periode aktif jika master kosong
+        $missingJurEntitasIds = array_diff($ids, array_keys($jurMap));
+        if (!empty($missingJurEntitasIds)) {
+            $mPlaceholders = implode(',', array_fill(0, count($missingJurEntitasIds), '?'));
+            $stmtUpjFallback = $pdo->prepare("
+                SELECT upp.entitas_id, upj.jurusan_id, j.nama_jurusan, j.kode
+                FROM unit_pelaksana_periode upp
+                JOIN unit_periode_jurusan upj ON upp.id = upj.unit_pelaksana_periode_id
+                JOIN jurusan j ON upj.jurusan_id = j.id
+                JOIN periode pr ON upp.periode_id = pr.id
+                WHERE upp.entitas_id IN ($mPlaceholders)
+                  AND pr.status IN ('dibuka', 'persiapan')
+                ORDER BY upp.id DESC
+            ");
+            $stmtUpjFallback->execute(array_values($missingJurEntitasIds));
+            $upjFallbackRows = $stmtUpjFallback->fetchAll(PDO::FETCH_ASSOC);
+            foreach ($upjFallbackRows as $row) {
+                if (!isset($jurMap[$row['entitas_id']]) || !in_array((int)$row['jurusan_id'], $jurMap[$row['entitas_id']])) {
+                    $jurMap[$row['entitas_id']][] = (int)$row['jurusan_id'];
+                    $jurNamesMap[$row['entitas_id']][] = $row['nama_jurusan'];
+                }
+            }
+        }
+
+        // Fallback peminatan dari periode aktif jika master kosong
+        $missingPemEntitasIds = array_diff($ids, array_keys($pemMap));
+        if (!empty($missingPemEntitasIds)) {
+            $mPlaceholdersPem = implode(',', array_fill(0, count($missingPemEntitasIds), '?'));
+            $stmtUppFallback = $pdo->prepare("
+                SELECT upp.entitas_id, uppem.peminatan_id, p.nama AS nama_peminatan
+                FROM unit_pelaksana_periode upp
+                JOIN unit_periode_peminatan uppem ON upp.id = uppem.unit_pelaksana_periode_id
+                JOIN peminatan p ON uppem.peminatan_id = p.id
+                JOIN periode pr ON upp.periode_id = pr.id
+                WHERE upp.entitas_id IN ($mPlaceholdersPem)
+                  AND pr.status IN ('dibuka', 'persiapan')
+                ORDER BY upp.id DESC
+            ");
+            $stmtUppFallback->execute(array_values($missingPemEntitasIds));
+            $uppFallbackRows = $stmtUppFallback->fetchAll(PDO::FETCH_ASSOC);
+            foreach ($uppFallbackRows as $row) {
+                if (!isset($pemMap[$row['entitas_id']]) || !in_array((int)$row['peminatan_id'], $pemMap[$row['entitas_id']])) {
+                    $pemMap[$row['entitas_id']][] = (int)$row['peminatan_id'];
+                    $pemNamesMap[$row['entitas_id']][] = $row['nama_peminatan'];
+                }
+            }
+        }
+
         foreach ($data as &$item) {
             $item['peminatan_ids']   = $pemMap[$item['id']] ?? [];
             $item['peminatan_names'] = $pemNamesMap[$item['id']] ?? [];
+            $item['prodi_ids']       = $jurMap[$item['id']] ?? [];
+            $item['prodi_names']     = $jurNamesMap[$item['id']] ?? [];
         }
         unset($item);
     }

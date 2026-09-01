@@ -60,6 +60,12 @@ try {
         ? array_values(array_unique(array_filter(array_map('intval', $body['peminatan_ids']))))
         : [];
 
+    // Ambil prodi_ids jika dikirim
+    $hasProdiPayload = isset($body['prodi_ids']);
+    $prodiIds = $hasProdiPayload && is_array($body['prodi_ids'])
+        ? array_values(array_unique(array_filter(array_map('intval', $body['prodi_ids']))))
+        : [];
+
     // Jika menerima magang, pastikan ada minimal 1 peminatan
     if ($menerimaMagang === 1) {
         if ($hasPeminatanPayload && empty($peminatanIds)) {
@@ -79,7 +85,8 @@ try {
     }
 
     Database::transaction(function (PDO $pdo) use (
-        $id, $nama, $singkatan, $alamat, $lat, $lng, $aktif, $menerimaMagang, $hasPeminatanPayload, $peminatanIds
+        $id, $nama, $singkatan, $alamat, $lat, $lng, $aktif, $menerimaMagang, 
+        $hasPeminatanPayload, $peminatanIds, $hasProdiPayload, $prodiIds
     ) {
         // Update entitas — tipe dan parent_id tetap dipertahankan
         $stmt = $pdo->prepare("
@@ -106,6 +113,56 @@ try {
             // Jika menerima_magang dimatikan, bersihkan relasi peminatan
             $stmtDel = $pdo->prepare("DELETE FROM unit_peminatan WHERE entitas_id = ?");
             $stmtDel->execute([$id]);
+        }
+
+        // Update relasi default prodi jika payload dikirimkan
+        if ($hasProdiPayload) {
+            $stmtDelJur = $pdo->prepare("DELETE FROM unit_jurusan WHERE entitas_id = ?");
+            $stmtDelJur->execute([$id]);
+
+            if ($menerimaMagang === 1 && !empty($prodiIds)) {
+                $stmtJur = $pdo->prepare(
+                    "INSERT INTO unit_jurusan (entitas_id, jurusan_id) VALUES (?, ?)"
+                );
+                foreach ($prodiIds as $jid) {
+                    $stmtJur->execute([$id, $jid]);
+                }
+            }
+        } elseif ($menerimaMagang === 0) {
+            $stmtDelJur = $pdo->prepare("DELETE FROM unit_jurusan WHERE entitas_id = ?");
+            $stmtDelJur->execute([$id]);
+        }
+
+        // Sinkronkan ke periode aktif/persiapan jika ada unit_pelaksana_periode
+        $stmtActiveUpp = $pdo->prepare("
+            SELECT upp.id 
+            FROM unit_pelaksana_periode upp
+            JOIN periode pr ON upp.periode_id = pr.id
+            WHERE upp.entitas_id = ? AND pr.status IN ('dibuka', 'persiapan')
+        ");
+        $stmtActiveUpp->execute([$id]);
+        $activeUppIds = $stmtActiveUpp->fetchAll(PDO::FETCH_COLUMN);
+
+        foreach ($activeUppIds as $auppId) {
+            $auppId = (int)$auppId;
+            if ($hasProdiPayload) {
+                $pdo->prepare("DELETE FROM unit_periode_jurusan WHERE unit_pelaksana_periode_id = ?")->execute([$auppId]);
+                if ($menerimaMagang === 1 && !empty($prodiIds)) {
+                    $stmtInsUpj = $pdo->prepare("INSERT INTO unit_periode_jurusan (unit_pelaksana_periode_id, jurusan_id) VALUES (?, ?)");
+                    foreach ($prodiIds as $jid) {
+                        $stmtInsUpj->execute([$auppId, $jid]);
+                    }
+                }
+            }
+            if ($hasPeminatanPayload) {
+                $pdo->prepare("DELETE FROM unit_periode_peminatan WHERE unit_pelaksana_periode_id = ?")->execute([$auppId]);
+                if ($menerimaMagang === 1 && !empty($peminatanIds)) {
+                    $stmtInsUppem = $pdo->prepare("INSERT INTO unit_periode_peminatan (unit_pelaksana_periode_id, peminatan_id) VALUES (?, ?)");
+                    foreach ($peminatanIds as $pid) {
+                        $stmtInsUppem->execute([$auppId, $pid]);
+                    }
+                }
+            }
         }
     });
 

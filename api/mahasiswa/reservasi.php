@@ -86,6 +86,27 @@ try {
             }
         }
 
+        // Validasi kesesuaian Program Studi (Prodi) mahasiswa
+        $mhsData = Auth::getMahasiswa();
+        $mhsJurusanId = (int)($mhsData['jurusan_id'] ?? 0);
+        if (!$mhsJurusanId) {
+            $stmtM = $pdo->prepare("SELECT jurusan_id FROM mahasiswa WHERE id = ?");
+            $stmtM->execute([$mahasiswaId]);
+            $mhsJurusanId = (int)$stmtM->fetchColumn();
+        }
+
+        $stmtCheckProdi = $pdo->prepare("SELECT COUNT(*) FROM unit_periode_jurusan WHERE unit_pelaksana_periode_id = ?");
+        $stmtCheckProdi->execute([$uppId]);
+        $totalProdiSet = (int)$stmtCheckProdi->fetchColumn();
+
+        if ($totalProdiSet > 0) {
+            $stmtMatch = $pdo->prepare("SELECT COUNT(*) FROM unit_periode_jurusan WHERE unit_pelaksana_periode_id = ? AND jurusan_id = ?");
+            $stmtMatch->execute([$uppId, $mhsJurusanId]);
+            if ((int)$stmtMatch->fetchColumn() === 0) {
+                throw new \Exception('Unit magang ini tidak membuka kuota untuk Program Studi Anda.');
+            }
+        }
+
         if ((int)$upp['kuota_tersisa'] <= 0) {
             throw new \Exception('Maaf, kuota untuk unit pelaksana ini sudah habis atau sedang direservasi orang lain.');
         }

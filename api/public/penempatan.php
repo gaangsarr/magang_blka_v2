@@ -48,7 +48,7 @@ try {
         FROM pendaftaran p
         JOIN unit_pelaksana_periode upp ON p.unit_pelaksana_periode_id = upp.id
         JOIN entitas_perusahaan e ON upp.entitas_id = e.id
-        WHERE p.periode_id = :pid AND p.status = 'diterima'
+        WHERE p.periode_id = :pid AND p.status IN ('diterima', 'dipindahkan')
         ORDER BY e.nama ASC
     ");
     $stmtUnits->execute([':pid' => $periodeId]);
@@ -60,7 +60,7 @@ try {
         FROM pendaftaran p
         JOIN mahasiswa m ON p.mahasiswa_id = m.id
         JOIN jurusan j ON m.jurusan_id = j.id
-        WHERE p.periode_id = :pid AND p.status = 'diterima'
+        WHERE p.periode_id = :pid AND p.status IN ('diterima', 'dipindahkan')
         ORDER BY j.nama_jurusan ASC
     ");
     $stmtJurusan->execute([':pid' => $periodeId]);
@@ -75,7 +75,7 @@ try {
         FROM pendaftaran p
         JOIN mahasiswa m ON p.mahasiswa_id = m.id
         JOIN unit_pelaksana_periode upp ON p.unit_pelaksana_periode_id = upp.id
-        WHERE p.periode_id = :pid AND p.status = 'diterima'
+        WHERE p.periode_id = :pid AND p.status IN ('diterima', 'dipindahkan')
     ");
     $stmtStats->execute([':pid' => $periodeId]);
     $stats = $stmtStats->fetch(PDO::FETCH_ASSOC) ?: [
@@ -93,7 +93,7 @@ try {
     $perPage = max(10, min(100, (int)($_GET['per_page'] ?? 25)));
     $offset = ($page - 1) * $perPage;
 
-    $where = ["p.periode_id = :pid", "p.status = 'diterima'"];
+    $where = ["p.periode_id = :pid", "p.status IN ('diterima', 'dipindahkan')"];
     $params = [':pid' => $periodeId];
 
     if ($unitFilter > 0) {

@@ -806,7 +806,19 @@ function renderUnitsTable(page = 1) {
     unitCurrentPage = Math.min(Math.max(1, page), totalPages);
 
     if (!filteredUnitsData || total === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 24px; color: #6B7280;">Tidak ada unit pelaksana yang cocok.</td></tr>';
+        const mhsJur = (window.statusAuthData && window.statusAuthData.user && window.statusAuthData.user.jurusan) ? window.statusAuthData.user.jurusan : '';
+        const jurMsg = mhsJur ? ` untuk Program Studi <strong>${escapeHtml(mhsJur)}</strong>` : '';
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" style="text-align: center; padding: 36px 20px; color: #64748b;">
+                    <div style="max-width: 420px; margin: 0 auto;">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 8px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <div style="font-weight: 700; color: #1e293b; font-size: 0.95rem; margin-bottom: 4px;">Tidak Ada Unit yang Cocok</div>
+                        <div style="font-size: 0.825rem; color: #64748b; line-height: 1.4;">Belum ada unit/kantor magang yang membuka alokasi kuota${jurMsg} pada periode ini.</div>
+                    </div>
+                </td>
+            </tr>
+        `;
         if (infoEl) infoEl.innerText = 'Menampilkan 0 unit pelaksana';
         if (badgeEl) badgeEl.innerText = 'Hal 1 / 1';
         if (prevBtn) prevBtn.disabled = true;

@@ -281,7 +281,7 @@ class SuratGenerator
             JOIN mahasiswa m ON p.mahasiswa_id = m.id
             JOIN unit_pelaksana_periode upp ON p.unit_pelaksana_periode_id = upp.id
             JOIN entitas_perusahaan e ON upp.entitas_id = e.id
-            WHERE p.periode_id = :pid AND p.status = 'diterima'
+            WHERE p.periode_id = :pid AND p.status IN ('diterima', 'dipindahkan')
             GROUP BY e.id, e.nama, e.alamat
             ORDER BY e.nama ASC
         ";
@@ -300,7 +300,7 @@ class SuratGenerator
                 JOIN mahasiswa m ON p.mahasiswa_id = m.id
                 LEFT JOIN jurusan j ON m.jurusan_id = j.id
                 JOIN unit_pelaksana_periode upp ON p.unit_pelaksana_periode_id = upp.id
-                WHERE p.periode_id = :pid AND upp.entitas_id = :uid AND p.status = 'diterima'
+                WHERE p.periode_id = :pid AND upp.entitas_id = :uid AND p.status IN ('diterima', 'dipindahkan')
                 GROUP BY prodi
                 ORDER BY jumlah DESC, prodi ASC
             ";
@@ -338,7 +338,7 @@ class SuratGenerator
             JOIN entitas_perusahaan e ON upp.entitas_id = e.id
             LEFT JOIN pendaftaran_peminatan pp ON p.id = pp.pendaftaran_id
             LEFT JOIN peminatan pem ON pp.peminatan_id = pem.id
-            WHERE p.periode_id = :pid AND upp.entitas_id = :uid AND p.status = 'diterima'
+            WHERE p.periode_id = :pid AND upp.entitas_id = :uid AND p.status IN ('diterima', 'dipindahkan')
             GROUP BY p.id, m.nim, p.nama_snapshot, p.jenis_kelamin, p.no_hp, p.alamat, p.rt, p.rw, p.kelurahan, p.kecamatan, p.kota_kabupaten, p.provinsi, p.ipk, p.jumlah_sks, j.nama_jurusan, e.nama, p.program
             ORDER BY j.nama_jurusan ASC, p.nama_snapshot ASC
         ";
