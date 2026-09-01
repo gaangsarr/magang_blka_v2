@@ -2247,17 +2247,25 @@ form[style*="overflow-y: auto"]::-webkit-scrollbar-thumb:hover {
   left: 14px;
   color: #94a3b8;
   pointer-events: none;
+  z-index: 2;
 }
 
 .admin-input-field {
   width: 100%;
-  padding: 12px 14px 12px 42px;
-  border-radius: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
   border: 1px solid #cbd5e1;
-  font-size: 0.925rem;
+  font-size: 0.9rem;
   color: #0f172a;
   background: #ffffff;
   transition: all 0.2s ease;
+  box-sizing: border-box;
+  text-align: left;
+}
+
+/* Hanya tambahkan padding-left ekstra jika input berada di dalam wrapper yang memiliki icon */
+.admin-input-wrapper .admin-input-field {
+  padding-left: 42px;
 }
 
 .admin-input-field:focus {
@@ -2493,3 +2501,9 @@ form[style*="overflow-y: auto"]::-webkit-scrollbar-thumb:hover {
     width: 30%;
   }
 }
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+

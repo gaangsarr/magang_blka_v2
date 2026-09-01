@@ -37,7 +37,7 @@ class Auth
     public static function startSession(bool $startPHP = false): void
     {
         if ($startPHP) {
-            if (session_status() === PHP_SESSION_NONE) {
+            if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
                 session_set_cookie_params([
                     'lifetime' => self::SESSION_LIFETIME,
                     'path'     => '/',
@@ -72,7 +72,9 @@ class Auth
     public static function setMahasiswaSession(int $mahasiswaId): void
     {
         self::startSession(startPHP: true);
-        session_regenerate_id(true); // QUALITY-07: Cegah Session Fixation Attack
+        if (session_status() === PHP_SESSION_ACTIVE && !headers_sent()) {
+            session_regenerate_id(true); // QUALITY-07: Cegah Session Fixation Attack
+        }
         $_SESSION['mahasiswa_id'] = $mahasiswaId;
         $_SESSION['role']         = 'mahasiswa';
         $_SESSION['created_at']   = time();
@@ -83,15 +85,25 @@ class Auth
     /**
      * Simpan admin_id ke session PHP (terpisah dari session mahasiswa).
      */
-    public static function setAdminSession(int $adminId, string $nama, string $adminRole = 'admin_blka'): void
+    public static function setAdminSession(
+        int $adminId, 
+        string $nama, 
+        string $adminRole = 'admin_blka', 
+        ?int $entitasId = null, 
+        bool $forcePasswordChange = false
+    ): void
     {
         self::startSession(startPHP: true);
-        session_regenerate_id(true); // QUALITY-07: Cegah Session Fixation Attack
-        $_SESSION['admin_id']   = $adminId;
-        $_SESSION['admin_nama'] = $nama;
-        $_SESSION['admin_role'] = $adminRole;
-        $_SESSION['role']       = 'admin';
-        $_SESSION['created_at'] = time();
+        if (session_status() === PHP_SESSION_ACTIVE && !headers_sent()) {
+            session_regenerate_id(true); // QUALITY-07: Cegah Session Fixation Attack
+        }
+        $_SESSION['admin_id']              = $adminId;
+        $_SESSION['admin_nama']            = $nama;
+        $_SESSION['admin_role']            = $adminRole;
+        $_SESSION['entitas_id']            = $entitasId;
+        $_SESSION['force_password_change'] = $forcePasswordChange;
+        $_SESSION['role']                  = 'admin';
+        $_SESSION['created_at']            = time();
     }
 
     // ============================================================
@@ -125,6 +137,33 @@ class Auth
         if (!self::isLoggedInAdmin()) {
             http_response_code(401);
             echo json_encode(['error' => 'Unauthorized. Admin access required.']);
+            exit;
+        }
+    }
+
+    /**
+     * Cek apakah request datang dari Admin Perusahaan (atau Super Admin yang sedang mengelola).
+     */
+    public static function requirePerusahaanApi(): void
+    {
+        self::startSession(startPHP: true);
+
+        if (!self::isLoggedInAdmin()) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Unauthorized. Silakan login terlebih dahulu.']);
+            exit;
+        }
+
+        $admin = self::getAdmin();
+        if (!$admin || ($admin['role'] !== 'admin_perusahaan' && $admin['role'] !== 'super_admin')) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Akses ditolak. Endpoint ini khusus Admin Perusahaan.']);
+            exit;
+        }
+
+        if ($admin['role'] === 'admin_perusahaan' && empty($admin['entitas_id'])) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Akun admin perusahaan belum terhubung ke entitas unit manapun.']);
             exit;
         }
     }
@@ -203,11 +242,37 @@ class Auth
         $id  = (int) $_SESSION['admin_id'];
         $pdo = Database::getInstance();
 
-        $stmt = $pdo->prepare('SELECT id, nama, email, role, mahasiswa_id, aktif FROM admin WHERE id = :id LIMIT 1');
+        $stmt = $pdo->prepare('SELECT id, nama, email, username, role, mahasiswa_id, entitas_id, force_password_change, aktif FROM admin WHERE id = :id LIMIT 1');
         $stmt->execute([':id' => $id]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
         return $row ?: null;
+    }
+
+    /**
+     * Shorthand: ambil entitas_id admin perusahaan dari session/DB.
+     */
+    public static function getPerusahaanEntitasId(): ?int
+    {
+        self::startSession(startPHP: true);
+        if (isset($_SESSION['entitas_id']) && (int)$_SESSION['entitas_id'] > 0) {
+            return (int)$_SESSION['entitas_id'];
+        }
+        $admin = self::getAdmin();
+        return !empty($admin['entitas_id']) ? (int)$admin['entitas_id'] : null;
+    }
+
+    /**
+     * Shorthand: cek apakah admin perusahaan wajib ganti password.
+     */
+    public static function isForcePasswordChange(): bool
+    {
+        self::startSession(startPHP: true);
+        if (isset($_SESSION['force_password_change'])) {
+            return (bool)$_SESSION['force_password_change'];
+        }
+        $admin = self::getAdmin();
+        return !empty($admin['force_password_change']);
     }
 
     /**

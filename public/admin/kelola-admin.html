@@ -9,6 +9,116 @@
     <link rel="apple-touch-icon" href="/assets/img/logo_itpln.png">
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/admin.css">
+    <style>
+        .kelola-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 0;
+        }
+        .kelola-tab-btn {
+            background: none;
+            border: none;
+            padding: 12px 20px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #64748b;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .kelola-tab-btn:hover {
+            color: #004687;
+        }
+        .kelola-tab-btn.active {
+            color: #004687;
+            border-bottom-color: #004687;
+        }
+        .badge-count {
+            background: #e2e8f0;
+            color: #334155;
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-weight: 700;
+        }
+        .kelola-tab-btn.active .badge-count {
+            background: #004687;
+            color: #ffffff;
+        }
+        .tab-panel {
+            display: none;
+        }
+        .tab-panel.active {
+            display: block;
+        }
+        .stats-grid-perusahaan {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .stat-card-mini {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .stat-card-mini .stat-val {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: #004687;
+        }
+        .stat-card-mini .stat-lbl {
+            font-size: 0.8rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+        .btn-action-sm {
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.775rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid transparent;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.15s;
+        }
+        .btn-action-primary {
+            background: #004687;
+            color: #fff;
+        }
+        .btn-action-primary:hover {
+            background: #003666;
+        }
+        .btn-action-outline {
+            background: #fff;
+            border-color: #cbd5e1;
+            color: #334155;
+        }
+        .btn-action-outline:hover {
+            background: #f8fafc;
+            border-color: #94a3b8;
+        }
+        .btn-action-warning {
+            background: #fef3c7;
+            border-color: #fde68a;
+            color: #92400e;
+        }
+        .btn-action-warning:hover {
+            background: #fde68a;
+        }
+    </style>
 </head>
 <body class="admin-body">
     <div class="admin-layout">
@@ -24,8 +134,8 @@
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
                     </a>
                     <div>
-                        <h1>Pengelolaan Hak Akses Admin</h1>
-                        <p>Kelola daftar Admin REMATE dan tambahkan hak akses admin berbasis Email Kampus (@itpln.ac.id)</p>
+                        <h1>Pengelolaan Akun & Hak Akses Admin</h1>
+                        <p>Kelola admin internal kampus (BLKA) dan akun admin mitra perusahaan/unit PLN.</p>
                     </div>
                 </div>
 
@@ -40,67 +150,192 @@
 
             <!-- Main Content Container -->
             <div class="admin-content">
-                <!-- Section 1: Form Tambah Admin Baru -->
-                <div class="admin-card">
-                    <div class="admin-card-header" style="padding-bottom: 12px;">
-                        <div>
-                            <h3 class="admin-card-title">Tambah Admin Baru (via Email Kampus)</h3>
-                            <span style="font-size: 0.825rem; color: #64748b;">Gunakan form ini untuk memberikan akses Admin/Super Admin ke akun Dosen, Staf, maupun Mahasiswa menggunakan Email Kampus (@itpln.ac.id).</span>
-                        </div>
-                    </div>
-                    <form id="form-add-admin" style="padding: 0 24px 24px; display: grid; grid-template-columns: 1fr 1fr 160px 140px; gap: 16px; align-items: end;">
-                        <div>
-                            <label class="admin-input-label" for="add-email">Email Kampus (@itpln.ac.id)</label>
-                            <input type="email" id="add-email" class="admin-input-field" style="padding-left: 14px;" placeholder="contoh: nama@itpln.ac.id" required>
-                        </div>
-                        <div>
-                            <label class="admin-input-label" for="add-nama">Nama Lengkap & Gelar</label>
-                            <input type="text" id="add-nama" class="admin-input-field" style="padding-left: 14px;" placeholder="Nama Lengkap" required>
-                        </div>
-                        <div>
-                            <label class="admin-input-label" for="add-role">Role Akses</label>
-                            <select id="add-role" class="admin-input-field" style="padding-left: 14px;">
-                                <option value="admin_blka">Admin REMATE</option>
-                                <option value="super_admin">Super Admin</option>
-                            </select>
-                        </div>
-                        <button type="submit" class="btn-modal-login" style="width: 100%; padding: 10px 16px; margin: 0; display: inline-flex; justify-content: center; align-items: center;">
-                            + Tambah
-                        </button>
-                    </form>
+                
+                <!-- Tab Selector -->
+                <div class="kelola-tabs">
+                    <button class="kelola-tab-btn active" id="tab-btn-perusahaan" data-target="tab-perusahaan">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M8 10h.01"/><path d="M16 10h.01"/><path d="M8 14h.01"/><path d="M16 14h.01"/></svg>
+                        <span>Akun Mitra Perusahaan / Unit PLN</span>
+                        <span class="badge-count" id="count-perusahaan">0</span>
+                    </button>
+                    <button class="kelola-tab-btn" id="tab-btn-kampus" data-target="tab-kampus">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                        <span>Admin Kampus (BLKA / Staf)</span>
+                        <span class="badge-count" id="count-kampus">0</span>
+                    </button>
                 </div>
 
-                <!-- Section 2: Daftar Admin Aktif -->
-                <div class="admin-card">
-                    <div class="admin-card-header">
-                        <div>
-                            <h3 class="admin-card-title">Daftar Admin & Super Admin Aktif</h3>
-                            <span style="font-size: 0.825rem; color: #64748b;">Pengguna yang tertera di bawah ini dapat login langsung ke Dashboard Admin menggunakan akun SSO Google Kampus.</span>
+                <!-- TAB 1: ADMIN MITRA PERUSAHAAN -->
+                <div class="tab-panel active" id="tab-perusahaan">
+                    <!-- Stats Badges -->
+                    <div class="stats-grid-perusahaan">
+                        <div class="stat-card-mini">
+                            <span class="stat-val" id="stat-total-unit">0</span>
+                            <span class="stat-lbl">Total Entitas / Kantor</span>
+                        </div>
+                        <div class="stat-card-mini" style="border-left: 4px solid #10b981;">
+                            <span class="stat-val" id="stat-has-account" style="color: #10b981;">0</span>
+                            <span class="stat-lbl">Sudah Memiliki Akun</span>
+                        </div>
+                        <div class="stat-card-mini" style="border-left: 4px solid #f59e0b;">
+                            <span class="stat-val" id="stat-need-reset" style="color: #f59e0b;">0</span>
+                            <span class="stat-lbl">Perlu Ganti Password (First-Login)</span>
+                        </div>
+                        <div class="stat-card-mini" style="border-left: 4px solid #ef4444;">
+                            <span class="stat-val" id="stat-no-account" style="color: #ef4444;">0</span>
+                            <span class="stat-lbl">Belum Memiliki Akun</span>
                         </div>
                     </div>
-                    
-                    <div style="overflow-x: auto;">
-                        <table class="admin-table">
-                            <thead>
-                                <tr>
-                                    <th style="width: 50px;">No</th>
-                                    <th>Nama Pengguna</th>
-                                    <th>Email Kampus</th>
-                                    <th>Role Akses</th>
-                                    <th>Tanggal Diberikan</th>
-                                    <th style="text-align: center; width: 140px;">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody id="table-admin">
-                                <tr>
-                                    <td colspan="6" style="text-align: center; color: #64748b; padding: 24px;">Memuat data admin...</td>
-                                </tr>
-                            </tbody>
-                        </table>
+
+                    <!-- Action Bar & Filter -->
+                    <div class="admin-card" style="margin-bottom: 16px;">
+                        <div style="padding: 16px 20px; display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center;">
+                            <div style="display: flex; gap: 10px; align-items: center; flex: 1; min-width: 280px;">
+                                <input type="text" id="filter-search-perusahaan" class="admin-input-field" placeholder="Cari nama kantor, username, atau PIC..." style="max-width: 360px; padding-left: 14px;">
+                                <select id="filter-status-perusahaan" class="admin-input-field" style="width: 180px; padding-left: 12px;">
+                                    <option value="">Semua Status Akun</option>
+                                    <option value="has_account">Sudah Ada Akun</option>
+                                    <option value="no_account">Belum Ada Akun</option>
+                                    <option value="first_login">Perlu First-Login</option>
+                                </select>
+                            </div>
+
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                <button id="btn-generate-all-perusahaan" class="btn-action-sm btn-action-primary" title="Buat akun otomatis untuk semua unit yang belum punya akun">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                                    <span>Generate Akun Otomatis</span>
+                                </button>
+                                <a href="/api/admin/kelola/perusahaan_export.php?format=print" target="_blank" class="btn-action-sm btn-action-outline" title="Cetak atau simpan ke PDF dokumen kredensial resmi">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+                                    <span>Cetak PDF Kredensial</span>
+                                </a>
+                                <a href="/api/admin/kelola/perusahaan_export.php?format=excel" class="btn-action-sm btn-action-outline" title="Ekspor daftar ke Excel">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                                    <span>Ekspor Excel</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Table Data Perusahaan -->
+                    <div class="admin-card">
+                        <div style="overflow-x: auto;">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 40px; text-align: center;">No</th>
+                                        <th>Nama Entitas / Unit Kantor</th>
+                                        <th style="width: 120px;">Tipe Unit</th>
+                                        <th>Unit Induk</th>
+                                        <th style="width: 140px;">Username Login</th>
+                                        <th style="width: 130px; text-align: center;">Status Akun</th>
+                                        <th>Kontak Resmi PIC</th>
+                                        <th style="width: 140px; text-align: center;">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-perusahaan">
+                                    <tr>
+                                        <td colspan="8" style="text-align: center; color: #64748b; padding: 24px;">Memuat data akun perusahaan...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- Pagination Perusahaan -->
+                        <div id="pagination-perusahaan" style="padding: 16px 20px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                            <div id="pagination-info-perusahaan" style="font-size: 0.85rem; color: #64748b; font-weight: 500;">
+                                Menampilkan 0 data
+                            </div>
+                            <div style="display: flex; gap: 6px; align-items: center;" id="pagination-nav-perusahaan"></div>
+                        </div>
                     </div>
                 </div>
+
+                <!-- TAB 2: ADMIN KAMPUS (BLKA) -->
+                <div class="tab-panel" id="tab-kampus">
+                    <!-- Form Tambah Admin Baru -->
+                    <div class="admin-card">
+                        <div class="admin-card-header" style="padding-bottom: 12px;">
+                            <div>
+                                <h3 class="admin-card-title">Tambah Admin Internal Kampus (via Email @itpln.ac.id)</h3>
+                                <span style="font-size: 0.825rem; color: #64748b;">Memberikan akses Admin/Super Admin ke staf kampus atau dosen dengan login SSO Google.</span>
+                            </div>
+                        </div>
+                        <form id="form-add-admin" style="padding: 0 24px 24px; display: grid; grid-template-columns: 1fr 1fr 160px 140px; gap: 16px; align-items: end;">
+                            <div>
+                                <label class="admin-input-label" for="add-email">Email Kampus (@itpln.ac.id)</label>
+                                <input type="email" id="add-email" class="admin-input-field" style="padding-left: 14px;" placeholder="contoh: nama@itpln.ac.id" required>
+                            </div>
+                            <div>
+                                <label class="admin-input-label" for="add-nama">Nama Lengkap & Gelar</label>
+                                <input type="text" id="add-nama" class="admin-input-field" style="padding-left: 14px;" placeholder="Nama Lengkap" required>
+                            </div>
+                            <div>
+                                <label class="admin-input-label" for="add-role">Role Akses</label>
+                                <select id="add-role" class="admin-input-field" style="padding-left: 14px;">
+                                    <option value="admin_blka">Admin REMATE</option>
+                                    <option value="super_admin">Super Admin</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn-modal-login" style="width: 100%; padding: 10px 16px; margin: 0; display: inline-flex; justify-content: center; align-items: center;">
+                                + Tambah
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Daftar Admin Aktif -->
+                    <div class="admin-card">
+                        <div class="admin-card-header">
+                            <div>
+                                <h3 class="admin-card-title">Daftar Admin Internal Kampus</h3>
+                                <span style="font-size: 0.825rem; color: #64748b;">Pengguna di bawah ini login ke portal menggunakan akun resmi Google Kampus.</span>
+                            </div>
+                        </div>
+                        
+                        <div style="overflow-x: auto;">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 50px;">No</th>
+                                        <th>Nama Pengguna</th>
+                                        <th>Email Kampus</th>
+                                        <th>Role Akses</th>
+                                        <th>Tanggal Diberikan</th>
+                                        <th style="text-align: center; width: 140px;">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-admin">
+                                    <tr>
+                                        <td colspan="6" style="text-align: center; color: #64748b; padding: 24px;">Memuat data admin...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- Pagination Kampus -->
+                        <div id="pagination-kampus" style="padding: 16px 20px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                            <div id="pagination-info-kampus" style="font-size: 0.85rem; color: #64748b; font-weight: 500;">
+                                Menampilkan 0 data
+                            </div>
+                            <div style="display: flex; gap: 6px; align-items: center;" id="pagination-nav-kampus"></div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </main>
+    </div>
+
+    <!-- Modal Kredensial Baru / Hasil Reset -->
+    <div id="modal-credential" class="modal-overlay hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999;">
+        <div style="background: #fff; border-radius: 16px; width: 90%; max-width: 500px; padding: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h3 id="modal-cred-title" style="margin: 0; font-size: 1.15rem; color: #004687; font-weight: 700;">Kredensial Akun Perusahaan</h3>
+                <button id="btn-close-modal-cred" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b;">&times;</button>
+            </div>
+            <div id="modal-cred-body"></div>
+            <div style="margin-top: 20px; text-align: right;">
+                <button id="btn-ok-modal-cred" class="btn-action-sm btn-action-primary" style="padding: 8px 20px;">Tutup</button>
+            </div>
+        </div>
     </div>
 
     <script type="module" src="/js/admin/common.js"></script>

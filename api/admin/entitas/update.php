@@ -133,6 +133,14 @@ try {
             $stmtDelJur->execute([$id]);
         }
 
+        // Sinkronkan status aktif ke seluruh record unit_pelaksana_periode
+        $stmtUpdUpp = $pdo->prepare("
+            UPDATE unit_pelaksana_periode 
+            SET aktif = ?, updated_at = NOW() 
+            WHERE entitas_id = ?
+        ");
+        $stmtUpdUpp->execute([$menerimaMagang, $id]);
+
         // Sinkronkan ke periode aktif/persiapan jika ada unit_pelaksana_periode
         $stmtActiveUpp = $pdo->prepare("
             SELECT upp.id 

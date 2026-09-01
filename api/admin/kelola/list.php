@@ -17,7 +17,7 @@ try {
     $pdo = Database::getInstance();
     $currentAdmin = Auth::getAdmin();
 
-    // Fetch all active admins
+    // Fetch all internal campus admins (exclude admin_perusahaan)
     $stmtAdmins = $pdo->query("
         SELECT 
             a.id AS admin_id,
@@ -27,7 +27,8 @@ try {
             a.aktif,
             a.created_at
         FROM admin a
-        ORDER BY (a.role = 'super_admin') DESC, a.id ASC
+        WHERE a.role IN ('super_admin', 'superadmin', 'admin_blka', 'admin')
+        ORDER BY (a.role = 'super_admin' OR a.role = 'superadmin') DESC, a.id ASC
     ");
     $admins = $stmtAdmins->fetchAll(PDO::FETCH_ASSOC);
 

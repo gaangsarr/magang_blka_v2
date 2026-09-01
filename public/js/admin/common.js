@@ -1,5 +1,7 @@
 import { initSidebar, updateSidebarProfile } from '/js/admin/sidebar.js';
 
+let profileInFlightPromise = null;
+
 // Auto render sidebar immediately or on DOM ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
@@ -12,6 +14,10 @@ if (document.readyState === 'loading') {
 }
 
 export async function loadAdminProfileHeader() {
+    if (profileInFlightPromise) {
+        return profileInFlightPromise;
+    }
+
     // 1. Try to load from sessionStorage cache
     const cachedProfile = sessionStorage.getItem('admin_profile');
     if (cachedProfile) {
@@ -24,29 +30,39 @@ export async function loadAdminProfileHeader() {
         }
     }
 
-    // 2. Fetch from server if not cached
-    try {
-        const res = await fetch('/api/admin/me.php');
-        if (res.status === 401) {
-            sessionStorage.removeItem('admin_profile');
-            window.location.href = '/admin/login.html';
-            return null;
-        }
+    // 2. Fetch from server if not cached (singleton promise)
+    profileInFlightPromise = (async () => {
+        try {
+            const res = await fetch('/api/admin/me.php');
+            if (res.status === 401) {
+                sessionStorage.removeItem('admin_profile');
+                if (!window.location.pathname.includes('login.html')) {
+                    window.location.href = '/admin/login.html';
+                }
+                return null;
+            }
 
-        const data = await res.json();
-        if (data.ok && data.admin) {
-            const adm = data.admin;
-            sessionStorage.setItem('admin_profile', JSON.stringify(adm));
-            applyAdminProfile(adm);
-            return adm;
+            const data = await res.json();
+            if (data.ok && data.admin) {
+                const adm = data.admin;
+                sessionStorage.setItem('admin_profile', JSON.stringify(adm));
+                applyAdminProfile(adm);
+                return adm;
+            }
+        } catch (err) {
+            console.error('[common.js] Error loading profile:', err);
+        } finally {
+            profileInFlightPromise = null;
         }
-    } catch (err) {
-        console.error('[common.js] Error loading profile:', err);
-    }
-    return null;
+        return null;
+    })();
+
+    return profileInFlightPromise;
 }
 
 function applyAdminProfile(adm) {
+    if (!adm) return;
+
     const nameEl = document.getElementById('admin-name');
     const roleEl = document.getElementById('admin-role');
     const avatarEl = document.getElementById('admin-avatar');
@@ -61,9 +77,19 @@ function applyAdminProfile(adm) {
     // Update sidebar footer profile and super admin filter
     updateSidebarProfile(adm);
 
-    if (!adm.is_super) {
-        const path = window.location.pathname;
-        if (path.includes('pengaturan') || path.includes('kelola-admin')) {
+    const currentPath = window.location.pathname.toLowerCase();
+
+    // Khusus Admin Perusahaan: jika berada di panel admin kampus, arahkan ke portal perusahaan
+    if (adm.is_perusahaan) {
+        if (!currentPath.startsWith('/perusahaan/') && !currentPath.includes('login.html')) {
+            window.location.href = '/perusahaan/index.html';
+            return;
+        }
+    }
+
+    // Khusus Admin Non-Super: jangan izinkan akses ke menu pengaturan & kelola-admin
+    if (!adm.is_super && !adm.is_perusahaan) {
+        if (currentPath.includes('pengaturan') || currentPath.includes('kelola-admin')) {
             window.location.href = '/admin/index.html';
         }
     }

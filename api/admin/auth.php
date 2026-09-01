@@ -20,39 +20,58 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $body = json_decode(file_get_contents('php://input'), true);
 
-if (!isset($body['email'], $body['password'])) {
+$identifier = trim((string)($body['identifier'] ?? $body['email'] ?? $body['username'] ?? ''));
+$password   = trim((string)($body['password'] ?? ''));
+
+if ($identifier === '' || $password === '') {
     http_response_code(400);
-    echo json_encode(['error' => 'Email dan password wajib diisi.']);
+    echo json_encode(['error' => 'Username/Email dan password wajib diisi.']);
     exit;
 }
 
 // Rate limiting: max 5 login attempts per minute per IP
 Auth::rateLimitByIp('login_admin', 5, 60);
 
-$email = trim($body['email']);
-$password = trim($body['password']);
-
 try {
     $pdo = Database::getInstance();
     
     // Wajib cek aktif = 1 agar admin yang dicabut aksesnya tidak bisa login
-    $stmt = $pdo->prepare("SELECT id, nama, role, password_hash, aktif FROM admin WHERE email = :email AND aktif = 1 LIMIT 1");
-    $stmt->execute([':email' => $email]);
+    $stmt = $pdo->prepare("
+        SELECT id, nama, email, username, role, entitas_id, password_hash, force_password_change, aktif 
+        FROM admin 
+        WHERE (email = :email OR username = :uname) AND aktif = 1 
+        LIMIT 1
+    ");
+    $stmt->execute([':email' => $identifier, ':uname' => $identifier]);
     $admin = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if (!$admin || !password_verify($password, $admin['password_hash'])) {
         http_response_code(401);
-        echo json_encode(['error' => 'Email atau password salah.']);
+        echo json_encode(['error' => 'Username/Email atau password salah.']);
         exit;
     }
     
+    $role = $admin['role'] ?? 'admin_blka';
+    $entitasId = !empty($admin['entitas_id']) ? (int)$admin['entitas_id'] : null;
+    $forceChange = (bool)($admin['force_password_change'] ?? false);
+
     // Set admin session dengan role yang benar dari database
-    Auth::setAdminSession((int)$admin['id'], $admin['nama'], $admin['role'] ?? 'admin_blka');
+    Auth::setAdminSession(
+        (int)$admin['id'], 
+        $admin['nama'], 
+        $role, 
+        $entitasId, 
+        $forceChange
+    );
     
+    $redirectUrl = ($role === 'admin_perusahaan') ? '/perusahaan/index.html' : '/admin/index.html';
+
     echo json_encode([
-        'ok' => true,
-        'message' => 'Login berhasil.',
-        'redirect' => '/admin/index.html'
+        'ok'                    => true,
+        'message'               => 'Login berhasil.',
+        'role'                  => $role,
+        'force_password_change' => $forceChange,
+        'redirect'              => $redirectUrl
     ]);
 
 } catch (\Throwable $e) {

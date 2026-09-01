@@ -85,8 +85,13 @@ try {
     $stmtPendaftar->execute([$periodeId]);
     $totalPendaftar = (int)$stmtPendaftar->fetchColumn();
     
-    // 3. Total & Sisa Kuota
-    $stmtKuota = $pdo->prepare("SELECT SUM(kuota_total) as total, SUM(kuota_tersisa) as sisa FROM unit_pelaksana_periode WHERE periode_id = ? AND aktif = 1");
+    // 3. Total & Sisa Kuota (Hanya hitung entitas aktif yang menerima magang)
+    $stmtKuota = $pdo->prepare("
+        SELECT SUM(upp.kuota_total) as total, SUM(upp.kuota_tersisa) as sisa 
+        FROM unit_pelaksana_periode upp
+        JOIN entitas_perusahaan e ON upp.entitas_id = e.id
+        WHERE upp.periode_id = ? AND upp.aktif = 1 AND e.aktif = 1 AND e.menerima_magang = 1
+    ");
     $stmtKuota->execute([$periodeId]);
     $kuota = $stmtKuota->fetch(PDO::FETCH_ASSOC);
     $totalKuota = (int)($kuota['total'] ?? 0);
@@ -130,7 +135,7 @@ try {
         SELECT e.nama, e.tipe, upp.kuota_total, upp.kuota_tersisa, (upp.kuota_total - upp.kuota_tersisa) as terisi
         FROM unit_pelaksana_periode upp
         JOIN entitas_perusahaan e ON upp.entitas_id = e.id
-        WHERE upp.periode_id = ? AND upp.aktif = 1 AND upp.kuota_tersisa = 0 AND upp.kuota_total > 0
+        WHERE upp.periode_id = ? AND upp.aktif = 1 AND e.aktif = 1 AND e.menerima_magang = 1 AND upp.kuota_tersisa = 0 AND upp.kuota_total > 0
         ORDER BY upp.kuota_total DESC, e.nama ASC
         LIMIT 5
     ");
@@ -142,7 +147,7 @@ try {
         SELECT e.nama, e.tipe, upp.kuota_total, upp.kuota_tersisa, (upp.kuota_total - upp.kuota_tersisa) as terisi
         FROM unit_pelaksana_periode upp
         JOIN entitas_perusahaan e ON upp.entitas_id = e.id
-        WHERE upp.periode_id = ? AND upp.aktif = 1 AND upp.kuota_tersisa > 0
+        WHERE upp.periode_id = ? AND upp.aktif = 1 AND e.aktif = 1 AND e.menerima_magang = 1 AND upp.kuota_tersisa > 0
         ORDER BY upp.kuota_tersisa DESC, terisi ASC, e.nama ASC
         LIMIT 5
     ");
@@ -154,7 +159,7 @@ try {
         SELECT e.tipe, COUNT(upp.id) as jumlah_unit, SUM(upp.kuota_total) as total_kuota, SUM(upp.kuota_total - upp.kuota_tersisa) as total_terisi
         FROM unit_pelaksana_periode upp
         JOIN entitas_perusahaan e ON upp.entitas_id = e.id
-        WHERE upp.periode_id = ? AND upp.aktif = 1
+        WHERE upp.periode_id = ? AND upp.aktif = 1 AND e.aktif = 1 AND e.menerima_magang = 1
         GROUP BY e.tipe
     ");
     $stmtHierarki->execute([$periodeId]);

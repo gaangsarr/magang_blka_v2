@@ -319,10 +319,16 @@ function updateTableNomorSuratPreview() {
     });
 }
 
+let currentPageSurat = 1;
+const pageSizeSurat = 25;
+let filteredUnitsList = [];
+let cachedSuratConfig = null;
+
 /**
- * Render tabel daftar kantor unit dengan dukungan pencarian real-time
+ * Render tabel daftar kantor unit dengan dukungan pencarian real-time & pagination
  */
 function renderUnitsTable(units, config, filterText = '') {
+    cachedSuratConfig = config;
     const tbody = document.getElementById('units-table-body');
     const infoCount = document.getElementById('units-count-info');
     if (!tbody) return;
@@ -340,11 +346,9 @@ function renderUnitsTable(units, config, filterText = '') {
             </tr>
         `;
         if (infoCount) infoCount.innerText = '0 Kantor Unit PLN ditemukan';
+        renderPaginationNavSurat('pagination-nav-surat', 'pagination-info-surat', 0, 1, pageSizeSurat, (p) => renderUnitsTablePage(p, config));
         return;
     }
-
-    const template = config?.nomor_surat_template || '{nomor}/Srt/1/D0/08/2026';
-    const startNum = parseInt(config?.nomor_surat_start || 1, 10);
 
     // Filter daftar unit jika ada pencarian
     let displayUnits = units;
@@ -356,40 +360,72 @@ function renderUnitsTable(units, config, filterText = '') {
         });
     }
 
-    if (displayUnits.length === 0) {
+    filteredUnitsList = displayUnits;
+    currentPageSurat = 1;
+
+    let totalMhsDisplay = 0;
+    displayUnits.forEach(u => {
+        totalMhsDisplay += parseInt(u.total_mahasiswa, 10) || 0;
+    });
+
+    if (infoCount) {
+        if (filterText) {
+            infoCount.innerText = `Menampilkan ${displayUnits.length} dari ${units.length} Kantor Unit PLN (${totalMhsDisplay} Mahasiswa Diterima)`;
+        } else {
+            infoCount.innerText = `Menampilkan ${units.length} Kantor Unit PLN (${totalMhsDisplay} Total Mahasiswa Diterima)`;
+        }
+    }
+
+    renderUnitsTablePage(1, config);
+}
+
+function renderUnitsTablePage(page = 1, config = null) {
+    if (!config) config = cachedSuratConfig;
+    currentPageSurat = page;
+    const tbody = document.getElementById('units-table-body');
+    if (!tbody) return;
+
+    const totalItems = filteredUnitsList.length;
+
+    if (totalItems === 0) {
         tbody.innerHTML = `
             <tr>
                 <td colspan="6" style="text-align: center; padding: 32px; color: #64748b;">
                     <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;">
                         <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.8"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                        <span style="font-weight: 600;">Tidak ditemukan unit yang cocok dengan pencarian "${escapeHtml(filterText)}"</span>
+                        <span style="font-weight: 600;">Tidak ditemukan unit yang cocok dengan pencarian</span>
                         <span style="font-size: 0.8rem; color: #94a3b8;">Coba gunakan kata kunci nama kantor atau kota lainnya.</span>
                     </div>
                 </td>
             </tr>
         `;
-        if (infoCount) {
-            infoCount.innerText = `Menampilkan 0 dari ${units.length} Kantor Unit PLN`;
-        }
+        renderPaginationNavSurat('pagination-nav-surat', 'pagination-info-surat', 0, 1, pageSizeSurat, (p) => renderUnitsTablePage(p, config));
         return;
     }
 
-    let totalMhsDisplay = 0;
-    let rowsHtml = '';
+    const template = config?.nomor_surat_template || '{nomor}/Srt/1/D0/08/2026';
+    const startNum = parseInt(config?.nomor_surat_start || 1, 10);
 
-    displayUnits.forEach((u, idx) => {
-        // Cari index asli unit di currentUnits untuk urutan nomor surat yang konsisten
-        const origIdx = units.findIndex(orig => orig.unit_id === u.unit_id);
-        const seq = startNum + (origIdx >= 0 ? origIdx : idx);
+    const totalPages = Math.ceil(totalItems / pageSizeSurat) || 1;
+    const safePage = Math.min(Math.max(1, page), totalPages);
+    currentPageSurat = safePage;
+
+    const startIdx = (safePage - 1) * pageSizeSurat;
+    const pageItems = filteredUnitsList.slice(startIdx, startIdx + pageSizeSurat);
+
+    let rowsHtml = '';
+    pageItems.forEach((u, idx) => {
+        const rowNumber = startIdx + idx + 1;
+        const origIdx = currentUnits.findIndex(orig => orig.unit_id === u.unit_id);
+        const seq = startNum + (origIdx >= 0 ? origIdx : startIdx + idx);
         const noSurat = formatNomorSuratJs(template, seq);
         const mhsCount = parseInt(u.total_mahasiswa, 10) || 0;
-        totalMhsDisplay += mhsCount;
 
         const alamat = u.unit_alamat ? escapeHtml(u.unit_alamat) : '<span style="color: #94a3b8; font-style: italic;">Alamat belum diatur di Master Unit</span>';
 
         rowsHtml += `
             <tr>
-                <td style="text-align: center; font-weight: 600; color: #64748b;">${idx + 1}</td>
+                <td style="text-align: center; font-weight: 600; color: #64748b;">${rowNumber}</td>
                 <td>
                     <code class="preview-nomor-cell" style="background: #f1f5f9; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; color: #0f172a;">${escapeHtml(noSurat)}</code>
                 </td>
@@ -415,13 +451,93 @@ function renderUnitsTable(units, config, filterText = '') {
     });
 
     tbody.innerHTML = rowsHtml;
-    if (infoCount) {
-        if (filterText) {
-            infoCount.innerText = `Menampilkan ${displayUnits.length} dari ${units.length} Kantor Unit PLN (${totalMhsDisplay} Mahasiswa Diterima)`;
-        } else {
-            infoCount.innerText = `Menampilkan ${units.length} Kantor Unit PLN (${totalMhsDisplay} Total Mahasiswa Diterima)`;
+    renderPaginationNavSurat('pagination-nav-surat', 'pagination-info-surat', totalItems, safePage, pageSizeSurat, (p) => renderUnitsTablePage(p, config));
+}
+
+function renderPaginationNavSurat(containerId, infoId, totalItems, currentPage, pageSize, onPageChange) {
+    const container = document.getElementById(containerId);
+    const info = document.getElementById(infoId);
+    if (!container || !info) return;
+
+    const totalPages = Math.ceil(totalItems / pageSize) || 1;
+    const safePage = Math.min(Math.max(1, currentPage), totalPages);
+
+    const startIdx = totalItems === 0 ? 0 : (safePage - 1) * pageSize + 1;
+    const endIdx = Math.min(safePage * pageSize, totalItems);
+
+    info.innerText = `Menampilkan ${startIdx} - ${endIdx} dari ${totalItems} unit kantor`;
+    container.innerHTML = '';
+
+    if (totalPages <= 1) return;
+
+    const prevBtn = document.createElement('button');
+    prevBtn.type = 'button';
+    prevBtn.className = 'btn-action-sm';
+    prevBtn.style.cssText = 'padding: 6px 12px; font-size: 0.8rem; background: #fff; border: 1px solid #cbd5e1; color: #475569; border-radius: 6px; cursor: pointer;';
+    prevBtn.innerHTML = '&larr; Sebelumnya';
+    prevBtn.disabled = safePage <= 1;
+    if (safePage <= 1) {
+        prevBtn.style.opacity = '0.5';
+        prevBtn.style.cursor = 'not-allowed';
+    } else {
+        prevBtn.addEventListener('click', () => onPageChange(safePage - 1));
+    }
+    container.appendChild(prevBtn);
+
+    const startPage = Math.max(1, safePage - 2);
+    const endPage = Math.min(totalPages, safePage + 2);
+
+    if (startPage > 1) {
+        container.appendChild(createSuratPageButton(1, safePage === 1, onPageChange));
+        if (startPage > 2) {
+            const dots = document.createElement('span');
+            dots.innerText = '...';
+            dots.style.cssText = 'padding: 0 4px; color: #94a3b8; font-size: 0.8rem;';
+            container.appendChild(dots);
         }
     }
+
+    for (let p = startPage; p <= endPage; p++) {
+        container.appendChild(createSuratPageButton(p, p === safePage, onPageChange));
+    }
+
+    if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+            const dots = document.createElement('span');
+            dots.innerText = '...';
+            dots.style.cssText = 'padding: 0 4px; color: #94a3b8; font-size: 0.8rem;';
+            container.appendChild(dots);
+        }
+        container.appendChild(createSuratPageButton(totalPages, safePage === totalPages, onPageChange));
+    }
+
+    const nextBtn = document.createElement('button');
+    nextBtn.type = 'button';
+    nextBtn.className = 'btn-action-sm';
+    nextBtn.style.cssText = 'padding: 6px 12px; font-size: 0.8rem; background: #fff; border: 1px solid #cbd5e1; color: #475569; border-radius: 6px; cursor: pointer;';
+    nextBtn.innerHTML = 'Berikutnya &rarr;';
+    nextBtn.disabled = safePage >= totalPages;
+    if (safePage >= totalPages) {
+        nextBtn.style.opacity = '0.5';
+        nextBtn.style.cursor = 'not-allowed';
+    } else {
+        nextBtn.addEventListener('click', () => onPageChange(safePage + 1));
+    }
+    container.appendChild(nextBtn);
+}
+
+function createSuratPageButton(pageNum, isActive, onClick) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'btn-action-sm';
+    btn.innerText = pageNum;
+    if (isActive) {
+        btn.style.cssText = 'padding: 6px 11px; font-size: 0.8rem; font-weight: 700; background: #004687; border: 1px solid #004687; color: #fff; border-radius: 6px; cursor: default;';
+    } else {
+        btn.style.cssText = 'padding: 6px 11px; font-size: 0.8rem; background: #fff; border: 1px solid #cbd5e1; color: #475569; border-radius: 6px; cursor: pointer;';
+        btn.addEventListener('click', () => onClick(pageNum));
+    }
+    return btn;
 }
 
 /**

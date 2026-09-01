@@ -41,6 +41,15 @@ if (str_starts_with($uri, '/api/')) {
 // Solusi: baca file manual dengan readfile() + header MIME yang tepat.
 $publicPath = __DIR__ . '/public' . $uri;
 
+if (is_dir($publicPath)) {
+    $dirIndex = rtrim($publicPath, '/') . '/index.html';
+    if (is_file($dirIndex)) {
+        header('Content-Type: text/html; charset=utf-8');
+        readfile($dirIndex);
+        return true;
+    }
+}
+
 if (is_file($publicPath)) {
     $ext = strtolower(pathinfo($publicPath, PATHINFO_EXTENSION));
 

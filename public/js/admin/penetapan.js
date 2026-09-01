@@ -14,7 +14,7 @@ let currentPeriodeData = null;
 let isPeriodeSelectPopulated = false;
 
 let currentPage = 1;
-let perPage = 50;
+let perPage = 25;
 let totalPages = 1;
 let totalRecords = 0;
 let searchDebounceTimer = null;

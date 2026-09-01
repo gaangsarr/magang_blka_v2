@@ -22,17 +22,37 @@ try {
     }
 
     $isSuperAdmin = ($admin['role'] === 'super_admin' || $admin['role'] === 'superadmin');
-    $roleLabel = $isSuperAdmin ? 'Super Admin REMATE' : 'Admin REMATE';
+    $isPerusahaan = ($admin['role'] === 'admin_perusahaan');
+    
+    $roleLabel = 'Admin REMATE';
+    if ($isSuperAdmin) {
+        $roleLabel = 'Super Admin REMATE';
+    } elseif ($isPerusahaan) {
+        $roleLabel = 'Admin Mitra Perusahaan';
+    }
+
+    $entitasData = null;
+    if (!empty($admin['entitas_id'])) {
+        $pdo = Database::getInstance();
+        $stmtE = $pdo->prepare("SELECT id, nama, singkatan, tipe, alamat FROM entitas_perusahaan WHERE id = ?");
+        $stmtE->execute([(int)$admin['entitas_id']]);
+        $entitasData = $stmtE->fetch(PDO::FETCH_ASSOC) ?: null;
+    }
 
     echo json_encode([
         'ok'             => true,
         'admin'          => [
-            'id'         => (int)$admin['id'],
-            'nama'       => $admin['nama'],
-            'email'      => $admin['email'],
-            'role'       => $admin['role'],
-            'role_label' => $roleLabel,
-            'is_super'   => $isSuperAdmin,
+            'id'                    => (int)$admin['id'],
+            'nama'                  => $admin['nama'],
+            'email'                 => $admin['email'] ?? '',
+            'username'              => $admin['username'] ?? '',
+            'role'                  => $admin['role'],
+            'role_label'            => $roleLabel,
+            'is_super'              => $isSuperAdmin,
+            'is_perusahaan'         => $isPerusahaan,
+            'entitas_id'            => !empty($admin['entitas_id']) ? (int)$admin['entitas_id'] : null,
+            'entitas'               => $entitasData,
+            'force_password_change' => (bool)($admin['force_password_change'] ?? false),
         ]
     ]);
 } catch (\Throwable $e) {

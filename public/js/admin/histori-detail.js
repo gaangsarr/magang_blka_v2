@@ -70,48 +70,9 @@ async function loadHistoriDetail(periodeId) {
             }
 
             // Table
-            const tbody = document.getElementById('table-pendaftar');
-            tbody.innerHTML = '';
-
-            if (data.data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: #64748b; padding: 24px;">Belum ada data pendaftar pada periode ini.</td></tr>';
-                return;
-            }
-
-            data.data.forEach((r, idx) => {
-                const progText = r.program === '1_bulan' ? 'Magang 1 Bulan' : 'Magang 5 Bulan (KRS)';
-                const isMoved = (r.is_dipindahkan == 1 || r.status === 'dipindahkan');
-
-                let statusBadge = '<span class="badge-status badge-draft">Diajukan</span>';
-                if (isMoved) {
-                    statusBadge = '<span class="badge-status" style="background: #e0e7ff; color: #4338ca; border: 1px solid #c7d2fe; font-weight: 700;">Dipindahkan</span>';
-                } else if (r.status === 'diverifikasi' || r.status === 'diterima') {
-                    statusBadge = '<span class="badge-status badge-dibuka">Diterima</span>';
-                } else if (r.status === 'ditolak') {
-                    statusBadge = '<span class="badge-status badge-ditutup">Ditolak</span>';
-                }
-
-                const unitDisplay = (r.unit_asal_nama && r.unit_asal_nama !== r.unit_nama)
-                    ? `<span style="font-size: 0.8rem; color: #64748b; text-decoration: line-through;">${escapeHtml(r.unit_asal_nama)}</span><br><span style="color: #4338ca; font-weight: 600;">➔ ${escapeHtml(r.unit_nama)}</span>`
-                    : escapeHtml(r.unit_nama || '-');
-
-                const tr = document.createElement('tr');
-                if (isMoved) {
-                    tr.style.backgroundColor = 'rgba(99, 102, 241, 0.04)';
-                }
-                tr.innerHTML = `
-                    <td>${idx + 1}</td>
-                    <td style="font-family: monospace;">${escapeHtml(r.nim || '-')}</td>
-                    <td style="font-weight: 700; color: #0b3d6b;">${escapeHtml(r.nama || '-')}</td>
-                    <td>${escapeHtml(r.jurusan || '-')}</td>
-                    <td>${progText}</td>
-                    <td>${unitDisplay}</td>
-                    <td>${statusBadge}</td>
-                    <td style="font-size: 0.85rem; color: #475569;">${escapeHtml(r.alamat_domisili || '-')}</td>
-                    <td style="font-size: 0.85rem; color: #64748b;">${escapeHtml(r.submitted_at || '-')}</td>
-                `;
-                tbody.appendChild(tr);
-            });
+            rawHistoriList = data.data || [];
+            currentPageHistori = 1;
+            renderHistoriTablePage(1);
         } else {
             alert(data.error || 'Gagal memuat detail histori.');
         }
@@ -119,6 +80,156 @@ async function loadHistoriDetail(periodeId) {
         console.error(err);
         alert('Kesalahan jaringan saat memuat detail histori.');
     }
+}
+
+let rawHistoriList = [];
+let currentPageHistori = 1;
+const pageSizeHistori = 25;
+
+function renderHistoriTablePage(page = 1) {
+    currentPageHistori = page;
+    const tbody = document.getElementById('table-pendaftar');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    const totalItems = rawHistoriList.length;
+
+    if (totalItems === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: #64748b; padding: 24px;">Belum ada data pendaftar pada periode ini.</td></tr>';
+        renderPaginationNavHistori('pagination-nav-histori', 'pagination-info-histori', 0, 1, pageSizeHistori, renderHistoriTablePage);
+        return;
+    }
+
+    const totalPages = Math.ceil(totalItems / pageSizeHistori) || 1;
+    const safePage = Math.min(Math.max(1, page), totalPages);
+    currentPageHistori = safePage;
+
+    const startIdx = (safePage - 1) * pageSizeHistori;
+    const pageItems = rawHistoriList.slice(startIdx, startIdx + pageSizeHistori);
+
+    pageItems.forEach((r, idx) => {
+        const rowNumber = startIdx + idx + 1;
+        const progText = r.program === '1_bulan' ? 'Magang 1 Bulan' : 'Magang 5 Bulan (KRS)';
+        const isMoved = (r.is_dipindahkan == 1 || r.status === 'dipindahkan');
+
+        let statusBadge = '<span class="badge-status badge-draft">Diajukan</span>';
+        if (isMoved) {
+            statusBadge = '<span class="badge-status" style="background: #e0e7ff; color: #4338ca; border: 1px solid #c7d2fe; font-weight: 700;">Dipindahkan</span>';
+        } else if (r.status === 'diverifikasi' || r.status === 'diterima') {
+            statusBadge = '<span class="badge-status badge-dibuka">Diterima</span>';
+        } else if (r.status === 'ditolak') {
+            statusBadge = '<span class="badge-status badge-ditutup">Ditolak</span>';
+        }
+
+        const unitDisplay = (r.unit_asal_nama && r.unit_asal_nama !== r.unit_nama)
+            ? `<span style="font-size: 0.8rem; color: #64748b; text-decoration: line-through;">${escapeHtml(r.unit_asal_nama)}</span><br><span style="color: #4338ca; font-weight: 600;">➔ ${escapeHtml(r.unit_nama)}</span>`
+            : escapeHtml(r.unit_nama || '-');
+
+        const tr = document.createElement('tr');
+        if (isMoved) {
+            tr.style.backgroundColor = 'rgba(99, 102, 241, 0.04)';
+        }
+        tr.innerHTML = `
+            <td style="text-align: center; color: #64748b;">${rowNumber}</td>
+            <td style="font-family: monospace;">${escapeHtml(r.nim || '-')}</td>
+            <td style="font-weight: 700; color: #0b3d6b;">${escapeHtml(r.nama || '-')}</td>
+            <td>${escapeHtml(r.jurusan || '-')}</td>
+            <td>${progText}</td>
+            <td>${unitDisplay}</td>
+            <td>${statusBadge}</td>
+            <td style="font-size: 0.85rem; color: #475569;">${escapeHtml(r.alamat_domisili || '-')}</td>
+            <td style="font-size: 0.85rem; color: #64748b;">${escapeHtml(r.submitted_at || '-')}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    renderPaginationNavHistori('pagination-nav-histori', 'pagination-info-histori', totalItems, safePage, pageSizeHistori, renderHistoriTablePage);
+}
+
+function renderPaginationNavHistori(containerId, infoId, totalItems, currentPage, pageSize, onPageChange) {
+    const container = document.getElementById(containerId);
+    const info = document.getElementById(infoId);
+    if (!container || !info) return;
+
+    const totalPages = Math.ceil(totalItems / pageSize) || 1;
+    const safePage = Math.min(Math.max(1, currentPage), totalPages);
+
+    const startIdx = totalItems === 0 ? 0 : (safePage - 1) * pageSize + 1;
+    const endIdx = Math.min(safePage * pageSize, totalItems);
+
+    info.innerText = `Menampilkan ${startIdx} - ${endIdx} dari ${totalItems} data pendaftar`;
+    container.innerHTML = '';
+
+    if (totalPages <= 1) return;
+
+    const prevBtn = document.createElement('button');
+    prevBtn.type = 'button';
+    prevBtn.className = 'btn-action-sm';
+    prevBtn.style.cssText = 'padding: 6px 12px; font-size: 0.8rem; background: #fff; border: 1px solid #cbd5e1; color: #475569; border-radius: 6px; cursor: pointer;';
+    prevBtn.innerHTML = '&larr; Sebelumnya';
+    prevBtn.disabled = safePage <= 1;
+    if (safePage <= 1) {
+        prevBtn.style.opacity = '0.5';
+        prevBtn.style.cursor = 'not-allowed';
+    } else {
+        prevBtn.addEventListener('click', () => onPageChange(safePage - 1));
+    }
+    container.appendChild(prevBtn);
+
+    const startPage = Math.max(1, safePage - 2);
+    const endPage = Math.min(totalPages, safePage + 2);
+
+    if (startPage > 1) {
+        container.appendChild(createHistoriPageButton(1, safePage === 1, onPageChange));
+        if (startPage > 2) {
+            const dots = document.createElement('span');
+            dots.innerText = '...';
+            dots.style.cssText = 'padding: 0 4px; color: #94a3b8; font-size: 0.8rem;';
+            container.appendChild(dots);
+        }
+    }
+
+    for (let p = startPage; p <= endPage; p++) {
+        container.appendChild(createHistoriPageButton(p, p === safePage, onPageChange));
+    }
+
+    if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+            const dots = document.createElement('span');
+            dots.innerText = '...';
+            dots.style.cssText = 'padding: 0 4px; color: #94a3b8; font-size: 0.8rem;';
+            container.appendChild(dots);
+        }
+        container.appendChild(createHistoriPageButton(totalPages, safePage === totalPages, onPageChange));
+    }
+
+    const nextBtn = document.createElement('button');
+    nextBtn.type = 'button';
+    nextBtn.className = 'btn-action-sm';
+    nextBtn.style.cssText = 'padding: 6px 12px; font-size: 0.8rem; background: #fff; border: 1px solid #cbd5e1; color: #475569; border-radius: 6px; cursor: pointer;';
+    nextBtn.innerHTML = 'Berikutnya &rarr;';
+    nextBtn.disabled = safePage >= totalPages;
+    if (safePage >= totalPages) {
+        nextBtn.style.opacity = '0.5';
+        nextBtn.style.cursor = 'not-allowed';
+    } else {
+        nextBtn.addEventListener('click', () => onPageChange(safePage + 1));
+    }
+    container.appendChild(nextBtn);
+}
+
+function createHistoriPageButton(pageNum, isActive, onClick) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'btn-action-sm';
+    btn.innerText = pageNum;
+    if (isActive) {
+        btn.style.cssText = 'padding: 6px 11px; font-size: 0.8rem; font-weight: 700; background: #004687; border: 1px solid #004687; color: #fff; border-radius: 6px; cursor: default;';
+    } else {
+        btn.style.cssText = 'padding: 6px 11px; font-size: 0.8rem; background: #fff; border: 1px solid #cbd5e1; color: #475569; border-radius: 6px; cursor: pointer;';
+        btn.addEventListener('click', () => onClick(pageNum));
+    }
+    return btn;
 }
 
 function renderJurusanChart(perJurusan) {
