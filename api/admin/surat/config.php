@@ -45,7 +45,7 @@ try {
             'periode_terpilih' => null,
             'all_periode' => [],
             'config' => null,
-            'units' => [],
+            'documents' => [],
             'message' => 'Belum ada data periode magang.'
         ]);
         exit;
@@ -56,21 +56,15 @@ try {
     // 2. Ambil konfigurasi surat
     $config = SuratGenerator::getConfig($pdo, $periodeId);
 
-    // 3. Ambil daftar unit yang ada mahasiswa diterima
-    $units = SuratGenerator::getUnitsSummary($pdo, $periodeId);
-
-    // Format nomor surat untuk masing-masing unit preview
-    $startNum = (int)($config['nomor_surat_start'] ?? 1);
-    foreach ($units as $idx => &$u) {
-        $u['nomor_surat_preview'] = SuratGenerator::formatNomorSurat($config['nomor_surat_template'] ?? '{nomor}/Srt/1/D0/08/' . date('Y'), $startNum + $idx);
-    }
+    // 3. Ambil daftar dokumen surat terkelompok per hierarki PLN Group
+    $documents = SuratGenerator::getDocxListForPeriod($pdo, $periodeId);
 
     echo json_encode([
         'ok' => true,
         'periode_terpilih' => $periode,
         'all_periode' => $allPeriode,
         'config' => $config,
-        'units' => $units
+        'documents' => $documents
     ]);
 } catch (\Throwable $e) {
     http_response_code(500);

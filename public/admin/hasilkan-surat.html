@@ -392,16 +392,16 @@
                         <div>
                             <h3 class="admin-card-title" style="display: flex; align-items: center; gap: 8px;">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                                <span>3. Daftar Dokumen Surat Penempatan Per-Kantor Unit</span>
+                                <span>3. Daftar Dokumen Surat Pengantar PLN Group</span>
                             </h3>
-                            <p style="font-size: 0.85rem; color: #64748b; margin-top: 4px;" id="units-count-info">Memuat unit...</p>
+                            <p style="font-size: 0.85rem; color: #64748b; margin-top: 4px;" id="units-count-info">Memuat dokumen...</p>
                         </div>
 
                         <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                            <!-- Quick Filter Unit Search -->
+                            <!-- Quick Filter Search -->
                             <div class="admin-input-wrapper" style="max-width: 260px; min-width: 180px;">
                                 <svg class="admin-input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                                <input type="text" id="filter-unit-search" class="admin-input-field" placeholder="Cari nama unit..." style="background: #ffffff; padding-left: 36px; font-size: 0.825rem; height: 38px; border-radius: 8px;">
+                                <input type="text" id="filter-unit-search" class="admin-input-field" placeholder="Cari dokumen/perusahaan..." style="background: #ffffff; padding-left: 36px; font-size: 0.825rem; height: 38px; border-radius: 8px;">
                             </div>
 
                             <button type="button" id="btn-download-all-zip" class="btn-primary" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 22px; background: #047857; border-radius: 10px; font-weight: 700; color: #ffffff; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(4, 120, 87, 0.2); white-space: nowrap;">
@@ -417,9 +417,9 @@
                             <thead>
                                 <tr>
                                     <th style="width: 50px; text-align: center;">No</th>
-                                    <th style="width: 230px;">Nomor Surat Terbit</th>
-                                    <th>Kantor Unit PLN</th>
-                                    <th>Alamat Kantor</th>
+                                    <th style="width: 210px;">Nomor Surat Terbit</th>
+                                    <th>Nama Dokumen Surat Pengantar</th>
+                                    <th>Tujuan / Penerima (Kepada Yth.)</th>
                                     <th style="width: 140px; text-align: center;">Jumlah Peserta</th>
                                     <th style="width: 170px; text-align: center;">Aksi Download</th>
                                 </tr>
@@ -427,7 +427,7 @@
                             <tbody id="units-table-body">
                                 <tr>
                                     <td colspan="6" style="text-align: center; padding: 40px; color: #94a3b8;">
-                                        Memuat data unit penempatan...
+                                        Memuat daftar dokumen surat...
                                     </td>
                                 </tr>
                             </tbody>

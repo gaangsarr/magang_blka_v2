@@ -14,46 +14,26 @@ Dotenv::createImmutable($root)->safeLoad();
 Auth::requireAdminApi();
 
 $periodeId = isset($_GET['periode_id']) ? (int)$_GET['periode_id'] : 0;
-$unitId = isset($_GET['unit_id']) ? (int)$_GET['unit_id'] : 0;
+$targetType = trim((string)($_GET['target_type'] ?? ''));
+$targetId = isset($_GET['target_id']) ? (int)$_GET['target_id'] : 0;
 
-if ($periodeId <= 0 || $unitId <= 0) {
+// Fallback untuk backward compatibility jika parameter unit_id dikirimkan
+if ($targetType === '' && isset($_GET['unit_id'])) {
+    $targetType = 'holding_unit';
+    $targetId = 0;
+}
+
+if ($periodeId <= 0 || $targetType === '') {
     http_response_code(400);
     header('Content-Type: text/plain; charset=utf-8');
-    echo 'Parameter periode_id dan unit_id diperlukan.';
+    echo 'Parameter periode_id dan target_type diperlukan.';
     exit;
 }
 
 try {
     $pdo = Database::getInstance();
-    $config = SuratGenerator::getConfig($pdo, $periodeId);
-    $units = SuratGenerator::getUnitsSummary($pdo, $periodeId);
 
-    $targetUnit = null;
-    $unitIndex = 0;
-    foreach ($units as $idx => $u) {
-        if ((int)$u['unit_id'] === $unitId) {
-            $targetUnit = $u;
-            $unitIndex = $idx;
-            break;
-        }
-    }
-
-    if (!$targetUnit) {
-        http_response_code(404);
-        header('Content-Type: text/plain; charset=utf-8');
-        echo 'Data unit tidak ditemukan atau tidak memiliki mahasiswa berstatus diterima pada periode ini.';
-        exit;
-    }
-
-    $students = SuratGenerator::getStudentsForUnit($pdo, $periodeId, $unitId);
-    if (empty($students)) {
-        http_response_code(404);
-        header('Content-Type: text/plain; charset=utf-8');
-        echo 'Tidak ada data mahasiswa diterima untuk unit ini.';
-        exit;
-    }
-
-    $docxPath = SuratGenerator::generateDocxForUnit($config, $targetUnit, $students, $unitIndex);
+    $docxPath = SuratGenerator::generateDocxByTarget($pdo, $periodeId, $targetType, $targetId);
 
     if (!file_exists($docxPath)) {
         http_response_code(500);
@@ -62,8 +42,7 @@ try {
         exit;
     }
 
-    $safeName = preg_replace('/[^A-Za-z0-9_\-]/', '_', $targetUnit['unit_nama']);
-    $downloadFileName = 'Surat_Penempatan_' . $safeName . '_' . date('Ymd') . '.docx';
+    $downloadFileName = basename($docxPath);
 
     header('Content-Description: File Transfer');
     header('Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document');

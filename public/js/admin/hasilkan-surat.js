@@ -7,7 +7,7 @@ import { showAdminToast, showAdminAlert, showAdminConfirm } from '/js/admin/comm
 
 let currentPeriodeId = null;
 let currentConfig = null;
-let currentUnits = [];
+let currentDocuments = [];
 let allPeriodeList = [];
 let csrfToken = null;
 let currentSearchQuery = '';
@@ -78,22 +78,21 @@ function initEvents() {
         btnZip.addEventListener('click', downloadAllZip);
     }
 
-    // Filter search unit in real-time
+    // Filter search documents in real-time
     const filterUnitSearch = document.getElementById('filter-unit-search');
     if (filterUnitSearch) {
         filterUnitSearch.addEventListener('input', (e) => {
             currentSearchQuery = e.target.value.trim().toLowerCase();
-            renderUnitsTable(currentUnits, currentConfig, currentSearchQuery);
+            renderDocumentsTable(currentDocuments, currentConfig, currentSearchQuery);
         });
     }
 }
 
 /**
- * Memuat konfigurasi surat dan data unit untuk periode terpilih
+ * Memuat konfigurasi surat dan daftar dokumen untuk periode terpilih
  */
 async function loadSuratData(periodeId = null) {
     try {
-        // Fetch status & CSRF token jika belum ada
         if (!csrfToken) {
             try {
                 const statusRes = await fetch('/api/admin/status.php');
@@ -123,11 +122,11 @@ async function loadSuratData(periodeId = null) {
         const periodeTerpilih = data.periode_terpilih;
         currentPeriodeId = periodeTerpilih ? periodeTerpilih.id : null;
         currentConfig = data.config;
-        currentUnits = data.units || [];
+        currentDocuments = data.documents || [];
 
-        renderPeriodSelector(allPeriodeList, currentPeriodeId, currentUnits);
+        renderPeriodSelector(allPeriodeList, currentPeriodeId, currentDocuments);
         populateConfigForm(currentConfig, currentPeriodeId);
-        renderUnitsTable(currentUnits, currentConfig, currentSearchQuery);
+        renderDocumentsTable(currentDocuments, currentConfig, currentSearchQuery);
 
     } catch (err) {
         console.error('[hasilkan-surat.js] Error:', err);
@@ -138,7 +137,7 @@ async function loadSuratData(periodeId = null) {
 /**
  * Render Minimalist Period Selector Bar
  */
-function renderPeriodSelector(periodes, selectedId, units = []) {
+function renderPeriodSelector(periodes, selectedId, documents = []) {
     const selectorContainer = document.getElementById('period-selector-container');
     const metaContainer = document.getElementById('period-meta-badges');
     if (!selectorContainer) return;
@@ -152,12 +151,10 @@ function renderPeriodSelector(periodes, selectedId, units = []) {
     const selectedPeriod = periodes.find(p => p.id == selectedId) || periodes[0];
     const activeId = selectedPeriod ? selectedPeriod.id : null;
 
-    // Hitung total mahasiswa diterima pada unit
-    const totalMhsAccepted = (units || []).reduce((acc, u) => acc + (parseInt(u.total_mahasiswa, 10) || 0), 0);
-    const totalUnitsCount = (units || []).length;
+    // Hitung total mahasiswa diterima pada dokumen
+    const totalMhsAccepted = (documents || []).reduce((acc, d) => acc + (parseInt(d.total_mahasiswa, 10) || 0), 0);
+    const totalDocsCount = (documents || []).length;
 
-    // Jika jumlah periode <= 4, buat tampilan Pill buttons yang responsif & cepat di-klik
-    // Jika > 4 periode, buat tampilan <select> dropdown yang rapi
     if (periodes.length <= 4) {
         let pillsHtml = `<div class="period-pills-list">`;
         periodes.forEach(p => {
@@ -179,7 +176,6 @@ function renderPeriodSelector(periodes, selectedId, units = []) {
         pillsHtml += `</div>`;
         selectorContainer.innerHTML = pillsHtml;
 
-        // Attach click listeners to pill buttons
         selectorContainer.querySelectorAll('.period-pill-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const pid = btn.getAttribute('data-periode-id');
@@ -189,7 +185,6 @@ function renderPeriodSelector(periodes, selectedId, units = []) {
             });
         });
     } else {
-        // Tampilan Dropdown Select jika banyak periode
         let selectHtml = `<select id="select-periode-surat" class="period-select-dropdown">`;
         periodes.forEach(p => {
             const isSelected = p.id == activeId;
@@ -214,7 +209,6 @@ function renderPeriodSelector(periodes, selectedId, units = []) {
         }
     }
 
-    // Render metadata badges di sisi kanan bar
     if (metaContainer && selectedPeriod) {
         let statusBadgeClass = 'meta-chip-neutral';
         let statusDotClass = 'ditutup';
@@ -255,7 +249,7 @@ function renderPeriodSelector(periodes, selectedId, units = []) {
             </span>
             <span class="meta-chip meta-chip-stat">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M8 10h.01"/><path d="M16 10h.01"/><path d="M8 14h.01"/><path d="M16 14h.01"/></svg>
-                <span>${totalUnitsCount} Unit (${totalMhsAccepted} Mahasiswa)</span>
+                <span>${totalDocsCount} Dokumen (${totalMhsAccepted} Mahasiswa)</span>
             </span>
         `;
     }
@@ -320,56 +314,55 @@ function updateTableNomorSuratPreview() {
 }
 
 /**
- * Render tabel daftar kantor unit dengan dukungan pencarian real-time
+ * Render tabel daftar dokumen dengan dukungan pencarian real-time
  */
-function renderUnitsTable(units, config, filterText = '') {
+function renderDocumentsTable(documents, config, filterText = '') {
     const tbody = document.getElementById('units-table-body');
     const infoCount = document.getElementById('units-count-info');
     if (!tbody) return;
 
-    if (!units || units.length === 0) {
+    if (!documents || documents.length === 0) {
         tbody.innerHTML = `
             <tr>
                 <td colspan="6" style="text-align: center; padding: 40px; color: #94a3b8;">
                     <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
                         <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                        <span style="font-weight: 600; font-size: 0.95rem;">Belum ada mahasiswa berstatus 'diterima' pada unit-unit di periode ini.</span>
-                        <span style="font-size: 0.825rem; color: #64748b;">Silakan lakukan penetapan mahasiswa terlebih dahulu pada menu <strong>Penetapan Unit</strong>.</span>
+                        <span style="font-weight: 600; font-size: 0.95rem;">Belum ada mahasiswa berstatus 'diterima' pada periode ini.</span>
+                        <span style="font-size: 0.825rem; color: #64748b;">Silakan lakukan verifikasi dan penetapan mahasiswa terlebih dahulu.</span>
                     </div>
                 </td>
             </tr>
         `;
-        if (infoCount) infoCount.innerText = '0 Kantor Unit PLN ditemukan';
+        if (infoCount) infoCount.innerText = '0 Dokumen Surat Pengantar ditemukan';
         return;
     }
 
     const template = config?.nomor_surat_template || '{nomor}/Srt/1/D0/08/2026';
     const startNum = parseInt(config?.nomor_surat_start || 1, 10);
 
-    // Filter daftar unit jika ada pencarian
-    let displayUnits = units;
+    let displayDocs = documents;
     if (filterText) {
-        displayUnits = units.filter(u => {
-            const nama = (u.unit_nama || '').toLowerCase();
-            const alamat = (u.unit_alamat || '').toLowerCase();
-            return nama.includes(filterText) || alamat.includes(filterText);
+        displayDocs = documents.filter(d => {
+            const nama = (d.nama_dokumen || '').toLowerCase();
+            const penerima = (d.penerima || '').toLowerCase();
+            return nama.includes(filterText) || penerima.includes(filterText);
         });
     }
 
-    if (displayUnits.length === 0) {
+    if (displayDocs.length === 0) {
         tbody.innerHTML = `
             <tr>
                 <td colspan="6" style="text-align: center; padding: 32px; color: #64748b;">
                     <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;">
                         <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.8"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                        <span style="font-weight: 600;">Tidak ditemukan unit yang cocok dengan pencarian "${escapeHtml(filterText)}"</span>
-                        <span style="font-size: 0.8rem; color: #94a3b8;">Coba gunakan kata kunci nama kantor atau kota lainnya.</span>
+                        <span style="font-weight: 600;">Tidak ditemukan dokumen yang cocok dengan pencarian "${escapeHtml(filterText)}"</span>
+                        <span style="font-size: 0.8rem; color: #94a3b8;">Coba gunakan kata kunci lain.</span>
                     </div>
                 </td>
             </tr>
         `;
         if (infoCount) {
-            infoCount.innerText = `Menampilkan 0 dari ${units.length} Kantor Unit PLN`;
+            infoCount.innerText = `Menampilkan 0 dari ${documents.length} Dokumen Surat Pengantar`;
         }
         return;
     }
@@ -377,15 +370,21 @@ function renderUnitsTable(units, config, filterText = '') {
     let totalMhsDisplay = 0;
     let rowsHtml = '';
 
-    displayUnits.forEach((u, idx) => {
-        // Cari index asli unit di currentUnits untuk urutan nomor surat yang konsisten
-        const origIdx = units.findIndex(orig => orig.unit_id === u.unit_id);
+    displayDocs.forEach((doc, idx) => {
+        const origIdx = documents.findIndex(orig => orig.type === doc.type && orig.target_id === doc.target_id);
         const seq = startNum + (origIdx >= 0 ? origIdx : idx);
         const noSurat = formatNomorSuratJs(template, seq);
-        const mhsCount = parseInt(u.total_mahasiswa, 10) || 0;
+        const mhsCount = parseInt(doc.total_mahasiswa, 10) || 0;
         totalMhsDisplay += mhsCount;
 
-        const alamat = u.unit_alamat ? escapeHtml(u.unit_alamat) : '<span style="color: #94a3b8; font-style: italic;">Alamat belum diatur di Master Unit</span>';
+        const downloadUrl = `/api/admin/surat/download.php?periode_id=${encodeURIComponent(currentPeriodeId)}&target_type=${encodeURIComponent(doc.type)}&target_id=${encodeURIComponent(doc.target_id)}`;
+
+        let badgeType = '<span style="display: inline-block; background: #dbeafe; color: #1e40af; font-size: 0.725rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; margin-left: 6px;">PLN Pusat</span>';
+        if (doc.type === 'subholding') {
+            badgeType = '<span style="display: inline-block; background: #fef3c7; color: #92400e; font-size: 0.725rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; margin-left: 6px;">Subholding</span>';
+        } else if (doc.type === 'anak_perusahaan') {
+            badgeType = '<span style="display: inline-block; background: #f3e8ff; color: #6b21a8; font-size: 0.725rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; margin-left: 6px;">Anak Perusahaan</span>';
+        }
 
         rowsHtml += `
             <tr>
@@ -394,10 +393,13 @@ function renderUnitsTable(units, config, filterText = '') {
                     <code class="preview-nomor-cell" style="background: #f1f5f9; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; color: #0f172a;">${escapeHtml(noSurat)}</code>
                 </td>
                 <td>
-                    <strong style="color: #0b3d6b; font-size: 0.925rem;">${escapeHtml(u.unit_nama)}</strong>
+                    <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 4px;">
+                        <strong style="color: #0b3d6b; font-size: 0.925rem;">${escapeHtml(doc.nama_dokumen)}</strong>
+                        ${badgeType}
+                    </div>
                 </td>
-                <td style="font-size: 0.825rem; color: #475569; max-width: 320px;">
-                    ${alamat}
+                <td style="font-size: 0.825rem; color: #475569; max-width: 300px;">
+                    ${escapeHtml(doc.penerima)}
                 </td>
                 <td style="text-align: center;">
                     <span style="display: inline-block; background: #ecfdf5; color: #065f46; font-weight: 700; padding: 4px 12px; border-radius: 8px; font-size: 0.85rem;">
@@ -405,7 +407,7 @@ function renderUnitsTable(units, config, filterText = '') {
                     </span>
                 </td>
                 <td style="text-align: center;">
-                    <a href="/api/admin/surat/download.php?periode_id=${encodeURIComponent(currentPeriodeId)}&unit_id=${encodeURIComponent(u.unit_id)}" class="btn-primary" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; font-size: 0.8rem; background: #0b3d6b; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 700; white-space: nowrap; box-shadow: 0 2px 6px rgba(11, 61, 107, 0.15);">
+                    <a href="${downloadUrl}" class="btn-primary" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; font-size: 0.8rem; background: #0b3d6b; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 700; white-space: nowrap; box-shadow: 0 2px 6px rgba(11, 61, 107, 0.15);">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                         <span>Download DOCX</span>
                     </a>
@@ -417,9 +419,9 @@ function renderUnitsTable(units, config, filterText = '') {
     tbody.innerHTML = rowsHtml;
     if (infoCount) {
         if (filterText) {
-            infoCount.innerText = `Menampilkan ${displayUnits.length} dari ${units.length} Kantor Unit PLN (${totalMhsDisplay} Mahasiswa Diterima)`;
+            infoCount.innerText = `Menampilkan ${displayDocs.length} dari ${documents.length} Dokumen Surat Pengantar (${totalMhsDisplay} Mahasiswa)`;
         } else {
-            infoCount.innerText = `Menampilkan ${units.length} Kantor Unit PLN (${totalMhsDisplay} Total Mahasiswa Diterima)`;
+            infoCount.innerText = `Menampilkan ${documents.length} Dokumen Surat Pengantar (${totalMhsDisplay} Total Mahasiswa)`;
         }
     }
 }
@@ -518,11 +520,12 @@ function downloadAllZip() {
         return;
     }
 
-    if (!currentUnits || currentUnits.length === 0) {
-        showAdminAlert('Tidak ada unit dengan mahasiswa berstatus diterima pada periode ini.', 'info', 'Belum Ada Surat');
+    if (!currentDocuments || currentDocuments.length === 0) {
+        showAdminAlert('Tidak ada mahasiswa berstatus diterima pada periode ini untuk dibuatkan surat.', 'info', 'Belum Ada Surat');
         return;
     }
 
     window.location.href = `/api/admin/surat/download_all.php?periode_id=${currentPeriodeId}`;
 }
+
 
