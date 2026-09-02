@@ -5,6 +5,7 @@ require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
 use Dotenv\Dotenv;
 use App\Database;
 use App\Auth;
+use App\Models\PicNarahubung;
 
 $root = dirname(__DIR__, 2);
 Dotenv::createImmutable($root)->safeLoad();
@@ -32,9 +33,9 @@ try {
             m.jurusan_id,
             j.nama_jurusan AS jurusan_nama,
             p.is_dipindahkan,
-
             p.catatan_admin,
             upp.kuota_tersisa,
+            upp.entitas_id,
             e.nama AS nama_unit,
             e_asal.nama AS nama_unit_asal,
             pr.id AS periode_id,
@@ -71,6 +72,22 @@ try {
             $displayStatus = 'menunggu_pengumuman';
         }
 
+        // Resolusi PIC Narahubung jika pengumuman dibuka dan diterima / dipindahkan
+        $picNarahubung = null;
+        if ($isPengumumanBuka && ($row['status'] === 'diterima' || $row['status'] === 'dipindahkan' || (bool)$row['is_dipindahkan'])) {
+            $picData = PicNarahubung::resolveForUnit((int)$row['entitas_id']);
+            if ($picData) {
+                $picNarahubung = [
+                    'nama_pic'     => $picData['nama_pic'],
+                    'area_hcbp'    => $picData['area_hcbp'],
+                    'no_wa'        => $picData['no_wa'],
+                    'email'        => $picData['email'],
+                    'nama_entitas' => $picData['nama_entitas'],
+                    'keterangan'   => $picData['keterangan']
+                ];
+            }
+        }
+
         $processedList[] = [
             'pendaftaran_id'    => (int)$row['pendaftaran_id'],
             'periode_id'        => (int)$row['periode_id'],
@@ -88,6 +105,7 @@ try {
             'nama_unit_asal'    => $isPengumumanBuka ? $row['nama_unit_asal'] : null,
             'is_dipindahkan'    => $isPengumumanBuka ? (bool)$row['is_dipindahkan'] : false,
             'catatan_admin'     => $isPengumumanBuka ? $row['catatan_admin'] : null,
+            'pic_narahubung'    => $picNarahubung,
             'submitted_at'      => $row['submitted_at']
         ];
     }

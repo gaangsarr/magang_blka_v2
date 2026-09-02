@@ -74,6 +74,13 @@ export const SIDEBAR_MENU_SECTIONS = [
                 icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>`
             },
             {
+                id: 'menu-pic-narahubung',
+                label: 'Master PIC Narahubung',
+                path: '/admin/pic-narahubung.html',
+                aliases: ['/admin/pic-narahubung.html'],
+                icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`
+            },
+            {
                 id: 'group-hierarki',
                 label: 'Hierarki Entitas PLN',
                 isGroup: true,

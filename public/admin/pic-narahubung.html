@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master PIC Narahubung — REMATE Admin</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/assets/img/logo_itpln.png">
+    <link rel="apple-touch-icon" href="/assets/img/logo_itpln.png">
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body class="admin-body">
+    <div class="admin-layout">
+        <!-- Dynamic Sidebar Navigation -->
+        <aside id="admin-sidebar" class="admin-sidebar"></aside>
+
+        <!-- Main Content Area -->
+        <main class="admin-main">
+            <header class="admin-topbar">
+                <div class="topbar-title-group">
+                    <h1>Master PIC Narahubung Mahasiswa</h1>
+                    <p>Kelola kontak narahubung HC/SDM per Unit Besar (Unit Induk/Holding/Pusat) untuk koordinasi penempatan magang mahasiswa</p>
+                </div>
+
+                <div class="admin-profile-badge">
+                    <div class="admin-avatar" id="admin-avatar">A</div>
+                    <div class="admin-user-info">
+                        <span class="admin-user-name" id="admin-name">Administrator</span>
+                        <span class="admin-user-role" id="admin-role">Admin REMATE</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="admin-content">
+                <!-- Summary Stats Strip -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px;">
+                    <div class="admin-card" style="padding: 18px 20px; display: flex; align-items: center; gap: 16px; margin-bottom: 0;">
+                        <div style="width: 46px; height: 46px; border-radius: 12px; background: #e0f2fe; color: #0284c7; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        </div>
+                        <div>
+                            <span style="font-size: 0.8rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Total PIC Narahubung</span>
+                            <div style="font-size: 1.5rem; font-weight: 800; color: #0b3d6b; line-height: 1.2;" id="stat-total-pic">0</div>
+                        </div>
+                    </div>
+
+                    <div class="admin-card" style="padding: 18px 20px; display: flex; align-items: center; gap: 16px; margin-bottom: 0;">
+                        <div style="width: 46px; height: 46px; border-radius: 12px; background: #f0fdf4; color: #16a34a; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>
+                        </div>
+                        <div>
+                            <span style="font-size: 0.8rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Unit Bawahan Terhubung</span>
+                            <div style="font-size: 1.5rem; font-weight: 800; color: #16a34a; line-height: 1.2;" id="stat-total-connected">0 Unit</div>
+                        </div>
+                    </div>
+
+                    <div class="admin-card" style="padding: 18px 20px; display: flex; align-items: center; gap: 16px; margin-bottom: 0;">
+                        <div style="width: 46px; height: 46px; border-radius: 12px; background: #fef3c7; color: #d97706; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+                        </div>
+                        <div>
+                            <span style="font-size: 0.8rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Area HCBP Terdaftar</span>
+                            <div style="font-size: 1.5rem; font-weight: 800; color: #d97706; line-height: 1.2;" id="stat-total-areas">0 Area</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Card -->
+                <div class="admin-card">
+                    <div class="admin-card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <h3 class="admin-card-title" style="margin: 0;">Daftar PIC Narahubung Mahasiswa</h3>
+                                <span class="badge-status badge-dibuka" id="total-count-badge">0 Data</span>
+                            </div>
+                            <p style="font-size: 0.85rem; color: #64748b; margin: 4px 0 0 0;">Unit pelaksana (UP3) dan unit layanan (ULP) di bawah unit induk akan otomatis mewarisi kontak narahubung ini</p>
+                        </div>
+
+                        <div class="admin-filter-toolbar">
+                            <div style="position: relative;">
+                                <input type="text" id="search-pic" placeholder="Cari PIC, unit, atau kontak..." style="padding: 8px 14px 8px 34px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.85rem; width: 230px; outline: none; background: #fff; transition: all 0.2s;" />
+                                <svg style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #94a3b8;" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                            </div>
+
+                            <select id="filter-area-hcbp" class="admin-select-filter">
+                                <option value="">Semua Area HCBP</option>
+                            </select>
+
+                            <select id="filter-status-pic" class="admin-select-filter">
+                                <option value="">Semua Status</option>
+                                <option value="1">Aktif Saja</option>
+                                <option value="0">Nonaktif</option>
+                            </select>
+
+                            <button type="button" id="btn-add-pic" class="btn-primary" style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: #0b3d6b; color: #ffffff; border: none; border-radius: 8px; font-weight: 700; font-size: 0.85rem; cursor: pointer; box-shadow: 0 3px 8px rgba(11, 61, 107, 0.18); transition: all 0.2s ease;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                <span>Tambah PIC</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="admin-table-container">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 45px; text-align: center;">No</th>
+                                    <th style="width: 125px;">Area HCBP</th>
+                                    <th style="width: 270px;">Unit Induk / Perusahaan</th>
+                                    <th>Nama PIC Narahubung</th>
+                                    <th style="width: 160px;">Kontak WhatsApp / HP</th>
+                                    <th style="width: 160px; text-align: center;">Unit Terhubung</th>
+                                    <th style="width: 85px; text-align: center;">Status</th>
+                                    <th style="width: 90px; text-align: center;">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-pic-body">
+                                <tr><td colspan="8" style="text-align: center; padding: 32px; color: #64748b;">Memuat data PIC Narahubung...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Create / Edit PIC Narahubung -->
+    <div id="modal-pic" class="modal-overlay hidden" role="dialog" aria-modal="true">
+        <div class="modal-card modal-card-structured" style="max-width: 540px;">
+            <div class="modal-card-header">
+                <button type="button" id="btn-close-modal" class="auth-modal-close">&times;</button>
+                <h3 id="modal-pic-title" class="auth-modal-title" style="margin: 0; font-size: 1.15rem; font-weight: 800; color: #0b3d6b;">Tambah PIC Narahubung</h3>
+            </div>
+
+            <form id="form-pic" style="display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; overflow: hidden; margin: 0;">
+                <input type="hidden" id="pic-id" value="" />
+
+                <div class="modal-card-body" style="display: flex; flex-direction: column; gap: 16px;">
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 6px;">Unit Induk / Entitas Perusahaan <span style="color: #ef4444;">*</span></label>
+                        <select id="pic-entitas-id" required style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; background: #fff;">
+                            <option value="">Pilih Unit Induk / Perusahaan...</option>
+                        </select>
+                        <span style="font-size: 0.775rem; color: #64748b; margin-top: 4px; display: block;">Pilih Unit Induk, Holding, atau Anak Perusahaan yang menaungi unit pelaksana/layanan.</span>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div>
+                            <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 6px;">Area HCBP</label>
+                            <input type="text" id="pic-area-hcbp" list="list-area-hcbp" placeholder="Misal: HCBP Area 1" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem;" />
+                            <datalist id="list-area-hcbp"></datalist>
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 6px;">Status</label>
+                            <select id="pic-aktif" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; background: #fff;">
+                                <option value="1">Aktif (Tampil ke Mahasiswa)</option>
+                                <option value="0">Nonaktif</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 6px;">Nama Lengkap PIC Narahubung <span style="color: #ef4444;">*</span></label>
+                        <input type="text" id="pic-nama" required placeholder="Contoh: RAHMI SUNDARI" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem;" />
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div>
+                            <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 6px;">Nomor WhatsApp / HP <span style="color: #ef4444;">*</span></label>
+                            <input type="tel" id="pic-no-wa" required placeholder="Contoh: 082376376255" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; font-family: monospace;" />
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 6px;">Email (Opsional)</label>
+                            <input type="email" id="pic-email" placeholder="Contoh: pic@pln.co.id" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem;" />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 6px;">Keterangan / Catatan Tambahan (Opsional)</label>
+                        <textarea id="pic-keterangan" rows="2" placeholder="Informasi tambahan seperti jam layanan koordinasi atau ruang lingkup unit..." style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.875rem; resize: vertical;"></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-card-footer">
+                    <button type="button" id="btn-cancel-modal" class="btn-modal-cancel" style="width: auto; padding: 10px 18px;">Batal</button>
+                    <button type="submit" id="btn-submit-pic" class="btn-modal-login" style="width: auto; padding: 10px 22px;">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Lihat Unit Terhubung / Bawahan -->
+    <div id="modal-connected-units" class="modal-overlay hidden" role="dialog" aria-modal="true">
+        <div class="modal-card modal-card-structured" style="max-width: 680px; max-height: 85vh;">
+            <div class="modal-card-header" style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; padding: 20px 24px;">
+                <button type="button" id="btn-close-connected-modal" class="auth-modal-close">&times;</button>
+                <div style="padding-right: 28px;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                        <span class="badge-status badge-dibuka" id="modal-connected-area-badge" style="font-size: 0.75rem;">HCBP Area</span>
+                        <span style="font-size: 0.8rem; color: #64748b; font-weight: 600;" id="modal-connected-type-badge">Unit Induk</span>
+                    </div>
+                    <h3 id="modal-connected-unit-name" style="margin: 0 0 6px 0; font-size: 1.15rem; font-weight: 800; color: #0b3d6b;">Nama Unit Induk</h3>
+                    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 0.825rem; color: #475569;">
+                        <span style="display: inline-flex; align-items: center; gap: 5px;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                            <span id="modal-connected-pic-name" style="font-weight: 700; color: #1e293b;">-</span>
+                        </span>
+                        <span style="display: inline-flex; align-items: center; gap: 5px;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>
+                            <span id="modal-connected-pic-phone" style="font-family: monospace; font-weight: 600;">-</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-card-body" style="padding: 20px 24px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto;">
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
+                    <div>
+                        <span style="font-size: 0.875rem; font-weight: 700; color: #1e293b;">Daftar Kantor / Unit Bawahan</span>
+                        <p style="margin: 2px 0 0 0; font-size: 0.775rem; color: #64748b;">Seluruh unit berikut mewarisi kontak narahubung ini saat mahasiswa melihat pengumuman.</p>
+                    </div>
+                    <div style="position: relative;">
+                        <input type="text" id="search-connected-input" placeholder="Saring unit bawahan..." style="padding: 6px 12px 6px 28px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.8rem; width: 180px;" />
+                        <svg style="position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: #94a3b8;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    </div>
+                </div>
+
+                <!-- Subordinate Units Container -->
+                <div id="modal-connected-list-container" style="border: 1px solid #e2e8f0; border-radius: 10px; background: #ffffff; max-height: 360px; overflow-y: auto;">
+                    <div style="text-align: center; padding: 24px; color: #64748b;">Memuat unit terhubung...</div>
+                </div>
+            </div>
+
+            <div class="modal-card-footer" style="padding: 14px 24px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                <span id="modal-connected-count-summary" style="font-size: 0.8rem; font-weight: 600; color: #64748b;">Total: 0 Unit</span>
+                <button type="button" id="btn-close-connected-footer" class="btn-modal-cancel" style="width: auto; padding: 8px 18px;">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="/js/admin/common.js"></script>
+    <script type="module" src="/js/admin/pic-narahubung.js"></script>
+</body>
+</html>

@@ -449,6 +449,37 @@
                         <div><span style="color: #64748b;">Waktu Pengajuan:</span> <span id="modal-submit-date" style="color: #475569; font-family: monospace; display: block;">-</span></div>
                     </div>
                 </div>
+
+                <!-- Section: Informasi PIC Narahubung Penempatan Unit (Ditampilkan jika diterima / dipindahkan) -->
+                <div id="modal-pic-narahubung-section" class="hidden" style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 16px; margin-top: 16px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                            <h4 style="font-size: 0.85rem; color: #166534; margin: 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 800;">Narahubung Mahasiswa Penempatan Unit</h4>
+                        </div>
+                        <span id="modal-pic-area-badge" style="font-size: 0.725rem; font-weight: 700; color: #166534; background: #dcfce7; padding: 2px 8px; border-radius: 6px; border: 1px solid #86efac;">-</span>
+                    </div>
+
+                    <div style="display: grid; gap: 8px; font-size: 0.875rem;">
+                        <div>
+                            <span style="color: #64748b; font-size: 0.8rem;">Unit Induk / Kantor Naungan:</span>
+                            <div id="modal-pic-unit-induk" style="font-weight: 700; color: #0b3d6b; margin-top: 1px;">-</div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <div>
+                                <span style="color: #64748b; font-size: 0.8rem;">Nama PIC Narahubung:</span>
+                                <div id="modal-pic-nama" style="font-weight: 700; color: #1e293b; margin-top: 1px;">-</div>
+                            </div>
+                            <div>
+                                <span style="color: #64748b; font-size: 0.8rem;">Nomor WhatsApp / Kontak:</span>
+                                <div id="modal-pic-kontak" style="font-family: monospace; font-weight: 700; color: #166534; margin-top: 1px; font-size: 0.95rem;">-</div>
+                            </div>
+                        </div>
+                        <p style="margin: 6px 0 0 0; font-size: 0.8rem; color: #475569; line-height: 1.45; border-top: 1px dashed #bbf7d0; padding-top: 8px;">
+                            Silakan hubungi PIC narahubung di atas untuk informasi lebih lanjut.
+                        </p>
+                    </div>
+                </div>
             </div>
 
             <!-- Modal Footer Button -->
@@ -673,6 +704,26 @@
                         </p>
                     </div>
                 `;
+            }
+
+            // PIC Narahubung Card (Tampil jika diterima / dipindahkan dan pengumuman dibuka)
+            const picSection = document.getElementById('modal-pic-narahubung-section');
+            const picAreaBadge = document.getElementById('modal-pic-area-badge');
+            const picUnitInduk = document.getElementById('modal-pic-unit-induk');
+            const picNama = document.getElementById('modal-pic-nama');
+            const picKontak = document.getElementById('modal-pic-kontak');
+
+            if (picSection) {
+                if (isPub && item.pic_narahubung && (st === 'diterima' || st === 'dipindahkan' || isMoved)) {
+                    const pic = item.pic_narahubung;
+                    if (picAreaBadge) picAreaBadge.innerText = pic.area_hcbp || 'HCBP';
+                    if (picUnitInduk) picUnitInduk.innerText = pic.nama_entitas || item.nama_unit;
+                    if (picNama) picNama.innerText = pic.nama_pic || '-';
+                    if (picKontak) picKontak.innerText = pic.no_wa || '-';
+                    picSection.classList.remove('hidden');
+                } else {
+                    picSection.classList.add('hidden');
+                }
             }
 
             modalDetail.classList.add('active');

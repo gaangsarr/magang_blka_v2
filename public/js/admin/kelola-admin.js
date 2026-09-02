@@ -176,7 +176,7 @@ async function handleGenerateAllWithProgress() {
                         <div style="width: 54px; height: 54px; background: #dcfce7; color: #166534; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px; border: 2px solid #bbf7d0;">
                             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
                         </div>
-                        <h3 style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin-bottom: 6px;">🎉 Pembuatan Akun Selesai!</h3>
+                        <h3 style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin-bottom: 6px;">Pembuatan Akun Selesai</h3>
                         <p style="font-size: 0.875rem; color: #475569; line-height: 1.5; margin-bottom: 20px;">
                             Total <strong>${completedCount.toLocaleString('id-ID')}</strong> akun mitra perusahaan telah berhasil dibuat dengan format password awal aman <strong>(PLN-{KODE}-2026)</strong>.
                         </p>
@@ -306,7 +306,7 @@ function renderPerusahaanTablePage(page = 1) {
             let cleanPhone = (item.pic_kontak || '').replace(/[^0-9]/g, '');
             if (cleanPhone.startsWith('0')) cleanPhone = '62' + cleanPhone.substring(1);
             if (cleanPhone.length >= 9) {
-                waLink = ` • <a href="https://wa.me/${cleanPhone}" target="_blank" style="color: #059669; text-decoration: none; font-weight: 600;" title="Hubungi via WhatsApp">💬 Chat</a>`;
+                waLink = ` • <a href="https://wa.me/${cleanPhone}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 4px; color: #059669; text-decoration: none; font-weight: 600; vertical-align: middle;" title="Hubungi via WhatsApp"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg><span>WhatsApp</span></a>`;
             }
             picDisplay = `
                 <div style="font-weight: 600; color: #1e293b;">${escapeHtml(item.pic_nama)}</div>
