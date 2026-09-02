@@ -20,6 +20,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     const btn = document.getElementById('btn-login');
     const errBox = document.getElementById('error-box');
 
+    // Toggle Password Visibility
+    const btnToggle = document.getElementById('btn-toggle-password');
+    const passInput = document.getElementById('password');
+    const iconShow = document.getElementById('icon-eye-show');
+    const iconHide = document.getElementById('icon-eye-hide');
+
+    if (btnToggle && passInput) {
+        btnToggle.addEventListener('click', () => {
+            const isPassword = passInput.type === 'password';
+            passInput.type = isPassword ? 'text' : 'password';
+            if (iconShow && iconHide) {
+                iconShow.classList.toggle('hidden', isPassword);
+                iconHide.classList.toggle('hidden', !isPassword);
+            }
+        });
+    }
+
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         

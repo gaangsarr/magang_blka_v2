@@ -102,7 +102,53 @@ try {
 
         $uppId = $uppData ? (int)$uppData['id'] : null;
 
-        // Ambil data prodi & peminatan yang dipilih pada periode ini
+        // Fallback jika unit_pelaksana_periode untuk periode ini belum pernah disimpan
+        if (!$uppData) {
+            $stmtPrevUpp = $pdo->prepare("
+                SELECT id, kuota_total, kuota_tersisa, aktif 
+                FROM unit_pelaksana_periode 
+                WHERE entitas_id = :eid 
+                ORDER BY periode_id DESC 
+                LIMIT 1
+            ");
+            $stmtPrevUpp->execute([':eid' => $entitasId]);
+            $prevUpp = $stmtPrevUpp->fetch(PDO::FETCH_ASSOC);
+
+            $menerima = (bool)$entitas['menerima_magang'] && ($prevUpp ? (bool)$prevUpp['aktif'] : true);
+            $kuotaVal = $prevUpp ? (int)$prevUpp['kuota_total'] : 0;
+
+            $uppData = [
+                'id'            => null,
+                'kuota_total'   => $kuotaVal,
+                'kuota_tersisa' => $kuotaVal,
+                'aktif'         => $menerima,
+            ];
+
+            if ($prevUpp) {
+                $prevUppId = (int)$prevUpp['id'];
+                $stmtJ = $pdo->prepare("
+                    SELECT j.id, j.nama_jurusan, j.kode, j.jenjang
+                    FROM unit_periode_jurusan upj
+                    JOIN jurusan j ON upj.jurusan_id = j.id
+                    WHERE upj.unit_pelaksana_periode_id = ?
+                    ORDER BY j.jenjang ASC, j.nama_jurusan ASC
+                ");
+                $stmtJ->execute([$prevUppId]);
+                $selectedJurusan = $stmtJ->fetchAll(PDO::FETCH_ASSOC);
+
+                $stmtPem = $pdo->prepare("
+                    SELECT pem.id, pem.nama AS nama_peminatan
+                    FROM unit_periode_peminatan uppem
+                    JOIN peminatan pem ON uppem.peminatan_id = pem.id
+                    WHERE uppem.unit_pelaksana_periode_id = ?
+                    ORDER BY pem.nama ASC
+                ");
+                $stmtPem->execute([$prevUppId]);
+                $selectedPeminatan = $stmtPem->fetchAll(PDO::FETCH_ASSOC);
+            }
+        }
+
+        // Ambil data prodi & peminatan yang dipilih pada periode ini (jika UPP sudah ada)
         if ($uppId) {
             $stmtJ = $pdo->prepare("
                 SELECT j.id, j.nama_jurusan, j.kode, j.jenjang
