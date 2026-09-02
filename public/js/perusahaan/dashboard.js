@@ -77,7 +77,7 @@ function initNavbar() {
 // TAB NAVIGATION
 // ==========================================
 function initTabs() {
-    const tabBtns = document.querySelectorAll('.perusahaan-nav-btn');
+    const tabBtns = document.querySelectorAll('.perusahaan-nav-btn, .mobile-bottom-nav-item');
     tabBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             const targetTab = btn.getAttribute('data-tab');
@@ -94,7 +94,7 @@ function initTabs() {
 }
 
 function switchTab(tabId) {
-    document.querySelectorAll('.perusahaan-nav-btn').forEach(b => {
+    document.querySelectorAll('.perusahaan-nav-btn, .mobile-bottom-nav-item').forEach(b => {
         if (b.getAttribute('data-tab') === tabId) {
             b.classList.add('active');
         } else {
@@ -109,6 +109,11 @@ function switchTab(tabId) {
             p.classList.remove('active');
         }
     });
+
+    // Scroll halus ke atas saat ganti tab di layar HP
+    if (window.innerWidth <= 768) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
 
     // Trigger tab-specific refresh if needed
     if (tabId === 'tab-kuota') {
@@ -216,8 +221,10 @@ async function loadDashboardSummary() {
             // Update Navbar Branding
             const unitNama = data.entitas?.nama || 'Unit Mitra';
             const unitSingkatan = data.entitas?.singkatan ? ` (${data.entitas.singkatan})` : '';
-            document.getElementById('header-unit-nama').innerText = unitNama + unitSingkatan;
-            document.getElementById('nav-unit-name').innerText = data.entitas?.singkatan || unitNama;
+            const elHeader = document.getElementById('header-unit-nama');
+            if (elHeader) elHeader.innerText = unitNama + unitSingkatan;
+            const elNavUnit = document.getElementById('nav-unit-name');
+            if (elNavUnit) elNavUnit.innerText = data.entitas?.singkatan || unitNama;
 
             // Render Notification Banner
             renderNotificationBanner(data.notification);
@@ -239,14 +246,34 @@ async function loadDashboardSummary() {
             if (data.periode) {
                 currentPeriodeId = data.periode.id;
                 let statusBadge = `<span class="badge-status badge-${data.periode.status}">${data.periode.status.toUpperCase()}</span>`;
+                
+                // Program Magang (1 Bulan / 5 Bulan)
+                const programs = [];
+                if (data.periode.program_1_bulan) {
+                    programs.push('<span class="badge-status badge-info" style="font-size: 0.775rem; font-weight: 700; background: #e0f2fe; color: #0369a1; border-color: #bae6fd;">⏱ 1 Bulan</span>');
+                }
+                if (data.periode.program_5_bulan) {
+                    programs.push('<span class="badge-status badge-info" style="font-size: 0.775rem; font-weight: 700; background: #ede9fe; color: #6d28d9; border-color: #ddd6fe;">🗓 5 Bulan (MBKM)</span>');
+                }
+                const programBadges = programs.length > 0 ? programs.join(' ') : '<span style="color: #94a3b8; font-style: italic;">Tidak ditentukan</span>';
+
                 periodeEl.innerHTML = `
-                    <div style="font-size: 1.1rem; font-weight: 700; color: #004687; margin-bottom: 6px;">
-                        ${escapeHtml(data.periode.nama)}
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
+                        <div style="font-size: 1.1rem; font-weight: 800; color: #004687;">
+                            ${escapeHtml(data.periode.nama)}
+                        </div>
+                        <div>${statusBadge}</div>
                     </div>
-                    <div style="margin-bottom: 10px;">Status Periode: ${statusBadge}</div>
-                    <div style="font-size: 0.85rem; color: #64748b; line-height: 1.6;">
-                        Status Menerima Magang: <strong>${upp && upp.aktif ? '<span style="color:#166534;">Menerima Magang</span>' : '<span style="color:#991b1b;">Tidak Menerima</span>'}</strong><br>
-                        Program Studi Terbuka: <strong>${prodiCount} Prodi</strong>
+                    
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 10px; font-size: 0.85rem;">
+                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                            <span style="color: #475569; font-weight: 600;">Program Dibuka:</span>
+                            <div style="display: inline-flex; gap: 6px; flex-wrap: wrap;">${programBadges}</div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; padding-top: 8px; border-top: 1px dashed #e2e8f0; color: #475569;">
+                            <span>Status Unit: <strong>${upp && upp.aktif ? '<span style="color:#166534;">✓ Menerima Magang</span>' : '<span style="color:#991b1b;">✕ Tidak Menerima</span>'}</strong></span>
+                            <span>Prodi Dibuka: <strong>${prodiCount} Prodi</strong></span>
+                        </div>
                     </div>
                 `;
             } else {
@@ -287,21 +314,31 @@ function renderNotificationBanner(notif) {
 
     const bannerClass = notif.type === 'success' ? 'banner-success' : 'banner-info';
     const iconSvg = notif.type === 'success' 
-        ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`
-        : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>`;
+        ? `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`
+        : `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>`;
 
     bannerContainer.innerHTML = `
         <div class="notification-banner ${bannerClass}">
-            <div class="banner-icon-box">${iconSvg}</div>
-            <div class="banner-content">
-                <h4 class="banner-title">${escapeHtml(notif.title)}</h4>
-                <p class="banner-desc">${escapeHtml(notif.message)}</p>
+            <div class="banner-top-row">
+                <div class="banner-icon-box">${iconSvg}</div>
+                <div class="banner-title-box">
+                    <h4 class="banner-title">${escapeHtml(notif.title)}</h4>
+                </div>
+                ${notif.can_edit ? `
+                    <button class="btn-portal-primary btn-nav-to-tab banner-desktop-btn" data-target="tab-kuota">
+                        <span>Atur Kuota Sekarang</span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                    </button>
+                ` : ''}
             </div>
+            <p class="banner-desc">${escapeHtml(notif.message)}</p>
             ${notif.can_edit ? `
-                <button class="btn-portal-primary btn-nav-to-tab" data-target="tab-kuota" style="white-space: nowrap; font-size: 0.8rem; padding: 7px 14px;">
-                    <span>Atur Kuota Sekarang</span>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-                </button>
+                <div class="banner-mobile-action">
+                    <button class="btn-portal-primary btn-nav-to-tab" data-target="tab-kuota" style="width: 100%; justify-content: center; padding: 10px 16px; font-size: 0.85rem; font-weight: 700; border-radius: 10px;">
+                        <span>Atur Kuota & Prodi Sekarang</span>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                    </button>
+                </div>
             ` : ''}
         </div>
     `;
@@ -317,11 +354,13 @@ function updateToggleCardVisual(isMenerima) {
     const cardWrapper = document.getElementById('toggle-card-wrapper');
     const badge = document.getElementById('toggle-status-badge');
     const desc = document.getElementById('toggle-desc-text');
+    const chips = document.getElementById('kuota-quick-chips');
 
     if (isMenerima) {
         if (cardWrapper) {
-            cardWrapper.style.background = '#f0fdf4';
-            cardWrapper.style.borderColor = '#bbf7d0';
+            cardWrapper.className = 'p-control-card active-accepting';
+            cardWrapper.style.background = '';
+            cardWrapper.style.borderColor = '';
         }
         if (badge) {
             badge.className = 'badge-status badge-success';
@@ -329,12 +368,14 @@ function updateToggleCardVisual(isMenerima) {
         }
         if (desc) {
             desc.style.color = '#166534';
-            desc.innerText = 'Unit kantor Anda aktif menerima pendaftaran dan dapat dipilih oleh mahasiswa pelamar.';
+            desc.innerText = 'Unit kantor Anda aktif menerima pendaftaran pada periode ini.';
         }
+        if (chips) chips.style.display = 'flex';
     } else {
         if (cardWrapper) {
-            cardWrapper.style.background = '#fef2f2';
-            cardWrapper.style.borderColor = '#fecaca';
+            cardWrapper.className = 'p-control-card inactive-accepting';
+            cardWrapper.style.background = '';
+            cardWrapper.style.borderColor = '';
         }
         if (badge) {
             badge.className = 'badge-status badge-danger';
@@ -344,6 +385,7 @@ function updateToggleCardVisual(isMenerima) {
             desc.style.color = '#991b1b';
             desc.innerText = 'Unit kantor dinonaktifkan dan tidak akan menerima mahasiswa magang pada periode ini.';
         }
+        if (chips) chips.style.display = 'none';
     }
 }
 
@@ -602,56 +644,16 @@ async function loadKuotaData(periodeId = 0) {
             const inputKuota = document.getElementById('input-kuota-total');
             const detailContainer = document.getElementById('kuota-detail-container');
 
-            // Render Live Kuota Status Summary Bar
-            const barTitle = document.getElementById('kuota-bar-title');
-            const barSub = document.getElementById('kuota-bar-subtitle');
-            const pillTerima = document.getElementById('pill-terima-status');
-            const pillKuota = document.getElementById('pill-kuota-count');
-            const pillProdi = document.getElementById('pill-prodi-count');
-            const pillPem = document.getElementById('pill-pem-count');
-
             const selectedProdiCount = (k?.jurusan_list || []).filter(j => j.is_selected).length;
             const selectedPemCount = (k?.peminatan_list || []).filter(p => p.is_selected).length;
 
-            if (k && k.menerima_magang) {
-                if (barTitle) barTitle.innerText = `Konfigurasi Kuota Aktif (${data.selected_periode?.nama || 'Periode'})`;
-                if (barSub) barSub.innerText = `Unit siap menerima kapasitas ${k.kuota_total} mahasiswa untuk ${selectedProdiCount} Program Studi.`;
-                if (pillTerima) {
-                    pillTerima.className = 'badge-status badge-success';
-                    pillTerima.innerText = '✓ Menerima Magang';
-                }
-                if (pillKuota) {
-                    pillKuota.className = 'badge-status badge-info';
-                    pillKuota.innerText = `${k.kuota_total} Mahasiswa`;
-                }
-                if (pillProdi) {
-                    pillProdi.className = 'badge-status badge-neutral';
-                    pillProdi.innerText = `${selectedProdiCount} Prodi Dibuka`;
-                }
-                if (pillPem) {
-                    pillPem.className = 'badge-status badge-neutral';
-                    pillPem.innerText = `${selectedPemCount} Peminatan`;
-                }
-            } else {
-                if (barTitle) barTitle.innerText = `Konfigurasi Kuota (${data.selected_periode?.nama || 'Periode'})`;
-                if (barSub) barSub.innerText = 'Unit kantor tidak membuka penerimaan magang pada periode ini.';
-                if (pillTerima) {
-                    pillTerima.className = 'badge-status badge-danger';
-                    pillTerima.innerText = '✕ Tidak Menerima';
-                }
-                if (pillKuota) {
-                    pillKuota.className = 'badge-status badge-neutral';
-                    pillKuota.innerText = '0 Kuota';
-                }
-                if (pillProdi) {
-                    pillProdi.className = 'badge-status badge-neutral';
-                    pillProdi.innerText = '0 Prodi';
-                }
-                if (pillPem) {
-                    pillPem.className = 'badge-status badge-neutral';
-                    pillPem.innerText = '0 Peminatan';
-                }
-            }
+            const chipKuota = document.getElementById('chip-kuota-val');
+            const chipProdi = document.getElementById('chip-prodi-val');
+            const chipPem = document.getElementById('chip-pem-val');
+
+            if (chipKuota) chipKuota.innerText = `${k?.kuota_total || 0} Mhs`;
+            if (chipProdi) chipProdi.innerText = `${selectedProdiCount} Prodi`;
+            if (chipPem) chipPem.innerText = `${selectedPemCount} Bidang`;
 
             const saveWrapper = document.getElementById('btn-save-kuota-wrapper');
             if (toggleMenerima) {

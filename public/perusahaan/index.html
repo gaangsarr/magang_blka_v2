@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <title>Dashboard Mitra Perusahaan — REMATE ITPLN</title>
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/assets/img/logo_itpln.png">
@@ -22,6 +22,10 @@
             --brand-muted: #64748b;
         }
 
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
         body.perusahaan-body {
             background-color: var(--brand-bg);
             color: var(--brand-text);
@@ -29,57 +33,60 @@
             margin: 0;
             padding: 0;
             min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
         }
 
+        /* Top Navigation Bar */
         .perusahaan-navbar {
             background: #ffffff;
             border-bottom: 1px solid var(--brand-border);
-            padding: 14px 28px;
+            padding: 12px 28px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             position: sticky;
             top: 0;
             z-index: 100;
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+            gap: 16px;
         }
 
         .navbar-brand-group {
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 14px;
+            min-width: 0;
         }
 
         .navbar-logos {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
+            flex-shrink: 0;
         }
 
         .navbar-logos img {
-            height: 36px;
+            height: 32px;
             width: auto;
             object-fit: contain;
         }
 
-        .navbar-title-wrap {
-            border-left: 2px solid #e2e8f0;
-            padding-left: 14px;
+        .navbar-brand-info {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.15;
         }
 
-        .navbar-title {
+        .navbar-brand-title {
             font-size: 1.05rem;
             font-weight: 800;
-            color: var(--brand-primary);
-            margin: 0;
-            line-height: 1.2;
-            letter-spacing: -0.01em;
+            color: #004687;
+            letter-spacing: -0.02em;
         }
 
-        .navbar-subtitle {
-            font-size: 0.75rem;
-            color: var(--brand-muted);
-            margin: 2px 0 0;
+        .navbar-brand-subtitle {
+            font-size: 0.725rem;
+            color: #64748b;
             font-weight: 500;
         }
 
@@ -87,19 +94,39 @@
             display: flex;
             align-items: center;
             gap: 12px;
+            flex-shrink: 0;
         }
 
-        .unit-badge-pill {
-            background: #f0f7ff;
-            color: var(--brand-primary);
-            border: 1px solid #bfdbfe;
-            border-radius: 999px;
-            padding: 6px 14px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            display: flex;
+        .navbar-company-badge {
+            display: inline-flex;
             align-items: center;
             gap: 8px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 6px 14px;
+            font-size: 0.825rem;
+            font-weight: 600;
+            color: #1e293b;
+            max-width: 320px;
+        }
+
+        .navbar-company-badge span {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .company-badge-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 6px;
+            background: #eff6ff;
+            color: #004687;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
         }
 
         .btn-logout-perusahaan {
@@ -112,9 +139,10 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.15s ease;
-            display: flex;
+            display: inline-flex;
             align-items: center;
             gap: 6px;
+            white-space: nowrap;
         }
 
         .btn-logout-perusahaan:hover {
@@ -125,61 +153,93 @@
         .perusahaan-container {
             max-width: 1280px;
             margin: 0 auto;
-            padding: 28px 24px 60px;
+            padding: 24px 20px 60px;
         }
 
-        /* Action Banner */
+        /* Action Banner Redesigned */
         .notification-banner {
-            border-radius: 12px;
-            padding: 16px 20px;
+            border-radius: 14px;
+            padding: 18px 22px;
             margin-bottom: 24px;
             display: flex;
-            align-items: flex-start;
-            gap: 14px;
+            flex-direction: column;
+            gap: 10px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
             border: 1px solid transparent;
         }
 
         .notification-banner.banner-info {
-            background: #eff6ff;
-            border-color: #bfdbfe;
-            color: #1e40af;
+            background: linear-gradient(135deg, #f0f7ff 0%, #e0f2fe 100%);
+            border-color: #bae6fd;
+            color: #0369a1;
         }
 
         .notification-banner.banner-success {
-            background: #f0fdf4;
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
             border-color: #bbf7d0;
-            color: #166534;
+            color: #15803d;
+        }
+
+        .banner-top-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
         }
 
         .banner-icon-box {
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.7);
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: #ffffff;
             flex-shrink: 0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
         }
 
-        .banner-content {
+        .notification-banner.banner-info .banner-icon-box {
+            color: #0284c7;
+        }
+
+        .notification-banner.banner-success .banner-icon-box {
+            color: #16a34a;
+        }
+
+        .banner-title-box {
             flex: 1;
+            min-width: 0;
         }
 
         .banner-title {
-            font-weight: 700;
-            font-size: 0.925rem;
-            margin: 0 0 4px;
+            font-weight: 800;
+            font-size: 0.975rem;
+            color: #0f172a;
+            margin: 0;
+            line-height: 1.3;
         }
 
         .banner-desc {
             font-size: 0.85rem;
+            color: #334155;
             margin: 0;
-            line-height: 1.5;
-            opacity: 0.95;
+            line-height: 1.55;
+            word-break: break-word;
         }
 
-        /* Navigation Tabs */
+        .banner-desktop-btn {
+            font-size: 0.8rem;
+            padding: 8px 16px;
+            flex-shrink: 0;
+        }
+
+        .banner-mobile-action {
+            display: none;
+            margin-top: 4px;
+        }
+
+        /* Desktop Navigation Tabs (Horizontal Pill Bar) */
         .perusahaan-nav-tabs {
             display: flex;
             gap: 6px;
@@ -189,6 +249,12 @@
             border: 1px solid var(--brand-border);
             margin-bottom: 24px;
             overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+
+        .perusahaan-nav-tabs::-webkit-scrollbar {
+            display: none;
         }
 
         .perusahaan-nav-btn {
@@ -205,6 +271,7 @@
             gap: 8px;
             transition: all 0.2s;
             white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .perusahaan-nav-btn:hover {
@@ -215,6 +282,11 @@
         .perusahaan-nav-btn.active {
             background: var(--brand-primary);
             color: #ffffff;
+        }
+
+        /* Mobile Bottom Floating Dock Navigation */
+        .mobile-bottom-dock {
+            display: none; /* Hidden on Desktop */
         }
 
         .p-tab-pane {
@@ -242,12 +314,14 @@
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+            gap: 12px;
         }
 
         .p-stat-info {
             display: flex;
             flex-direction: column;
             gap: 4px;
+            min-width: 0;
         }
 
         .p-stat-val {
@@ -273,10 +347,160 @@
             flex-shrink: 0;
         }
 
+        /* Responsive Layout Grids */
+        .p-overview-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            align-items: start;
+        }
+
+        .p-profil-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            align-items: start;
+        }
+
+        .p-form-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .p-card-header-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .p-card-header-select {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .p-card-body {
+            padding: 0 24px 24px;
+        }
+
+        /* Unified Master Control Card (Tab 2) */
+        .p-control-card {
+            background: #ffffff;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+            transition: all 0.25s ease;
+        }
+
+        .p-control-card.active-accepting {
+            border-color: #86efac;
+            background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
+        }
+
+        .p-control-card.inactive-accepting {
+            border-color: #fca5a5;
+            background: linear-gradient(135deg, #fef2f2 0%, #ffffff 100%);
+        }
+
+        .p-control-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .p-control-title-box {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .p-control-status-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 4px;
+        }
+
+        .p-control-title {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+        .p-control-desc {
+            font-size: 0.8rem;
+            color: #64748b;
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        .p-chips-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px dashed #e2e8f0;
+        }
+
+        .p-chip-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 4px 10px;
+            font-size: 0.775rem;
+            color: #475569;
+        }
+
+        .p-chip-item strong {
+            color: #004687;
+            font-weight: 700;
+        }
+
+        /* Filter & Search Bar */
+        .p-filter-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+            padding: 16px 20px;
+        }
+
+        .p-filter-inputs {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .p-filter-search {
+            width: 280px;
+            flex-shrink: 0;
+        }
+
+        .p-filter-select {
+            width: 155px;
+            flex-shrink: 0;
+        }
+
         /* Checkboxes Grid */
         .checkbox-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
             gap: 12px;
             margin-top: 12px;
         }
@@ -292,6 +516,7 @@
             background: #ffffff;
             transition: all 0.15s ease;
             user-select: none;
+            word-break: break-word;
         }
 
         .custom-checkbox-card:hover {
@@ -312,8 +537,8 @@
         .custom-checkbox-card input[type="checkbox"] {
             margin: 0;
             accent-color: var(--brand-primary);
-            width: 17px;
-            height: 17px;
+            width: 18px;
+            height: 18px;
             cursor: pointer;
             flex-shrink: 0;
         }
@@ -332,6 +557,7 @@
             align-items: center;
             gap: 8px;
             transition: all 0.15s ease;
+            white-space: nowrap;
         }
 
         .btn-portal-primary:hover {
@@ -351,6 +577,7 @@
             align-items: center;
             gap: 8px;
             transition: all 0.15s ease;
+            white-space: nowrap;
         }
 
         .btn-portal-outline:hover {
@@ -368,7 +595,7 @@
             align-items: center;
             justify-content: center;
             z-index: 99999;
-            padding: 20px;
+            padding: 16px;
         }
 
         .force-modal-box {
@@ -407,6 +634,7 @@
             border: 1px solid #e2e8f0;
             border-radius: 10px;
             padding: 12px 14px;
+            word-break: break-word;
         }
 
         .mhs-detail-label {
@@ -449,8 +677,8 @@
         .switch {
             position: relative;
             display: inline-block;
-            width: 54px;
-            height: 30px;
+            width: 50px;
+            height: 28px;
             flex-shrink: 0;
             user-select: none;
         }
@@ -479,8 +707,8 @@
         .slider:before {
             position: absolute;
             content: "";
-            height: 22px;
-            width: 22px;
+            height: 20px;
+            width: 20px;
             left: 2px;
             bottom: 2px;
             background-color: #ffffff;
@@ -489,7 +717,6 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.25);
         }
 
-        /* Active / Checked State: Vibrant Green */
         .switch input:checked + .slider {
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             border-color: #047857;
@@ -497,7 +724,7 @@
         }
 
         .switch input:checked + .slider:before {
-            transform: translateX(24px);
+            transform: translateX(22px);
             background-color: #ffffff;
         }
 
@@ -508,6 +735,291 @@
         .switch input:focus-visible + .slider {
             outline: 2px solid #0284c7;
             outline-offset: 2px;
+        }
+
+        .p-table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            width: 100%;
+        }
+
+        /* ======================================================== */
+        /* RESPONSIVE MEDIA QUERIES (TABLET & MOBILE OPTIMIZATIONS) */
+        /* ======================================================== */
+
+        /* Tablet (<= 1024px) */
+        @media (max-width: 1024px) {
+            .perusahaan-navbar {
+                padding: 12px 20px;
+            }
+            .perusahaan-container {
+                padding: 20px 16px 60px;
+            }
+            .p-overview-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            .p-profil-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+
+        /* Mobile & Small Tablets (<= 768px) */
+        @media (max-width: 768px) {
+            .perusahaan-navbar {
+                padding: 10px 14px;
+                gap: 10px;
+            }
+            .navbar-brand-group {
+                gap: 10px;
+            }
+            .navbar-logos img {
+                height: 26px;
+            }
+            .navbar-brand-title {
+                font-size: 0.95rem;
+            }
+            .navbar-brand-subtitle {
+                font-size: 0.65rem;
+            }
+            .navbar-company-badge {
+                display: none;
+            }
+            .btn-logout-perusahaan {
+                padding: 6px 10px;
+                font-size: 0.75rem;
+            }
+
+            /* Sembunyikan Nav Tabs Horizontal Atas di Mobile */
+            .perusahaan-nav-tabs {
+                display: none;
+            }
+
+            /* Berikan ruang padding bawah agar konten tidak tertimpa Dock Bawah */
+            .perusahaan-container {
+                padding: 14px 12px 100px;
+            }
+
+            /* Tampilkan Bottom Dock Navigation Melayang di HP */
+            .mobile-bottom-dock {
+                display: flex;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 64px;
+                background: rgba(255, 255, 255, 0.96);
+                backdrop-filter: blur(16px);
+                -webkit-backdrop-filter: blur(16px);
+                border-top: 1px solid #e2e8f0;
+                box-shadow: 0 -4px 20px rgba(0, 70, 135, 0.08);
+                z-index: 9999;
+                align-items: center;
+                justify-content: space-around;
+                padding: 0 4px;
+                padding-bottom: env(safe-area-inset-bottom, 0px);
+            }
+
+            .mobile-bottom-nav-item {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 3px;
+                flex: 1;
+                height: 100%;
+                background: none;
+                border: none;
+                padding: 6px 2px;
+                cursor: pointer;
+                color: #64748b;
+                transition: all 0.2s ease;
+                -webkit-tap-highlight-color: transparent;
+                user-select: none;
+            }
+
+            .mobile-bottom-nav-item .nav-icon-wrap {
+                width: 40px;
+                height: 26px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 12px;
+                transition: all 0.2s ease;
+            }
+
+            .mobile-bottom-nav-item .nav-label {
+                font-size: 0.7rem;
+                font-weight: 600;
+                letter-spacing: -0.01em;
+                transition: all 0.2s ease;
+                white-space: nowrap;
+            }
+
+            /* Active State Dock */
+            .mobile-bottom-nav-item.active {
+                color: #004687;
+            }
+
+            .mobile-bottom-nav-item.active .nav-icon-wrap {
+                background: #eff6ff;
+                color: #004687;
+                transform: scale(1.05);
+            }
+
+            .mobile-bottom-nav-item.active .nav-label {
+                font-weight: 800;
+                color: #004687;
+            }
+
+            .mobile-bottom-nav-item:active {
+                transform: scale(0.95);
+            }
+
+            .notification-banner {
+                padding: 16px;
+                gap: 10px;
+                margin-bottom: 18px;
+            }
+            .banner-desktop-btn {
+                display: none;
+            }
+            .banner-mobile-action {
+                display: block;
+                width: 100%;
+            }
+            .banner-title {
+                font-size: 0.925rem;
+            }
+            .banner-desc {
+                font-size: 0.825rem;
+            }
+            .perusahaan-stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+                margin-bottom: 16px;
+            }
+            .p-stat-card {
+                padding: 14px 14px;
+                border-radius: 12px;
+            }
+            .p-stat-val {
+                font-size: 1.45rem;
+            }
+            .p-stat-label {
+                font-size: 0.75rem;
+            }
+            .p-stat-icon-wrap {
+                width: 36px;
+                height: 36px;
+                border-radius: 10px;
+            }
+            .p-stat-icon-wrap svg {
+                width: 18px;
+                height: 18px;
+            }
+            .p-card-body {
+                padding: 0 16px 20px;
+            }
+            .p-card-header-flex {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+            }
+            .p-card-header-select {
+                flex-direction: column;
+                align-items: stretch;
+                width: 100%;
+            }
+            .p-card-header-select select {
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+            .p-control-card {
+                padding: 14px 16px;
+                margin-bottom: 16px;
+            }
+            .p-control-title {
+                font-size: 0.875rem;
+            }
+            .p-control-desc {
+                font-size: 0.775rem;
+            }
+            #input-kuota-total {
+                max-width: 100% !important;
+            }
+            .checkbox-grid {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+            .custom-checkbox-card {
+                padding: 10px 12px;
+            }
+            .p-filter-bar {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 12px;
+                padding: 14px 16px;
+            }
+            .p-filter-inputs {
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: stretch !important;
+                width: 100% !important;
+                gap: 8px;
+            }
+            .p-filter-search,
+            .p-filter-select,
+            .p-filter-inputs input,
+            .p-filter-inputs select {
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+            #btn-export-pendaftar {
+                width: 100% !important;
+                justify-content: center;
+            }
+            #pendaftar-pagination {
+                flex-direction: column;
+                gap: 12px;
+                text-align: center;
+            }
+            .p-form-grid-2 {
+                grid-template-columns: 1fr;
+                gap: 12px;
+                margin-bottom: 14px;
+            }
+            .force-modal-box {
+                padding: 20px 16px;
+                border-radius: 14px;
+            }
+            .mhs-detail-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            #btn-save-kuota-wrapper,
+            #btn-save-kuota {
+                width: 100%;
+            }
+            #btn-save-kuota {
+                justify-content: center;
+            }
+            #btn-save-profil,
+            #btn-save-password {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* Extra Small Phones (<= 440px) */
+        @media (max-width: 440px) {
+            .navbar-unit-name {
+                max-width: 130px;
+            }
+            .perusahaan-stats-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -520,16 +1032,18 @@
                 <img src="/assets/img/logo_pln.png" alt="Logo PLN">
                 <img src="/assets/img/logo_itpln.png" alt="Logo ITPLN">
             </div>
-            <div class="navbar-title-wrap">
-                <h1 class="navbar-title" id="header-unit-nama">Portal Mitra Perusahaan</h1>
-                <p class="navbar-subtitle">Sistem Rekrutmen Magang Talenta Energi (REMATE) BLKA ITPLN</p>
+            <div class="navbar-brand-info">
+                <span class="navbar-brand-title">REMATE</span>
+                <span class="navbar-brand-subtitle">Portal Mitra Perusahaan</span>
             </div>
         </div>
 
         <div class="navbar-user-card">
-            <div class="unit-badge-pill">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M8 10h.01"/><path d="M16 10h.01"/><path d="M8 14h.01"/><path d="M16 14h.01"/></svg>
-                <span id="nav-unit-name">Memuat Unit...</span>
+            <div class="navbar-company-badge" id="badge-unit-pill">
+                <div class="company-badge-icon">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M8 10h.01"/><path d="M16 10h.01"/><path d="M8 14h.01"/><path d="M16 14h.01"/></svg>
+                </div>
+                <span id="header-unit-nama">Memuat Unit...</span>
             </div>
             <button id="btn-logout" class="btn-logout-perusahaan" title="Keluar dari Portal">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -544,7 +1058,7 @@
         <!-- In-App Notification Action Banner -->
         <div id="banner-container"></div>
 
-        <!-- Navigation Tabs -->
+        <!-- Desktop Navigation Tabs (Horizontal Pill Bar) -->
         <div class="perusahaan-nav-tabs">
             <button class="perusahaan-nav-btn active" data-tab="tab-overview">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
@@ -559,7 +1073,7 @@
                 <span>Live Pendaftar Masuk</span>
             </button>
             <button class="perusahaan-nav-btn" data-tab="tab-profil">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M8 10h.01"/><path d="M16 10h.01"/></svg>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M8 10h.01"/><path d="M16 10h.01"/><path d="M8 14h.01"/><path d="M16 14h.01"/></svg>
                 <span>Profil Unit & PIC</span>
             </button>
         </div>
@@ -612,16 +1126,16 @@
             </div>
 
             <!-- Periode & Unit Quick Information Card -->
-            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; align-items: start;">
+            <div class="p-overview-grid">
                 <div class="admin-card">
                     <div class="admin-card-header">
                         <h3 class="admin-card-title">Status Periode Magang Aktif</h3>
                     </div>
-                    <div style="padding: 0 24px 24px;">
+                    <div class="p-card-body">
                         <div id="overview-periode-info" style="line-height: 1.6; color: #475569;">
                             Memuat info periode...
                         </div>
-                        <div style="margin-top: 18px; padding-top: 16px; border-top: 1px solid #f1f5f9; display: flex; gap: 10px;">
+                        <div style="margin-top: 18px; padding-top: 16px; border-top: 1px solid #f1f5f9; display: flex; flex-wrap: wrap; gap: 10px;">
                             <button class="btn-portal-primary btn-nav-to-tab" data-target="tab-kuota">
                                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/><line x1="1" x2="7" y1="14" y2="14"/><line x1="9" x2="15" y1="8" y2="8"/><line x1="17" x2="23" y1="16" y2="16"/></svg>
                                 <span>Atur Kuota & Prodi</span>
@@ -638,7 +1152,7 @@
                     <div class="admin-card-header">
                         <h3 class="admin-card-title">PIC Resmi Unit Kantor</h3>
                     </div>
-                    <div style="padding: 0 24px 24px;">
+                    <div class="p-card-body">
                         <div id="overview-pic-info" style="line-height: 1.6; color: #475569; font-size: 0.9rem;">
                             Memuat data PIC...
                         </div>
@@ -658,53 +1172,52 @@
         <!-- ========================================== -->
         <div class="p-tab-pane" id="tab-kuota">
             <div class="admin-card">
-                <div class="admin-card-header" style="justify-content: space-between; align-items: center;">
+                <div class="admin-card-header p-card-header-flex">
                     <div>
-                        <h3 class="admin-card-title">Pengaturan Penerimaan Magang per Periode</h3>
-                        <span style="font-size: 0.825rem; color: #64748b;">Tentukan kesediaan unit menerima mahasiswa magang, total kuota yang sanggup diterima, serta prodi yang dibuka.</span>
+                        <h3 class="admin-card-title" style="margin: 0;">Pengaturan Penerimaan Magang</h3>
+                        <span style="font-size: 0.825rem; color: #64748b; margin-top: 4px; display: block;">Tentukan kesediaan unit menerima mahasiswa, kapasitas kuota, serta pilihan program studi.</span>
                     </div>
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <label for="select-kuota-periode" style="font-size: 0.825rem; font-weight: 600; color: #475569;">Pilih Periode:</label>
+                    <div class="p-card-header-select">
+                        <label for="select-kuota-periode" style="font-size: 0.825rem; font-weight: 600; color: #475569; white-space: nowrap;">Periode:</label>
                         <select id="select-kuota-periode" class="admin-input-field" style="width: 260px;"></select>
                     </div>
                 </div>
 
-                <div style="padding: 0 24px 24px;">
-                    <!-- Live Kuota Configuration Status Bar -->
-                    <div id="kuota-status-summary-bar" style="margin-bottom: 20px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                            <div style="width: 38px; height: 38px; border-radius: 10px; background: #16a34a; color: #ffffff; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                            </div>
-                            <div>
-                                <div style="font-size: 0.925rem; font-weight: 700; color: #166534;" id="kuota-bar-title">Konfigurasi Kuota Periode Ini</div>
-                                <div style="font-size: 0.8rem; color: #15803d;" id="kuota-bar-subtitle">Memuat status kuota tersimpan...</div>
-                            </div>
-                        </div>
-                        <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;" id="kuota-bar-pills">
-                            <span class="badge-status badge-success" id="pill-terima-status">Menerima Magang</span>
-                            <span class="badge-status badge-info" id="pill-kuota-count">0 Mahasiswa</span>
-                            <span class="badge-status badge-neutral" id="pill-prodi-count">0 Prodi</span>
-                            <span class="badge-status badge-neutral" id="pill-pem-count">0 Peminatan</span>
-                        </div>
-                    </div>
-
+                <div class="p-card-body">
                     <div id="kuota-lock-alert" class="alert alert-info hidden" style="margin-bottom: 20px;"></div>
 
                     <form id="form-kuota-setting">
-                        <!-- Toggle Terima Magang Card -->
-                        <div id="toggle-card-wrapper" style="background: #f0fdf4; border: 1.5px solid #bbf7d0; border-radius: 14px; padding: 18px 22px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; gap: 16px; transition: all 0.25s ease;">
-                            <div>
-                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
-                                    <strong style="font-size: 0.975rem; color: #004687; display: block;">Menerima Mahasiswa Magang pada Periode Ini</strong>
-                                    <span id="toggle-status-badge" class="badge-status badge-success" style="font-size: 0.75rem; padding: 3px 10px; font-weight: 700;">✓ Aktif Menerima</span>
+                        <!-- Unified Master Control Card -->
+                        <div id="toggle-card-wrapper" class="p-control-card active-accepting">
+                            <div class="p-control-header">
+                                <div class="p-control-title-box">
+                                    <div class="p-control-status-row">
+                                        <span class="p-control-title">Penerimaan Mahasiswa Magang</span>
+                                        <span id="toggle-status-badge" class="badge-status badge-success" style="font-size: 0.75rem; padding: 2px 8px; font-weight: 700;">✓ Aktif Menerima</span>
+                                    </div>
+                                    <p id="toggle-desc-text" class="p-control-desc">Unit kantor Anda aktif menerima pendaftaran pada periode ini.</p>
                                 </div>
-                                <span id="toggle-desc-text" style="font-size: 0.825rem; color: #166534; display: block; line-height: 1.4;">Unit kantor Anda aktif menerima pendaftaran dan dapat dipilih oleh mahasiswa pelamar.</span>
+                                <label class="switch" title="Nyalakan / Matikan Penerimaan Magang">
+                                    <input type="checkbox" id="toggle-menerima-magang" checked>
+                                    <span class="slider"></span>
+                                </label>
                             </div>
-                            <label class="switch" title="Nyalakan / Matikan Penerimaan Magang">
-                                <input type="checkbox" id="toggle-menerima-magang" checked>
-                                <span class="slider"></span>
-                            </label>
+
+                            <!-- Live Quick Stats Badges -->
+                            <div id="kuota-quick-chips" class="p-chips-row">
+                                <div class="p-chip-item">
+                                    <span style="font-size: 0.75rem; color: #64748b;">Total Kuota:</span>
+                                    <strong id="chip-kuota-val">0 Mhs</strong>
+                                </div>
+                                <div class="p-chip-item">
+                                    <span style="font-size: 0.75rem; color: #64748b;">Prodi Dibuka:</span>
+                                    <strong id="chip-prodi-val">0 Prodi</strong>
+                                </div>
+                                <div class="p-chip-item">
+                                    <span style="font-size: 0.75rem; color: #64748b;">Peminatan:</span>
+                                    <strong id="chip-pem-val">0 Bidang</strong>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Bagian Detail Kuota & Jurusan -->
@@ -713,13 +1226,13 @@
                                 <label class="admin-input-label" for="input-kuota-total" style="font-size: 0.875rem;">
                                     Total Kuota Mahasiswa yang Diterima <span style="color: red;">*</span>
                                 </label>
-                                <input type="number" id="input-kuota-total" class="admin-input-field" min="1" max="1000" placeholder="contoh: 10" style="max-width: 240px;" required>
+                                <input type="number" id="input-kuota-total" class="admin-input-field" min="1" max="1000" placeholder="contoh: 10" style="max-width: 240px; width: 100%;" required>
                                 <span style="font-size: 0.775rem; color: #64748b; display: block; margin-top: 4px;">Jumlah kapasitas mahasiswa yang dapat memilih kantor Anda pada periode ini.</span>
                             </div>
 
                             <!-- Pilihan Program Studi -->
                             <div style="margin-bottom: 24px;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
                                     <label class="admin-input-label" style="font-size: 0.875rem; margin-bottom: 0;">
                                         Program Studi (Prodi) yang Diterima <span style="color: red;">*</span>
                                     </label>
@@ -735,7 +1248,7 @@
 
                             <!-- Pilihan Peminatan (Wajib) -->
                             <div style="margin-bottom: 24px;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
                                     <label class="admin-input-label" style="font-size: 0.875rem; margin-bottom: 0;">
                                         Peminatan / Bidang Penempatan yang Dibuka <span style="color: red;">*</span>
                                     </label>
@@ -767,17 +1280,17 @@
         <div class="p-tab-pane" id="tab-pendaftar">
             <!-- Filter & Search Bar -->
             <div class="admin-card" style="margin-bottom: 16px;">
-                <div style="padding: 16px 20px; display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center;">
-                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; flex: 1; min-width: 300px;">
-                        <input type="text" id="filter-search-mhs" class="admin-input-field" placeholder="Cari nama mahasiswa, NIM, no HP..." style="max-width: 300px; padding-left: 14px;">
-                        <select id="filter-mhs-status" class="admin-input-field" style="width: 160px;">
+                <div class="p-filter-bar">
+                    <div class="p-filter-inputs">
+                        <input type="text" id="filter-search-mhs" class="admin-input-field p-filter-search" placeholder="Cari nama mahasiswa, NIM, no HP...">
+                        <select id="filter-mhs-status" class="admin-input-field p-filter-select">
                             <option value="">Semua Status</option>
                             <option value="diajukan">Diajukan</option>
                             <option value="diverifikasi">Diverifikasi</option>
                             <option value="diterima">Diterima / Ditetapkan</option>
                             <option value="ditolak">Ditolak</option>
                         </select>
-                        <select id="filter-mhs-program" class="admin-input-field" style="width: 160px;">
+                        <select id="filter-mhs-program" class="admin-input-field p-filter-select">
                             <option value="">Semua Program</option>
                             <option value="1_bulan">1 Bulan</option>
                             <option value="5_bulan">5 Bulan</option>
@@ -795,7 +1308,7 @@
 
             <!-- Table Pendaftar Masuk -->
             <div class="admin-card">
-                <div style="overflow-x: auto;">
+                <div class="p-table-responsive">
                     <table class="admin-table">
                         <thead>
                             <tr>
@@ -819,7 +1332,7 @@
                 </div>
 
                 <!-- Pagination -->
-                <div id="pendaftar-pagination" style="padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f5f9;">
+                <div id="pendaftar-pagination" style="padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f5f9; flex-wrap: wrap; gap: 12px;">
                     <span id="pendaftar-pagination-info" style="font-size: 0.825rem; color: #64748b;">Menampilkan 0 data</span>
                     <div id="pendaftar-pagination-btns" style="display: flex; gap: 6px;"></div>
                 </div>
@@ -830,13 +1343,13 @@
         <!-- TAB 4: PROFIL UNIT & PIC -->
         <!-- ========================================== -->
         <div class="p-tab-pane" id="tab-profil">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;">
+            <div class="p-profil-grid">
                 <!-- Form Profil Kantor & PIC -->
                 <div class="admin-card">
                     <div class="admin-card-header">
                         <h3 class="admin-card-title">Profil Kantor & Kontak PIC Resmi</h3>
                     </div>
-                    <form id="form-update-profil" style="padding: 0 24px 24px;">
+                    <form id="form-update-profil" class="p-card-body">
                         <div style="margin-bottom: 14px;">
                             <label class="admin-input-label" for="prof-nama">Nama Unit Kantor (Resmi)</label>
                             <input type="text" id="prof-nama" class="admin-input-field" readonly style="background: #f1f5f9;">
@@ -845,7 +1358,7 @@
                             <label class="admin-input-label" for="prof-alamat">Alamat Lengkap Kantor <span style="color: red;">*</span></label>
                             <textarea id="prof-alamat" class="admin-input-field" rows="3" placeholder="Masukkan alamat lengkap kantor unit..." required maxlength="500" style="resize: none; font-family: inherit; line-height: 1.5; min-height: 75px;"></textarea>
                         </div>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                        <div class="p-form-grid-2">
                             <div>
                                 <label class="admin-input-label" for="prof-lat">Latitude Peta</label>
                                 <input type="number" step="any" id="prof-lat" class="admin-input-field" placeholder="-6.200000">
@@ -866,7 +1379,7 @@
                                 <label class="admin-input-label" for="prof-pic-jabatan">Jabatan PIC</label>
                                 <input type="text" id="prof-pic-jabatan" class="admin-input-field" placeholder="contoh: Manajer Bagian K3L / Staf SDM">
                             </div>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                            <div class="p-form-grid-2">
                                 <div>
                                     <label class="admin-input-label" for="prof-pic-kontak">No. WhatsApp/HP PIC <span style="color: red;">*</span></label>
                                     <input type="text" id="prof-pic-kontak" class="admin-input-field" placeholder="0812xxxxxxxx" required>
@@ -892,7 +1405,7 @@
                     <div class="admin-card-header">
                         <h3 class="admin-card-title">Keamanan & Kata Sandi Akun</h3>
                     </div>
-                    <form id="form-update-password" style="padding: 0 24px 24px;">
+                    <form id="form-update-password" class="p-card-body">
                         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; margin-bottom: 16px; font-size: 0.85rem; color: #475569;">
                             Username Akun Anda: <strong id="prof-account-username" style="color: #004687; font-family: monospace; font-size: 0.95rem;">-</strong>
                         </div>
@@ -923,14 +1436,45 @@
 
     </div>
 
+    <!-- Mobile Floating Bottom Navigation Dock (App-Like Bar) -->
+    <nav class="mobile-bottom-dock" aria-label="Navigasi Menu Mobile">
+        <button type="button" class="mobile-bottom-nav-item active" data-tab="tab-overview" title="Ringkasan & Status">
+            <div class="nav-icon-wrap">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+            </div>
+            <span class="nav-label">Ringkasan</span>
+        </button>
+
+        <button type="button" class="mobile-bottom-nav-item" data-tab="tab-kuota" title="Pengaturan Kuota & Prodi">
+            <div class="nav-icon-wrap">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/><line x1="1" x2="7" y1="14" y2="14"/><line x1="9" x2="15" y1="8" y2="8"/><line x1="17" x2="23" y1="16" y2="16"/></svg>
+            </div>
+            <span class="nav-label">Kuota & Prodi</span>
+        </button>
+
+        <button type="button" class="mobile-bottom-nav-item" data-tab="tab-pendaftar" title="Live Pendaftar Masuk">
+            <div class="nav-icon-wrap">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <span class="nav-label">Pendaftar</span>
+        </button>
+
+        <button type="button" class="mobile-bottom-nav-item" data-tab="tab-profil" title="Profil Unit & PIC">
+            <div class="nav-icon-wrap">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M8 10h.01"/><path d="M16 10h.01"/><path d="M8 14h.01"/><path d="M16 14h.01"/></svg>
+            </div>
+            <span class="nav-label">Profil PIC</span>
+        </button>
+    </nav>
+
     <!-- ========================================== -->
     <!-- MODAL DETAIL MAHASISWA (READ-ONLY) -->
     <!-- ========================================== -->
-    <div id="modal-detail-mhs" class="modal-overlay hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 20px;">
+    <div id="modal-detail-mhs" class="modal-overlay hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 16px;">
         <div style="background: #fff; border-radius: 16px; width: 100%; max-width: 600px; padding: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #e2e8f0;">
                 <h3 style="margin: 0; font-size: 1.15rem; color: #004687; font-weight: 700;">Detail Mahasiswa Pendaftar</h3>
-                <button id="btn-close-detail-mhs" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b;">&times;</button>
+                <button id="btn-close-detail-mhs" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b; line-height: 1;">&times;</button>
             </div>
             
             <div id="mhs-detail-body">
@@ -938,7 +1482,7 @@
             </div>
 
             <div style="margin-top: 24px; text-align: right;">
-                <button id="btn-ok-detail-mhs" class="btn-portal-primary" style="padding: 8px 24px;">Tutup</button>
+                <button id="btn-ok-detail-mhs" class="btn-portal-primary" style="padding: 8px 24px; width: auto;">Tutup</button>
             </div>
         </div>
     </div>
@@ -979,7 +1523,7 @@
                     <label class="admin-input-label" for="force-pic-jabatan">Jabatan PIC</label>
                     <input type="text" id="force-pic-jabatan" class="admin-input-field" placeholder="contoh: Staf SDM / Manajer Unit">
                 </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px;">
+                <div class="p-form-grid-2">
                     <div>
                         <label class="admin-input-label" for="force-pic-kontak">No. WhatsApp/HP PIC <span style="color: red;">*</span></label>
                         <input type="text" id="force-pic-kontak" class="admin-input-field" required placeholder="0812xxxxxxxx">

@@ -59,7 +59,7 @@ try {
 
     // 2. Ambil Periode Aktif (Prioritas: 'dibuka' -> 'persiapan' -> periode terbaru)
     $stmtPeriode = $pdo->query("
-        SELECT id, nama, tanggal_mulai, tanggal_selesai, status, created_at
+        SELECT id, nama, tanggal_mulai, tanggal_selesai, status, program_1_bulan, program_5_bulan, angkatan_eligible, created_at
         FROM periode 
         WHERE status IN ('dibuka', 'persiapan', 'ditutup')
         ORDER BY (status = 'dibuka') DESC, (status = 'persiapan') DESC, id DESC
@@ -69,7 +69,7 @@ try {
 
     if (!$periodeAktif) {
         // Fallback periode terbaru
-        $stmtFall = $pdo->query("SELECT id, nama, tanggal_mulai, tanggal_selesai, status, created_at FROM periode ORDER BY id DESC LIMIT 1");
+        $stmtFall = $pdo->query("SELECT id, nama, tanggal_mulai, tanggal_selesai, status, program_1_bulan, program_5_bulan, angkatan_eligible, created_at FROM periode ORDER BY id DESC LIMIT 1");
         $periodeAktif = $stmtFall->fetch(PDO::FETCH_ASSOC);
     }
 
@@ -176,6 +176,9 @@ try {
             'status'             => $periodeStatus,
             'tanggal_mulai'      => $periodeAktif['tanggal_mulai'] ?? null,
             'tanggal_selesai'    => $periodeAktif['tanggal_selesai'] ?? null,
+            'program_1_bulan'    => (bool)($periodeAktif['program_1_bulan'] ?? false),
+            'program_5_bulan'    => (bool)($periodeAktif['program_5_bulan'] ?? false),
+            'angkatan_eligible'  => $periodeAktif['angkatan_eligible'] ?? null,
             'upp'                => $uppData ? [
                 'id'            => (int)$uppData['id'],
                 'kuota_total'   => (int)$uppData['kuota_total'],
