@@ -144,6 +144,7 @@ try {
             p.jenis_kelamin,
             p.ipk,
             p.jumlah_sks,
+            p.transkrip_path,
             p.no_hp,
             p.program,
             p.status,

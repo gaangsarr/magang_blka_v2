@@ -37,11 +37,44 @@ foreach ($required as $req) {
     }
 }
 
+// Validasi File Transkrip Nilai (Wajib)
+Auth::startSession(startPHP: true);
+$transkripPath = trim((string)($body['transkrip_path'] ?? $_SESSION['transkrip_temp_path'] ?? ''));
+
+if (empty($transkripPath)) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Berkas transkrip nilai wajib diunggah sebelum mengirim pendaftaran.']);
+    exit;
+}
+
+if (!str_starts_with($transkripPath, 'transkrip/') || str_contains($transkripPath, '..')) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Format path transkrip tidak valid.']);
+    exit;
+}
+
+$mhsAuth = Auth::getMahasiswa();
+$mhsNim = preg_replace('/[^a-zA-Z0-9_-]/', '', (string)($mhsAuth['nim'] ?? ''));
+if (!str_ends_with($transkripPath, '/' . $mhsNim . '.pdf') && !str_ends_with($transkripPath, $mhsNim . '.pdf')) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Dokumen transkrip tidak cocok dengan NIM Anda. Silakan unggah ulang.']);
+    exit;
+}
+
+$transkripFullPath = dirname(__DIR__, 2) . '/storage/' . $transkripPath;
+if (!file_exists($transkripFullPath) || !is_readable($transkripFullPath)) {
+    http_response_code(400);
+    echo json_encode(['error' => 'File transkrip tidak ditemukan di server. Silakan unggah ulang transkrip Anda.']);
+    unset($_SESSION['transkrip_temp_path'], $_SESSION['transkrip_periode_id']);
+    exit;
+}
+
 $mahasiswaId = Auth::getMahasiswaId();
 $periodeId = (int)$body['periode_id'];
 $reservasiId = (int)$body['reservasi_id'];
 $uppId = (int)$body['upp_id'];
 $peminatanIds = isset($body['peminatan']) && is_array($body['peminatan']) ? array_map('intval', $body['peminatan']) : [];
+
 
 // Validasi & Sanitasi Ketat Nomor Handphone / WhatsApp (hanya angka, diawali 08/628, 10-14 digit)
 $rawNoHp = trim((string)($body['no_hp'] ?? ''));
@@ -102,7 +135,7 @@ if ($body['program'] === '5_bulan') {
 }
 
 try {
-    Database::transaction(function (PDO $pdo) use ($mahasiswaId, $periodeId, $reservasiId, $uppId, $body, $peminatanIds) {
+    Database::transaction(function (PDO $pdo) use ($mahasiswaId, $periodeId, $reservasiId, $uppId, $body, $peminatanIds, $transkripPath) {
         // 1. Validasi periode dibuka dan angkatan eligible
         $stmtP = $pdo->prepare("SELECT angkatan_eligible, nama, status FROM periode WHERE id = :pid");
         $stmtP->execute([':pid' => $periodeId]);
@@ -148,34 +181,38 @@ try {
             INSERT INTO pendaftaran (
                 mahasiswa_id, periode_id, reservasi_id, unit_pelaksana_periode_id, 
                 program, nama_snapshot, jenis_kelamin, ipk, jumlah_sks, no_hp, 
-                alamat, rt, rw, kelurahan, kecamatan, kota_kabupaten, provinsi, latitude, longitude
+                alamat, rt, rw, kelurahan, kecamatan, kota_kabupaten, provinsi, latitude, longitude,
+                transkrip_path, transkrip_uploaded_at
             ) VALUES (
                 :mid, :pid, :rid, :upp_id,
                 :prog, :nama, :jk, :ipk, :sks, :hp,
-                :almt, :rt, :rw, :kel, :kec, :kota, :prov, :lat, :lng
+                :almt, :rt, :rw, :kel, :kec, :kota, :prov, :lat, :lng,
+                :transkrip_path, :transkrip_uploaded_at
             )
         ");
         
         $stmtInsert->execute([
-            ':mid' => $mahasiswaId,
-            ':pid' => $periodeId,
-            ':rid' => $reservasiId,
-            ':upp_id' => $uppId,
-            ':prog' => $body['program'],
-            ':nama' => $body['nama'],
-            ':jk' => $body['jenis_kelamin'],
-            ':ipk' => (float)$body['ipk'],
-            ':sks' => (int)$body['jumlah_sks'],
-            ':hp' => $body['no_hp'],
-            ':almt' => $body['alamat_lengkap'],
-            ':rt' => $body['rt'],
-            ':rw' => $body['rw'],
-            ':kel' => $body['kelurahan'],
-            ':kec' => $body['kecamatan'],
-            ':kota' => $body['kota_kabupaten'],
-            ':prov' => $body['provinsi'],
-            ':lat' => (float)$body['lat'],
-            ':lng' => (float)$body['lng']
+            ':mid'                   => $mahasiswaId,
+            ':pid'                   => $periodeId,
+            ':rid'                   => $reservasiId,
+            ':upp_id'                => $uppId,
+            ':prog'                  => $body['program'],
+            ':nama'                  => $body['nama'],
+            ':jk'                    => $body['jenis_kelamin'],
+            ':ipk'                   => (float)$body['ipk'],
+            ':sks'                   => (int)$body['jumlah_sks'],
+            ':hp'                    => $body['no_hp'],
+            ':almt'                  => $body['alamat_lengkap'],
+            ':rt'                    => $body['rt'],
+            ':rw'                    => $body['rw'],
+            ':kel'                   => $body['kelurahan'],
+            ':kec'                   => $body['kecamatan'],
+            ':kota'                  => $body['kota_kabupaten'],
+            ':prov'                  => $body['provinsi'],
+            ':lat'                   => (float)$body['lat'],
+            ':lng'                   => (float)$body['lng'],
+            ':transkrip_path'        => $transkripPath,
+            ':transkrip_uploaded_at' => date('Y-m-d H:i:s')
         ]);
         
         $pendaftaranId = $pdo->lastInsertId();
@@ -194,6 +231,9 @@ try {
             }
         }
     });
+
+    // Bersihkan session temporary transkrip setelah berhasil submit
+    unset($_SESSION['transkrip_temp_path'], $_SESSION['transkrip_periode_id']);
 
     echo json_encode(['ok' => true, 'message' => 'Pendaftaran berhasil dikirim.']);
 } catch (\Exception $e) {

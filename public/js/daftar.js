@@ -211,6 +211,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         btnPrev.addEventListener('click', handlePrev);
         btnSubmit.addEventListener('click', handleSubmit);
 
+        // Inisialisasi Upload Transkrip Nilai
+        initTranskripUpload();
+
         // Cek jika ada reservasi aktif yang belum kadaluarsa (mis. saat refresh halaman)
         if (statusData.active_reservasi && statusData.active_reservasi.reservasi_id) {
             const activeRes = statusData.active_reservasi;
@@ -673,6 +676,12 @@ function validateStep(step) {
             showError('Maksimal memilih 3 bidang peminatan magang.', 'peminatan-options', 'Batas Peminatan');
             return false;
         }
+
+        // Validasi Transkrip Nilai Wajib
+        if (!window.transkripUploadedPath) {
+            showError('Berkas transkrip nilai (PDF) wajib diunggah sebelum melanjutkan ke tahap domisili.', 'transkrip-drop-zone', 'Transkrip Belum Diunggah');
+            return false;
+        }
     } else if (step === 3) {
         if (!document.getElementById('lat').value.trim() || !document.getElementById('lng').value.trim()) {
             showError('Silakan tentukan titik koordinat tempat tinggal Anda pada peta domisili.', 'map-domisili', 'Titik Lokasi Wajib Ditandai');
@@ -995,6 +1004,11 @@ function populateResume() {
     document.getElementById('resume-nim').innerText = document.getElementById('nim').value;
     document.getElementById('resume-hp').innerText = formData.no_hp;
     document.getElementById('resume-alamat').innerText = formData.alamat_lengkap + `, RT ${formData.rt}/RW ${formData.rw}, ${formData.kelurahan}, ${formData.kecamatan}, ${formData.kota_kabupaten}, ${formData.provinsi}`;
+    
+    const resumeTranskripEl = document.getElementById('resume-transkrip-name');
+    if (resumeTranskripEl) {
+        resumeTranskripEl.innerText = window.transkripUploadedFileName || 'Dokumen PDF Terverifikasi';
+    }
 }
 
 function startTimer(expireTimeMs) {
@@ -1048,14 +1062,26 @@ async function handleExpiredReservation() {
 
 async function handleSubmit() {
     showError(null);
+
+    if (!window.transkripUploadedPath) {
+        showError('Berkas transkrip nilai belum diunggah. Silakan kembali ke tahap Data Diri.', null, 'Transkrip Wajib Diunggah');
+        btnSubmit.disabled = false;
+        return;
+    }
+
     btnSubmit.disabled = true;
     btnSubmit.innerText = 'Menyimpan...';
 
     try {
+        const payload = {
+            ...formData,
+            transkrip_path: window.transkripUploadedPath
+        };
+
         const res = await fetch('/api/mahasiswa/submit.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
-            body: JSON.stringify(formData)
+            body: JSON.stringify(payload)
         });
         
         const data = await res.json();
@@ -1079,6 +1105,150 @@ async function handleSubmit() {
         btnSubmit.innerText = 'Kirim Pendaftaran';
     }
 }
+
+// ----------------------------------------------------
+// Transkrip Nilai Upload Handler (Step 2)
+// ----------------------------------------------------
+function initTranskripUpload() {
+    const fileInput = document.getElementById('transkrip-file-input');
+    const dropZone = document.getElementById('transkrip-drop-zone');
+    const stateIdle = document.getElementById('transkrip-state-idle');
+    const stateUploading = document.getElementById('transkrip-state-uploading');
+    const stateSuccess = document.getElementById('transkrip-state-success');
+    const stateError = document.getElementById('transkrip-state-error');
+    const successFilename = document.getElementById('transkrip-success-filename');
+    const successSize = document.getElementById('transkrip-success-size');
+    const errorText = document.getElementById('transkrip-error-text');
+    const btnGanti = document.getElementById('btn-ganti-transkrip');
+    const btnRetry = document.getElementById('btn-retry-transkrip');
+
+    if (!fileInput || !dropZone) return;
+
+    function setTranskripState(state) {
+        [stateIdle, stateUploading, stateSuccess, stateError].forEach(el => {
+            if (el) el.classList.add('hidden');
+        });
+        if (state === 'idle' && stateIdle) stateIdle.classList.remove('hidden');
+        else if (state === 'uploading' && stateUploading) stateUploading.classList.remove('hidden');
+        else if (state === 'success' && stateSuccess) stateSuccess.classList.remove('hidden');
+        else if (state === 'error' && stateError) stateError.classList.remove('hidden');
+    }
+
+    async function handleFileUpload(file) {
+        if (!file) return;
+
+        // Validasi cepat client-side
+        if (!file.name.toLowerCase().endsWith('.pdf') && file.type !== 'application/pdf') {
+            if (errorText) errorText.innerText = 'Format berkas harus PDF (.pdf).';
+            setTranskripState('error');
+            return;
+        }
+
+        const maxBytes = 512 * 1024;
+        if (file.size > maxBytes) {
+            if (errorText) errorText.innerText = `Ukuran berkas (${(file.size / 1024).toFixed(0)} KB) melebihi batas 512 KB.`;
+            setTranskripState('error');
+            return;
+        }
+
+        setTranskripState('uploading');
+
+        const uploadFormData = new FormData();
+        uploadFormData.append('transkrip', file);
+
+        try {
+            const res = await fetch('/api/mahasiswa/transkrip/upload.php', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-Token': csrfToken
+                },
+                body: uploadFormData
+            });
+
+            const data = await res.json();
+
+            if (!res.ok || !data.ok) {
+                if (errorText) errorText.innerText = data.error || 'Gagal mengunggah transkrip nilai.';
+                setTranskripState('error');
+                window.transkripUploadedPath = null;
+                window.transkripUploadedFileName = null;
+                return;
+            }
+
+            window.transkripUploadedPath = data.path;
+            window.transkripUploadedFileName = file.name;
+
+            if (successFilename) successFilename.innerText = file.name;
+            if (successSize) successSize.innerText = `${(file.size / 1024).toFixed(0)} KB — Dokumen Valid`;
+            setTranskripState('success');
+
+        } catch (err) {
+            console.error('[transkrip-upload] Network error:', err);
+            if (errorText) errorText.innerText = 'Koneksi internet bermasalah saat mengunggah berkas.';
+            setTranskripState('error');
+            window.transkripUploadedPath = null;
+            window.transkripUploadedFileName = null;
+        }
+    }
+
+    // Native file input change
+    fileInput.addEventListener('change', () => {
+        if (fileInput.files && fileInput.files[0]) {
+            handleFileUpload(fileInput.files[0]);
+        }
+    });
+
+    // Drag & Drop
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (stateIdle) {
+            stateIdle.style.borderColor = '#0284c7';
+            stateIdle.style.background = '#e0f2fe';
+        }
+    });
+
+    dropZone.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (stateIdle) {
+            stateIdle.style.borderColor = '#cbd5e1';
+            stateIdle.style.background = '#f8fafc';
+        }
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (stateIdle) {
+            stateIdle.style.borderColor = '#cbd5e1';
+            stateIdle.style.background = '#f8fafc';
+        }
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+            handleFileUpload(e.dataTransfer.files[0]);
+        }
+    });
+
+    // Ganti File & Coba Lagi
+    if (btnGanti) {
+        btnGanti.addEventListener('click', () => {
+            fileInput.value = '';
+            window.transkripUploadedPath = null;
+            window.transkripUploadedFileName = null;
+            setTranskripState('idle');
+        });
+    }
+
+    if (btnRetry) {
+        btnRetry.addEventListener('click', () => {
+            fileInput.value = '';
+            setTranskripState('idle');
+        });
+    }
+
+    setTranskripState('idle');
+}
+
 
 // ----------------------------------------------------
 // Modal Utility

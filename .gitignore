@@ -33,3 +33,7 @@ check_periode.php
 # Test scripts di dalam direktori scripts/ juga diexclude
 scripts/test_*.php
 
+# Uploaded Files
+/storage/transkrip/*
+!/storage/transkrip/.gitkeep
+

@@ -137,6 +137,7 @@ try {
             p.is_dipindahkan,
             p.catatan_admin,
             p.submitted_at,
+            p.transkrip_path,
             p.unit_pelaksana_periode_id,
             e.nama AS unit_nama,
             p.unit_pelaksana_periode_asal_id,

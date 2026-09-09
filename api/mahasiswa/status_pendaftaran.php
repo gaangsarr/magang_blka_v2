@@ -28,6 +28,8 @@ try {
             p.status, 
             p.submitted_at, 
             p.program,
+            p.transkrip_path,
+            p.transkrip_uploaded_at,
             p.nama_snapshot AS nama,
             m.nim,
             m.jurusan_id,
@@ -106,7 +108,11 @@ try {
             'is_dipindahkan'    => $isPengumumanBuka ? (bool)$row['is_dipindahkan'] : false,
             'catatan_admin'     => $isPengumumanBuka ? $row['catatan_admin'] : null,
             'pic_narahubung'    => $picNarahubung,
-            'submitted_at'      => $row['submitted_at']
+            'submitted_at'      => $row['submitted_at'],
+            'id'                => (int)$row['pendaftaran_id'],
+            'transkrip_path'    => $row['transkrip_path'] ?? null,
+            'transkrip_uploaded_at' => $row['transkrip_uploaded_at'] ?? null,
+            'transkrip_filename'=> !empty($row['transkrip_path']) ? basename((string)$row['transkrip_path']) : null
         ];
     }
 

@@ -1,3 +1,5 @@
+import { openPdfPreviewModal } from '/js/pdf-modal.js';
+
 document.addEventListener('DOMContentLoaded', async () => {
     const statusRes = await fetch('/api/admin/status.php');
     const statusData = await statusRes.json();
@@ -244,10 +246,30 @@ document.addEventListener('DOMContentLoaded', async () => {
             statusBadge = '<span class="badge-status" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;">Dipindahkan</span>';
         } else if (st === 'ditolak') {
             statusBadge = '<span class="badge-status" style="background: #fef2f2; color: #dc2626; border: 1px solid #fecaca;">Ditolak</span>';
-        } else if (st === 'diverifikasi') {
-            statusBadge = '<span class="badge-status badge-persiapan">Diverifikasi</span>';
         }
         badgeContainer.innerHTML = statusBadge;
+
+        // Transkrip Nilai Preview Modal
+        const btnTranskrip = document.getElementById('detail-btn-transkrip');
+        const filenameEl = document.getElementById('detail-transkrip-filename');
+        const fileName = p.transkrip_filename || (p.transkrip_path ? p.transkrip_path.split('/').pop() : `${p.nim}.pdf`);
+
+        if (filenameEl) {
+            filenameEl.innerText = p.transkrip_path ? fileName : 'Belum Ada Berkas';
+        }
+
+        if (btnTranskrip) {
+            if (p.id && p.transkrip_path) {
+                btnTranskrip.style.display = 'inline-flex';
+                btnTranskrip.onclick = (e) => {
+                    e.preventDefault();
+                    openPdfPreviewModal(`/api/admin/transkrip/download.php?pendaftaran_id=${p.id}`, p.nama || 'Pendaftar', `NIM: ${p.nim || '-'}`);
+                };
+            } else {
+                btnTranskrip.style.display = 'none';
+                btnTranskrip.onclick = null;
+            }
+        }
 
         const modal = document.getElementById('modal-detail-pendaftar');
         if (modal) modal.classList.add('active');

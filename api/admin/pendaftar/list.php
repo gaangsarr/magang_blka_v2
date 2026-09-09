@@ -119,6 +119,7 @@ try {
             p.program,
             p.ipk,
             p.jumlah_sks,
+            p.transkrip_path,
             p.jenis_kelamin,
             p.alamat AS alamat_domisili,
             p.rt,

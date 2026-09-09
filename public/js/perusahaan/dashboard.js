@@ -1,4 +1,5 @@
 import { showAdminAlert, showAdminConfirm, showAdminToast } from '/js/admin/common.js';
+import { openPdfPreviewModal } from '/js/pdf-modal.js';
 
 let csrfToken = null;
 let currentSummary = null;
@@ -830,13 +831,28 @@ function renderPendaftarTable(list) {
             </td>
             <td style="text-align: center;">${statusBadge}</td>
             <td style="text-align: center;">
-                <button class="btn-portal-outline btn-view-mhs" data-id="${mhs.id}" style="padding: 5px 10px; font-size: 0.775rem;">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                    <span>Detail</span>
-                </button>
+                <div style="display: inline-flex; align-items: center; gap: 6px;">
+                    <button type="button" class="btn-portal-outline btn-transkrip-mhs" data-id="${mhs.id}" data-nama="${escapeHtml(mhs.nama)}" data-nim="${escapeHtml(mhs.nim)}" style="padding: 5px 8px; font-size: 0.775rem; color: #0284c7; border-color: #bae6fd; background: #f0f9ff; display: inline-flex; align-items: center; gap: 4px; cursor: pointer;" title="Pratinjau Transkrip Nilai (PDF)">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
+                        <span>Transkrip</span>
+                    </button>
+                    <button class="btn-portal-outline btn-view-mhs" data-id="${mhs.id}" style="padding: 5px 10px; font-size: 0.775rem;">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                        <span>Detail</span>
+                    </button>
+                </div>
             </td>
         `;
         tbody.appendChild(tr);
+    });
+
+    document.querySelectorAll('.btn-transkrip-mhs').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const mhsId = btn.getAttribute('data-id');
+            const nama = btn.getAttribute('data-nama');
+            const nim = btn.getAttribute('data-nim');
+            openPdfPreviewModal(`/api/admin/transkrip/download.php?pendaftaran_id=${mhsId}`, nama, nim);
+        });
     });
 
     document.querySelectorAll('.btn-view-mhs').forEach(btn => {
@@ -858,15 +874,11 @@ function showMhsDetailModal(mhs) {
             <div style="background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 10px; padding: 14px 16px; margin-bottom: 20px; text-align: left;">
                 <div style="display: flex; align-items: center; gap: 8px; font-weight: 700; color: #3730a3; font-size: 0.875rem; margin-bottom: 6px;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 3h5v5"/><path d="M4 20L21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/></svg>
-                    <span>Mahasiswa Hasil Penetapan / Pengalihan Unit</span>
+                    <span>Pendaftar Hasil Pemindahan Unit</span>
                 </div>
-                <div style="font-size: 0.825rem; color: #4338ca; line-height: 1.5;">
-                    Mahasiswa ini dialihkan oleh Administrator BLKA dari pilihan kantor awal:
-                    <div style="margin-top: 6px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                        <span style="background: #ffffff; border: 1px solid #cbd5e1; padding: 3px 10px; border-radius: 6px; font-weight: 600; color: #64748b; text-decoration: line-through; font-size: 0.8rem;">
-                            ${escapeHtml(mhs.unit_asal_nama || 'Kantor Pilihan Awal')}
-                        </span>
-                        <span style="font-weight: 800; color: #4338ca;">➔</span>
+                <div style="font-size: 0.825rem; color: #4338ca; line-height: 1.4;">
+                    Mahasiswa ini awalnya memilih unit lain, namun oleh Administrator BLKA dialokasikan ke unit Anda:
+                    <div style="margin-top: 6px;">
                         <span style="background: #e0e7ff; border: 1px solid #a5b4fc; padding: 3px 10px; border-radius: 6px; font-weight: 700; color: #1e1b4b; font-size: 0.8rem;">
                             ${escapeHtml(mhs.unit_tujuan_nama || 'Unit Kantor Anda')}
                         </span>
@@ -921,7 +933,21 @@ function showMhsDetailModal(mhs) {
             </div>
         </div>
 
-        <div class="mhs-detail-item" style="margin-top: 16px;">
+        <div class="mhs-detail-item" style="margin-top: 14px; display: flex; align-items: center; justify-content: space-between; background: #f8fafc; padding: 12px 16px; border-radius: 10px; border: 1px solid #e2e8f0; flex-wrap: wrap; gap: 8px;">
+            <div>
+                <div class="mhs-detail-label" style="margin-bottom: 2px;">Dokumen Transkrip Nilai</div>
+                <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    <span style="font-weight: 700; font-size: 0.85rem; color: #1e293b; font-family: monospace;">${escapeHtml(mhs.transkrip_filename || (mhs.transkrip_path ? mhs.transkrip_path.split('/').pop() : `${mhs.nim}.pdf`))}</span>
+                </div>
+            </div>
+            <button type="button" id="btn-modal-transkrip-viewer" class="btn-portal-outline" style="padding: 6px 14px; font-size: 0.8rem; font-weight: 700; color: #0284c7; border-color: #bae6fd; background: #e0f2fe; display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
+                <span>Pratinjau Transkrip Nilai</span>
+            </button>
+        </div>
+
+        <div class="mhs-detail-item" style="margin-top: 14px;">
             <div class="mhs-detail-label">Peminatan yang Dipilih</div>
             <div class="mhs-detail-val">${mhs.peminatan && mhs.peminatan.length > 0 ? escapeHtml(mhs.peminatan.join(', ')) : '-'}</div>
         </div>
@@ -933,6 +959,13 @@ function showMhsDetailModal(mhs) {
     `;
 
     modal.classList.remove('hidden');
+
+    const btnTranskrip = document.getElementById('btn-modal-transkrip-viewer');
+    if (btnTranskrip) {
+        btnTranskrip.addEventListener('click', () => {
+            openPdfPreviewModal(`/api/admin/transkrip/download.php?pendaftaran_id=${mhs.id}`, mhs.nama, mhs.nim);
+        });
+    }
 }
 
 function renderPendaftarPagination(pag) {

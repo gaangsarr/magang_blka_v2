@@ -447,6 +447,21 @@
                         <div><span style="color: #64748b;">NIM:</span> <strong id="modal-mhs-nim" style="color: #0b3d6b; font-family: monospace; display: block;">-</strong></div>
                         <div><span style="color: #64748b;">Jurusan:</span> <span id="modal-mhs-jurusan" style="color: #0f172a; font-weight: 600; display: block;">-</span></div>
                         <div><span style="color: #64748b;">Waktu Pengajuan:</span> <span id="modal-submit-date" style="color: #475569; font-family: monospace; display: block;">-</span></div>
+                        
+                        <div style="grid-column: 1 / -1; margin-top: 6px; padding-top: 10px; border-top: 1px dashed #e2e8f0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                            <div>
+                                <span style="color: #64748b; font-size: 0.8rem; display: block;">Dokumen Terlampir:</span>
+                                <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                    <span id="modal-transkrip-filename" style="font-size: 0.875rem; font-weight: 700; color: #1e293b; font-family: monospace;">-</span>
+                                </div>
+                                <span id="modal-transkrip-meta" style="font-size: 0.75rem; color: #64748b; display: block; margin-top: 2px;"></span>
+                            </div>
+                            <button type="button" id="modal-btn-download-transkrip" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; color: #0284c7; background: #e0f2fe; border: 1px solid #bae6fd; text-decoration: none; transition: background 0.2s ease; cursor: pointer;">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
+                                <span>Lihat Transkrip PDF</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -617,6 +632,41 @@
             document.getElementById('modal-mhs-nim').innerText = item.nim;
             document.getElementById('modal-mhs-jurusan').innerText = item.jurusan || '-';
             document.getElementById('modal-submit-date').innerText = item.submitted_at;
+
+            // Transkrip Nilai Modal Viewer & Filename Display
+            const btnTranskrip = document.getElementById('modal-btn-download-transkrip');
+            const transkripNameEl = document.getElementById('modal-transkrip-filename');
+            const transkripMetaEl = document.getElementById('modal-transkrip-meta');
+
+            const pId = item.pendaftaran_id || item.id;
+            const fileName = item.transkrip_filename || (item.transkrip_path ? item.transkrip_path.split('/').pop() : null);
+
+            if (fileName) {
+                if (transkripNameEl) transkripNameEl.innerText = fileName;
+                if (transkripMetaEl) {
+                    transkripMetaEl.innerText = item.transkrip_uploaded_at 
+                        ? `Diunggah: ${item.transkrip_uploaded_at} (PDF)` 
+                        : 'Berkas PDF Transkrip Nilai';
+                }
+                if (btnTranskrip) {
+                    btnTranskrip.style.display = 'inline-flex';
+                    btnTranskrip.onclick = (e) => {
+                        e.preventDefault();
+                        if (typeof window.openPdfPreviewModal === 'function') {
+                            window.openPdfPreviewModal(`/api/mahasiswa/transkrip/download.php?pendaftaran_id=${pId}`, item.nama || 'Transkrip Nilai', `NIM: ${item.nim || '-'}`);
+                        } else {
+                            window.open(`/api/mahasiswa/transkrip/download.php?pendaftaran_id=${pId}`, '_blank');
+                        }
+                    };
+                }
+            } else {
+                if (transkripNameEl) transkripNameEl.innerText = 'Belum Ada Berkas';
+                if (transkripMetaEl) transkripMetaEl.innerText = 'Transkrip belum diunggah';
+                if (btnTranskrip) {
+                    btnTranskrip.style.display = 'none';
+                    btnTranskrip.onclick = null;
+                }
+            }
 
             // Unit Asal
             const unitAsalRow = document.getElementById('modal-unit-asal-row');
@@ -964,5 +1014,6 @@
 
         fetchStatusAndProfile();
     </script>
+    <script type="module" src="/js/pdf-modal.js"></script>
 </body>
 </html>

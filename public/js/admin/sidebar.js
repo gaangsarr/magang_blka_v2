@@ -194,7 +194,7 @@ export function initSidebar() {
 
                 navHtml += `
                     <div class="nav-group ${groupCollapsedClass}" id="${item.id}">
-                        <div class="nav-group-header">
+                        <div class="nav-group-header" title="${item.label}">
                             <div class="nav-group-header-left">
                                 ${item.icon}
                                 <span>${item.label}</span>
@@ -214,12 +214,13 @@ export function initSidebar() {
                 const superAdminAttr = item.superAdminOnly ? 'data-super-admin-only="true"' : '';
 
                 navHtml += `
-                    <a href="${item.path}" class="nav-link ${activeClass}" id="${item.id}" ${superAdminAttr}>
+                    <a href="${item.path}" class="nav-link ${activeClass}" id="${item.id}" ${superAdminAttr} title="${item.label}">
                         ${item.icon}
                         <span>${item.label}</span>
                     </a>
                 `;
             }
+
         });
 
         navHtml += `
@@ -231,15 +232,24 @@ export function initSidebar() {
     aside.innerHTML = `
         <!-- Sidebar Brand Header -->
         <div class="sidebar-header">
-            <a href="/admin/index.html" class="sidebar-brand-link">
-                <img src="/assets/img/logo_itpln.png" alt="Logo ITPLN" class="sidebar-logo" onerror="this.style.display='none'" />
-                <div class="sidebar-brand-info">
-                    <div class="sidebar-brand-title">
-                        <span>REMATE</span>
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%;">
+                <a href="/admin/index.html" class="sidebar-brand-link">
+                    <img src="/assets/img/logo_itpln.png" alt="Logo ITPLN" class="sidebar-logo" onerror="this.style.display='none'" />
+                    <div class="sidebar-brand-info">
+                        <div class="sidebar-brand-title">
+                            <span>REMATE</span>
+                        </div>
+                        <span class="sidebar-subtitle">Rekrutmen Magang Talenta Energi</span>
                     </div>
-                    <span class="sidebar-subtitle">Rekrutmen Magang Talenta Energi</span>
-                </div>
-            </a>
+                </a>
+                <button type="button" id="btn-toggle-sidebar" class="btn-sidebar-toggle" title="Ciutkan / Lebarkan Menu Sidebar" aria-label="Toggle Sidebar">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
+                        <line x1="9" y1="3" x2="9" y2="21"/>
+                        <path d="m14 9-3 3 3 3"/>
+                    </svg>
+                </button>
+            </div>
         </div>
 
         <!-- Sidebar Scrollable Navigation -->
@@ -271,10 +281,33 @@ export function initSidebar() {
         const header = group.querySelector('.nav-group-header');
         if (header) {
             header.addEventListener('click', () => {
+                if (aside.classList.contains('sidebar-collapsed')) {
+                    // Jika sedang mode collapsed dan diklik, lebarkan kembali
+                    aside.classList.remove('sidebar-collapsed');
+                    localStorage.setItem('remate_admin_sidebar_collapsed', 'false');
+                    window.dispatchEvent(new Event('resize'));
+                }
                 group.classList.toggle('collapsed');
             });
         }
     });
+
+    // Sidebar Collapsed Management via localStorage
+    const COLLAPSED_KEY = 'remate_admin_sidebar_collapsed';
+    if (localStorage.getItem(COLLAPSED_KEY) === 'true') {
+        aside.classList.add('sidebar-collapsed');
+    }
+
+    const toggleBtn = aside.querySelector('#btn-toggle-sidebar');
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isNowCollapsed = aside.classList.toggle('sidebar-collapsed');
+            localStorage.setItem(COLLAPSED_KEY, isNowCollapsed ? 'true' : 'false');
+            window.dispatchEvent(new Event('resize'));
+        });
+    }
+
 
     // Handle Sidebar Scroll Position Retention & Active Item In-View
     const navEl = aside.querySelector('.sidebar-nav');
