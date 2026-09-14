@@ -1,5 +1,3 @@
-import { openPdfPreviewModal } from '/js/pdf-modal.js';
-
 document.addEventListener('DOMContentLoaded', async () => {
     const statusRes = await fetch('/api/admin/status.php');
     const statusData = await statusRes.json();
@@ -263,7 +261,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 btnTranskrip.style.display = 'inline-flex';
                 btnTranskrip.onclick = (e) => {
                     e.preventDefault();
-                    openPdfPreviewModal(`/api/admin/transkrip/download.php?pendaftaran_id=${p.id}`, p.nama || 'Pendaftar', `NIM: ${p.nim || '-'}`);
+                    window.open(`/api/admin/transkrip/download.php?pendaftaran_id=${p.id}`, '_blank');
                 };
             } else {
                 btnTranskrip.style.display = 'none';

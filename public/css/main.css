@@ -1360,6 +1360,57 @@ body.dot-bg {
   pointer-events: auto;
 }
 
+/* Mobile Drawer User Profile Card */
+.mobile-drawer-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  margin-bottom: 2px;
+}
+
+.mobile-drawer-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #0b3d6b;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.mobile-drawer-user-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.mobile-drawer-user-name {
+  font-family: var(--font-heading);
+  font-size: 0.925rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mobile-drawer-user-meta {
+  font-size: 0.775rem;
+  color: #64748b;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .mobile-drawer-header {
   display: flex;
   align-items: center;
@@ -1468,14 +1519,9 @@ body.dot-bg {
   }
 
   .navbar-menu,
-  .navbar-action {
-    display: none; /* Hide desktop menu and button */
-  }
-
-  .navbar-action:has(.navbar-profile-wrapper),
+  .navbar-action,
   .navbar-profile-wrapper {
-    display: flex !important; /* Show profile avatar on mobile */
-    align-items: center;
+    display: none !important; /* Hide desktop menu, action, and profile from top bar on mobile */
   }
 
   .navbar-toggle {
@@ -2505,5 +2551,231 @@ form[style*="overflow-y: auto"]::-webkit-scrollbar-thumb:hover {
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+/* ============================================================
+   COMPONENT: INFORMASI & PANDUAN MAGANG (DOCUMENTS SECTION)
+   ============================================================ */
+.guidelines-section {
+  width: calc(100% - 48px);
+  max-width: 1080px;
+  margin: 48px auto 60px;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.guidelines-header {
+  text-align: center;
+  margin-bottom: 36px;
+}
+
+.guidelines-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #e0f2fe;
+  color: #0369a1;
+  font-size: 0.775rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 5px 14px;
+  border-radius: 9999px;
+  margin-bottom: 12px;
+  border: 1px solid #bae6fd;
+}
+
+.guidelines-pill svg {
+  color: #0284c7;
+}
+
+.guidelines-title {
+  font-family: var(--font-heading);
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #0b3d6b;
+  margin: 0 0 10px 0;
+  line-height: 1.25;
+}
+
+.guidelines-desc {
+  font-size: 0.95rem;
+  color: #64748b;
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.55;
+}
+
+.guidelines-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+@media (max-width: 768px) {
+  .guidelines-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .guidelines-section {
+    width: calc(100% - 32px);
+    margin: 32px auto 44px;
+  }
+  .guidelines-title {
+    font-size: 1.4rem;
+  }
+}
+
+.doc-guide-card {
+  background: #ffffff;
+  border-radius: 18px;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  box-shadow: 0 4px 20px -2px rgba(11, 61, 107, 0.04), 0 2px 6px -1px rgba(0, 0, 0, 0.02);
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.doc-guide-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 36px -4px rgba(11, 61, 107, 0.09), 0 4px 12px -2px rgba(0, 0, 0, 0.04);
+  border-color: #bae6fd;
+}
+
+.doc-guide-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.doc-guide-icon-wrap {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: #f0f9ff;
+  border: 1px solid #e0f2fe;
+  color: #0284c7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.doc-guide-card:hover .doc-guide-icon-wrap {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #0284c7;
+}
+
+.doc-guide-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 0.725rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+  letter-spacing: 0.02em;
+  border: 1px solid #e2e8f0;
+}
+
+.doc-guide-badge.badge-primary {
+  background: #e0f2fe;
+  color: #0369a1;
+  border-color: #bae6fd;
+}
+
+.doc-guide-card-content {
+  flex: 1 0 auto;
+  margin-bottom: 24px;
+}
+
+.doc-guide-card-title {
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 8px 0;
+  line-height: 1.35;
+}
+
+.doc-guide-card-desc {
+  font-size: 0.875rem;
+  color: #64748b;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.doc-guide-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 18px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.btn-doc-preview {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 11px 18px;
+  background: #0b3d6b;
+  color: #ffffff;
+  border: 1px solid #0b3d6b;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.btn-doc-preview:hover {
+  background: #0284c7;
+  border-color: #0284c7;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+}
+
+.btn-doc-preview svg {
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   COMPONENT: IN-PAGE PDF PREVIEW MODAL
+   ============================================================ */
+.admin-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.admin-modal-overlay.active {
+  opacity: 1;
+  visibility: visible;
 }
 

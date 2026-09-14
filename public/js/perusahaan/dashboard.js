@@ -1,5 +1,4 @@
 import { showAdminAlert, showAdminConfirm, showAdminToast } from '/js/admin/common.js';
-import { openPdfPreviewModal } from '/js/pdf-modal.js';
 
 let csrfToken = null;
 let currentSummary = null;
@@ -849,9 +848,7 @@ function renderPendaftarTable(list) {
     document.querySelectorAll('.btn-transkrip-mhs').forEach(btn => {
         btn.addEventListener('click', () => {
             const mhsId = btn.getAttribute('data-id');
-            const nama = btn.getAttribute('data-nama');
-            const nim = btn.getAttribute('data-nim');
-            openPdfPreviewModal(`/api/admin/transkrip/download.php?pendaftaran_id=${mhsId}`, nama, nim);
+            window.open(`/api/admin/transkrip/download.php?pendaftaran_id=${mhsId}`, '_blank');
         });
     });
 
@@ -963,7 +960,7 @@ function showMhsDetailModal(mhs) {
     const btnTranskrip = document.getElementById('btn-modal-transkrip-viewer');
     if (btnTranskrip) {
         btnTranskrip.addEventListener('click', () => {
-            openPdfPreviewModal(`/api/admin/transkrip/download.php?pendaftaran_id=${mhs.id}`, mhs.nama, mhs.nim);
+            window.open(`/api/admin/transkrip/download.php?pendaftaran_id=${mhs.id}`, '_blank');
         });
     }
 }

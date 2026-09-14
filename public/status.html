@@ -327,6 +327,13 @@
 
     <!-- Mobile Navigation Drawer Dropdown -->
     <div class="mobile-menu-drawer" id="mobile-menu-drawer">
+      <div class="mobile-drawer-profile" id="mobileDrawerProfile">
+        <div class="mobile-drawer-avatar" id="mobileDrawerAvatar">M</div>
+        <div class="mobile-drawer-user-info">
+          <div class="mobile-drawer-user-name" id="mobileDrawerUserName">Memuat...</div>
+          <div class="mobile-drawer-user-meta" id="mobileDrawerUserMeta">-</div>
+        </div>
+      </div>
       <ul class="mobile-menu-links">
         <li><a href="/login.html">Beranda</a></li>
         <li><a href="/daftar.html">Pendaftaran</a></li>
@@ -652,11 +659,7 @@
                     btnTranskrip.style.display = 'inline-flex';
                     btnTranskrip.onclick = (e) => {
                         e.preventDefault();
-                        if (typeof window.openPdfPreviewModal === 'function') {
-                            window.openPdfPreviewModal(`/api/mahasiswa/transkrip/download.php?pendaftaran_id=${pId}`, item.nama || 'Transkrip Nilai', `NIM: ${item.nim || '-'}`);
-                        } else {
-                            window.open(`/api/mahasiswa/transkrip/download.php?pendaftaran_id=${pId}`, '_blank');
-                        }
+                        window.open(`/api/mahasiswa/transkrip/download.php?pendaftaran_id=${pId}`, '_blank');
                     };
                 }
             } else {
@@ -820,6 +823,13 @@
                     if (cardJurusan) cardJurusan.textContent = u.jurusan;
                     if (cardAngkatan) cardAngkatan.textContent = u.angkatan;
                     if (cardEmail) cardEmail.textContent = u.email;
+
+                    const mobileAvatar = document.getElementById('mobileDrawerAvatar');
+                    const mobileName = document.getElementById('mobileDrawerUserName');
+                    const mobileMeta = document.getElementById('mobileDrawerUserMeta');
+                    if (mobileAvatar) mobileAvatar.textContent = initial;
+                    if (mobileName) mobileName.textContent = u.nama;
+                    if (mobileMeta) mobileMeta.textContent = (u.nim || '-') + (u.jurusan ? ' • ' + u.jurusan : '');
                 }
 
                 // Fetch Registration History
@@ -1014,6 +1024,5 @@
 
         fetchStatusAndProfile();
     </script>
-    <script type="module" src="/js/pdf-modal.js"></script>
 </body>
 </html>

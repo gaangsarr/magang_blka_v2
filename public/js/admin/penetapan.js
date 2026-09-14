@@ -4,7 +4,6 @@
  */
 
 import { showAdminAlert, showAdminConfirm, showAdminToast } from './common.js';
-import { openPdfPreviewModal } from '/js/pdf-modal.js';
 
 let csrfToken = null;
 let allPenetapanData = [];
@@ -601,10 +600,10 @@ function renderTable(dataArray) {
             <td><span class="badge-status ${badgeClass}">${statusLabel}</span></td>
             <td>
                 <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                    <button type="button" style="display: inline-flex; align-items: center; gap: 4px; padding: 6px 10px; font-size: 0.775rem; background: #e0f2fe; border: 1px solid #bae6fd; color: #0284c7; font-weight: 700; border-radius: 8px; cursor: pointer;" title="Pratinjau Dokumen Transkrip Nilai (PDF)" onclick="openPdfPreviewModal('/api/admin/transkrip/download.php?pendaftaran_id=${p.pendaftaran_id}', '${escapeHtml(p.nama).replace(/'/g, "\\'")}', 'NIM: ${escapeHtml(p.nim)}')">
+                    <a href="/api/admin/transkrip/download.php?pendaftaran_id=${p.pendaftaran_id}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 4px; padding: 6px 10px; font-size: 0.775rem; background: #e0f2fe; border: 1px solid #bae6fd; color: #0284c7; font-weight: 700; border-radius: 8px; text-decoration: none; cursor: pointer;" title="Buka Dokumen Transkrip Nilai (PDF) di Tab Baru">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
                         <span>Transkrip</span>
-                    </button>
+                    </a>
                     <button type="button" style="display: inline-flex; align-items: center; gap: 4px; padding: 6px 10px; font-size: 0.775rem; background: #ecfdf5; border: 1px solid #a7f3d0; color: #047857; font-weight: 700; border-radius: 8px; cursor: pointer;" onclick="openApproveModal(${p.pendaftaran_id}, '${escapeHtml(p.nama).replace(/'/g, "\\'")}', '${escapeHtml(p.unit_nama).replace(/'/g, "\\'")}')">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                         <span>Setujui</span>

@@ -279,17 +279,30 @@ function updateLandingPageForLoggedInUser(data) {
     }
   }
 
-  // Mobile Action
+  // Mobile Drawer Profile Card (matches status.html & daftar.html)
+  const mobileProfile = document.getElementById('mobileDrawerProfile');
+  if (mobileProfile) {
+    mobileProfile.style.display = 'flex';
+    const mobileAvatar = document.getElementById('mobileDrawerAvatar');
+    const mobileName = document.getElementById('mobileDrawerUserName');
+    const mobileMeta = document.getElementById('mobileDrawerUserMeta');
+    if (mobileAvatar) mobileAvatar.textContent = initial;
+    if (mobileName) mobileName.textContent = user ? user.nama : 'Mahasiswa';
+    if (mobileMeta) mobileMeta.textContent = (user && user.nim ? user.nim : '-') + (user && user.jurusan ? ' • ' + user.jurusan : '');
+  }
+
+  // Mobile Action (Identical to status.html & daftar.html)
   const mobileMenuAction = document.querySelector('.mobile-menu-action');
   if (mobileMenuAction) {
+    mobileMenuAction.style.marginTop = '10px';
     mobileMenuAction.innerHTML = `
-      <button type="button" class="btn-mobile-masuk" style="background:#dc2626;" id="btnMobileLandingLogout">
-        Keluar (${escapeHtml(shortName)})
+      <button type="button" class="btn-mobile-masuk" style="background:#dc2626;" id="btnMobileLogout">
+        Keluar (Logout)
       </button>
     `;
-    const btnMobileLandingLogout = document.getElementById('btnMobileLandingLogout');
-    if (btnMobileLandingLogout) {
-      btnMobileLandingLogout.addEventListener('click', async () => {
+    const btnMobileLogout = document.getElementById('btnMobileLogout');
+    if (btnMobileLogout) {
+      btnMobileLogout.addEventListener('click', async () => {
         try {
           await fetch('/api/auth/logout.php', { method: 'POST', credentials: 'same-origin' });
         } catch (_) {}

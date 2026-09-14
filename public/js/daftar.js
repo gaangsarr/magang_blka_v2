@@ -109,6 +109,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (cardJurusan) cardJurusan.textContent = user.jurusan;
             if (cardAngkatan) cardAngkatan.textContent = user.angkatan;
             if (cardEmail) cardEmail.textContent = user.email;
+
+            const mobileAvatar = document.getElementById('mobileDrawerAvatar');
+            const mobileName = document.getElementById('mobileDrawerUserName');
+            const mobileMeta = document.getElementById('mobileDrawerUserMeta');
+            if (mobileAvatar) mobileAvatar.textContent = initial;
+            if (mobileName) mobileName.textContent = user.nama;
+            if (mobileMeta) mobileMeta.textContent = (user.nim || '-') + (user.jurusan ? ' • ' + user.jurusan : '');
         }
 
         // Ambil Data Profil
