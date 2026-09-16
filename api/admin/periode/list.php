@@ -21,6 +21,9 @@ if (!Auth::isLoggedInAdmin()) {
 try {
     $pdo = Database::getInstance();
     
+    // Auto-close periode yang telah melewati batas penutupan agar status di admin selalu real-time
+    \App\PeriodeHelper::closeExpiredPeriodes($pdo);
+    
     $stmt = $pdo->prepare("SELECT * FROM periode ORDER BY id DESC");
     $stmt->execute();
     $periode = $stmt->fetchAll(PDO::FETCH_ASSOC);

@@ -120,6 +120,8 @@ try {
             p.ipk,
             p.jumlah_sks,
             p.transkrip_path,
+            p.cv_path,
+            p.porto_path,
             p.jenis_kelamin,
             p.alamat AS alamat_domisili,
             p.rt,

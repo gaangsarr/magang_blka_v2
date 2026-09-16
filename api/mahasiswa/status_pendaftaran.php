@@ -30,6 +30,10 @@ try {
             p.program,
             p.transkrip_path,
             p.transkrip_uploaded_at,
+            p.cv_path,
+            p.cv_uploaded_at,
+            p.porto_path,
+            p.porto_uploaded_at,
             p.nama_snapshot AS nama,
             m.nim,
             m.jurusan_id,
@@ -112,7 +116,13 @@ try {
             'id'                => (int)$row['pendaftaran_id'],
             'transkrip_path'    => $row['transkrip_path'] ?? null,
             'transkrip_uploaded_at' => $row['transkrip_uploaded_at'] ?? null,
-            'transkrip_filename'=> !empty($row['transkrip_path']) ? basename((string)$row['transkrip_path']) : null
+            'transkrip_filename'=> !empty($row['transkrip_path']) ? basename((string)$row['transkrip_path']) : null,
+            'cv_path'           => $row['cv_path'] ?? null,
+            'cv_uploaded_at'    => $row['cv_uploaded_at'] ?? null,
+            'cv_filename'       => !empty($row['cv_path']) ? basename((string)$row['cv_path']) : null,
+            'porto_path'        => $row['porto_path'] ?? null,
+            'porto_uploaded_at' => $row['porto_uploaded_at'] ?? null,
+            'porto_filename'    => !empty($row['porto_path']) ? basename((string)$row['porto_path']) : null
         ];
     }
 

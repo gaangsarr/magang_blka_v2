@@ -42,6 +42,20 @@ if (!in_array($status, $validStatus, true)) {
 $adminId = Auth::getAdminId();
 
 try {
+    $pdo = Database::getInstance();
+
+    // Validasi jika ingin mengubah status menjadi 'dibuka' tapi waktu penutupan sudah lewat
+    if ($status === 'dibuka') {
+        $stmtCek = $pdo->prepare("SELECT tanggal_selesai, jam_selesai FROM periode WHERE id = ?");
+        $stmtCek->execute([$id]);
+        $pData = $stmtCek->fetch(PDO::FETCH_ASSOC);
+        if ($pData && \App\PeriodeHelper::isPeriodeExpired($pData)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Tidak dapat membuka periode karena waktu penutupan (tanggal & jam selesai) sudah terlewati. Silakan edit dan perpanjang tanggal/jam selesai terlebih dahulu.']);
+            exit;
+        }
+    }
+
     Database::transaction(function (PDO $pdo) use ($id, $status, $adminId) {
         if (in_array($status, ['dibuka', 'persiapan'], true)) {
             // Tutup periode lain yang sedang dibuka atau persiapan (hanya 1 periode yang boleh aktif)

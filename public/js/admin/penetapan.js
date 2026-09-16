@@ -598,12 +598,23 @@ function renderTable(dataArray) {
                 ${isMoved ? '<span style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.725rem; background: #fef3c7; color: #b45309; padding: 2px 6px; border-radius: 4px; font-weight: 700; margin-top: 2px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Dipindahkan</span>' : ''}
             </td>
             <td><span class="badge-status ${badgeClass}">${statusLabel}</span></td>
-            <td>
-                <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+            <td style="white-space: nowrap;">
+                <div style="display: inline-flex; gap: 4px; align-items: center; flex-wrap: nowrap; white-space: nowrap;">
+                    ${p.transkrip_path ? `
                     <a href="/api/admin/transkrip/download.php?pendaftaran_id=${p.pendaftaran_id}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 4px; padding: 6px 10px; font-size: 0.775rem; background: #e0f2fe; border: 1px solid #bae6fd; color: #0284c7; font-weight: 700; border-radius: 8px; text-decoration: none; cursor: pointer;" title="Buka Dokumen Transkrip Nilai (PDF) di Tab Baru">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
                         <span>Transkrip</span>
-                    </a>
+                    </a>` : ''}
+                    ${p.cv_path ? `
+                    <a href="/api/admin/cv/download.php?pendaftaran_id=${p.pendaftaran_id}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 4px; padding: 6px 10px; font-size: 0.775rem; background: #ecfdf5; border: 1px solid #a7f3d0; color: #047857; font-weight: 700; border-radius: 8px; text-decoration: none; cursor: pointer;" title="Buka Dokumen Curriculum Vitae / CV (PDF) di Tab Baru">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
+                        <span>CV</span>
+                    </a>` : ''}
+                    ${p.porto_path ? `
+                    <a href="/api/admin/porto/download.php?pendaftaran_id=${p.pendaftaran_id}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 4px; padding: 6px 10px; font-size: 0.775rem; background: #ede9fe; border: 1px solid #ddd6fe; color: #6d28d9; font-weight: 700; border-radius: 8px; text-decoration: none; cursor: pointer;" title="Buka Dokumen Portofolio (PDF) di Tab Baru">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
+                        <span>Porto</span>
+                    </a>` : ''}
                     <button type="button" style="display: inline-flex; align-items: center; gap: 4px; padding: 6px 10px; font-size: 0.775rem; background: #ecfdf5; border: 1px solid #a7f3d0; color: #047857; font-weight: 700; border-radius: 8px; cursor: pointer;" onclick="openApproveModal(${p.pendaftaran_id}, '${escapeHtml(p.nama).replace(/'/g, "\\'")}', '${escapeHtml(p.unit_nama).replace(/'/g, "\\'")}')">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                         <span>Setujui</span>

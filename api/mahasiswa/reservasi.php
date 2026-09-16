@@ -60,7 +60,7 @@ try {
 
         // 2. Kunci row unit_pelaksana_periode untuk cek kuota dan periode
         $stmtUpp = $pdo->prepare("
-            SELECT upp.kuota_tersisa, upp.kuota_total, upp.periode_id, pr.nama AS nama_periode, pr.status AS status_periode, pr.angkatan_eligible
+            SELECT upp.kuota_tersisa, upp.kuota_total, upp.periode_id, pr.nama AS nama_periode, pr.status AS status_periode, pr.angkatan_eligible, pr.tanggal_selesai, pr.jam_selesai
             FROM unit_pelaksana_periode upp 
             JOIN periode pr ON upp.periode_id = pr.id
             WHERE upp.id = :upp_id FOR UPDATE
@@ -74,6 +74,15 @@ try {
 
         if ($upp['status_periode'] !== 'dibuka') {
             throw new \Exception('Periode magang untuk unit ini tidak sedang dibuka.');
+        }
+
+        // Failsafe pengecekan jam server
+        if (\App\PeriodeHelper::isPeriodeExpired([
+            'tanggal_selesai' => $upp['tanggal_selesai'] ?? null,
+            'jam_selesai'     => $upp['jam_selesai'] ?? null
+        ])) {
+            \App\PeriodeHelper::closeExpiredPeriodes($pdo);
+            throw new \Exception('Periode pendaftaran magang telah ditutup.');
         }
 
         if (!empty($upp['angkatan_eligible'])) {

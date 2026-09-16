@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+ob_start();
 require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
 
 use Dotenv\Dotenv;
@@ -37,43 +38,117 @@ foreach ($required as $req) {
     }
 }
 
-// Validasi File Transkrip Nilai (Wajib)
-Auth::startSession(startPHP: true);
-$transkripPath = trim((string)($body['transkrip_path'] ?? $_SESSION['transkrip_temp_path'] ?? ''));
-
-if (empty($transkripPath)) {
-    http_response_code(400);
-    echo json_encode(['error' => 'Berkas transkrip nilai wajib diunggah sebelum mengirim pendaftaran.']);
-    exit;
-}
-
-if (!str_starts_with($transkripPath, 'transkrip/') || str_contains($transkripPath, '..')) {
-    http_response_code(400);
-    echo json_encode(['error' => 'Format path transkrip tidak valid.']);
-    exit;
-}
-
-$mhsAuth = Auth::getMahasiswa();
-$mhsNim = preg_replace('/[^a-zA-Z0-9_-]/', '', (string)($mhsAuth['nim'] ?? ''));
-if (!str_ends_with($transkripPath, '/' . $mhsNim . '.pdf') && !str_ends_with($transkripPath, $mhsNim . '.pdf')) {
-    http_response_code(400);
-    echo json_encode(['error' => 'Dokumen transkrip tidak cocok dengan NIM Anda. Silakan unggah ulang.']);
-    exit;
-}
-
-$transkripFullPath = dirname(__DIR__, 2) . '/storage/' . $transkripPath;
-if (!file_exists($transkripFullPath) || !is_readable($transkripFullPath)) {
-    http_response_code(400);
-    echo json_encode(['error' => 'File transkrip tidak ditemukan di server. Silakan unggah ulang transkrip Anda.']);
-    unset($_SESSION['transkrip_temp_path'], $_SESSION['transkrip_periode_id']);
-    exit;
-}
-
 $mahasiswaId = Auth::getMahasiswaId();
 $periodeId = (int)$body['periode_id'];
 $reservasiId = (int)$body['reservasi_id'];
 $uppId = (int)$body['upp_id'];
 $peminatanIds = isset($body['peminatan']) && is_array($body['peminatan']) ? array_map('intval', $body['peminatan']) : [];
+
+$pdoEarly = Database::getInstance();
+$stmtPCheck = $pdoEarly->prepare("SELECT angkatan_eligible, nama, status, tanggal_selesai, jam_selesai, syarat_transkrip, syarat_cv, syarat_porto FROM periode WHERE id = :pid");
+$stmtPCheck->execute([':pid' => $periodeId]);
+$periodeDataEarly = $stmtPCheck->fetch(PDO::FETCH_ASSOC);
+
+if (!$periodeDataEarly || $periodeDataEarly['status'] !== 'dibuka') {
+    http_response_code(400);
+    echo json_encode(['error' => 'Periode magang ini tidak sedang dibuka.']);
+    exit;
+}
+
+if (\App\PeriodeHelper::isPeriodeExpired($periodeDataEarly)) {
+    \App\PeriodeHelper::closeExpiredPeriodes($pdoEarly);
+    http_response_code(400);
+    echo json_encode(['error' => 'Periode pendaftaran magang telah ditutup.']);
+    exit;
+}
+
+Auth::startSession(startPHP: true);
+$mhsAuth = Auth::getMahasiswa();
+$mhsNim = preg_replace('/[^a-zA-Z0-9_-]/', '', (string)($mhsAuth['nim'] ?? ''));
+
+// 1. Validasi File Transkrip Nilai (jika disyaratkan)
+$transkripPath = null;
+if (!empty($periodeDataEarly['syarat_transkrip'])) {
+    $transkripPath = trim((string)($body['transkrip_path'] ?? $_SESSION['transkrip_temp_path'] ?? ''));
+    if (empty($transkripPath)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Berkas transkrip nilai wajib diunggah sebelum mengirim pendaftaran.']);
+        exit;
+    }
+    if (!str_starts_with($transkripPath, 'transkrip/') || str_contains($transkripPath, '..')) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Format path transkrip tidak valid.']);
+        exit;
+    }
+    if (!str_ends_with($transkripPath, '/' . $mhsNim . '.pdf') && !str_ends_with($transkripPath, $mhsNim . '.pdf')) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Dokumen transkrip tidak cocok dengan NIM Anda. Silakan unggah ulang.']);
+        exit;
+    }
+    $transkripFullPath = dirname(__DIR__, 2) . '/storage/' . $transkripPath;
+    if (!file_exists($transkripFullPath) || !is_readable($transkripFullPath)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'File transkrip tidak ditemukan di server. Silakan unggah ulang transkrip Anda.']);
+        unset($_SESSION['transkrip_temp_path'], $_SESSION['transkrip_periode_id']);
+        exit;
+    }
+}
+
+// 2. Validasi File CV (jika disyaratkan)
+$cvPath = null;
+if (!empty($periodeDataEarly['syarat_cv'])) {
+    $cvPath = trim((string)($body['cv_path'] ?? $_SESSION['cv_temp_path'] ?? ''));
+    if (empty($cvPath)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Berkas Curriculum Vitae (CV) wajib diunggah sebelum mengirim pendaftaran.']);
+        exit;
+    }
+    if (!str_starts_with($cvPath, 'cv/') || str_contains($cvPath, '..')) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Format path CV tidak valid.']);
+        exit;
+    }
+    if (!str_ends_with($cvPath, '/' . $mhsNim . '.pdf') && !str_ends_with($cvPath, $mhsNim . '.pdf')) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Dokumen CV tidak cocok dengan NIM Anda. Silakan unggah ulang.']);
+        exit;
+    }
+    $cvFullPath = dirname(__DIR__, 2) . '/storage/' . $cvPath;
+    if (!file_exists($cvFullPath) || !is_readable($cvFullPath)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'File CV tidak ditemukan di server. Silakan unggah ulang CV Anda.']);
+        unset($_SESSION['cv_temp_path'], $_SESSION['cv_periode_id']);
+        exit;
+    }
+}
+
+// 3. Validasi File Portofolio (jika disyaratkan)
+$portoPath = null;
+if (!empty($periodeDataEarly['syarat_porto'])) {
+    $portoPath = trim((string)($body['porto_path'] ?? $_SESSION['porto_temp_path'] ?? ''));
+    if (empty($portoPath)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Berkas Portofolio wajib diunggah sebelum mengirim pendaftaran.']);
+        exit;
+    }
+    if (!str_starts_with($portoPath, 'porto/') || str_contains($portoPath, '..')) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Format path Portofolio tidak valid.']);
+        exit;
+    }
+    if (!str_ends_with($portoPath, '/' . $mhsNim . '.pdf') && !str_ends_with($portoPath, $mhsNim . '.pdf')) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Dokumen Portofolio tidak cocok dengan NIM Anda. Silakan unggah ulang.']);
+        exit;
+    }
+    $portoFullPath = dirname(__DIR__, 2) . '/storage/' . $portoPath;
+    if (!file_exists($portoFullPath) || !is_readable($portoFullPath)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'File Portofolio tidak ditemukan di server. Silakan unggah ulang Portofolio Anda.']);
+        unset($_SESSION['porto_temp_path'], $_SESSION['porto_periode_id']);
+        exit;
+    }
+}
 
 
 // Validasi & Sanitasi Ketat Nomor Handphone / WhatsApp (hanya angka, diawali 08/628, 10-14 digit)
@@ -135,13 +210,17 @@ if ($body['program'] === '5_bulan') {
 }
 
 try {
-    Database::transaction(function (PDO $pdo) use ($mahasiswaId, $periodeId, $reservasiId, $uppId, $body, $peminatanIds, $transkripPath) {
+    Database::transaction(function (PDO $pdo) use ($mahasiswaId, $periodeId, $reservasiId, $uppId, $body, $peminatanIds, $transkripPath, $cvPath, $portoPath) {
         // 1. Validasi periode dibuka dan angkatan eligible
-        $stmtP = $pdo->prepare("SELECT angkatan_eligible, nama, status FROM periode WHERE id = :pid");
+        $stmtP = $pdo->prepare("SELECT angkatan_eligible, nama, status, tanggal_selesai, jam_selesai FROM periode WHERE id = :pid");
         $stmtP->execute([':pid' => $periodeId]);
         $periodeData = $stmtP->fetch(PDO::FETCH_ASSOC);
         if (!$periodeData || $periodeData['status'] !== 'dibuka') {
             throw new \Exception("Periode magang ini tidak sedang dibuka.");
+        }
+        if (\App\PeriodeHelper::isPeriodeExpired($periodeData)) {
+            \App\PeriodeHelper::closeExpiredPeriodes($pdo);
+            throw new \Exception("Periode pendaftaran magang telah ditutup.");
         }
         if (!empty($periodeData['angkatan_eligible'])) {
             $mhsData = Auth::getMahasiswa();
@@ -182,12 +261,16 @@ try {
                 mahasiswa_id, periode_id, reservasi_id, unit_pelaksana_periode_id, 
                 program, nama_snapshot, jenis_kelamin, ipk, jumlah_sks, no_hp, 
                 alamat, rt, rw, kelurahan, kecamatan, kota_kabupaten, provinsi, latitude, longitude,
-                transkrip_path, transkrip_uploaded_at
+                transkrip_path, transkrip_uploaded_at,
+                cv_path, cv_uploaded_at,
+                porto_path, porto_uploaded_at
             ) VALUES (
                 :mid, :pid, :rid, :upp_id,
                 :prog, :nama, :jk, :ipk, :sks, :hp,
                 :almt, :rt, :rw, :kel, :kec, :kota, :prov, :lat, :lng,
-                :transkrip_path, :transkrip_uploaded_at
+                :transkrip_path, :transkrip_uploaded_at,
+                :cv_path, :cv_uploaded_at,
+                :porto_path, :porto_uploaded_at
             )
         ");
         
@@ -212,7 +295,11 @@ try {
             ':lat'                   => (float)$body['lat'],
             ':lng'                   => (float)$body['lng'],
             ':transkrip_path'        => $transkripPath,
-            ':transkrip_uploaded_at' => date('Y-m-d H:i:s')
+            ':transkrip_uploaded_at' => $transkripPath ? date('Y-m-d H:i:s') : null,
+            ':cv_path'               => $cvPath,
+            ':cv_uploaded_at'        => $cvPath ? date('Y-m-d H:i:s') : null,
+            ':porto_path'            => $portoPath,
+            ':porto_uploaded_at'     => $portoPath ? date('Y-m-d H:i:s') : null,
         ]);
         
         $pendaftaranId = $pdo->lastInsertId();
@@ -232,14 +319,21 @@ try {
         }
     });
 
-    // Bersihkan session temporary transkrip setelah berhasil submit
-    unset($_SESSION['transkrip_temp_path'], $_SESSION['transkrip_periode_id']);
+    // Bersihkan session temporary transkrip, cv, dan porto setelah berhasil submit
+    unset(
+        $_SESSION['transkrip_temp_path'], $_SESSION['transkrip_periode_id'],
+        $_SESSION['cv_temp_path'], $_SESSION['cv_periode_id'],
+        $_SESSION['porto_temp_path'], $_SESSION['porto_periode_id']
+    );
 
+    if (ob_get_length()) ob_clean();
     echo json_encode(['ok' => true, 'message' => 'Pendaftaran berhasil dikirim.']);
 } catch (\Exception $e) {
+    if (ob_get_length()) ob_clean();
     http_response_code(400);
     echo json_encode(['error' => $e->getMessage()]);
 } catch (\Throwable $e) {
+    if (ob_get_length()) ob_clean();
     http_response_code(500);
     echo json_encode(['error' => 'Terjadi kesalahan sistem.']);
 }

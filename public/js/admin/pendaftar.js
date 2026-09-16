@@ -247,25 +247,75 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         badgeContainer.innerHTML = statusBadge;
 
-        // Transkrip Nilai Preview Modal
+        // 1. Transkrip Nilai Preview Modal
+        const wrapTranskrip = document.getElementById('detail-wrapper-transkrip');
         const btnTranskrip = document.getElementById('detail-btn-transkrip');
         const filenameEl = document.getElementById('detail-transkrip-filename');
-        const fileName = p.transkrip_filename || (p.transkrip_path ? p.transkrip_path.split('/').pop() : `${p.nim}.pdf`);
+        const transkripFile = p.transkrip_filename || (p.transkrip_path ? p.transkrip_path.split('/').pop() : `${p.nim}.pdf`);
 
-        if (filenameEl) {
-            filenameEl.innerText = p.transkrip_path ? fileName : 'Belum Ada Berkas';
-        }
-
-        if (btnTranskrip) {
-            if (p.id && p.transkrip_path) {
+        if (p.id && p.transkrip_path) {
+            if (wrapTranskrip) wrapTranskrip.style.display = 'flex';
+            if (filenameEl) filenameEl.innerText = transkripFile;
+            if (btnTranskrip) {
                 btnTranskrip.style.display = 'inline-flex';
                 btnTranskrip.onclick = (e) => {
                     e.preventDefault();
                     window.open(`/api/admin/transkrip/download.php?pendaftaran_id=${p.id}`, '_blank');
                 };
-            } else {
+            }
+        } else {
+            if (wrapTranskrip) wrapTranskrip.style.display = 'none';
+            if (btnTranskrip) {
                 btnTranskrip.style.display = 'none';
                 btnTranskrip.onclick = null;
+            }
+        }
+
+        // 2. Curriculum Vitae (CV) Preview Modal
+        const wrapCv = document.getElementById('detail-wrapper-cv');
+        const btnCv = document.getElementById('detail-btn-cv');
+        const filenameCvEl = document.getElementById('detail-cv-filename');
+        const cvFile = p.cv_filename || (p.cv_path ? p.cv_path.split('/').pop() : `${p.nim}_CV.pdf`);
+
+        if (p.id && p.cv_path) {
+            if (wrapCv) wrapCv.style.display = 'flex';
+            if (filenameCvEl) filenameCvEl.innerText = cvFile;
+            if (btnCv) {
+                btnCv.style.display = 'inline-flex';
+                btnCv.onclick = (e) => {
+                    e.preventDefault();
+                    window.open(`/api/admin/cv/download.php?pendaftaran_id=${p.id}`, '_blank');
+                };
+            }
+        } else {
+            if (wrapCv) wrapCv.style.display = 'none';
+            if (btnCv) {
+                btnCv.style.display = 'none';
+                btnCv.onclick = null;
+            }
+        }
+
+        // 3. Portofolio Preview Modal
+        const wrapPorto = document.getElementById('detail-wrapper-porto');
+        const btnPorto = document.getElementById('detail-btn-porto');
+        const filenamePortoEl = document.getElementById('detail-porto-filename');
+        const portoFile = p.porto_filename || (p.porto_path ? p.porto_path.split('/').pop() : `${p.nim}_Porto.pdf`);
+
+        if (p.id && p.porto_path) {
+            if (wrapPorto) wrapPorto.style.display = 'flex';
+            if (filenamePortoEl) filenamePortoEl.innerText = portoFile;
+            if (btnPorto) {
+                btnPorto.style.display = 'inline-flex';
+                btnPorto.onclick = (e) => {
+                    e.preventDefault();
+                    window.open(`/api/admin/porto/download.php?pendaftaran_id=${p.id}`, '_blank');
+                };
+            }
+        } else {
+            if (wrapPorto) wrapPorto.style.display = 'none';
+            if (btnPorto) {
+                btnPorto.style.display = 'none';
+                btnPorto.onclick = null;
             }
         }
 

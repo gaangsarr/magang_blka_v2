@@ -32,8 +32,21 @@ if (empty($body['nama']) || empty($body['tanggal_mulai']) || empty($body['tangga
 $nama = trim($body['nama']);
 $tglMulai = $body['tanggal_mulai'];
 $tglSelesai = $body['tanggal_selesai'];
+$jamSelesai = !empty($body['jam_selesai']) ? trim((string)$body['jam_selesai']) : '23:59:00';
+if (preg_match('/^\d{2}:\d{2}$/', $jamSelesai)) {
+    $jamSelesai .= ':00';
+}
+if (!preg_match('/^\d{2}:\d{2}:\d{2}$/', $jamSelesai)) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Format jam selesai tidak valid (contoh: 23:59).']);
+    exit;
+}
+
 $prog1 = isset($body['program_1_bulan']) ? (int)(bool)$body['program_1_bulan'] : 0;
 $prog5 = isset($body['program_5_bulan']) ? (int)(bool)$body['program_5_bulan'] : 0;
+$syaratTranskrip = isset($body['syarat_transkrip']) ? (int)(bool)$body['syarat_transkrip'] : 1;
+$syaratCv = isset($body['syarat_cv']) ? (int)(bool)$body['syarat_cv'] : 0;
+$syaratPorto = isset($body['syarat_porto']) ? (int)(bool)$body['syarat_porto'] : 0;
 $copyFromPeriodeId = isset($body['copy_from_periode_id']) ? (int)$body['copy_from_periode_id'] : null;
 
 // Parse angkatan_eligible (bisa array atau string dipisah koma)
@@ -48,15 +61,15 @@ if (is_array($angkatanInput)) {
 $adminId = Auth::getAdminId();
 
 try {
-    Database::transaction(function (PDO $pdo) use ($nama, $tglMulai, $tglSelesai, $prog1, $prog5, $angkatanEligible, $copyFromPeriodeId, $adminId) {
+    Database::transaction(function (PDO $pdo) use ($nama, $tglMulai, $tglSelesai, $jamSelesai, $prog1, $prog5, $syaratTranskrip, $syaratCv, $syaratPorto, $angkatanEligible, $copyFromPeriodeId, $adminId) {
         // Tutup periode lain yang sedang dibuka atau persiapan (hanya 1 periode yang boleh aktif)
         $pdo->query("UPDATE periode SET status = 'ditutup' WHERE status IN ('dibuka', 'persiapan')");
 
         $stmt = $pdo->prepare("
-            INSERT INTO periode (nama, tanggal_mulai, tanggal_selesai, status, program_1_bulan, program_5_bulan, angkatan_eligible) 
-            VALUES (?, ?, ?, 'persiapan', ?, ?, ?)
+            INSERT INTO periode (nama, tanggal_mulai, tanggal_selesai, jam_selesai, status, program_1_bulan, program_5_bulan, syarat_transkrip, syarat_cv, syarat_porto, angkatan_eligible) 
+            VALUES (?, ?, ?, ?, 'persiapan', ?, ?, ?, ?, ?, ?)
         ");
-        $stmt->execute([$nama, $tglMulai, $tglSelesai, $prog1, $prog5, $angkatanEligible]);
+        $stmt->execute([$nama, $tglMulai, $tglSelesai, $jamSelesai, $prog1, $prog5, $syaratTranskrip, $syaratCv, $syaratPorto, $angkatanEligible]);
         
         $periodeId = $pdo->lastInsertId();
         

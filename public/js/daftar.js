@@ -165,6 +165,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         formData.periode_id = periodeData.periode.id;
         formData.periode_nama = periodeData.periode.nama;
         setupProgramOptions(periodeData.periode);
+        setupDokumenSyarat(periodeData.periode);
 
         // Ambil Peminatan
         const peminatanRes = await fetch('/api/peminatan/list.php');
@@ -217,9 +218,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         btnNext.addEventListener('click', handleNext);
         btnPrev.addEventListener('click', handlePrev);
         btnSubmit.addEventListener('click', handleSubmit);
-
-        // Inisialisasi Upload Transkrip Nilai
-        initTranskripUpload();
 
         // Cek jika ada reservasi aktif yang belum kadaluarsa (mis. saat refresh halaman)
         if (statusData.active_reservasi && statusData.active_reservasi.reservasi_id) {
@@ -684,9 +682,19 @@ function validateStep(step) {
             return false;
         }
 
-        // Validasi Transkrip Nilai Wajib
-        if (!window.transkripUploadedPath) {
+        // Validasi Dokumen Persyaratan Wajib Sesuai Periode Aktif
+        if (window.syaratTranskrip && !window.transkripUploadedPath) {
             showError('Berkas transkrip nilai (PDF) wajib diunggah sebelum melanjutkan ke tahap domisili.', 'transkrip-drop-zone', 'Transkrip Belum Diunggah');
+            return false;
+        }
+
+        if (window.syaratCv && !window.cvUploadedPath) {
+            showError('Berkas Curriculum Vitae / CV (PDF) wajib diunggah sebelum melanjutkan ke tahap domisili.', 'cv-drop-zone', 'CV Belum Diunggah');
+            return false;
+        }
+
+        if (window.syaratPorto && !window.portoUploadedPath) {
+            showError('Berkas Portofolio (PDF) wajib diunggah sebelum melanjutkan ke tahap domisili.', 'porto-drop-zone', 'Portofolio Belum Diunggah');
             return false;
         }
     } else if (step === 3) {
@@ -1016,6 +1024,14 @@ function populateResume() {
     if (resumeTranskripEl) {
         resumeTranskripEl.innerText = window.transkripUploadedFileName || 'Dokumen PDF Terverifikasi';
     }
+    const resumeCvEl = document.getElementById('resume-cv-name');
+    if (resumeCvEl) {
+        resumeCvEl.innerText = window.cvUploadedFileName || 'Dokumen PDF Terverifikasi';
+    }
+    const resumePortoEl = document.getElementById('resume-porto-name');
+    if (resumePortoEl) {
+        resumePortoEl.innerText = window.portoUploadedFileName || 'Dokumen PDF Terverifikasi';
+    }
 }
 
 function startTimer(expireTimeMs) {
@@ -1070,8 +1086,20 @@ async function handleExpiredReservation() {
 async function handleSubmit() {
     showError(null);
 
-    if (!window.transkripUploadedPath) {
+    if (window.syaratTranskrip && !window.transkripUploadedPath) {
         showError('Berkas transkrip nilai belum diunggah. Silakan kembali ke tahap Data Diri.', null, 'Transkrip Wajib Diunggah');
+        btnSubmit.disabled = false;
+        return;
+    }
+
+    if (window.syaratCv && !window.cvUploadedPath) {
+        showError('Berkas CV belum diunggah. Silakan kembali ke tahap Data Diri.', null, 'CV Wajib Diunggah');
+        btnSubmit.disabled = false;
+        return;
+    }
+
+    if (window.syaratPorto && !window.portoUploadedPath) {
+        showError('Berkas Portofolio belum diunggah. Silakan kembali ke tahap Data Diri.', null, 'Portofolio Wajib Diunggah');
         btnSubmit.disabled = false;
         return;
     }
@@ -1082,7 +1110,9 @@ async function handleSubmit() {
     try {
         const payload = {
             ...formData,
-            transkrip_path: window.transkripUploadedPath
+            transkrip_path: window.transkripUploadedPath || null,
+            cv_path: window.cvUploadedPath || null,
+            porto_path: window.portoUploadedPath || null
         };
 
         const res = await fetch('/api/mahasiswa/submit.php', {
@@ -1091,7 +1121,17 @@ async function handleSubmit() {
             body: JSON.stringify(payload)
         });
         
-        const data = await res.json();
+        let data;
+        const resText = await res.text();
+        try {
+            data = JSON.parse(resText);
+        } catch (jsonErr) {
+            console.error('[submit.php] Non-JSON response:', resText);
+            showError('Terjadi kesalahan pada respons server. Silakan coba beberapa saat lagi.', null, 'Kesalahan Server');
+            btnSubmit.disabled = false;
+            btnSubmit.innerText = 'Kirim Pendaftaran';
+            return;
+        }
         
         if (!res.ok) {
             showError(data.error || 'Gagal mengirim pendaftaran.', null, 'Pengiriman Gagal');
@@ -1111,6 +1151,36 @@ async function handleSubmit() {
         btnSubmit.disabled = false;
         btnSubmit.innerText = 'Kirim Pendaftaran';
     }
+}
+
+// ----------------------------------------------------
+// Setup Dokumen Persyaratan Berdasarkan Periode Aktif
+// ----------------------------------------------------
+function setupDokumenSyarat(periode) {
+    if (!periode) return;
+    window.syaratTranskrip = (periode.syarat_transkrip !== false && periode.syarat_transkrip != 0);
+    window.syaratCv = (periode.syarat_cv === true || periode.syarat_cv == 1);
+    window.syaratPorto = (periode.syarat_porto === true || periode.syarat_porto == 1);
+
+    const wrapTranskrip = document.getElementById('wrapper-upload-transkrip');
+    const wrapCv = document.getElementById('wrapper-upload-cv');
+    const wrapPorto = document.getElementById('wrapper-upload-porto');
+
+    const resTranskrip = document.getElementById('resume-group-transkrip');
+    const resCv = document.getElementById('resume-group-cv');
+    const resPorto = document.getElementById('resume-group-porto');
+
+    if (wrapTranskrip) wrapTranskrip.classList.toggle('hidden', !window.syaratTranskrip);
+    if (wrapCv) wrapCv.classList.toggle('hidden', !window.syaratCv);
+    if (wrapPorto) wrapPorto.classList.toggle('hidden', !window.syaratPorto);
+
+    if (resTranskrip) resTranskrip.classList.toggle('hidden', !window.syaratTranskrip);
+    if (resCv) resCv.classList.toggle('hidden', !window.syaratCv);
+    if (resPorto) resPorto.classList.toggle('hidden', !window.syaratPorto);
+
+    if (window.syaratTranskrip) initTranskripUpload();
+    if (window.syaratCv) initCvUpload();
+    if (window.syaratPorto) initPortoUpload();
 }
 
 // ----------------------------------------------------
@@ -1254,6 +1324,284 @@ function initTranskripUpload() {
     }
 
     setTranskripState('idle');
+}
+
+// ----------------------------------------------------
+// CV Upload Handler (Step 2 - Maks 2 MB)
+// ----------------------------------------------------
+function initCvUpload() {
+    const fileInput = document.getElementById('cv-file-input');
+    const dropZone = document.getElementById('cv-drop-zone');
+    const stateIdle = document.getElementById('cv-state-idle');
+    const stateUploading = document.getElementById('cv-state-uploading');
+    const stateSuccess = document.getElementById('cv-state-success');
+    const stateError = document.getElementById('cv-state-error');
+    const successFilename = document.getElementById('cv-success-filename');
+    const successSize = document.getElementById('cv-success-size');
+    const errorText = document.getElementById('cv-error-text');
+    const btnGanti = document.getElementById('btn-ganti-cv');
+    const btnRetry = document.getElementById('btn-retry-cv');
+
+    if (!fileInput || !dropZone) return;
+
+    function setCvState(state) {
+        [stateIdle, stateUploading, stateSuccess, stateError].forEach(el => {
+            if (el) el.classList.add('hidden');
+        });
+        if (state === 'idle' && stateIdle) stateIdle.classList.remove('hidden');
+        else if (state === 'uploading' && stateUploading) stateUploading.classList.remove('hidden');
+        else if (state === 'success' && stateSuccess) stateSuccess.classList.remove('hidden');
+        else if (state === 'error' && stateError) stateError.classList.remove('hidden');
+    }
+
+    async function handleFileUpload(file) {
+        if (!file) return;
+
+        if (!file.name.toLowerCase().endsWith('.pdf') && file.type !== 'application/pdf') {
+            if (errorText) errorText.innerText = 'Format berkas harus PDF (.pdf).';
+            setCvState('error');
+            return;
+        }
+
+        const maxBytes = 2 * 1024 * 1024; // 2 MB
+        if (file.size > maxBytes) {
+            if (errorText) errorText.innerText = `Ukuran berkas (${(file.size / (1024 * 1024)).toFixed(1)} MB) melebihi batas 2 MB.`;
+            setCvState('error');
+            return;
+        }
+
+        setCvState('uploading');
+
+        const uploadFormData = new FormData();
+        uploadFormData.append('cv', file);
+
+        try {
+            const res = await fetch('/api/mahasiswa/cv/upload.php', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-Token': csrfToken
+                },
+                body: uploadFormData
+            });
+
+            const data = await res.json();
+
+            if (!res.ok || !data.ok) {
+                if (errorText) errorText.innerText = data.error || 'Gagal mengunggah CV.';
+                setCvState('error');
+                window.cvUploadedPath = null;
+                window.cvUploadedFileName = null;
+                return;
+            }
+
+            window.cvUploadedPath = data.path;
+            window.cvUploadedFileName = file.name;
+
+            if (successFilename) successFilename.innerText = file.name;
+            if (successSize) successSize.innerText = `${(file.size / 1024).toFixed(0)} KB — Dokumen Valid`;
+            setCvState('success');
+
+        } catch (err) {
+            console.error('[cv-upload] Network error:', err);
+            if (errorText) errorText.innerText = 'Koneksi internet bermasalah saat mengunggah CV.';
+            setCvState('error');
+            window.cvUploadedPath = null;
+            window.cvUploadedFileName = null;
+        }
+    }
+
+    fileInput.addEventListener('change', () => {
+        if (fileInput.files && fileInput.files[0]) {
+            handleFileUpload(fileInput.files[0]);
+        }
+    });
+
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (stateIdle) {
+            stateIdle.style.borderColor = '#16a34a';
+            stateIdle.style.background = '#dcfce7';
+        }
+    });
+
+    dropZone.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (stateIdle) {
+            stateIdle.style.borderColor = '#cbd5e1';
+            stateIdle.style.background = '#f8fafc';
+        }
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (stateIdle) {
+            stateIdle.style.borderColor = '#cbd5e1';
+            stateIdle.style.background = '#f8fafc';
+        }
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+            handleFileUpload(e.dataTransfer.files[0]);
+        }
+    });
+
+    if (btnGanti) {
+        btnGanti.addEventListener('click', () => {
+            fileInput.value = '';
+            window.cvUploadedPath = null;
+            window.cvUploadedFileName = null;
+            setCvState('idle');
+        });
+    }
+
+    if (btnRetry) {
+        btnRetry.addEventListener('click', () => {
+            fileInput.value = '';
+            setCvState('idle');
+        });
+    }
+
+    setCvState('idle');
+}
+
+// ----------------------------------------------------
+// Portofolio Upload Handler (Step 2 - Maks 5 MB)
+// ----------------------------------------------------
+function initPortoUpload() {
+    const fileInput = document.getElementById('porto-file-input');
+    const dropZone = document.getElementById('porto-drop-zone');
+    const stateIdle = document.getElementById('porto-state-idle');
+    const stateUploading = document.getElementById('porto-state-uploading');
+    const stateSuccess = document.getElementById('porto-state-success');
+    const stateError = document.getElementById('porto-state-error');
+    const successFilename = document.getElementById('porto-success-filename');
+    const successSize = document.getElementById('porto-success-size');
+    const errorText = document.getElementById('porto-error-text');
+    const btnGanti = document.getElementById('btn-ganti-porto');
+    const btnRetry = document.getElementById('btn-retry-porto');
+
+    if (!fileInput || !dropZone) return;
+
+    function setPortoState(state) {
+        [stateIdle, stateUploading, stateSuccess, stateError].forEach(el => {
+            if (el) el.classList.add('hidden');
+        });
+        if (state === 'idle' && stateIdle) stateIdle.classList.remove('hidden');
+        else if (state === 'uploading' && stateUploading) stateUploading.classList.remove('hidden');
+        else if (state === 'success' && stateSuccess) stateSuccess.classList.remove('hidden');
+        else if (state === 'error' && stateError) stateError.classList.remove('hidden');
+    }
+
+    async function handleFileUpload(file) {
+        if (!file) return;
+
+        if (!file.name.toLowerCase().endsWith('.pdf') && file.type !== 'application/pdf') {
+            if (errorText) errorText.innerText = 'Format berkas harus PDF (.pdf).';
+            setPortoState('error');
+            return;
+        }
+
+        const maxBytes = 5 * 1024 * 1024; // 5 MB
+        if (file.size > maxBytes) {
+            if (errorText) errorText.innerText = `Ukuran berkas (${(file.size / (1024 * 1024)).toFixed(1)} MB) melebihi batas 5 MB.`;
+            setPortoState('error');
+            return;
+        }
+
+        setPortoState('uploading');
+
+        const uploadFormData = new FormData();
+        uploadFormData.append('porto', file);
+
+        try {
+            const res = await fetch('/api/mahasiswa/porto/upload.php', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-Token': csrfToken
+                },
+                body: uploadFormData
+            });
+
+            const data = await res.json();
+
+            if (!res.ok || !data.ok) {
+                if (errorText) errorText.innerText = data.error || 'Gagal mengunggah Portofolio.';
+                setPortoState('error');
+                window.portoUploadedPath = null;
+                window.portoUploadedFileName = null;
+                return;
+            }
+
+            window.portoUploadedPath = data.path;
+            window.portoUploadedFileName = file.name;
+
+            if (successFilename) successFilename.innerText = file.name;
+            if (successSize) successSize.innerText = `${(file.size / 1024).toFixed(0)} KB — Dokumen Valid`;
+            setPortoState('success');
+
+        } catch (err) {
+            console.error('[porto-upload] Network error:', err);
+            if (errorText) errorText.innerText = 'Koneksi internet bermasalah saat mengunggah Portofolio.';
+            setPortoState('error');
+            window.portoUploadedPath = null;
+            window.portoUploadedFileName = null;
+        }
+    }
+
+    fileInput.addEventListener('change', () => {
+        if (fileInput.files && fileInput.files[0]) {
+            handleFileUpload(fileInput.files[0]);
+        }
+    });
+
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (stateIdle) {
+            stateIdle.style.borderColor = '#ca8a04';
+            stateIdle.style.background = '#fef9c3';
+        }
+    });
+
+    dropZone.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (stateIdle) {
+            stateIdle.style.borderColor = '#cbd5e1';
+            stateIdle.style.background = '#f8fafc';
+        }
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (stateIdle) {
+            stateIdle.style.borderColor = '#cbd5e1';
+            stateIdle.style.background = '#f8fafc';
+        }
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+            handleFileUpload(e.dataTransfer.files[0]);
+        }
+    });
+
+    if (btnGanti) {
+        btnGanti.addEventListener('click', () => {
+            fileInput.value = '';
+            window.portoUploadedPath = null;
+            window.portoUploadedFileName = null;
+            setPortoState('idle');
+        });
+    }
+
+    if (btnRetry) {
+        btnRetry.addEventListener('click', () => {
+            fileInput.value = '';
+            setPortoState('idle');
+        });
+    }
+
+    setPortoState('idle');
 }
 
 

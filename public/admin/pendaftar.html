@@ -213,18 +213,53 @@
                             <span class="detail-item-label">No. Handphone / WhatsApp</span>
                             <span class="detail-item-value" id="detail-nohp">-</span>
                         </div>
-                        <div class="detail-item-group" style="grid-column: 1 / -1; margin-top: 6px; padding-top: 10px; border-top: 1px dashed #e2e8f0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
-                            <div>
-                                <span class="detail-item-label">Dokumen Transkrip Nilai</span>
-                                <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                                    <span id="detail-transkrip-filename" style="font-size: 0.85rem; font-weight: 700; color: #1e293b; font-family: monospace;">-</span>
+                        <div class="detail-item-group" style="grid-column: 1 / -1; margin-top: 6px; padding-top: 10px; border-top: 1px dashed #e2e8f0; display: flex; flex-direction: column; gap: 8px;">
+                            <span class="detail-item-label" style="font-weight: 700; color: #475569;">Dokumen Terlampir</span>
+                            
+                            <!-- Transkrip Row -->
+                            <div id="detail-wrapper-transkrip" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; background: #f8fafc; padding: 8px 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                <div>
+                                    <div style="font-size: 0.725rem; color: #64748b; font-weight: 600;">Transkrip Nilai</div>
+                                    <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                        <span id="detail-transkrip-filename" style="font-size: 0.85rem; font-weight: 700; color: #1e293b; font-family: monospace;">-</span>
+                                    </div>
                                 </div>
+                                <button type="button" id="detail-btn-transkrip" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; color: #0284c7; background: #e0f2fe; border: 1px solid #bae6fd; text-decoration: none; transition: background 0.2s ease; cursor: pointer;">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
+                                    <span>Lihat Transkrip PDF</span>
+                                </button>
                             </div>
-                            <button type="button" id="detail-btn-transkrip" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; color: #0284c7; background: #e0f2fe; border: 1px solid #bae6fd; text-decoration: none; transition: background 0.2s ease; cursor: pointer;">
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
-                                <span>Lihat Transkrip PDF</span>
-                            </button>
+
+                            <!-- CV Row -->
+                            <div id="detail-wrapper-cv" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; background: #f8fafc; padding: 8px 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                <div>
+                                    <div style="font-size: 0.725rem; color: #64748b; font-weight: 600;">Curriculum Vitae (CV)</div>
+                                    <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                        <span id="detail-cv-filename" style="font-size: 0.85rem; font-weight: 700; color: #1e293b; font-family: monospace;">-</span>
+                                    </div>
+                                </div>
+                                <button type="button" id="detail-btn-cv" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; color: #047857; background: #d1fae5; border: 1px solid #a7f3d0; text-decoration: none; transition: background 0.2s ease; cursor: pointer;">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
+                                    <span>Lihat CV PDF</span>
+                                </button>
+                            </div>
+
+                            <!-- Porto Row -->
+                            <div id="detail-wrapper-porto" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; background: #f8fafc; padding: 8px 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                <div>
+                                    <div style="font-size: 0.725rem; color: #64748b; font-weight: 600;">Portofolio</div>
+                                    <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                        <span id="detail-porto-filename" style="font-size: 0.85rem; font-weight: 700; color: #1e293b; font-family: monospace;">-</span>
+                                    </div>
+                                </div>
+                                <button type="button" id="detail-btn-porto" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; color: #6d28d9; background: #ede9fe; border: 1px solid #ddd6fe; text-decoration: none; transition: background 0.2s ease; cursor: pointer;">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
+                                    <span>Lihat Portofolio PDF</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

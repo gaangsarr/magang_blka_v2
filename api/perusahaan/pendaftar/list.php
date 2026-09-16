@@ -145,6 +145,8 @@ try {
             p.ipk,
             p.jumlah_sks,
             p.transkrip_path,
+            p.cv_path,
+            p.porto_path,
             p.no_hp,
             p.program,
             p.status,
@@ -238,6 +240,9 @@ try {
             'alamat_lengkap'   => $alamatLengkap ?: '-',
             'peminatan'        => $peminatanMap[$pId] ?? [],
             'submitted_at'     => $r['submitted_at'],
+            'transkrip_path'   => $r['transkrip_path'] ?? null,
+            'cv_path'          => $r['cv_path'] ?? null,
+            'porto_path'       => $r['porto_path'] ?? null,
         ];
     }
 

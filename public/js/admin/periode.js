@@ -17,6 +17,43 @@ function escapeHtml(unsafe) {
          .replace(/'/g, "&#039;");
 }
 
+function populateTimeSelects(hourSelectId, minuteSelectId, defaultHour = '23', defaultMinute = '59') {
+    const hourEl = document.getElementById(hourSelectId);
+    const minEl = document.getElementById(minuteSelectId);
+    if (!hourEl || !minEl) return;
+    
+    hourEl.innerHTML = '';
+    for (let h = 0; h < 24; h++) {
+        const val = String(h).padStart(2, '0');
+        const opt = document.createElement('option');
+        opt.value = val;
+        opt.textContent = val;
+        if (val === defaultHour) opt.selected = true;
+        hourEl.appendChild(opt);
+    }
+    
+    minEl.innerHTML = '';
+    for (let m = 0; m < 60; m++) {
+        const val = String(m).padStart(2, '0');
+        const opt = document.createElement('option');
+        opt.value = val;
+        opt.textContent = val;
+        if (val === defaultMinute) opt.selected = true;
+        minEl.appendChild(opt);
+    }
+}
+
+function formatDateIndo(dateStr) {
+    if (!dateStr) return '-';
+    const parts = dateStr.split('-');
+    if (parts.length !== 3) return dateStr;
+    const months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    const d = parseInt(parts[2], 10);
+    const m = parseInt(parts[1], 10);
+    const y = parts[0];
+    return `${d} ${months[m] || ''} ${y}`;
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     const statusRes = await fetch('/api/admin/status.php');
     const statusData = await statusRes.json();
@@ -30,6 +67,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         const nameElem = document.getElementById('admin-name');
         if (nameElem) nameElem.innerText = statusData.admin.nama;
     }
+
+    // Inisialisasi dropdown jam 24 jam (00:00 - 23:59 WIB)
+    populateTimeSelects('create-jam_hour', 'create-jam_minute', '23', '59');
+    populateTimeSelects('edit-jam_hour', 'edit-jam_minute', '23', '59');
 
     loadPeriode();
 
@@ -66,13 +107,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const selectedAngkatan = Array.from(document.querySelectorAll('#container-chk-angkatan-create .chk-angkatan:checked')).map(cb => cb.value);
 
+        const hourVal = document.getElementById('create-jam_hour').value;
+        const minVal = document.getElementById('create-jam_minute').value;
+
         const payload = {
             nama: document.getElementById('create-nama').value,
             tanggal_mulai: document.getElementById('create-tanggal_mulai').value,
             tanggal_selesai: document.getElementById('create-tanggal_selesai').value,
+            jam_selesai: `${hourVal}:${minVal}`,
             angkatan_eligible: selectedAngkatan,
-            program_1_bulan: document.getElementById('create-prog1').checked,
-            program_5_bulan: document.getElementById('create-prog5').checked,
+            program_1_bulan: document.getElementById('create-prog1').checked ? 1 : 0,
+            program_5_bulan: document.getElementById('create-prog1').checked ? 0 : 1,
+            syarat_transkrip: document.getElementById('create-syarat-transkrip').checked,
+            syarat_cv: document.getElementById('create-syarat-cv').checked,
+            syarat_porto: document.getElementById('create-syarat-porto').checked,
             copy_from_periode_id: document.getElementById('copy_from_periode_id').value ? parseInt(document.getElementById('copy_from_periode_id').value) : null
         };
 
@@ -87,6 +135,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 alert(data.message || 'Periode berhasil dibuat.');
                 hideModal('modal-create');
                 e.target.reset();
+                document.getElementById('create-jam_hour').value = '23';
+                document.getElementById('create-jam_minute').value = '59';
+                document.getElementById('create-prog1').checked = true;
+                document.getElementById('create-prog5').checked = false;
                 loadPeriode();
             } else {
                 alert(data.error || 'Gagal membuat periode.');
@@ -107,14 +159,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const selectedAngkatan = Array.from(document.querySelectorAll('#container-chk-angkatan-edit .chk-angkatan:checked')).map(cb => cb.value);
 
+        const editHour = document.getElementById('edit-jam_hour').value;
+        const editMin = document.getElementById('edit-jam_minute').value;
+
         const payload = {
             id: parseInt(document.getElementById('edit-periode-id').value),
             nama: document.getElementById('edit-nama').value,
             tanggal_mulai: document.getElementById('edit-tanggal_mulai').value,
             tanggal_selesai: document.getElementById('edit-tanggal_selesai').value,
+            jam_selesai: `${editHour}:${editMin}`,
+            status: document.getElementById('edit-status') ? document.getElementById('edit-status').value : undefined,
             angkatan_eligible: selectedAngkatan,
-            program_1_bulan: document.getElementById('edit-prog1').checked,
-            program_5_bulan: document.getElementById('edit-prog5').checked
+            program_1_bulan: document.getElementById('edit-prog1').checked ? 1 : 0,
+            program_5_bulan: document.getElementById('edit-prog1').checked ? 0 : 1,
+            syarat_transkrip: document.getElementById('edit-syarat-transkrip').checked,
+            syarat_cv: document.getElementById('edit-syarat-cv').checked,
+            syarat_porto: document.getElementById('edit-syarat-porto').checked
         };
 
         try {
@@ -204,6 +264,12 @@ function addAngkatanCheckbox(containerId, yearStr, isChecked = false) {
 
 window.openCreateModal = function() {
     renderAngkatanCheckboxes('container-chk-angkatan-create', ['2023', '2024']);
+    const chkTranskrip = document.getElementById('create-syarat-transkrip');
+    const chkCv = document.getElementById('create-syarat-cv');
+    const chkPorto = document.getElementById('create-syarat-porto');
+    if (chkTranskrip) chkTranskrip.checked = true;
+    if (chkCv) chkCv.checked = false;
+    if (chkPorto) chkPorto.checked = false;
     showModal('modal-create');
 };
 
@@ -249,17 +315,40 @@ async function loadPeriode() {
                     ? `<span style="font-weight: 700; font-size: 0.8rem; color: #0369a1; background: #e0f2fe; padding: 3px 8px; border-radius: 6px;">${escapeHtml(p.angkatan_eligible)}</span>`
                     : '<span style="font-size: 0.8rem; color: #94a3b8;">Semua Angkatan</span>';
 
+                // Syarat dokumen badge
+                const docBadgesArr = [];
+                if (p.syarat_transkrip == 1) {
+                    docBadgesArr.push('<span style="font-size: 0.72rem; font-weight: 700; color: #0369a1; background: #e0f2fe; padding: 2px 6px; border-radius: 4px; border: 1px solid #bae6fd;">Transkrip</span>');
+                }
+                if (p.syarat_cv == 1) {
+                    docBadgesArr.push('<span style="font-size: 0.72rem; font-weight: 700; color: #166534; background: #dcfce7; padding: 2px 6px; border-radius: 4px; border: 1px solid #bbf7d0;">CV</span>');
+                }
+                if (p.syarat_porto == 1) {
+                    docBadgesArr.push('<span style="font-size: 0.72rem; font-weight: 700; color: #854d0e; background: #fef9c3; padding: 2px 6px; border-radius: 4px; border: 1px solid #fef08a;">Porto</span>');
+                }
+                const docBadgesHtml = docBadgesArr.length > 0
+                    ? `<div style="display: flex; gap: 4px; flex-wrap: wrap; margin-top: 5px;">${docBadgesArr.join('')}</div>`
+                    : `<div style="font-size: 0.72rem; color: #94a3b8; margin-top: 4px;">Tanpa Syarat Berkas</div>`;
+
+                const tglMulaiFormatted = formatDateIndo(p.tanggal_mulai);
+                const tglSelesaiFormatted = p.tanggal_selesai 
+                    ? `${formatDateIndo(p.tanggal_selesai)} <span style="font-size: 0.775rem; color: #475569; font-weight: 700; display: block;">${(p.jam_selesai ? p.jam_selesai.substring(0, 5) : '23:59')} WIB</span>`
+                    : '-';
+
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td style="font-weight: 600; color: #64748b;">${p.id}</td>
-                    <td style="font-weight: 700; color: #0b3d6b;">${escapeHtml(p.nama)}</td>
-                    <td style="color: #475569;">${p.tanggal_mulai}</td>
-                    <td style="color: #475569;">${p.tanggal_selesai}</td>
+                    <td style="font-weight: 700; color: #0b3d6b;">
+                        <div>${escapeHtml(p.nama)}</div>
+                        ${docBadgesHtml}
+                    </td>
+                    <td style="color: #475569;">${tglMulaiFormatted}</td>
+                    <td style="color: #475569;">${tglSelesaiFormatted}</td>
                     <td>${angkatanPills}</td>
                     <td>${badgeHTML}</td>
                     <td>
                         <span style="font-weight: 600; font-size: 0.825rem; color: #0b3d6b; background: #f1f5f9; padding: 3px 8px; border-radius: 6px;">
-                            ${p.program_1_bulan ? '1 Bulan ' : ''}${p.program_5_bulan ? '5 Bulan' : ''}
+                            ${p.program_1_bulan == 1 ? 'Magang 1 Bulan' : (p.program_5_bulan == 1 ? 'Magang 5 Bulan' : '-')}
                         </span>
                     </td>
                     <td>
@@ -291,14 +380,68 @@ window.openEditModal = function(periodeId) {
     document.getElementById('edit-nama').value = p.nama || '';
     document.getElementById('edit-tanggal_mulai').value = p.tanggal_mulai || '';
     document.getElementById('edit-tanggal_selesai').value = p.tanggal_selesai || '';
-    document.getElementById('edit-prog1').checked = p.program_1_bulan == 1;
-    document.getElementById('edit-prog5').checked = p.program_5_bulan == 1;
+    
+    const rawJam = p.jam_selesai ? p.jam_selesai.substring(0, 5) : '23:59';
+    const [h, m] = rawJam.split(':');
+    document.getElementById('edit-jam_hour').value = h || '23';
+    document.getElementById('edit-jam_minute').value = m || '59';
+
+    const isProg1 = (p.program_1_bulan == 1 && p.program_5_bulan != 1) || (p.program_1_bulan == 1);
+    document.getElementById('edit-prog1').checked = isProg1;
+    document.getElementById('edit-prog5').checked = !isProg1;
+    
+    const editTranskrip = document.getElementById('edit-syarat-transkrip');
+    const editCv = document.getElementById('edit-syarat-cv');
+    const editPorto = document.getElementById('edit-syarat-porto');
+    if (editTranskrip) editTranskrip.checked = (p.syarat_transkrip == 1);
+    if (editCv) editCv.checked = (p.syarat_cv == 1);
+    if (editPorto) editPorto.checked = (p.syarat_porto == 1);
+
+    const editStatus = document.getElementById('edit-status');
+    if (editStatus) {
+        editStatus.value = p.status || 'persiapan';
+    }
+    const hint = document.getElementById('edit-status-hint');
+    if (hint) {
+        hint.innerText = 'Status akan otomatis berubah menjadi "Ditutup" jika waktu penutupan server sudah terlewati.';
+    }
 
     const selectedYears = p.angkatan_eligible ? p.angkatan_eligible.split(',').map(s => s.trim()) : [];
     renderAngkatanCheckboxes('container-chk-angkatan-edit', selectedYears);
 
     showModal('modal-edit');
 };
+
+function checkAndSuggestOpenStatus() {
+    const tgl = document.getElementById('edit-tanggal_selesai').value;
+    const h = document.getElementById('edit-jam_hour').value;
+    const m = document.getElementById('edit-jam_minute').value;
+    if (!tgl || !h || !m) return;
+    
+    const deadline = new Date(`${tgl}T${h}:${m}:00`);
+    const now = new Date();
+    const statusSelect = document.getElementById('edit-status');
+    const hint = document.getElementById('edit-status-hint');
+    if (!statusSelect) return;
+    
+    if (deadline > now) {
+        if (statusSelect.value === 'ditutup') {
+            statusSelect.value = 'dibuka';
+            if (hint) hint.innerHTML = '<span style="color: #166534; font-weight: 600;">Status otomatis disesuaikan ke "Dibuka" karena waktu penutupan diperpanjang ke masa depan.</span>';
+        } else if (hint) {
+            hint.innerText = 'Status akan otomatis berubah menjadi "Ditutup" jika waktu penutupan server sudah terlewati.';
+        }
+    } else {
+        if (statusSelect.value === 'dibuka') {
+            statusSelect.value = 'ditutup';
+            if (hint) hint.innerHTML = '<span style="color: #b91c1c; font-weight: 600;">Status otomatis disesuaikan ke "Ditutup" karena waktu penutupan telah lewat.</span>';
+        }
+    }
+}
+
+document.getElementById('edit-tanggal_selesai').addEventListener('change', checkAndSuggestOpenStatus);
+document.getElementById('edit-jam_hour').addEventListener('change', checkAndSuggestOpenStatus);
+document.getElementById('edit-jam_minute').addEventListener('change', checkAndSuggestOpenStatus);
 
 window.openStatusModal = function(id, currentStatus) {
     document.getElementById('status-periode-id').value = id;
