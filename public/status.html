@@ -418,7 +418,7 @@
                 <!-- Modal Decision Box (Injected dynamically) -->
                 <div id="modal-alert-box" style="margin-bottom: 20px;"></div>
 
-                <!-- Section: Detail Penempatan & Catatan -->
+                <!-- Section: Detail Penempatan -->
                 <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; margin-bottom: 20px;">
                     <h4 style="font-size: 0.825rem; color: #64748b; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700;">Rincian Penempatan</h4>
                     
@@ -436,11 +436,6 @@
                         <div>
                             <span style="color: #64748b; font-size: 0.825rem;">Program Magang:</span>
                             <div id="modal-program-nama" style="font-weight: 600; color: #1e293b; margin-top: 2px;">-</div>
-                        </div>
-
-                        <div id="modal-catatan-row" class="hidden" style="margin-top: 6px; padding-top: 10px; border-top: 1px dashed #e2e8f0;">
-                            <span style="color: #92400e; font-size: 0.825rem; font-weight: 700;">Catatan Administrator BLKA:</span>
-                            <div id="modal-catatan-text" style="color: #78350f; font-size: 0.875rem; line-height: 1.5; margin-top: 2px; font-style: italic;">-</div>
                         </div>
                     </div>
                 </div>
@@ -774,16 +769,6 @@
                 unitAsalRow.classList.remove('hidden');
             } else {
                 unitAsalRow.classList.add('hidden');
-            }
-
-            // Catatan Admin
-            const catatanRow = document.getElementById('modal-catatan-row');
-            const catatanText = document.getElementById('modal-catatan-text');
-            if (item.catatan_admin) {
-                catatanText.innerText = `"${item.catatan_admin}"`;
-                catatanRow.classList.remove('hidden');
-            } else {
-                catatanRow.classList.add('hidden');
             }
 
             // Alert Decision Box

@@ -50,6 +50,17 @@ if ($nama !== null && mb_strlen($nama) > 100) {
     exit;
 }
 
+$hasJurusanPayload = isset($body['jurusan_ids']) && is_array($body['jurusan_ids']);
+$jurusanIds = $hasJurusanPayload
+    ? array_values(array_unique(array_filter(array_map('intval', $body['jurusan_ids']))))
+    : null;
+
+if ($hasJurusanPayload && empty($jurusanIds)) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Pilih minimal satu Program Studi (Prodi) untuk peminatan ini.']);
+    exit;
+}
+
 try {
     $pdo = Database::getInstance();
 
@@ -90,15 +101,27 @@ try {
         $params[':aktif'] = $aktif ? 1 : 0;
     }
 
-    if (empty($setClauses)) {
+    if (empty($setClauses) && !$hasJurusanPayload) {
         http_response_code(400);
         echo json_encode(['error' => 'Tidak ada data yang diubah.']);
         exit;
     }
 
-    $sql = "UPDATE peminatan SET " . implode(', ', $setClauses) . " WHERE id = :id";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute($params);
+    Database::transaction(function (PDO $pdo) use ($id, $setClauses, $params, $hasJurusanPayload, $jurusanIds) {
+        if (!empty($setClauses)) {
+            $sql = "UPDATE peminatan SET " . implode(', ', $setClauses) . " WHERE id = :id";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+        }
+
+        if ($hasJurusanPayload && $jurusanIds !== null) {
+            $pdo->prepare("DELETE FROM peminatan_jurusan WHERE peminatan_id = ?")->execute([$id]);
+            $stmtIns = $pdo->prepare("INSERT INTO peminatan_jurusan (peminatan_id, jurusan_id) VALUES (?, ?)");
+            foreach ($jurusanIds as $jid) {
+                $stmtIns->execute([$id, $jid]);
+            }
+        }
+    });
 
     echo json_encode([
         'ok'      => true,

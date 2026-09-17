@@ -31,6 +31,7 @@ if (empty($body['entitas_id']) || !isset($body['kuota_total'])) {
 
 $entitasId = (int)$body['entitas_id'];
 $kuotaBaru = (int)$body['kuota_total'];
+$tipeKuota = in_array($body['tipe_kuota'] ?? '', ['keseluruhan', 'breakdown'], true) ? $body['tipe_kuota'] : 'keseluruhan';
 $aktif = isset($body['aktif']) ? (int)(bool)$body['aktif'] : 1;
 $requestedPeriodeId = isset($body['periode_id']) ? (int)$body['periode_id'] : 0;
 $adminId = Auth::getAdminId();
@@ -38,12 +39,43 @@ $adminId = Auth::getAdminId();
 $hasProdiPayload = isset($body['prodi_ids']) && is_array($body['prodi_ids']);
 $prodiIds = $hasProdiPayload
     ? array_values(array_unique(array_filter(array_map('intval', $body['prodi_ids']))))
-    : null;
+    : [];
+
+$prodiAllocations = (isset($body['prodi_allocations']) && is_array($body['prodi_allocations'])) ? $body['prodi_allocations'] : [];
+$allocMap = [];
+foreach ($prodiAllocations as $k => $v) {
+    $allocMap[(int)$k] = (int)$v;
+}
 
 $hasPeminatanPayload = isset($body['peminatan_ids']) && is_array($body['peminatan_ids']);
 $peminatanIds = $hasPeminatanPayload
     ? array_values(array_unique(array_filter(array_map('intval', $body['peminatan_ids']))))
-    : null;
+    : [];
+
+if ($aktif === 1 && $tipeKuota === 'breakdown') {
+    if (empty($prodiIds)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Pada mode Kuota Terbagi per Prodi (Breakdown), silakan pilih minimal 1 Program Studi.']);
+        exit;
+    }
+
+    $sumBreakdown = 0;
+    foreach ($prodiIds as $jid) {
+        $q = $allocMap[$jid] ?? 0;
+        if ($q <= 0) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Pada mode breakdown, setiap program studi yang dipilih wajib memiliki kuota minimal 1.']);
+            exit;
+        }
+        $sumBreakdown += $q;
+    }
+
+    if ($sumBreakdown !== $kuotaBaru) {
+        http_response_code(400);
+        echo json_encode(['error' => "Jumlah alokasi per prodi ($sumBreakdown) harus sama persis dengan Total Kuota ($kuotaBaru)."]);
+        exit;
+    }
+}
 
 try {
     $pdo = Database::getInstance();
@@ -76,31 +108,76 @@ try {
     $periodeId = (int)$periodeId;
     
     Database::transaction(function (PDO $pdo) use (
-        $entitasId, $periodeId, $kuotaBaru, $aktif, $adminId, 
-        $hasProdiPayload, $prodiIds, $hasPeminatanPayload, $peminatanIds
+        $entitasId, $periodeId, $kuotaBaru, $tipeKuota, $aktif, $adminId, 
+        $hasProdiPayload, $prodiIds, $allocMap, $hasPeminatanPayload, $peminatanIds
     ) {
         // Cek apakah sudah ada di unit_pelaksana_periode
         $stmtCek = $pdo->prepare("SELECT id, kuota_total, kuota_tersisa FROM unit_pelaksana_periode WHERE entitas_id = ? AND periode_id = ? FOR UPDATE");
         $stmtCek->execute([$entitasId, $periodeId]);
         $existing = $stmtCek->fetch(PDO::FETCH_ASSOC);
         
-        $isNew = false;
+        $usedPerJurusan = [];
+        $totalUsed = 0;
+
         if ($existing) {
-            // Update
-            $selisih = $kuotaBaru - $existing['kuota_total'];
-            $kuotaTersisaBaru = $existing['kuota_tersisa'] + $selisih;
-            
-            if ($kuotaTersisaBaru < 0) {
-                throw new \Exception("Kuota tersisa akan menjadi negatif. Tidak bisa mengurangi kuota melebihi yang sudah terpakai.");
-            }
-            
-            $stmtUpdate = $pdo->prepare("UPDATE unit_pelaksana_periode SET kuota_total = ?, kuota_tersisa = ?, aktif = ? WHERE id = ?");
-            $stmtUpdate->execute([$kuotaBaru, $kuotaTersisaBaru, $aktif, $existing['id']]);
             $uppId = (int)$existing['id'];
+
+            // Cek pendaftaran dan reservasi aktif
+            $stmtUsedP = $pdo->prepare("
+                SELECT m.jurusan_id, COUNT(*) as jml
+                FROM pendaftaran p
+                JOIN mahasiswa m ON p.mahasiswa_id = m.id
+                WHERE p.unit_pelaksana_periode_id = ?
+                GROUP BY m.jurusan_id
+            ");
+            $stmtUsedP->execute([$uppId]);
+            foreach ($stmtUsedP->fetchAll(PDO::FETCH_ASSOC) as $row) {
+                $usedPerJurusan[(int)$row['jurusan_id']] = (int)$row['jml'];
+                $totalUsed += (int)$row['jml'];
+            }
+
+            $stmtUsedR = $pdo->prepare("
+                SELECT IFNULL(r.jurusan_id, m.jurusan_id) as jurusan_id, COUNT(*) as jml
+                FROM reservasi r
+                JOIN mahasiswa m ON r.mahasiswa_id = m.id
+                WHERE r.unit_pelaksana_periode_id = ? AND r.status = 'ditahan' AND r.expired_at > NOW()
+                GROUP BY jurusan_id
+            ");
+            $stmtUsedR->execute([$uppId]);
+            foreach ($stmtUsedR->fetchAll(PDO::FETCH_ASSOC) as $row) {
+                $jid = (int)$row['jurusan_id'];
+                $usedPerJurusan[$jid] = ($usedPerJurusan[$jid] ?? 0) + (int)$row['jml'];
+                $totalUsed += (int)$row['jml'];
+            }
+
+            if ($kuotaBaru < $totalUsed) {
+                throw new \Exception("Total kuota tidak boleh kurang dari $totalUsed karena saat ini sudah ada $totalUsed mahasiswa yang terdaftar/mereservasi.");
+            }
+
+            if ($tipeKuota === 'breakdown') {
+                foreach ($prodiIds as $jid) {
+                    $used = $usedPerJurusan[$jid] ?? 0;
+                    $prodiAlloc = $allocMap[$jid] ?? 0;
+                    if ($prodiAlloc < $used) {
+                        $stmtJn = $pdo->prepare("SELECT nama_jurusan FROM jurusan WHERE id = ?");
+                        $stmtJn->execute([$jid]);
+                        $jName = $stmtJn->fetchColumn() ?: "ID $jid";
+                        throw new \Exception("Kuota untuk $jName tidak boleh kurang dari $used karena sudah ada $used mahasiswa yang terdaftar/mereservasi.");
+                    }
+                }
+            }
+
+            // Update
+            $selisih = $kuotaBaru - (int)$existing['kuota_total'];
+            $kuotaTersisaBaru = max(0, (int)$existing['kuota_tersisa'] + $selisih);
+            
+            $stmtUpdate = $pdo->prepare("UPDATE unit_pelaksana_periode SET tipe_kuota = ?, kuota_total = ?, kuota_tersisa = ?, aktif = ?, updated_at = NOW() WHERE id = ?");
+            $stmtUpdate->execute([$tipeKuota, $kuotaBaru, $kuotaTersisaBaru, $aktif, $uppId]);
+            $isNew = false;
         } else {
             // Insert
-            $stmtInsert = $pdo->prepare("INSERT INTO unit_pelaksana_periode (entitas_id, periode_id, kuota_total, kuota_tersisa, aktif) VALUES (?, ?, ?, ?, ?)");
-            $stmtInsert->execute([$entitasId, $periodeId, $kuotaBaru, $kuotaBaru, $aktif]);
+            $stmtInsert = $pdo->prepare("INSERT INTO unit_pelaksana_periode (entitas_id, periode_id, tipe_kuota, kuota_total, kuota_tersisa, aktif, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())");
+            $stmtInsert->execute([$entitasId, $periodeId, $tipeKuota, $kuotaBaru, $kuotaBaru, $aktif]);
             $uppId = (int)$pdo->lastInsertId();
             $isNew = true;
         }
@@ -111,9 +188,12 @@ try {
             $stmtDel->execute([$uppId]);
 
             if (!empty($prodiIds)) {
-                $stmtIns = $pdo->prepare("INSERT INTO unit_periode_jurusan (unit_pelaksana_periode_id, jurusan_id) VALUES (?, ?)");
+                $stmtIns = $pdo->prepare("INSERT INTO unit_periode_jurusan (unit_pelaksana_periode_id, jurusan_id, kuota_total, kuota_tersisa) VALUES (?, ?, ?, ?)");
                 foreach ($prodiIds as $jid) {
-                    $stmtIns->execute([$uppId, $jid]);
+                    $kt = ($tipeKuota === 'breakdown') ? ($allocMap[$jid] ?? 0) : null;
+                    $used = $usedPerJurusan[$jid] ?? 0;
+                    $ks = ($tipeKuota === 'breakdown') ? max(0, ($allocMap[$jid] ?? 0) - $used) : null;
+                    $stmtIns->execute([$uppId, $jid, $kt, $ks]);
                 }
             }
 
@@ -174,6 +254,8 @@ try {
             $uppId, 
             json_encode([
                 'kuota_baru' => $kuotaBaru, 
+                'tipe_kuota' => $tipeKuota,
+                'prodi_allocations' => $allocMap,
                 'aktif' => $aktif, 
                 'periode_id' => $periodeId,
                 'prodi_ids' => $prodiIds,
@@ -187,7 +269,7 @@ try {
         'message' => 'Kuota berhasil diperbarui.'
     ]);
 } catch (\Throwable $e) {
-    if (str_contains($e->getMessage(), "Kuota tersisa akan menjadi negatif")) {
+    if (str_contains($e->getMessage(), "Total kuota tidak boleh kurang") || str_contains($e->getMessage(), "Kuota untuk")) {
         http_response_code(400);
         echo json_encode(['error' => $e->getMessage()]);
     } else {

@@ -56,14 +56,15 @@
                         <table class="admin-table">
                             <thead>
                                 <tr>
-                                    <th>Nama Peminatan</th>
+                                    <th style="min-width: 220px;">Nama Peminatan</th>
+                                    <th style="min-width: 250px;">Program Studi Terkait</th>
                                     <th>Deskripsi / Ruang Lingkup</th>
-                                    <th>Status</th>
+                                    <th style="width: 110px;">Status</th>
                                     <th style="width: 170px;">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody id="table-peminatan-body">
-                                <tr><td colspan="4" style="text-align: center; padding: 32px; color: #64748b;">Memuat data peminatan...</td></tr>
+                                <tr><td colspan="5" style="text-align: center; padding: 32px; color: #64748b;">Memuat data peminatan...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -74,7 +75,7 @@
 
     <!-- Modal Create / Edit Peminatan -->
     <div id="modal-peminatan" class="modal-overlay hidden" role="dialog" aria-modal="true">
-        <div class="modal-card modal-card-structured" style="max-width: 500px;">
+        <div class="modal-card modal-card-structured" style="max-width: 580px;">
             <div class="modal-card-header">
                 <button type="button" id="btn-close-modal" class="auth-modal-close">&times;</button>
                 <h3 id="modal-peminatan-title" class="auth-modal-title" style="margin: 0; font-size: 1.15rem; font-weight: 800; color: #0b3d6b;">Tambah Peminatan Baru</h3>
@@ -83,10 +84,28 @@
             <form id="form-peminatan" style="display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; overflow: hidden; margin: 0;">
                 <input type="hidden" id="peminatan-id" value="" />
 
-                <div class="modal-card-body" style="display: flex; flex-direction: column; gap: 16px;">
+                <div class="modal-card-body" style="display: flex; flex-direction: column; gap: 16px; max-height: 70vh; overflow-y: auto;">
                     <div>
                         <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 6px;">Nama Peminatan <span style="color: #ef4444;">*</span></label>
                         <input type="text" id="peminatan-nama" required placeholder="Contoh: Teknologi Informasi & Sistem" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem;" />
+                    </div>
+
+                    <!-- Pilihan Program Studi Terkait -->
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+                            <label style="font-size: 0.85rem; font-weight: 700; color: #0b3d6b; margin: 0;">
+                                Program Studi (Prodi) Terkait <span style="color: #ef4444;">*</span>
+                            </label>
+                            <div style="display: flex; gap: 8px;">
+                                <button type="button" id="btn-select-all-prodi-pem" class="btn-text-action" style="font-size: 0.75rem; color: #0284c7; background: none; border: none; cursor: pointer; font-weight: 600;">Pilih Semua</button>
+                                <span style="color: #cbd5e1;">|</span>
+                                <button type="button" id="btn-clear-prodi-pem" class="btn-text-action" style="font-size: 0.75rem; color: #64748b; background: none; border: none; cursor: pointer; font-weight: 600;">Kosongkan</button>
+                            </div>
+                        </div>
+                        <p style="font-size: 0.75rem; color: #64748b; margin: 0 0 10px 0;">Pilih satu atau lebih program studi yang memiliki bidang peminatan ini.</p>
+                        <div id="container-checkbox-prodi-pem" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; max-height: 160px; overflow-y: auto; background: #ffffff; padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                            <!-- Populated dynamically via JS -->
+                        </div>
                     </div>
 
                     <div>

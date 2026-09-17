@@ -48,6 +48,13 @@ export const SIDEBAR_MENU_SECTIONS = [
                 icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`
             },
             {
+                id: 'menu-pemindahan',
+                label: 'Monitoring Pemindahan',
+                path: '/admin/pemindahan.html',
+                aliases: ['/admin/pemindahan.html'],
+                icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>`
+            },
+            {
                 id: 'menu-hasilkan-surat',
                 label: 'Hasilkan Surat',
                 path: '/admin/hasilkan-surat.html',

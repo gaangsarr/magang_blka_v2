@@ -2344,3 +2344,159 @@ input:checked + .slider:before {
   letter-spacing: 0.02em;
   white-space: nowrap;
 }
+
+/* ============================================================
+   UNIFIED TABLE ACTION CELL & BUTTON SYSTEM (BLKA & PERUSAHAAN)
+   ============================================================ */
+.action-cell-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+  min-width: 200px;
+}
+
+.action-row-docs,
+.action-row-decision {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.action-row-label {
+  font-size: 0.685rem;
+  font-weight: 800;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-right: 2px;
+}
+
+.doc-empty-text {
+  font-size: 0.725rem;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+/* Document Review Pills */
+.btn-doc-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  font-size: 0.725rem;
+  font-weight: 700;
+  border-radius: 6px;
+  text-decoration: none;
+  cursor: pointer;
+  line-height: 1.4;
+  transition: all 0.15s ease;
+  border: 1px solid transparent;
+  box-sizing: border-box;
+}
+
+.btn-doc-pill.pill-transkrip {
+  background: #f0f9ff;
+  border-color: #bae6fd;
+  color: #0369a1;
+}
+.btn-doc-pill.pill-transkrip:hover {
+  background: #e0f2fe;
+  border-color: #7dd3fc;
+  color: #0284c7;
+  transform: translateY(-1px);
+}
+
+.btn-doc-pill.pill-cv {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #15803d;
+}
+.btn-doc-pill.pill-cv:hover {
+  background: #dcfce7;
+  border-color: #86efac;
+  color: #16a34a;
+  transform: translateY(-1px);
+}
+
+.btn-doc-pill.pill-porto {
+  background: #faf5ff;
+  border-color: #e9d5ff;
+  color: #7e22ce;
+}
+.btn-doc-pill.pill-porto:hover {
+  background: #f3e8ff;
+  border-color: #d8b4fe;
+  color: #9333ea;
+  transform: translateY(-1px);
+}
+
+.btn-doc-pill.pill-detail {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  color: #334155;
+}
+.btn-doc-pill.pill-detail:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  color: #0f172a;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  transform: translateY(-1px);
+}
+
+/* Decision Action Pills */
+.btn-action-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 9px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 6px;
+  cursor: pointer;
+  line-height: 1.4;
+  transition: all 0.15s ease;
+  border: 1px solid transparent;
+  box-sizing: border-box;
+}
+
+.btn-action-pill.pill-approve {
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+  color: #047857;
+}
+.btn-action-pill.pill-approve:hover {
+  background: #10b981;
+  border-color: #10b981;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25);
+  transform: translateY(-1px);
+}
+
+.btn-action-pill.pill-relocate {
+  background: #fffbeb;
+  border-color: #fde68a;
+  color: #b45309;
+}
+.btn-action-pill.pill-relocate:hover {
+  background: #d97706;
+  border-color: #d97706;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(217, 119, 6, 0.25);
+  transform: translateY(-1px);
+}
+
+.btn-action-pill.pill-reject {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+.btn-action-pill.pill-reject:hover {
+  background: #ef4444;
+  border-color: #ef4444;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.25);
+  transform: translateY(-1px);
+}
+

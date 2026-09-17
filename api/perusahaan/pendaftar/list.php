@@ -227,6 +227,7 @@ try {
             'jenis_kelamin'    => $r['jenis_kelamin'],
             'ipk'              => $r['ipk'] ? number_format((float)$r['ipk'], 2) : '-',
             'jumlah_sks'       => $r['jumlah_sks'] ? (int)$r['jumlah_sks'] : '-',
+            'jurusan_id'       => (int)($r['jurusan_id'] ?? 0),
             'jurusan_nama'     => $namaJurusanLengkap,
             'kode_jurusan'     => $r['kode_jurusan'] ?? '',
             'jenjang'          => $r['jenjang'] ?? 'S1',
@@ -246,6 +247,18 @@ try {
         ];
     }
 
+    // Hitung jumlah pendaftar belum dicek/ditetapkan (status bukan diterima, ditolak, dipindahkan, dibatalkan)
+    $stmtUnverified = $pdo->prepare("
+        SELECT COUNT(*)
+        FROM pendaftaran p
+        JOIN unit_pelaksana_periode upp ON p.unit_pelaksana_periode_id = upp.id
+        WHERE upp.entitas_id = :entitas_id 
+          AND upp.periode_id = :periode_id
+          AND p.status NOT IN ('diterima', 'ditolak', 'dipindahkan', 'dibatalkan')
+    ");
+    $stmtUnverified->execute([':entitas_id' => $entitasId, ':periode_id' => $periodeId]);
+    $unverifiedCount = (int)$stmtUnverified->fetchColumn();
+
     echo json_encode([
         'ok' => true,
         'all_periode' => $allPeriode,
@@ -254,6 +267,7 @@ try {
             'nama'   => $periode['nama'],
             'status' => $periode['status'],
         ],
+        'unverified_count' => $unverifiedCount,
         'pagination' => [
             'page'        => $page,
             'per_page'    => $perPage,

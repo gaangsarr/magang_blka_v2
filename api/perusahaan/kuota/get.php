@@ -88,7 +88,7 @@ try {
 
     // 3. Ambil data unit_pelaksana_periode untuk periode ini
     $stmtUpp = $pdo->prepare("
-        SELECT id, kuota_total, kuota_tersisa, aktif
+        SELECT id, tipe_kuota, kuota_total, kuota_tersisa, aktif
         FROM unit_pelaksana_periode
         WHERE entitas_id = :eid AND periode_id = :pid
         LIMIT 1
@@ -97,45 +97,60 @@ try {
     $upp = $stmtUpp->fetch(PDO::FETCH_ASSOC);
 
     $uppId = $upp ? (int)$upp['id'] : 0;
+    $tipeKuota = $upp ? ($upp['tipe_kuota'] ?? 'keseluruhan') : 'keseluruhan';
     $kuotaTotal = $upp ? (int)$upp['kuota_total'] : 0;
     $kuotaTersisa = $upp ? (int)$upp['kuota_tersisa'] : 0;
     // Sinkron penuh: Jika master entitas tidak menerima magang (0), maka otomatis false.
     $uppAktif = $menerimaMagangDefault && ($upp ? (bool)$upp['aktif'] : true);
 
-    // 4. Ambil semua jurusan aktif & tandai yang terpilih
+    // 4. Ambil semua jurusan aktif & tandai yang terpilih beserta kuota per prodi jika ada
     $stmtJAll = $pdo->query("SELECT id, kode, jenjang, nama_jurusan FROM jurusan WHERE aktif = 1 ORDER BY jenjang ASC, nama_jurusan ASC");
     $allJurusan = $stmtJAll->fetchAll(PDO::FETCH_ASSOC);
 
-    $selectedJurusanIds = [];
+    $upjMap = [];
     if ($uppId > 0) {
-        $stmtJSelected = $pdo->prepare("SELECT jurusan_id FROM unit_periode_jurusan WHERE unit_pelaksana_periode_id = ?");
+        $stmtJSelected = $pdo->prepare("SELECT jurusan_id, kuota_total, kuota_tersisa FROM unit_periode_jurusan WHERE unit_pelaksana_periode_id = ?");
         $stmtJSelected->execute([$uppId]);
-        $selectedJurusanIds = $stmtJSelected->fetchAll(PDO::FETCH_COLUMN);
+        foreach ($stmtJSelected->fetchAll(PDO::FETCH_ASSOC) as $r) {
+            $upjMap[(int)$r['jurusan_id']] = $r;
+        }
     } else {
         // Fallback: ambil template default dari unit_jurusan jika ada
         try {
             $stmtJTemplate = $pdo->prepare("SELECT jurusan_id FROM unit_jurusan WHERE entitas_id = ?");
             $stmtJTemplate->execute([$entitasId]);
-            $selectedJurusanIds = $stmtJTemplate->fetchAll(PDO::FETCH_COLUMN);
+            foreach ($stmtJTemplate->fetchAll(PDO::FETCH_COLUMN) as $jid) {
+                $upjMap[(int)$jid] = ['jurusan_id' => (int)$jid, 'kuota_total' => null, 'kuota_tersisa' => null];
+            }
         } catch (\PDOException $e) {
-            $selectedJurusanIds = [];
+            $upjMap = [];
         }
     }
 
     $jurusanList = [];
     foreach ($allJurusan as $j) {
         $jId = (int)$j['id'];
+        $isSelected = isset($upjMap[$jId]);
         $jurusanList[] = [
-            'id'           => $jId,
-            'kode_jurusan' => $j['kode'] ?? '',
-            'nama_jurusan' => $j['nama_jurusan'],
-            'jenjang'      => $j['jenjang'] ?: 'S1',
-            'is_selected'  => in_array($jId, array_map('intval', $selectedJurusanIds), true),
+            'id'            => $jId,
+            'kode_jurusan'  => $j['kode'] ?? '',
+            'nama_jurusan'  => $j['nama_jurusan'],
+            'jenjang'       => $j['jenjang'] ?: 'S1',
+            'is_selected'   => $isSelected,
+            'kuota_total'   => $isSelected ? ($upjMap[$jId]['kuota_total'] !== null ? (int)$upjMap[$jId]['kuota_total'] : null) : null,
+            'kuota_tersisa' => $isSelected ? ($upjMap[$jId]['kuota_tersisa'] !== null ? (int)$upjMap[$jId]['kuota_tersisa'] : null) : null,
         ];
     }
 
-    // 5. Ambil semua peminatan aktif & tandai yang terpilih
-    $stmtPemAll = $pdo->query("SELECT id, nama, deskripsi FROM peminatan WHERE aktif = 1 ORDER BY nama ASC");
+    // 5. Ambil semua peminatan aktif & relasi jurusan_ids nya
+    $stmtPemAll = $pdo->query("
+        SELECT p.id, p.nama, p.deskripsi, GROUP_CONCAT(pj.jurusan_id) AS jurusan_ids_str
+        FROM peminatan p
+        LEFT JOIN peminatan_jurusan pj ON p.id = pj.peminatan_id
+        WHERE p.aktif = 1
+        GROUP BY p.id, p.nama, p.deskripsi
+        ORDER BY p.nama ASC
+    ");
     $allPeminatan = $stmtPemAll->fetchAll(PDO::FETCH_ASSOC);
 
     $selectedPeminatanIds = [];
@@ -157,10 +172,12 @@ try {
     $peminatanList = [];
     foreach ($allPeminatan as $pem) {
         $pemId = (int)$pem['id'];
+        $jIds = !empty($pem['jurusan_ids_str']) ? array_map('intval', explode(',', $pem['jurusan_ids_str'])) : [];
         $peminatanList[] = [
             'id'             => $pemId,
             'nama_peminatan' => $pem['nama'],
             'deskripsi'      => $pem['deskripsi'],
+            'jurusan_ids'    => $jIds,
             'is_selected'    => in_array($pemId, array_map('intval', $selectedPeminatanIds), true),
         ];
     }
@@ -187,6 +204,7 @@ try {
         'kuota' => [
             'upp_id'           => $uppId,
             'menerima_magang'  => $uppAktif,
+            'tipe_kuota'       => $tipeKuota,
             'kuota_total'      => $kuotaTotal,
             'kuota_tersisa'    => $kuotaTersisa,
             'total_pendaftar'  => $totalPendaftar,

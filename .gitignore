@@ -36,4 +36,8 @@ scripts/test_*.php
 # Uploaded Files
 /storage/transkrip/*
 !/storage/transkrip/.gitkeep
+/storage/cv/*
+!/storage/cv/.gitkeep
+/storage/porto/*
+!/storage/porto/.gitkeep
 

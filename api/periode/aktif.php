@@ -46,6 +46,7 @@ try {
             'syarat_transkrip' => (bool) $periode['syarat_transkrip'],
             'syarat_cv' => (bool) $periode['syarat_cv'],
             'syarat_porto' => (bool) $periode['syarat_porto'],
+            'reservation_minutes' => \App\ReservasiHelper::getReservationMinutes(),
         ]
     ]);
 } catch (\Throwable $e) {

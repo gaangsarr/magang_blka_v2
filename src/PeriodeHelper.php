@@ -70,9 +70,10 @@ class PeriodeHelper
 
                 // Ambil semua reservasi 'ditahan' pada unit-unit yang terhubung ke periode ini
                 $stmtRes = $pdo->prepare("
-                    SELECT r.id, r.unit_pelaksana_periode_id
+                    SELECT r.id, r.unit_pelaksana_periode_id, IFNULL(r.jurusan_id, m.jurusan_id) AS jurusan_id, upp.tipe_kuota
                     FROM reservasi r
                     JOIN unit_pelaksana_periode upp ON r.unit_pelaksana_periode_id = upp.id
+                    LEFT JOIN mahasiswa m ON r.mahasiswa_id = m.id
                     WHERE upp.periode_id = ? AND r.status = 'ditahan'
                     FOR UPDATE
                 ");
@@ -86,17 +87,32 @@ class PeriodeHelper
                     // Ubah status reservasi menjadi kadaluarsa
                     $pdo->prepare("UPDATE reservasi SET status = 'kadaluarsa' WHERE id IN ($inRes)")->execute($resIds);
 
-                    // Kembalikan kuota ke masing-masing unit pelaksana
-                    $pdo->prepare("
-                        UPDATE unit_pelaksana_periode upp
-                        JOIN (
-                            SELECT unit_pelaksana_periode_id, COUNT(*) AS jumlah
-                            FROM reservasi
-                            WHERE id IN ($inRes)
-                            GROUP BY unit_pelaksana_periode_id
-                        ) r ON upp.id = r.unit_pelaksana_periode_id
-                        SET upp.kuota_tersisa = LEAST(upp.kuota_total, upp.kuota_tersisa + r.jumlah)
-                    ")->execute($resIds);
+                    $uppCounts = [];
+                    $upjCounts = [];
+                    foreach ($holdReservations as $hr) {
+                        $uppId = (int)$hr['unit_pelaksana_periode_id'];
+                        $uppCounts[$uppId] = ($uppCounts[$uppId] ?? 0) + 1;
+                        if (($hr['tipe_kuota'] ?? '') === 'breakdown' && !empty($hr['jurusan_id'])) {
+                            $jid = (int)$hr['jurusan_id'];
+                            $key = "{$uppId}_{$jid}";
+                            if (!isset($upjCounts[$key])) {
+                                $upjCounts[$key] = ['upp_id' => $uppId, 'jurusan_id' => $jid, 'jumlah' => 0];
+                            }
+                            $upjCounts[$key]['jumlah'] += 1;
+                        }
+                    }
+
+                    $stmtUpp = $pdo->prepare("UPDATE unit_pelaksana_periode SET kuota_tersisa = LEAST(kuota_total, kuota_tersisa + :jml) WHERE id = :upp_id");
+                    foreach ($uppCounts as $uppId => $jml) {
+                        $stmtUpp->execute([':jml' => $jml, ':upp_id' => $uppId]);
+                    }
+
+                    if (!empty($upjCounts)) {
+                        $stmtUpj = $pdo->prepare("UPDATE unit_periode_jurusan SET kuota_tersisa = LEAST(kuota_total, kuota_tersisa + :jml) WHERE unit_pelaksana_periode_id = :upp_id AND jurusan_id = :jid");
+                        foreach ($upjCounts as $item) {
+                            $stmtUpj->execute([':jml' => $item['jumlah'], ':upp_id' => $item['upp_id'], ':jid' => $item['jurusan_id']]);
+                        }
+                    }
                 }
 
                 // Catat log aktivitas

@@ -100,6 +100,7 @@ if (Auth::isLoggedInMahasiswa()) {
         'mhs_angkatan'           => $fullAngkatan,
 
         'active_reservasi'       => $activeReservasi,
+        'reservation_minutes'    => \App\ReservasiHelper::getReservationMinutes(),
         'csrf_token'             => $csrfToken,
         'user'                   => [
             'nama'     => $mahasiswa['nama'] ?? '-',

@@ -33,34 +33,24 @@ $mahasiswaId = Auth::getMahasiswaId();
 try {
     $result = Database::transaction(function (PDO $pdo) use ($mahasiswaId, $uppId) {
         // 0. Auto-cleanup reservasi kadaluarsa di sistem agar kuota yang tertahan lama otomatis kembali
-        $pdo->exec("
-            UPDATE unit_pelaksana_periode upp
-            JOIN (
-                SELECT unit_pelaksana_periode_id, COUNT(*) AS jumlah
-                FROM reservasi
-                WHERE status = 'ditahan' AND expired_at < NOW()
-                GROUP BY unit_pelaksana_periode_id
-            ) r ON upp.id = r.unit_pelaksana_periode_id
-            SET upp.kuota_tersisa = LEAST(upp.kuota_total, upp.kuota_tersisa + r.jumlah);
-            
-            UPDATE reservasi SET status = 'kadaluarsa' WHERE status = 'ditahan' AND expired_at < NOW();
-        ");
+        \App\ReservasiHelper::cleanupExpired($pdo);
 
         // 1. Batalkan reservasi sebelumnya milik mahasiswa ini yang masih 'ditahan'
-        $stmtCekRes = $pdo->prepare("SELECT id, unit_pelaksana_periode_id FROM reservasi WHERE mahasiswa_id = :mid AND status = 'ditahan' AND expired_at > NOW()");
+        $stmtCekRes = $pdo->prepare("
+            SELECT id FROM reservasi 
+            WHERE mahasiswa_id = :mid AND status = 'ditahan'
+            FOR UPDATE
+        ");
         $stmtCekRes->execute([':mid' => $mahasiswaId]);
         $oldReservations = $stmtCekRes->fetchAll(PDO::FETCH_ASSOC);
 
         foreach ($oldReservations as $old) {
-            // Batalkan
-            $pdo->prepare("UPDATE reservasi SET status = 'dibatalkan' WHERE id = :id")->execute([':id' => $old['id']]);
-            // Kembalikan kuota (tidak boleh melebihi kuota_total)
-            $pdo->prepare("UPDATE unit_pelaksana_periode SET kuota_tersisa = LEAST(kuota_total, kuota_tersisa + 1) WHERE id = :upp_id")->execute([':upp_id' => $old['unit_pelaksana_periode_id']]);
+            \App\ReservasiHelper::batalkanReservasi($pdo, (int)$old['id'], $mahasiswaId);
         }
 
         // 2. Kunci row unit_pelaksana_periode untuk cek kuota dan periode
         $stmtUpp = $pdo->prepare("
-            SELECT upp.kuota_tersisa, upp.kuota_total, upp.periode_id, pr.nama AS nama_periode, pr.status AS status_periode, pr.angkatan_eligible, pr.tanggal_selesai, pr.jam_selesai
+            SELECT upp.id, upp.tipe_kuota, upp.kuota_tersisa, upp.kuota_total, upp.periode_id, pr.nama AS nama_periode, pr.status AS status_periode, pr.angkatan_eligible, pr.tanggal_selesai, pr.jam_selesai
             FROM unit_pelaksana_periode upp 
             JOIN periode pr ON upp.periode_id = pr.id
             WHERE upp.id = :upp_id FOR UPDATE
@@ -104,39 +94,63 @@ try {
             $mhsJurusanId = (int)$stmtM->fetchColumn();
         }
 
-        $stmtCheckProdi = $pdo->prepare("SELECT COUNT(*) FROM unit_periode_jurusan WHERE unit_pelaksana_periode_id = ?");
-        $stmtCheckProdi->execute([$uppId]);
-        $totalProdiSet = (int)$stmtCheckProdi->fetchColumn();
+        // Cek penerimaan prodi di unit ini
+        $stmtUpj = $pdo->prepare("
+            SELECT kuota_total, kuota_tersisa 
+            FROM unit_periode_jurusan 
+            WHERE unit_pelaksana_periode_id = ? AND jurusan_id = ? 
+            FOR UPDATE
+        ");
+        $stmtUpj->execute([$uppId, $mhsJurusanId]);
+        $upjRow = $stmtUpj->fetch(PDO::FETCH_ASSOC);
 
-        if ($totalProdiSet > 0) {
-            $stmtMatch = $pdo->prepare("SELECT COUNT(*) FROM unit_periode_jurusan WHERE unit_pelaksana_periode_id = ? AND jurusan_id = ?");
-            $stmtMatch->execute([$uppId, $mhsJurusanId]);
-            if ((int)$stmtMatch->fetchColumn() === 0) {
-                throw new \Exception('Unit magang ini tidak membuka kuota untuk Program Studi Anda.');
+        if (!$upjRow) {
+            throw new \Exception('Unit magang ini tidak membuka kuota untuk Program Studi Anda.');
+        }
+
+        // Validasi kuota prodi jika mode breakdown
+        if (($upp['tipe_kuota'] ?? '') === 'breakdown') {
+            if ((int)($upjRow['kuota_tersisa'] ?? 0) <= 0) {
+                throw new \Exception('Maaf, kuota untuk Program Studi Anda di unit ini sudah habis atau sedang direservasi orang lain.');
             }
         }
 
+        // Validasi kuota total unit
         if ((int)$upp['kuota_tersisa'] <= 0) {
             throw new \Exception('Maaf, kuota untuk unit pelaksana ini sudah habis atau sedang direservasi orang lain.');
         }
 
-        // 3. Kurangi kuota (dijaga tidak boleh kurang dari 0)
+        // 3. Kurangi kuota unit
         $pdo->prepare("UPDATE unit_pelaksana_periode SET kuota_tersisa = GREATEST(0, kuota_tersisa - 1), updated_at = NOW() WHERE id = :upp_id")->execute([':upp_id' => $uppId]);
 
-        // 4. Buat reservasi baru (baca durasi dari .env, default 10 menit jika belum diset)
-        $reservationMinutes = max(1, (int)($_ENV['RESERVATION_MINUTES'] ?? 10));
+        // Kurangi kuota prodi jika mode breakdown
+        if (($upp['tipe_kuota'] ?? '') === 'breakdown') {
+            $pdo->prepare("UPDATE unit_periode_jurusan SET kuota_tersisa = GREATEST(0, kuota_tersisa - 1) WHERE unit_pelaksana_periode_id = ? AND jurusan_id = ?")->execute([$uppId, $mhsJurusanId]);
+        }
+
+        // 4. Buat reservasi baru (baca durasi dari .env via ReservasiHelper)
+        $reservationMinutes = \App\ReservasiHelper::getReservationMinutes();
         $expiredTimestamp = time() + ($reservationMinutes * 60);
         $expiredAt = date('Y-m-d H:i:s', $expiredTimestamp);
 
-        $stmtInsert = $pdo->prepare("INSERT INTO reservasi (mahasiswa_id, unit_pelaksana_periode_id, status, expired_at, created_at) VALUES (:mid, :upp_id, 'ditahan', :expired_at, NOW())");
-        $stmtInsert->execute([':mid' => $mahasiswaId, ':upp_id' => $uppId, ':expired_at' => $expiredAt]);
+        $stmtInsert = $pdo->prepare("
+            INSERT INTO reservasi (mahasiswa_id, unit_pelaksana_periode_id, jurusan_id, status, expired_at, created_at) 
+            VALUES (:mid, :upp_id, :jid, 'ditahan', :expired_at, NOW())
+        ");
+        $stmtInsert->execute([
+            ':mid'        => $mahasiswaId,
+            ':upp_id'     => $uppId,
+            ':jid'        => $mhsJurusanId,
+            ':expired_at' => $expiredAt
+        ]);
         $reservasiId = (int)$pdo->lastInsertId();
 
         return [
-            'reservasi_id'   => $reservasiId,
-            'expired_at'     => date('c', $expiredTimestamp), // Format ISO 8601 (e.g. 2026-09-01T23:25:00+07:00)
-            'expired_at_ms'  => $expiredTimestamp * 1000,
-            'expired_at_raw' => $expiredAt
+            'reservasi_id'        => $reservasiId,
+            'expired_at'          => date('c', $expiredTimestamp), // Format ISO 8601 (e.g. 2026-09-01T23:25:00+07:00)
+            'expired_at_ms'       => $expiredTimestamp * 1000,
+            'expired_at_raw'      => $expiredAt,
+            'reservation_minutes' => $reservationMinutes
         ];
     });
 

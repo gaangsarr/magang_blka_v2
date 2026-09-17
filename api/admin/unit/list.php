@@ -61,6 +61,7 @@ try {
             parent.nama  AS nama_parent,
             parent.tipe  AS tipe_parent,
             upp.id       AS upp_id,
+            upp.tipe_kuota,
             upp.kuota_total,
             upp.kuota_tersisa,
             upp.aktif
@@ -79,16 +80,37 @@ try {
     $units = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Ambil Master Jurusan & Master Peminatan
-    $allJurusan = $pdo->query("SELECT id, kode, nama_jurusan, aktif FROM jurusan ORDER BY nama_jurusan ASC")->fetchAll(PDO::FETCH_ASSOC);
+    $allJurusan = $pdo->query("SELECT id, kode, jenjang, nama_jurusan, aktif FROM jurusan ORDER BY jenjang ASC, nama_jurusan ASC")->fetchAll(PDO::FETCH_ASSOC);
     $jurusanById = [];
     foreach ($allJurusan as $j) {
         $jurusanById[(int)$j['id']] = $j;
     }
 
-    $allPeminatan = $pdo->query("SELECT id, nama, deskripsi, aktif FROM peminatan ORDER BY nama ASC")->fetchAll(PDO::FETCH_ASSOC);
+    // Ambil master peminatan beserta relasi prodi
+    $stmtPemAll = $pdo->query("
+        SELECT p.id, p.nama, p.deskripsi, p.aktif, GROUP_CONCAT(pj.jurusan_id) AS jurusan_ids_str
+        FROM peminatan p
+        LEFT JOIN peminatan_jurusan pj ON p.id = pj.peminatan_id
+        WHERE p.aktif = 1
+        GROUP BY p.id, p.nama, p.deskripsi, p.aktif
+        ORDER BY p.nama ASC
+    ");
+    $allPeminatan = [];
     $peminatanById = [];
-    foreach ($allPeminatan as $p) {
-        $peminatanById[(int)$p['id']] = $p;
+    while ($row = $stmtPemAll->fetch(PDO::FETCH_ASSOC)) {
+        $jIds = [];
+        if (!empty($row['jurusan_ids_str'])) {
+            $jIds = array_map('intval', explode(',', $row['jurusan_ids_str']));
+        }
+        $pObj = [
+            'id' => (int)$row['id'],
+            'nama' => $row['nama'],
+            'deskripsi' => $row['deskripsi'],
+            'aktif' => (int)$row['aktif'],
+            'jurusan_ids' => $jIds,
+        ];
+        $allPeminatan[] = $pObj;
+        $peminatanById[(int)$row['id']] = $pObj;
     }
 
     // Kumpulkan IDs
@@ -122,12 +144,19 @@ try {
 
     // Map Periode Snapshot
     $periodeJurusanByUpp = [];
+    $periodeJurusanDetailsByUpp = [];
     $periodePeminatanByUpp = [];
     if (!empty($uppIds)) {
         $inUpp = implode(',', $uppIds);
-        $stmtUpj = $pdo->query("SELECT unit_pelaksana_periode_id, jurusan_id FROM unit_periode_jurusan WHERE unit_pelaksana_periode_id IN ($inUpp)");
+        $stmtUpj = $pdo->query("SELECT unit_pelaksana_periode_id, jurusan_id, kuota_total, kuota_tersisa FROM unit_periode_jurusan WHERE unit_pelaksana_periode_id IN ($inUpp)");
         while ($row = $stmtUpj->fetch(PDO::FETCH_ASSOC)) {
-            $periodeJurusanByUpp[(int)$row['unit_pelaksana_periode_id']][] = (int)$row['jurusan_id'];
+            $uppKey = (int)$row['unit_pelaksana_periode_id'];
+            $jKey = (int)$row['jurusan_id'];
+            $periodeJurusanByUpp[$uppKey][] = $jKey;
+            $periodeJurusanDetailsByUpp[$uppKey][$jKey] = [
+                'kuota_total' => $row['kuota_total'] !== null ? (int)$row['kuota_total'] : null,
+                'kuota_tersisa' => $row['kuota_tersisa'] !== null ? (int)$row['kuota_tersisa'] : null,
+            ];
         }
 
         $stmtUppem = $pdo->query("SELECT unit_pelaksana_periode_id, peminatan_id FROM unit_periode_peminatan WHERE unit_pelaksana_periode_id IN ($inUpp)");
@@ -140,6 +169,9 @@ try {
     foreach ($units as &$u) {
         $eid = (int)$u['entitas_id'];
         $uppId = !empty($u['upp_id']) ? (int)$u['upp_id'] : null;
+
+        // Default tipe kuota
+        $u['tipe_kuota'] = $u['tipe_kuota'] ?? 'keseluruhan';
 
         // Tentukan prodi_ids: jika ada di periode snapshot gunakan itu; jika tidak ada upp_id atau snapshot belum ada, gunakan default master
         $hasCustomProdi = ($uppId !== null && array_key_exists($uppId, $periodeJurusanByUpp));
@@ -154,8 +186,11 @@ try {
             if (isset($jurusanById[$jid])) {
                 $prodiDetails[] = [
                     'id' => $jid,
-                    'kode' => $jurusanById[$jid]['kode'],
-                    'nama_jurusan' => $jurusanById[$jid]['nama_jurusan']
+                    'kode' => $jurusanById[$jid]['kode'] ?? '',
+                    'nama_jurusan' => $jurusanById[$jid]['nama_jurusan'],
+                    'jenjang' => $jurusanById[$jid]['jenjang'] ?? 'S1',
+                    'kuota_total' => $periodeJurusanDetailsByUpp[$uppId][$jid]['kuota_total'] ?? null,
+                    'kuota_tersisa' => $periodeJurusanDetailsByUpp[$uppId][$jid]['kuota_tersisa'] ?? null,
                 ];
             }
         }
@@ -165,7 +200,8 @@ try {
             if (isset($peminatanById[$pid])) {
                 $peminatanDetails[] = [
                     'id' => $pid,
-                    'nama' => $peminatanById[$pid]['nama']
+                    'nama' => $peminatanById[$pid]['nama'],
+                    'jurusan_ids' => $peminatanById[$pid]['jurusan_ids'] ?? []
                 ];
             }
         }

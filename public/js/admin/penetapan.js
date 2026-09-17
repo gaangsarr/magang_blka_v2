@@ -122,11 +122,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         btn.disabled = true;
         btn.innerText = 'Memproses...';
 
+        const bulkCatatan = document.getElementById('bulk-relocate-catatan').value.trim();
         const payload = {
             pendaftaran_ids: Array.from(selectedIds),
             status: 'dipindahkan',
+            action: 'dipindahkan',
             new_unit_pelaksana_periode_id: parseInt(document.getElementById('bulk-relocate-new-unit').value),
-            catatan_admin: document.getElementById('bulk-relocate-catatan').value
+            catatan_admin: bulkCatatan,
+            alasan_pemindahan: bulkCatatan,
+            catatan: bulkCatatan
         };
 
         try {
@@ -180,11 +184,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         btn.disabled = true;
         btn.innerText = 'Memproses...';
 
+        const catatanVal = document.getElementById('relocate-catatan').value.trim();
         const payload = {
             pendaftaran_id: pendaftaranId,
             status: 'dipindahkan',
             new_unit_pelaksana_periode_id: targetUppId,
-            catatan_admin: document.getElementById('relocate-catatan').value
+            catatan_admin: catatanVal,
+            alasan_pemindahan: catatanVal,
+            catatan: catatanVal
         };
 
         try {
@@ -560,7 +567,7 @@ function renderTable(dataArray) {
 
         if (p.status === 'diterima') {
             badgeClass = 'badge-dibuka';
-            statusLabel = 'Diterima (Pilihan Awal)';
+            statusLabel = 'Diterima';
         } else if (p.status === 'dipindahkan' || p.is_dipindahkan == 1) {
             badgeClass = 'badge-diarsipkan';
             statusLabel = 'Dipindahkan Paksa';
@@ -599,34 +606,40 @@ function renderTable(dataArray) {
             </td>
             <td><span class="badge-status ${badgeClass}">${statusLabel}</span></td>
             <td style="white-space: nowrap;">
-                <div style="display: inline-flex; gap: 4px; align-items: center; flex-wrap: nowrap; white-space: nowrap;">
-                    ${p.transkrip_path ? `
-                    <a href="/api/admin/transkrip/download.php?pendaftaran_id=${p.pendaftaran_id}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 4px; padding: 6px 10px; font-size: 0.775rem; background: #e0f2fe; border: 1px solid #bae6fd; color: #0284c7; font-weight: 700; border-radius: 8px; text-decoration: none; cursor: pointer;" title="Buka Dokumen Transkrip Nilai (PDF) di Tab Baru">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
-                        <span>Transkrip</span>
-                    </a>` : ''}
-                    ${p.cv_path ? `
-                    <a href="/api/admin/cv/download.php?pendaftaran_id=${p.pendaftaran_id}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 4px; padding: 6px 10px; font-size: 0.775rem; background: #ecfdf5; border: 1px solid #a7f3d0; color: #047857; font-weight: 700; border-radius: 8px; text-decoration: none; cursor: pointer;" title="Buka Dokumen Curriculum Vitae / CV (PDF) di Tab Baru">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
-                        <span>CV</span>
-                    </a>` : ''}
-                    ${p.porto_path ? `
-                    <a href="/api/admin/porto/download.php?pendaftaran_id=${p.pendaftaran_id}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 4px; padding: 6px 10px; font-size: 0.775rem; background: #ede9fe; border: 1px solid #ddd6fe; color: #6d28d9; font-weight: 700; border-radius: 8px; text-decoration: none; cursor: pointer;" title="Buka Dokumen Portofolio (PDF) di Tab Baru">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
-                        <span>Porto</span>
-                    </a>` : ''}
-                    <button type="button" style="display: inline-flex; align-items: center; gap: 4px; padding: 6px 10px; font-size: 0.775rem; background: #ecfdf5; border: 1px solid #a7f3d0; color: #047857; font-weight: 700; border-radius: 8px; cursor: pointer;" onclick="openApproveModal(${p.pendaftaran_id}, '${escapeHtml(p.nama).replace(/'/g, "\\'")}', '${escapeHtml(p.unit_nama).replace(/'/g, "\\'")}')">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                        <span>Setujui</span>
-                    </button>
-                    <button type="button" style="display: inline-flex; align-items: center; gap: 4px; padding: 6px 10px; font-size: 0.775rem; background: #fffbebf5; border: 1px solid #fde68a; color: #d97706; font-weight: 700; border-radius: 8px; cursor: pointer;" onclick="openRelocateModal(${p.pendaftaran_id}, '${escapeHtml(p.nama).replace(/'/g, "\\'")}', '${escapeHtml(unitAwal).replace(/'/g, "\\'")}')">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
-                        <span>Pindahkan</span>
-                    </button>
-                    <button type="button" style="display: inline-flex; align-items: center; gap: 4px; padding: 6px 10px; font-size: 0.775rem; background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; font-weight: 700; border-radius: 8px; cursor: pointer;" onclick="openRejectModal(${p.pendaftaran_id}, '${escapeHtml(p.nama).replace(/'/g, "\\'")}')">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-                        <span>Tolak</span>
-                    </button>
+                <div class="action-cell-stack">
+                    <div class="action-row-docs">
+                        <span class="action-row-label">Berkas:</span>
+                        ${p.transkrip_path ? `
+                        <a href="/api/admin/transkrip/download.php?pendaftaran_id=${p.pendaftaran_id}" target="_blank" rel="noopener noreferrer" class="btn-doc-pill pill-transkrip" title="Buka Dokumen Transkrip Nilai (PDF) di Tab Baru">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                            <span>Transkrip</span>
+                        </a>` : ''}
+                        ${p.cv_path ? `
+                        <a href="/api/admin/cv/download.php?pendaftaran_id=${p.pendaftaran_id}" target="_blank" rel="noopener noreferrer" class="btn-doc-pill pill-cv" title="Buka Dokumen Curriculum Vitae / CV (PDF) di Tab Baru">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><circle cx="12" cy="12" r="2.5"/><path d="M8 18c0-1.8 1.8-3 4-3s4 1.2 4 3"/></svg>
+                            <span>CV</span>
+                        </a>` : ''}
+                        ${p.porto_path ? `
+                        <a href="/api/admin/porto/download.php?pendaftaran_id=${p.pendaftaran_id}" target="_blank" rel="noopener noreferrer" class="btn-doc-pill pill-porto" title="Buka Dokumen Portofolio (PDF) di Tab Baru">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                            <span>Porto</span>
+                        </a>` : ''}
+                        ${(!p.transkrip_path && !p.cv_path && !p.porto_path) ? '<span class="doc-empty-text">Tidak ada berkas</span>' : ''}
+                    </div>
+                    <div class="action-row-decision">
+                        <button type="button" class="btn-action-pill pill-approve" onclick="openApproveModal(${p.pendaftaran_id}, '${escapeHtml(p.nama).replace(/'/g, "\\'")}', '${escapeHtml(p.unit_nama).replace(/'/g, "\\'")}')" title="Setujui dan Tetapkan Unit">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                            <span>Setujui</span>
+                        </button>
+                        <button type="button" class="btn-action-pill pill-relocate" onclick="openRelocateModal(${p.pendaftaran_id}, '${escapeHtml(p.nama).replace(/'/g, "\\'")}', '${escapeHtml(unitAwal).replace(/'/g, "\\'")}')" title="Pindahkan Paksa ke Unit Lain">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+                            <span>Pindahkan</span>
+                        </button>
+                        <button type="button" class="btn-action-pill pill-reject" onclick="openRejectModal(${p.pendaftaran_id}, '${escapeHtml(p.nama).replace(/'/g, "\\'")}')" title="Tolak Penetapan">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                            <span>Tolak</span>
+                        </button>
+                    </div>
                 </div>
             </td>
         `;
@@ -664,7 +677,7 @@ function updateBulkToolbar() {
 // Bulk Actions Handlers
 async function handleBulkApprove() {
     if (selectedIds.size === 0) return;
-    const confirmed = await showAdminConfirm(`Konfirmasi menyetujui penetapan ${selectedIds.size} mahasiswa terpilih pada unit pilihan awal mereka?`, 'Setujui Penetapan Massal', 'info', 'Ya, Setujui', 'Batal');
+    const confirmed = await showAdminConfirm(`Konfirmasi menyetujui penetapan ${selectedIds.size} mahasiswa terpilih pada unit penempatan mereka?`, 'Setujui Penetapan Massal', 'info', 'Ya, Setujui', 'Batal');
     if (!confirmed) return;
 
     try {

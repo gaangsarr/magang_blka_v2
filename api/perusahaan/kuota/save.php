@@ -25,9 +25,22 @@ $input = json_decode(file_get_contents('php://input'), true) ?? [];
 
 $periodeId = (int)($input['periode_id'] ?? 0);
 $menerimaMagang = !empty($input['menerima_magang']);
+$tipeKuota = in_array(($input['tipe_kuota'] ?? ''), ['keseluruhan', 'breakdown'], true) ? $input['tipe_kuota'] : 'keseluruhan';
 $kuotaTotal = max(0, (int)($input['kuota_total'] ?? 0));
-$jurusanIds = array_filter(array_map('intval', (array)($input['jurusan_ids'] ?? [])));
-$peminatanIds = array_filter(array_map('intval', (array)($input['peminatan_ids'] ?? [])));
+$jurusanIds = array_values(array_unique(array_filter(array_map('intval', (array)($input['jurusan_ids'] ?? [])))));
+$peminatanIds = array_values(array_unique(array_filter(array_map('intval', (array)($input['peminatan_ids'] ?? [])))));
+
+$rawAllocations = $input['jurusan_allocations'] ?? [];
+$allocMap = [];
+if (is_array($rawAllocations)) {
+    foreach ($rawAllocations as $k => $v) {
+        if (is_array($v) && isset($v['jurusan_id'], $v['kuota'])) {
+            $allocMap[(int)$v['jurusan_id']] = max(0, (int)$v['kuota']);
+        } elseif (is_numeric($k)) {
+            $allocMap[(int)$k] = max(0, (int)$v);
+        }
+    }
+}
 
 if ($periodeId <= 0) {
     http_response_code(400);
@@ -57,7 +70,7 @@ try {
         exit;
     }
 
-    $isSuperAdmin = ($admin['role'] === 'super_admin' || $admin['role'] === 'superadmin');
+    $isSuperAdmin = ($admin && ($admin['role'] === 'super_admin' || $admin['role'] === 'superadmin'));
 
     // Jika bukan Super Admin, hanya boleh edit di status persiapan atau draft
     if (!$isSuperAdmin && !in_array($periode['status'], ['persiapan', 'draft'], true)) {
@@ -84,6 +97,85 @@ try {
         exit;
     }
 
+    // Validasi mode breakdown
+    if ($menerimaMagang && $tipeKuota === 'breakdown') {
+        $sumBreakdown = 0;
+        foreach ($jurusanIds as $jid) {
+            $q = $allocMap[$jid] ?? 0;
+            if ($q <= 0) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Pada mode Kuota Terbagi per Prodi (Breakdown), setiap program studi yang dipilih wajib memiliki jatah minimal 1 mahasiswa.']);
+                exit;
+            }
+            $sumBreakdown += $q;
+        }
+
+        if ($sumBreakdown !== $kuotaTotal) {
+            http_response_code(400);
+            echo json_encode(['error' => "Jumlah total alokasi per prodi ($sumBreakdown) harus sama persis dengan Total Kuota yang disediakan ($kuotaTotal)."]);
+            exit;
+        }
+    }
+
+    // Cek entitas eksisting UPP
+    $stmtUppCheck = $pdo->prepare("SELECT id, kuota_total, kuota_tersisa FROM unit_pelaksana_periode WHERE entitas_id = :eid AND periode_id = :pid LIMIT 1");
+    $stmtUppCheck->execute([':eid' => $entitasId, ':pid' => $periodeId]);
+    $existingUpp = $stmtUppCheck->fetch(PDO::FETCH_ASSOC);
+    $uppId = $existingUpp ? (int)$existingUpp['id'] : 0;
+
+    // Periksa mahasiswa terdaftar / reservasi jika UPP sudah ada
+    $usedPerJurusan = [];
+    $totalUsed = 0;
+    if ($uppId > 0) {
+        $stmtUsedP = $pdo->prepare("
+            SELECT m.jurusan_id, COUNT(*) as jml
+            FROM pendaftaran p
+            JOIN mahasiswa m ON p.mahasiswa_id = m.id
+            WHERE p.unit_pelaksana_periode_id = ?
+            GROUP BY m.jurusan_id
+        ");
+        $stmtUsedP->execute([$uppId]);
+        foreach ($stmtUsedP->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $usedPerJurusan[(int)$row['jurusan_id']] = (int)$row['jml'];
+            $totalUsed += (int)$row['jml'];
+        }
+
+        $stmtUsedR = $pdo->prepare("
+            SELECT IFNULL(r.jurusan_id, m.jurusan_id) as jurusan_id, COUNT(*) as jml
+            FROM reservasi r
+            JOIN mahasiswa m ON r.mahasiswa_id = m.id
+            WHERE r.unit_pelaksana_periode_id = ? AND r.status = 'ditahan' AND r.expired_at > NOW()
+            GROUP BY jurusan_id
+        ");
+        $stmtUsedR->execute([$uppId]);
+        foreach ($stmtUsedR->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $jid = (int)$row['jurusan_id'];
+            $usedPerJurusan[$jid] = ($usedPerJurusan[$jid] ?? 0) + (int)$row['jml'];
+            $totalUsed += (int)$row['jml'];
+        }
+
+        if ($menerimaMagang && $kuotaTotal < $totalUsed) {
+            http_response_code(400);
+            echo json_encode(['error' => "Total kuota tidak boleh kurang dari $totalUsed karena saat ini sudah ada $totalUsed mahasiswa yang terdaftar/mereservasi."]);
+            exit;
+        }
+
+        if ($menerimaMagang && $tipeKuota === 'breakdown') {
+            foreach ($jurusanIds as $jid) {
+                $used = $usedPerJurusan[$jid] ?? 0;
+                $prodiAlloc = $allocMap[$jid] ?? 0;
+                if ($prodiAlloc < $used) {
+                    $stmtJn = $pdo->prepare("SELECT nama_jurusan FROM jurusan WHERE id = ?");
+                    $stmtJn->execute([$jid]);
+                    $jName = $stmtJn->fetchColumn() ?: "ID $jid";
+                    http_response_code(400);
+                    echo json_encode(['error' => "Kuota untuk $jName tidak boleh kurang dari $used karena sudah ada $used mahasiswa yang terdaftar/mereservasi."]);
+                    exit;
+                }
+            }
+        }
+    }
+
     $pdo->beginTransaction();
 
     // 2. Update master entitas_perusahaan
@@ -91,26 +183,19 @@ try {
     $stmtUpdE->execute([':m' => $menerimaMagang ? 1 : 0, ':eid' => $entitasId]);
 
     // 3. Upsert tabel unit_pelaksana_periode
-    $stmtUppCheck = $pdo->prepare("SELECT id, kuota_total, kuota_tersisa FROM unit_pelaksana_periode WHERE entitas_id = :eid AND periode_id = :pid LIMIT 1");
-    $stmtUppCheck->execute([':eid' => $entitasId, ':pid' => $periodeId]);
-    $existingUpp = $stmtUppCheck->fetch(PDO::FETCH_ASSOC);
-
-    $uppId = 0;
     if ($existingUpp) {
-        $uppId = (int)$existingUpp['id'];
         $oldTotal = (int)$existingUpp['kuota_total'];
         $oldTersisa = (int)$existingUpp['kuota_tersisa'];
-        
-        // Hitung selisih kuota jika kuota total bertambah/berkurang
         $selisih = $kuotaTotal - $oldTotal;
         $newTersisa = max(0, $oldTersisa + $selisih);
 
         $stmtUppUpd = $pdo->prepare("
             UPDATE unit_pelaksana_periode 
-            SET kuota_total = :kt, kuota_tersisa = :ks, aktif = :aktif, updated_at = NOW()
+            SET tipe_kuota = :tk, kuota_total = :kt, kuota_tersisa = :ks, aktif = :aktif, updated_at = NOW()
             WHERE id = :id
         ");
         $stmtUppUpd->execute([
+            ':tk'    => $tipeKuota,
             ':kt'    => $kuotaTotal,
             ':ks'    => $newTersisa,
             ':aktif' => $menerimaMagang ? 1 : 0,
@@ -118,12 +203,13 @@ try {
         ]);
     } else {
         $stmtUppIns = $pdo->prepare("
-            INSERT INTO unit_pelaksana_periode (entitas_id, periode_id, kuota_total, kuota_tersisa, aktif, created_at, updated_at)
-            VALUES (:eid, :pid, :kt, :ks, :aktif, NOW(), NOW())
+            INSERT INTO unit_pelaksana_periode (entitas_id, periode_id, tipe_kuota, kuota_total, kuota_tersisa, aktif, created_at, updated_at)
+            VALUES (:eid, :pid, :tk, :kt, :ks, :aktif, NOW(), NOW())
         ");
         $stmtUppIns->execute([
             ':eid'   => $entitasId,
             ':pid'   => $periodeId,
+            ':tk'    => $tipeKuota,
             ':kt'    => $kuotaTotal,
             ':ks'    => $kuotaTotal,
             ':aktif' => $menerimaMagang ? 1 : 0,
@@ -136,9 +222,20 @@ try {
     $stmtDelJ->execute([$uppId]);
 
     if ($menerimaMagang && !empty($jurusanIds)) {
-        $stmtInsJ = $pdo->prepare("INSERT INTO unit_periode_jurusan (unit_pelaksana_periode_id, jurusan_id) VALUES (:upp_id, :jid)");
+        $stmtInsJ = $pdo->prepare("
+            INSERT INTO unit_periode_jurusan (unit_pelaksana_periode_id, jurusan_id, kuota_total, kuota_tersisa)
+            VALUES (:upp_id, :jid, :kt, :ks)
+        ");
         foreach ($jurusanIds as $jid) {
-            $stmtInsJ->execute([':upp_id' => $uppId, ':jid' => $jid]);
+            $kt = ($tipeKuota === 'breakdown') ? ($allocMap[$jid] ?? 0) : null;
+            $used = $usedPerJurusan[$jid] ?? 0;
+            $ks = ($tipeKuota === 'breakdown') ? max(0, ($allocMap[$jid] ?? 0) - $used) : null;
+            $stmtInsJ->execute([
+                ':upp_id' => $uppId,
+                ':jid'    => $jid,
+                ':kt'     => $kt,
+                ':ks'     => $ks,
+            ]);
         }
     }
 

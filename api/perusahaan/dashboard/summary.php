@@ -6,6 +6,7 @@ require_once dirname(__DIR__, 3) . '/vendor/autoload.php';
 use Dotenv\Dotenv;
 use App\Database;
 use App\Auth;
+use App\PenetapanHelper;
 
 $root = dirname(__DIR__, 3);
 Dotenv::createImmutable($root)->safeLoad();
@@ -57,19 +58,42 @@ try {
         exit;
     }
 
-    // 2. Ambil Periode Aktif (Prioritas: 'dibuka' -> 'persiapan' -> periode terbaru)
-    $stmtPeriode = $pdo->query("
-        SELECT id, nama, tanggal_mulai, tanggal_selesai, status, program_1_bulan, program_5_bulan, angkatan_eligible, created_at
-        FROM periode 
-        WHERE status IN ('dibuka', 'persiapan', 'ditutup')
-        ORDER BY (status = 'dibuka') DESC, (status = 'persiapan') DESC, id DESC
-        LIMIT 1
-    ");
-    $periodeAktif = $stmtPeriode->fetch(PDO::FETCH_ASSOC);
+    // 1.5 Ambil Daftar Seluruh Periode untuk selector
+    $stmtAllP = $pdo->query("SELECT id, nama, tanggal_mulai, tanggal_selesai, status FROM periode ORDER BY id DESC");
+    $allPeriode = $stmtAllP->fetchAll(PDO::FETCH_ASSOC);
+
+    // 2. Ambil Periode (Prioritas: $_GET['periode_id'] -> 'dibuka' -> 'persiapan' -> periode terbaru)
+    $requestedPid = isset($_GET['periode_id']) ? (int)$_GET['periode_id'] : 0;
+    $periodeAktif = null;
+
+    if ($requestedPid > 0) {
+        $stmtP = $pdo->prepare("
+            SELECT id, nama, tanggal_mulai, tanggal_selesai, status, program_1_bulan, program_5_bulan, angkatan_eligible, created_at
+            FROM periode 
+            WHERE id = ?
+        ");
+        $stmtP->execute([$requestedPid]);
+        $periodeAktif = $stmtP->fetch(PDO::FETCH_ASSOC);
+    }
 
     if (!$periodeAktif) {
-        // Fallback periode terbaru
-        $stmtFall = $pdo->query("SELECT id, nama, tanggal_mulai, tanggal_selesai, status, program_1_bulan, program_5_bulan, angkatan_eligible, created_at FROM periode ORDER BY id DESC LIMIT 1");
+        $stmtPeriode = $pdo->query("
+            SELECT id, nama, tanggal_mulai, tanggal_selesai, status, program_1_bulan, program_5_bulan, angkatan_eligible, created_at
+            FROM periode 
+            WHERE status IN ('dibuka', 'persiapan')
+            ORDER BY (status = 'dibuka') DESC, (status = 'persiapan') DESC, id DESC
+            LIMIT 1
+        ");
+        $periodeAktif = $stmtPeriode->fetch(PDO::FETCH_ASSOC);
+    }
+
+    if (!$periodeAktif && !empty($allPeriode)) {
+        $stmtFall = $pdo->prepare("
+            SELECT id, nama, tanggal_mulai, tanggal_selesai, status, program_1_bulan, program_5_bulan, angkatan_eligible, created_at
+            FROM periode 
+            WHERE id = ?
+        ");
+        $stmtFall->execute([(int)$allPeriode[0]['id']]);
         $periodeAktif = $stmtFall->fetch(PDO::FETCH_ASSOC);
     }
 
@@ -90,7 +114,7 @@ try {
         $periodeId = (int)$periodeAktif['id'];
         $periodeStatus = $periodeAktif['status'];
 
-        // Cek / buat snapshot unit_pelaksana_periode jika belum ada
+        // Cek data unit_pelaksana_periode untuk periode ini SAJA (TIDAK BOLEH fallback ke periode lain!)
         $stmtUpp = $pdo->prepare("
             SELECT id, kuota_total, kuota_tersisa, aktif 
             FROM unit_pelaksana_periode 
@@ -98,57 +122,12 @@ try {
             LIMIT 1
         ");
         $stmtUpp->execute([':eid' => $entitasId, ':pid' => $periodeId]);
-        $uppData = $stmtUpp->fetch(PDO::FETCH_ASSOC);
+        $uppData = $stmtUpp->fetch(PDO::FETCH_ASSOC) ?: null;
 
         $uppId = $uppData ? (int)$uppData['id'] : null;
+        $isConfigured = ($uppId !== null && $uppId > 0);
 
-        // Fallback jika unit_pelaksana_periode untuk periode ini belum pernah disimpan
-        if (!$uppData) {
-            $stmtPrevUpp = $pdo->prepare("
-                SELECT id, kuota_total, kuota_tersisa, aktif 
-                FROM unit_pelaksana_periode 
-                WHERE entitas_id = :eid 
-                ORDER BY periode_id DESC 
-                LIMIT 1
-            ");
-            $stmtPrevUpp->execute([':eid' => $entitasId]);
-            $prevUpp = $stmtPrevUpp->fetch(PDO::FETCH_ASSOC);
-
-            $menerima = (bool)$entitas['menerima_magang'] && ($prevUpp ? (bool)$prevUpp['aktif'] : true);
-            $kuotaVal = $prevUpp ? (int)$prevUpp['kuota_total'] : 0;
-
-            $uppData = [
-                'id'            => null,
-                'kuota_total'   => $kuotaVal,
-                'kuota_tersisa' => $kuotaVal,
-                'aktif'         => $menerima,
-            ];
-
-            if ($prevUpp) {
-                $prevUppId = (int)$prevUpp['id'];
-                $stmtJ = $pdo->prepare("
-                    SELECT j.id, j.nama_jurusan, j.kode, j.jenjang
-                    FROM unit_periode_jurusan upj
-                    JOIN jurusan j ON upj.jurusan_id = j.id
-                    WHERE upj.unit_pelaksana_periode_id = ?
-                    ORDER BY j.jenjang ASC, j.nama_jurusan ASC
-                ");
-                $stmtJ->execute([$prevUppId]);
-                $selectedJurusan = $stmtJ->fetchAll(PDO::FETCH_ASSOC);
-
-                $stmtPem = $pdo->prepare("
-                    SELECT pem.id, pem.nama AS nama_peminatan
-                    FROM unit_periode_peminatan uppem
-                    JOIN peminatan pem ON uppem.peminatan_id = pem.id
-                    WHERE uppem.unit_pelaksana_periode_id = ?
-                    ORDER BY pem.nama ASC
-                ");
-                $stmtPem->execute([$prevUppId]);
-                $selectedPeminatan = $stmtPem->fetchAll(PDO::FETCH_ASSOC);
-            }
-        }
-
-        // Ambil data prodi & peminatan yang dipilih pada periode ini (jika UPP sudah ada)
+        // Ambil data prodi & peminatan yang dipilih pada periode ini (HANYA jika UPP sudah ada untuk periode ini)
         if ($uppId) {
             $stmtJ = $pdo->prepare("
                 SELECT j.id, j.nama_jurusan, j.kode, j.jenjang
@@ -170,7 +149,7 @@ try {
             $stmtPem->execute([$uppId]);
             $selectedPeminatan = $stmtPem->fetchAll(PDO::FETCH_ASSOC);
 
-            // Hitung statistik pendaftar masuk ke unit ini
+            // Hitung statistik pendaftar masuk ke unit ini pada periode ini
             $stmtStats = $pdo->prepare("
                 SELECT status, COUNT(*) AS jml
                 FROM pendaftaran
@@ -190,21 +169,40 @@ try {
                 }
             }
             $statsPendaftar['total'] = $totalMhs;
+
+            // Hitung mahasiswa belum dicek (status bukan diterima, ditolak, dipindahkan, dibatalkan)
+            $stmtBelumDicek = $pdo->prepare("
+                SELECT COUNT(*) 
+                FROM pendaftaran 
+                WHERE unit_pelaksana_periode_id = :upp_id 
+                  AND periode_id = :pid 
+                  AND status NOT IN ('diterima', 'ditolak', 'dipindahkan', 'dibatalkan')
+            ");
+            $stmtBelumDicek->execute([':upp_id' => $uppId, ':pid' => $periodeId]);
+            $pendingCheckCount = (int)$stmtBelumDicek->fetchColumn();
+            $statsPendaftar['belum_dicek'] = $pendingCheckCount;
         }
 
         // Susun Action Banner
-        if ($periodeStatus === 'persiapan') {
+        if (!$isConfigured) {
+            $bannerNotification = [
+                'type'        => 'warning',
+                'title'       => "Periode {$periodeAktif['nama']} (Kuota Belum Dikonfigurasi)",
+                'message'     => 'Unit Anda belum mengatur kuota dan program studi untuk periode ini. Silakan atur kuota dan jurusan pada menu Pengaturan Kuota agar unit Anda dapat menerima pendaftar.',
+                'can_edit'    => true,
+            ];
+        } elseif ($periodeStatus === 'persiapan') {
             $bannerNotification = [
                 'type'        => 'info',
                 'title'       => "Periode {$periodeAktif['nama']} (Tahap Persiapan)",
-                'message'     => 'Pendaftaran mahasiswa belum dibuka. Anda dapat mengonfigurasi kesediaan menerima magang, kuota kuantitas, program studi, dan peminatan pada menu Pengaturan Kuota.',
+                'message'     => 'Pendaftaran mahasiswa belum dibuka. Pengaturan kuota unit Anda telah tersimpan dan dapat disesuaikan kembali pada menu Pengaturan Kuota sebelum masa pendaftaran dibuka.',
                 'can_edit'    => true,
             ];
         } elseif ($periodeStatus === 'dibuka') {
             $bannerNotification = [
                 'type'        => 'success',
                 'title'       => "Periode {$periodeAktif['nama']} (Pendaftaran Dibuka)",
-                'message'     => 'Pendaftaran mahasiswa sedang aktif dan live. Anda dapat memantau pendaftar yang masuk ke unit Anda pada menu Live Pendaftar.',
+                'message'     => 'Pendaftaran mahasiswa sedang aktif dan live. Anda dapat memantau dan memverifikasi pendaftar yang masuk ke unit Anda pada menu Verifikasi Peserta.',
                 'can_edit'    => false,
             ];
         } else {
@@ -225,6 +223,7 @@ try {
             'program_1_bulan'    => (bool)($periodeAktif['program_1_bulan'] ?? false),
             'program_5_bulan'    => (bool)($periodeAktif['program_5_bulan'] ?? false),
             'angkatan_eligible'  => $periodeAktif['angkatan_eligible'] ?? null,
+            'is_configured'      => $isConfigured,
             'upp'                => $uppData ? [
                 'id'            => (int)$uppData['id'],
                 'kuota_total'   => (int)$uppData['kuota_total'],
@@ -265,9 +264,12 @@ try {
                 'email'   => $entitas['pic_email'] ?? '',
             ]
         ],
-        'periode'        => $periodeSummary,
-        'stats'          => $statsPendaftar,
-        'notification'   => $bannerNotification,
+        'all_periode'            => $allPeriode,
+        'periode'                => $periodeSummary,
+        'stats'                  => $statsPendaftar,
+        'notification'           => $bannerNotification,
+        'pending_pendaftar_count' => $pendingCheckCount ?? 0,
+        'pending_transfer_count' => PenetapanHelper::getPendingTransferCount($pdo, (int)$entitas['id'], $periodeId ? (int)$periodeId : null),
     ]);
 
 } catch (\Throwable $e) {

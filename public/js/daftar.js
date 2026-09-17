@@ -1,6 +1,7 @@
 let csrfToken = null;
 let minIpk5Bulan = 3.00;
 let minSks5Bulan = 110;
+let reservationMinutes = 10;
 import { initMap, searchLocation, invalidateMapSize } from './map.js';
 
 
@@ -164,6 +165,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         formData.periode_id = periodeData.periode.id;
         formData.periode_nama = periodeData.periode.nama;
+        if (periodeData.periode && periodeData.periode.reservation_minutes) {
+            reservationMinutes = parseInt(periodeData.periode.reservation_minutes, 10) || 10;
+        }
+        const lblDurasi = document.getElementById('durasi-reservasi-label');
+        if (lblDurasi) {
+            lblDurasi.innerText = `${reservationMinutes} menit`;
+        }
         setupProgramOptions(periodeData.periode);
         setupDokumenSyarat(periodeData.periode);
 
@@ -588,23 +596,29 @@ function handlePrev() {
     if (currentStep === 5 && formData.reservasi_id) {
         showModal('Batalkan Pilihan', 'Jika Anda kembali, pilihan unit Anda akan dibatalkan dan kuota akan dilepas. Yakin ingin kembali?', async () => {
             try {
-                await fetch('/api/mahasiswa/batal_reservasi.php', {
+                const cancelRes = await fetch('/api/mahasiswa/batal_reservasi.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
                     body: JSON.stringify({ reservasi_id: formData.reservasi_id })
                 });
-                
+                const cancelData = await cancelRes.json();
+                if (!cancelRes.ok && !cancelData.already_done) {
+                    console.warn('[daftar.js] Gagal batalkan reservasi:', cancelData.error);
+                }
+            } catch (err) {
+                console.warn('[daftar.js] Network error saat batalkan reservasi:', err);
+            } finally {
                 if (reservasiTimerInterval) clearInterval(reservasiTimerInterval);
-                document.getElementById('reservasi-timer').innerText = '00:00';
+                const timerEl = document.getElementById('reservasi-timer');
+                if (timerEl) timerEl.innerText = '--:--';
                 formData.reservasi_id = null;
                 formData.upp_id = null;
                 formData.nama_unit_dipilih = null;
-                
+                try { sessionStorage.removeItem('magang_draft_form'); } catch(e){}
+
                 currentStep--;
                 updateUI();
-                loadUnits();
-            } catch (err) {
-                showError('Gagal membatalkan reservasi.', null, 'Gagal Pembatalan');
+                await loadUnits();
             }
         });
         return;
@@ -855,17 +869,27 @@ function renderUnitsTable(page = 1) {
 
     pageUnits.forEach((u, idx) => {
         const tr = document.createElement('tr');
-        const isFull = u.kuota_tersisa <= 0;
+        const sisaEfektif = (u.sisa_kuota_efektif !== undefined) ? parseInt(u.sisa_kuota_efektif, 10) : parseInt(u.kuota_tersisa, 10);
+        const totalEfektif = (u.total_kuota_efektif !== undefined) ? parseInt(u.total_kuota_efektif, 10) : parseInt(u.kuota_total, 10);
+        const isFull = sisaEfektif <= 0;
         if (isFull) tr.classList.add('row-full');
         
         let actionHtml = '';
         if (isFull) {
-            actionHtml = `<span class="text-abu" style="font-weight: 600;">Penuh</span>`;
+            actionHtml = `<span class="text-abu" style="font-weight: 600; font-size: 0.775rem;">Penuh</span>`;
         } else {
             actionHtml = `<button type="button" class="btn btn-primary" style="padding: 0.35rem 0.9rem; font-size: 0.85rem; font-weight: 600;" onclick="window.pilihUnit(${u.upp_id}, '${escapeHtml(u.nama_unit).replace(/'/g, "\\'")}')">Pilih</button>`;
         }
 
         const noUrut = offset + idx + 1;
+
+        const kuotaCellHtml = `
+            <div style="text-align: right;">
+                <span style="font-weight: 700; color: ${isFull ? '#94a3b8' : '#059669'}; font-family: monospace; font-size: 0.95rem;">
+                    ${String(sisaEfektif).padStart(2, '0')} / ${String(totalEfektif).padStart(2, '0')}
+                </span>
+            </div>
+        `;
 
         tr.innerHTML = `
             <td data-label="No" style="text-align: center; font-weight: 600; color: #64748b;">${noUrut}</td>
@@ -878,8 +902,8 @@ function renderUnitsTable(page = 1) {
             </td>
             <td data-label="Jarak">${u.jarak !== null ? u.jarak + ' km' : '-'}</td>
             <td data-label="Peminatan"><span class="badge badge-gold">${u.kecocokan} Sesuai</span></td>
-            <td data-label="Kuota Tersisa" class="table-monospace ${isFull ? 'text-abu' : 'text-hijau'}" style="text-align: right; font-weight: 700;">
-                ${String(u.kuota_tersisa).padStart(2, '0')} / ${String(u.kuota_total).padStart(2, '0')}
+            <td data-label="Sisa Kuota" class="table-monospace">
+                ${kuotaCellHtml}
             </td>
             <td data-label="Aksi" style="text-align: center;">${actionHtml}</td>
         `;
@@ -970,7 +994,7 @@ document.addEventListener('click', (e) => {
 
 // Terpaksa di scope global karena dipanggil dari onclick atribut HTML string
 window.pilihUnit = function(upp_id, nama_unit) {
-    showModal('Konfirmasi Pilihan', `Anda akan memilih unit ${nama_unit}. Kuota akan ditahan selama batas waktu reservasi. Lanjutkan?`, async () => {
+    showModal('Konfirmasi Pilihan', `Anda akan memilih unit ${nama_unit}. Kuota akan ditahan sementara selama ${reservationMinutes} menit untuk melengkapi data resume dan konfirmasi. Lanjutkan?`, async () => {
         showError(null);
         try {
             const res = await fetch('/api/mahasiswa/reservasi.php', {
@@ -982,8 +1006,12 @@ window.pilihUnit = function(upp_id, nama_unit) {
             const data = await res.json();
             if (!res.ok) {
                 showError(data.error || 'Gagal melakukan reservasi unit.', null, 'Reservasi Unit Gagal');
-                loadUnits(); 
+                await loadUnits(); 
                 return;
+            }
+
+            if (data.data && data.data.reservation_minutes) {
+                reservationMinutes = parseInt(data.data.reservation_minutes, 10) || reservationMinutes;
             }
 
             // Berhasil reservasi
@@ -1076,10 +1104,10 @@ async function handleExpiredReservation() {
         }
     }
 
-    showToast('Batas waktu reservasi unit telah habis. Silakan pilih kembali unit yang tersedia.', 'warning', 'Waktu Reservasi Habis');
-    showError('Batas waktu konfirmasi reservasi unit telah habis. Silakan pilih kembali unit pelaksana.', null, 'Waktu Reservasi Habis');
+    showToast(`Batas waktu reservasi unit (${reservationMinutes} menit) telah habis. Kuota telah dikembalikan, silakan pilih kembali unit yang tersedia.`, 'warning', 'Waktu Reservasi Habis');
+    showError(`Batas waktu konfirmasi reservasi unit (${reservationMinutes} menit) telah habis. Silakan pilih kembali unit pelaksana.`, null, 'Waktu Reservasi Habis');
     currentStep = 4;
-    loadUnits();
+    await loadUnits();
     updateUI();
 }
 

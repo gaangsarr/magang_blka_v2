@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitoring Pemindahan Peserta — REMATE Admin</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/assets/img/logo_itpln.png">
+    <link rel="apple-touch-icon" href="/assets/img/logo_itpln.png">
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/admin.css">
+    <style>
+        .filter-grid-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            width: 100%;
+            margin-top: 16px;
+        }
+        .stat-card-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .stat-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .stat-val {
+            font-size: 1.4rem;
+            font-weight: 800;
+            line-height: 1.1;
+            color: #0f172a;
+        }
+        .stat-label {
+            font-size: 0.8rem;
+            color: #64748b;
+            font-weight: 600;
+            margin-top: 2px;
+        }
+    </style>
+</head>
+<body class="admin-body">
+    <div class="admin-layout">
+        <!-- Dynamic Sidebar Navigation -->
+        <aside id="admin-sidebar" class="admin-sidebar"></aside>
+
+        <!-- Main Content Area -->
+        <main class="admin-main">
+            <!-- Topbar Header -->
+            <header class="admin-topbar">
+                <div class="topbar-title-group">
+                    <h1>Monitoring Pemindahan Peserta</h1>
+                    <p>Pantau pengajuan pemindahan peserta antar mitra perusahaan dan lakukan intervensi administrator</p>
+                </div>
+
+                <div class="admin-profile-badge">
+                    <div class="admin-avatar" id="admin-avatar">A</div>
+                    <div class="admin-user-info">
+                        <span class="admin-user-name" id="admin-name">Administrator</span>
+                        <span class="admin-user-role" id="admin-role">Admin REMATE</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content Container -->
+            <div class="admin-content">
+                <!-- Summary Stat Counters -->
+                <div class="stat-card-row">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #e0f2fe; color: #0284c7;">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+                        </div>
+                        <div>
+                            <div class="stat-val" id="stat-total-transfer">0</div>
+                            <div class="stat-label">Total Pemindahan</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #fef3c7; color: #d97706;">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        </div>
+                        <div>
+                            <div class="stat-val" id="stat-pending-transfer" style="color: #d97706;">0</div>
+                            <div class="stat-label">Menunggu Approval</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #ecfdf5; color: #059669;">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                        </div>
+                        <div>
+                            <div class="stat-val" id="stat-approved-transfer" style="color: #059669;">0</div>
+                            <div class="stat-label">Disetujui Mitra</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #fef2f2; color: #dc2626;">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                        </div>
+                        <div>
+                            <div class="stat-val" id="stat-rejected-transfer" style="color: #dc2626;">0</div>
+                            <div class="stat-label">Ditolak / Batal</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table Container Card -->
+                <div class="admin-card">
+                    <div class="admin-card-header" style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; width: 100%;">
+                            <div>
+                                <h3 class="admin-card-title">Daftar Pemindahan Peserta</h3>
+                                <p style="font-size: 0.85rem; font-weight: 600; margin: 4px 0 0 0;" id="info-periode">Memuat periode...</p>
+                            </div>
+
+                            <div>
+                                <span id="filtered-count-badge" style="font-size: 0.8rem; background: #f1f5f9; color: #475569; padding: 6px 12px; border-radius: 8px; font-weight: 600;">0 Data Ditampilkan</span>
+                            </div>
+                        </div>
+
+                        <!-- Filter Controls -->
+                        <div class="filter-grid-bar">
+                            <div>
+                                <label class="admin-input-label" for="filter-periode">Pilih Periode Magang</label>
+                                <select id="filter-periode" class="admin-input-field">
+                                    <option value="">Memuat periode...</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="admin-input-label" for="filter-status">Status Approval</label>
+                                <select id="filter-status" class="admin-input-field">
+                                    <option value="">Semua Status Approval</option>
+                                    <option value="menunggu_approval">Menunggu Approval</option>
+                                    <option value="disetujui">Disetujui</option>
+                                    <option value="ditolak">Ditolak</option>
+                                    <option value="force_blka">Ditetapkan BLKA</option>
+                                </select>
+                            </div>
+
+                            <div style="grid-column: span 2;">
+                                <label class="admin-input-label" for="filter-search">Pencarian Mahasiswa / Unit</label>
+                                <input type="text" id="filter-search" class="admin-input-field" placeholder="Cari nama mahasiswa, NIM, unit asal, atau unit tujuan...">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Table Data -->
+                    <div class="admin-table-container">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 40px; text-align: center;">No</th>
+                                    <th>Mahasiswa (NIM & Nama)</th>
+                                    <th>Program Studi</th>
+                                    <th>Unit Asal</th>
+                                    <th>Unit Tujuan</th>
+                                    <th>Alasan Pemindahan</th>
+                                    <th style="width: 140px; text-align: center;">Status Approval</th>
+                                    <th style="width: 130px; text-align: center;">Waktu Pengajuan</th>
+                                    <th style="min-width: 150px; text-align: center;">Aksi / Intervensi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-pemindahan">
+                                <tr>
+                                    <td colspan="9" style="text-align: center; color: #64748b; padding: 32px;">Memuat data pemindahan...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Intervensi BLKA -->
+    <div id="modal-intervensi" class="modal-overlay hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 16px;">
+        <div style="background: #fff; border-radius: 16px; width: 100%; max-width: 480px; padding: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #e2e8f0;">
+                <h3 id="intervensi-modal-title" style="margin: 0; font-size: 1.15rem; font-weight: 700;">Intervensi Pemindahan BLKA</h3>
+                <button type="button" class="btn-close-modal" data-target="modal-intervensi" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b; line-height: 1;">&times;</button>
+            </div>
+
+            <form id="form-intervensi">
+                <input type="hidden" id="intervensi-id">
+                <input type="hidden" id="intervensi-action">
+
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; margin-bottom: 16px;">
+                    <div style="font-size: 0.85rem; color: #334155;"><strong>Mahasiswa:</strong> <span id="intervensi-mhs">-</span></div>
+                    <div style="font-size: 0.85rem; color: #334155; margin-top: 4px;"><strong>Unit Asal:</strong> <span id="intervensi-unit-asal">-</span></div>
+                    <div style="font-size: 0.85rem; color: #334155; margin-top: 4px;"><strong>Unit Tujuan:</strong> <span id="intervensi-unit-tujuan">-</span></div>
+                </div>
+
+                <div id="intervensi-alert" class="alert hidden" style="margin-bottom: 16px; font-size: 0.85rem;"></div>
+
+                <div style="margin-bottom: 18px;">
+                    <label class="admin-input-label" for="intervensi-catatan">Catatan Intervensi Admin BLKA (Opsional)</label>
+                    <textarea id="intervensi-catatan" class="admin-input-field" rows="3" placeholder="Contoh: Diintervensi langsung oleh BLKA sesuai kebutuhan kuota."></textarea>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                    <button type="button" class="btn-portal-outline btn-close-modal" data-target="modal-intervensi">Batal</button>
+                    <button type="submit" id="btn-submit-intervensi" class="btn-primary" style="padding: 10px 20px; font-weight: 700; border-radius: 8px;">
+                        <span>Proses Intervensi</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="/js/admin/common.js"></script>
+    <script type="module" src="/js/admin/pemindahan.js"></script>
+</body>
+</html>

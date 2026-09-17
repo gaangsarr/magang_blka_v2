@@ -29,6 +29,9 @@ if (!is_array($body)) {
 
 $nama = trim($body['nama'] ?? '');
 $deskripsi = trim($body['deskripsi'] ?? '');
+$jurusanIds = isset($body['jurusan_ids']) && is_array($body['jurusan_ids'])
+    ? array_values(array_unique(array_filter(array_map('intval', $body['jurusan_ids']))))
+    : [];
 
 if ($nama === '') {
     http_response_code(400);
@@ -39,6 +42,12 @@ if ($nama === '') {
 if (mb_strlen($nama) > 100) {
     http_response_code(400);
     echo json_encode(['error' => 'Nama peminatan maksimal 100 karakter.']);
+    exit;
+}
+
+if (empty($jurusanIds)) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Pilih minimal satu Program Studi (Prodi) untuk peminatan ini.']);
     exit;
 }
 
@@ -54,16 +63,26 @@ try {
         exit;
     }
 
-    $stmt = $pdo->prepare("INSERT INTO peminatan (nama, deskripsi, aktif) VALUES (:nama, :desk, 1)");
-    $stmt->execute([
-        ':nama' => $nama,
-        ':desk' => $deskripsi ?: null,
-    ]);
+    $newId = Database::transaction(function (PDO $pdo) use ($nama, $deskripsi, $jurusanIds) {
+        $stmt = $pdo->prepare("INSERT INTO peminatan (nama, deskripsi, aktif) VALUES (:nama, :desk, 1)");
+        $stmt->execute([
+            ':nama' => $nama,
+            ':desk' => $deskripsi ?: null,
+        ]);
+        $peminatanId = (int) $pdo->lastInsertId();
+
+        $stmtJur = $pdo->prepare("INSERT INTO peminatan_jurusan (peminatan_id, jurusan_id) VALUES (?, ?)");
+        foreach ($jurusanIds as $jid) {
+            $stmtJur->execute([$peminatanId, $jid]);
+        }
+
+        return $peminatanId;
+    });
 
     echo json_encode([
         'ok'      => true,
         'message' => "Peminatan '$nama' berhasil ditambahkan.",
-        'id'      => (int) $pdo->lastInsertId(),
+        'id'      => $newId,
     ]);
 } catch (\Throwable $e) {
     http_response_code(500);

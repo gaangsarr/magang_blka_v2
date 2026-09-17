@@ -110,7 +110,7 @@ try {
             'nama_unit'         => $isPengumumanBuka ? $row['nama_unit'] : ($row['nama_unit_asal'] ?: $row['nama_unit']),
             'nama_unit_asal'    => $isPengumumanBuka ? $row['nama_unit_asal'] : null,
             'is_dipindahkan'    => $isPengumumanBuka ? (bool)$row['is_dipindahkan'] : false,
-            'catatan_admin'     => $isPengumumanBuka ? $row['catatan_admin'] : null,
+            'catatan_admin'     => null,
             'pic_narahubung'    => $picNarahubung,
             'submitted_at'      => $row['submitted_at'],
             'id'                => (int)$row['pendaftaran_id'],

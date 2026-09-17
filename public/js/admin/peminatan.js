@@ -16,6 +16,7 @@ export function escapeHtml(unsafe) {
 
 let csrfToken = null;
 let peminatanList = [];
+let allJurusanList = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
     // 1. Auth & CSRF
@@ -47,14 +48,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             } else {
                 const filtered = peminatanList.filter(p => 
                     (p.nama || '').toLowerCase().includes(q) ||
-                    (p.deskripsi || '').toLowerCase().includes(q)
+                    (p.deskripsi || '').toLowerCase().includes(q) ||
+                    (p.jurusan_names || []).some(jn => jn.toLowerCase().includes(q))
                 );
                 renderTable(filtered);
             }
         });
     }
 
-    // 4. Modal Triggers
+    // 4. Modal Triggers & Prodi Quick Actions
     const btnAdd = document.getElementById('btn-add-peminatan');
     if (btnAdd) {
         btnAdd.addEventListener('click', openCreateModal);
@@ -66,6 +68,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const btnCancel = document.getElementById('btn-cancel-modal');
     if (btnCancel) btnCancel.addEventListener('click', hideModal);
 
+    document.getElementById('btn-select-all-prodi-pem')?.addEventListener('click', () => {
+        document.querySelectorAll('.chk-modal-prodi-pem').forEach(cb => cb.checked = true);
+    });
+
+    document.getElementById('btn-clear-prodi-pem')?.addEventListener('click', () => {
+        document.querySelectorAll('.chk-modal-prodi-pem').forEach(cb => cb.checked = false);
+    });
+
     const form = document.getElementById('form-peminatan');
     if (form) {
         form.addEventListener('submit', handleFormSubmit);
@@ -76,7 +86,7 @@ async function loadPeminatan() {
     const tbody = document.getElementById('table-peminatan-body');
     const badge = document.getElementById('total-count-badge');
     if (tbody) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 32px; color: #64748b;">Memuat data peminatan...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 32px; color: #64748b;">Memuat data peminatan...</td></tr>';
     }
 
     try {
@@ -84,13 +94,16 @@ async function loadPeminatan() {
         const data = await res.json();
         if (data.ok && Array.isArray(data.data)) {
             peminatanList = data.data;
+            if (Array.isArray(data.all_jurusan)) {
+                allJurusanList = data.all_jurusan;
+            }
             if (badge) badge.innerText = `${peminatanList.length} Peminatan`;
             renderTable(peminatanList);
         } else {
-            if (tbody) tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 32px; color: #ef4444;">Gagal memuat data.</td></tr>';
+            if (tbody) tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 32px; color: #ef4444;">Gagal memuat data.</td></tr>';
         }
     } catch (err) {
-        if (tbody) tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 32px; color: #ef4444;">Kesalahan jaringan.</td></tr>';
+        if (tbody) tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 32px; color: #ef4444;">Kesalahan jaringan.</td></tr>';
     }
 }
 
@@ -99,7 +112,7 @@ function renderTable(dataArray) {
     if (!tbody) return;
 
     if (dataArray.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 36px; color: #64748b;">Belum ada master data peminatan.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 36px; color: #64748b;">Belum ada master data peminatan.</td></tr>';
         return;
     }
 
@@ -109,11 +122,18 @@ function renderTable(dataArray) {
             ? '<span class="badge-status badge-dibuka">Aktif</span>'
             : '<span class="badge-status badge-ditutup">Nonaktif</span>';
 
+        const prodiBadges = (p.jurusan_names && p.jurusan_names.length > 0)
+            ? `<div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                ${p.jurusan_names.map(jn => `<span class="badge-status badge-info" style="font-size: 0.725rem; padding: 2px 6px; background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; font-weight: 600;">${escapeHtml(jn)}</span>`).join('')}
+               </div>`
+            : '<span style="color: #94a3b8; font-size: 0.8rem; font-style: italic;">Belum ada prodi</span>';
+
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>
                 <div style="font-weight: 700; color: #0b3d6b; font-size: 0.925rem;">${escapeHtml(p.nama)}</div>
             </td>
+            <td>${prodiBadges}</td>
             <td style="color: #475569; font-size: 0.875rem;">${escapeHtml(p.deskripsi || '-')}</td>
             <td>${statusHtml}</td>
             <td>
@@ -135,6 +155,28 @@ function renderTable(dataArray) {
     });
 }
 
+function renderProdiCheckboxes(selectedIds = []) {
+    const container = document.getElementById('container-checkbox-prodi-pem');
+    if (!container) return;
+
+    container.innerHTML = '';
+    const selectedNumIds = (selectedIds || []).map(id => parseInt(id, 10));
+
+    allJurusanList.forEach(j => {
+        const jId = parseInt(j.id, 10);
+        const isChecked = selectedNumIds.includes(jId);
+        const labelText = (j.jenjang ? `${j.jenjang} - ` : '') + j.nama_jurusan;
+
+        const label = document.createElement('label');
+        label.style.cssText = 'display: flex; align-items: center; gap: 8px; font-size: 0.825rem; color: #334155; cursor: pointer; padding: 4px; border-radius: 4px;';
+        label.innerHTML = `
+            <input type="checkbox" class="chk-modal-prodi-pem" value="${jId}" ${isChecked ? 'checked' : ''} style="cursor: pointer; width: 15px; height: 15px;">
+            <span>${escapeHtml(labelText)}</span>
+        `;
+        container.appendChild(label);
+    });
+}
+
 function openCreateModal() {
     const modal = document.getElementById('modal-peminatan');
     const form = document.getElementById('form-peminatan');
@@ -145,6 +187,7 @@ function openCreateModal() {
     document.getElementById('peminatan-id').value = '';
     if (titleEl) titleEl.innerText = 'Tambah Peminatan Baru';
     document.getElementById('peminatan-aktif').value = '1';
+    renderProdiCheckboxes([]);
     modal.classList.remove('hidden');
 }
 
@@ -158,6 +201,7 @@ function openEditModal(p) {
     document.getElementById('peminatan-nama').value = p.nama || '';
     document.getElementById('peminatan-deskripsi').value = p.deskripsi || '';
     document.getElementById('peminatan-aktif').value = p.aktif ? '1' : '0';
+    renderProdiCheckboxes(p.jurusan_ids || []);
     modal.classList.remove('hidden');
 }
 
@@ -176,15 +220,23 @@ async function handleFormSubmit(e) {
     const deskripsi = document.getElementById('peminatan-deskripsi').value.trim();
     const aktif = parseInt(document.getElementById('peminatan-aktif').value, 10);
 
+    const checkedJids = Array.from(document.querySelectorAll('.chk-modal-prodi-pem:checked')).map(cb => parseInt(cb.value, 10));
+
     if (!nama) {
         showAdminAlert('Nama peminatan wajib diisi!', 'warning');
+        return;
+    }
+
+    if (checkedJids.length === 0) {
+        showAdminAlert('Silakan pilih minimal 1 Program Studi terkait untuk peminatan ini!', 'warning', 'Program Studi Wajib');
         return;
     }
 
     const payload = {
         nama,
         deskripsi: deskripsi || null,
-        aktif
+        aktif,
+        jurusan_ids: checkedJids
     };
 
     const submitBtn = document.getElementById('btn-submit-peminatan');

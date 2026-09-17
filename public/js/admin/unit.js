@@ -76,26 +76,44 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 4. Modal Quick Action Buttons
     document.getElementById('btn-select-all-prodi')?.addEventListener('click', () => {
-        document.querySelectorAll('.chk-modal-prodi').forEach(cb => cb.checked = true);
+        document.querySelectorAll('.chk-modal-prodi').forEach(cb => {
+            cb.checked = true;
+            toggleProdiRowState(cb);
+        });
+        syncPeminatanFilter();
+        updateModalAllocSummary();
     });
     document.getElementById('btn-clear-prodi')?.addEventListener('click', () => {
-        document.querySelectorAll('.chk-modal-prodi').forEach(cb => cb.checked = false);
+        document.querySelectorAll('.chk-modal-prodi').forEach(cb => {
+            cb.checked = false;
+            toggleProdiRowState(cb);
+        });
+        syncPeminatanFilter();
+        updateModalAllocSummary();
     });
 
     document.getElementById('btn-select-all-pem')?.addEventListener('click', () => {
-        document.querySelectorAll('.chk-modal-pem').forEach(cb => cb.checked = true);
+        document.querySelectorAll('#container-checkbox-peminatan label:not([style*="display: none"]) .chk-modal-pem').forEach(cb => cb.checked = true);
     });
     document.getElementById('btn-clear-pem')?.addEventListener('click', () => {
         document.querySelectorAll('.chk-modal-pem').forEach(cb => cb.checked = false);
     });
 
-    // 5. Form Kuota Submit
+    // 5. Radio Mode Kuota change listener
+    document.querySelectorAll('input[name="modal_tipe_kuota"]').forEach(radio => {
+        radio.addEventListener('change', onModeKuotaChange);
+    });
+
+    // 6. Total Kuota input change listener
+    document.getElementById('kuota_total')?.addEventListener('input', updateModalAllocSummary);
+
+    // 7. Form Kuota Submit
     const formKuota = document.getElementById('form-kuota');
     if (formKuota) {
         formKuota.addEventListener('submit', handleFormKuotaSubmit);
     }
 
-    // 6. Initial Load
+    // 8. Initial Load
     await loadUnit();
 });
 
@@ -103,7 +121,7 @@ async function loadUnit(targetPeriodeId = null) {
     const tbody = document.getElementById('table-unit');
     const infoEl = document.getElementById('info-periode');
     if (tbody) {
-        tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: #64748b; padding: 28px;">Memuat alokasi kuota...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: #64748b; padding: 28px;">Memuat alokasi kuota...</td></tr>';
     }
 
     try {
@@ -157,10 +175,10 @@ async function loadUnit(targetPeriodeId = null) {
 
             renderKuotaTable(allUnitKuota);
         } else {
-            if (tbody) tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: #ef4444; padding: 24px;">Gagal memuat data alokasi kuota.</td></tr>';
+            if (tbody) tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: #ef4444; padding: 24px;">Gagal memuat data alokasi kuota.</td></tr>';
         }
     } catch (err) {
-        if (tbody) tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: #ef4444; padding: 24px;">Kesalahan jaringan saat memuat kuota.</td></tr>';
+        if (tbody) tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: #ef4444; padding: 24px;">Kesalahan jaringan saat memuat kuota.</td></tr>';
     }
 }
 
@@ -169,7 +187,7 @@ function renderKuotaTable(dataArray) {
     if (!tbody) return;
 
     if (!dataArray || dataArray.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: #64748b; padding: 32px;">Belum ada kantor/unit yang membuka magang. Aktifkan toggle "Buka Magang" pada menu Hierarki PLN terlebih dahulu.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: #64748b; padding: 32px;">Belum ada kantor/unit yang membuka magang. Aktifkan toggle "Buka Magang" pada menu Hierarki PLN terlebih dahulu.</td></tr>';
         return;
     }
 
@@ -186,17 +204,26 @@ function renderKuotaTable(dataArray) {
         const totalK = isAssigned ? `<span style="font-weight: 700; color: #0f172a; font-size: 0.8125rem;">${u.kuota_total}</span> <span style="font-size: 0.75rem; color: #64748b;">slot</span>` : '<span style="color: #94a3b8; font-size: 0.8rem;">-</span>';
         const sisaK = isAssigned ? `<span style="font-weight: 700; color: ${u.kuota_tersisa > 0 ? '#10b981' : '#ef4444'}; font-size: 0.8125rem;">${u.kuota_tersisa}</span> <span style="font-size: 0.75rem; color: #64748b;">slot</span>` : '<span style="color: #94a3b8; font-size: 0.8rem;">-</span>';
 
+        // Mode Kuota Badge
+        const isBreakdown = (u.tipe_kuota === 'breakdown');
+        const modeBadge = isBreakdown
+            ? '<span class="badge-status" style="background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; font-size: 0.725rem; font-weight: 700;">Terbagi per Prodi</span>'
+            : '<span class="badge-status" style="background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; font-size: 0.725rem; font-weight: 600;">Keseluruhan (Pool)</span>';
+
         // Render Prodi Tags
         let prodiHtml = '';
         const totalJurusan = allJurusanList.length;
         const selectedJurCount = Array.isArray(u.prodi_details) ? u.prodi_details.length : 0;
 
-        if (selectedJurCount === 0 || (totalJurusan > 0 && selectedJurCount >= totalJurusan)) {
+        if (selectedJurCount === 0 || (totalJurusan > 0 && selectedJurCount >= totalJurusan && !isBreakdown)) {
             prodiHtml = '<span class="badge-status" style="background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; font-size: 0.725rem;">Semua Prodi (Umum)</span>';
         } else {
-            const tags = u.prodi_details.map(p => 
-                `<span class="badge-status" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; font-size: 0.725rem; margin: 2px 2px; display: inline-flex;" title="${escapeHtml(p.nama_jurusan)}">${escapeHtml(p.nama_jurusan)}</span>`
-            ).join('');
+            const tags = u.prodi_details.map(p => {
+                const allocText = (isBreakdown && p.kuota_total !== null) 
+                    ? ` <strong style="color: #4338ca;">(${p.kuota_total} slot)</strong>` 
+                    : '';
+                return `<span class="badge-status" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; font-size: 0.725rem; margin: 2px 2px; display: inline-flex; align-items: center; gap: 4px;" title="${escapeHtml(p.nama_jurusan)}">${escapeHtml(p.nama_jurusan)}${allocText}</span>`;
+            }).join('');
             prodiHtml = `<div style="max-width: 260px; display: flex; flex-wrap: wrap; gap: 2px;">${tags}</div>`;
         }
 
@@ -216,6 +243,7 @@ function renderKuotaTable(dataArray) {
             </td>
             <td>${getTipeBadge(u.tipe)}</td>
             <td style="color: #475569; font-size: 0.8125rem;">${escapeHtml(u.nama_parent || '-')}</td>
+            <td>${modeBadge}</td>
             <td>${prodiHtml}</td>
             <td>${peminatanHtml}</td>
             <td>${totalK}</td>
@@ -253,45 +281,269 @@ function applyKuotaFilter() {
     renderKuotaTable(filtered);
 }
 
+function onModeKuotaChange() {
+    const selectedMode = document.querySelector('input[name="modal_tipe_kuota"]:checked')?.value || 'keseluruhan';
+    const isBreakdown = (selectedMode === 'breakdown');
+
+    const lblKeseluruhan = document.getElementById('label-mode-keseluruhan');
+    const lblBreakdown = document.getElementById('label-mode-breakdown');
+
+    if (lblKeseluruhan && lblBreakdown) {
+        if (isBreakdown) {
+            lblBreakdown.style.borderColor = '#4338ca';
+            lblBreakdown.style.background = '#eef2ff';
+            lblBreakdown.querySelector('strong').style.color = '#3730a3';
+
+            lblKeseluruhan.style.borderColor = '#cbd5e1';
+            lblKeseluruhan.style.background = '#fff';
+            lblKeseluruhan.querySelector('strong').style.color = '#334155';
+        } else {
+            lblKeseluruhan.style.borderColor = '#0284c7';
+            lblKeseluruhan.style.background = '#f0f9ff';
+            lblKeseluruhan.querySelector('strong').style.color = '#0369a1';
+
+            lblBreakdown.style.borderColor = '#cbd5e1';
+            lblBreakdown.style.background = '#fff';
+            lblBreakdown.querySelector('strong').style.color = '#334155';
+        }
+    }
+
+    // Toggle allocation input containers
+    document.querySelectorAll('.prodi-row-item').forEach(row => {
+        const cb = row.querySelector('.chk-modal-prodi');
+        const allocBox = row.querySelector('.prodi-alloc-box');
+        if (allocBox) {
+            allocBox.style.display = (isBreakdown && cb && cb.checked) ? 'flex' : 'none';
+        }
+    });
+
+    updateModalAllocSummary();
+}
+
+function toggleProdiRowState(checkboxEl) {
+    const row = checkboxEl.closest('.prodi-row-item');
+    if (!row) return;
+
+    const isBreakdown = document.querySelector('input[name="modal_tipe_kuota"]:checked')?.value === 'breakdown';
+    const allocBox = row.querySelector('.prodi-alloc-box');
+    const allocInput = row.querySelector('.input-modal-prodi-alloc');
+
+    if (checkboxEl.checked) {
+        row.style.background = '#ffffff';
+        row.style.borderColor = '#93c5fd';
+        if (isBreakdown && allocBox) {
+            allocBox.style.display = 'flex';
+            if (allocInput && (!allocInput.value || parseInt(allocInput.value, 10) <= 0)) {
+                allocInput.value = '1';
+            }
+        }
+    } else {
+        row.style.background = '#f8fafc';
+        row.style.borderColor = '#e2e8f0';
+        if (allocBox) {
+            allocBox.style.display = 'none';
+        }
+    }
+}
+
+function updateModalAllocSummary() {
+    const isBreakdown = document.querySelector('input[name="modal_tipe_kuota"]:checked')?.value === 'breakdown';
+    const summaryEl = document.getElementById('modal-alloc-summary');
+    if (!summaryEl) return;
+
+    if (!isBreakdown) {
+        summaryEl.classList.add('hidden');
+        return;
+    }
+
+    summaryEl.classList.remove('hidden');
+
+    const totalKuota = parseInt(document.getElementById('kuota_total')?.value, 10) || 0;
+    let allocated = 0;
+    let countChecked = 0;
+
+    document.querySelectorAll('.chk-modal-prodi:checked').forEach(cb => {
+        countChecked++;
+        const row = cb.closest('.prodi-row-item');
+        const inp = row?.querySelector('.input-modal-prodi-alloc');
+        allocated += parseInt(inp?.value, 10) || 0;
+    });
+
+    const diff = totalKuota - allocated;
+
+    if (countChecked === 0) {
+        summaryEl.style.background = '#fef2f2';
+        summaryEl.style.color = '#991b1b';
+        summaryEl.style.border = '1px solid #fecaca';
+        summaryEl.innerHTML = `⚠️ Pilih minimal 1 program studi untuk membagikan alokasi kuota.`;
+    } else if (diff === 0 && totalKuota > 0) {
+        summaryEl.style.background = '#f0fdf4';
+        summaryEl.style.color = '#166534';
+        summaryEl.style.border = '1px solid #bbf7d0';
+        summaryEl.innerHTML = `✓ Total teralokasi: <strong>${allocated}</strong> dari <strong>${totalKuota}</strong> mahasiswa (Pas).`;
+    } else if (diff > 0) {
+        summaryEl.style.background = '#fffbeb';
+        summaryEl.style.color = '#92400e';
+        summaryEl.style.border = '1px solid #fde68a';
+        summaryEl.innerHTML = `ℹ️ Teralokasi: <strong>${allocated}</strong> / ${totalKuota}. Masih ada sisa <strong>${diff}</strong> kuota yang belum dialokasikan.`;
+    } else {
+        summaryEl.style.background = '#fef2f2';
+        summaryEl.style.color = '#991b1b';
+        summaryEl.style.border = '1px solid #fecaca';
+        summaryEl.innerHTML = `⚠️ Kelebihan alokasi: <strong>${allocated}</strong> / ${totalKuota} (Kelebihan ${Math.abs(diff)} mahasiswa!).`;
+    }
+}
+
+function syncPeminatanFilter() {
+    const checkedProdiIds = Array.from(document.querySelectorAll('.chk-modal-prodi:checked')).map(cb => parseInt(cb.value, 10));
+    const container = document.getElementById('container-checkbox-peminatan');
+    if (!container) return;
+
+    let visibleCount = 0;
+    container.querySelectorAll('.peminatan-item-wrapper').forEach(wrapper => {
+        const pJurusanIdsStr = wrapper.getAttribute('data-jurusan-ids') || '';
+        const pJurusanIds = pJurusanIdsStr ? pJurusanIdsStr.split(',').map(n => parseInt(n, 10)) : [];
+
+        // If no prodi is checked at all: show all peminatan
+        // If prodi(s) checked: show only if peminatan intersects with checked prodis
+        const isMatch = (checkedProdiIds.length === 0) || pJurusanIds.some(jid => checkedProdiIds.includes(jid));
+
+        if (isMatch) {
+            wrapper.style.display = 'flex';
+            visibleCount++;
+        } else {
+            wrapper.style.display = 'none';
+            // Uncheck hidden peminatan to avoid accidental submission
+            const cb = wrapper.querySelector('.chk-modal-pem');
+            if (cb) cb.checked = false;
+        }
+    });
+
+    const emptyNotice = document.getElementById('peminatan-empty-notice');
+    if (emptyNotice) {
+        emptyNotice.style.display = (visibleCount === 0) ? 'block' : 'none';
+    }
+}
+
 function openKuotaModal(unit) {
     document.getElementById('entitas-id').value = unit.entitas_id;
     document.getElementById('kuota-unit-nama').innerText = unit.nama;
     document.getElementById('kuota_total').value = unit.kuota_total || 0;
     document.getElementById('aktif').value = (unit.upp_id ? (unit.aktif || 1) : 1);
 
+    const tipeKuota = unit.tipe_kuota || 'keseluruhan';
+    const radioMode = document.querySelector(`input[name="modal_tipe_kuota"][value="${tipeKuota}"]`);
+    if (radioMode) {
+        radioMode.checked = true;
+    }
+    onModeKuotaChange();
+
+    // Map existing prodi allocations
+    const existingAllocMap = {};
+    if (Array.isArray(unit.prodi_details)) {
+        unit.prodi_details.forEach(p => {
+            if (p.kuota_total !== null && p.kuota_total !== undefined) {
+                existingAllocMap[parseInt(p.id, 10)] = parseInt(p.kuota_total, 10);
+            }
+        });
+    }
+
     // Render Checkboxes Prodi
     const prodiContainer = document.getElementById('container-checkbox-prodi');
     if (prodiContainer) {
         prodiContainer.innerHTML = '';
-        const assignedProdiIds = Array.isArray(unit.prodi_ids) ? unit.prodi_ids : [];
+        const assignedProdiIds = Array.isArray(unit.prodi_ids) ? unit.prodi_ids.map(n => parseInt(n, 10)) : [];
+        const isBreakdown = (tipeKuota === 'breakdown');
+
         allJurusanList.forEach(j => {
-            const isChecked = assignedProdiIds.includes(parseInt(j.id));
-            const lbl = document.createElement('label');
-            lbl.style.cssText = 'display: flex; align-items: center; gap: 8px; font-size: 0.825rem; color: #334155; cursor: pointer; user-select: none; padding: 4px 6px; border-radius: 6px;';
-            lbl.innerHTML = `
-                <input type="checkbox" value="${j.id}" class="chk-modal-prodi" ${isChecked ? 'checked' : ''} style="cursor: pointer;">
-                <span title="${escapeHtml(j.nama_jurusan)}">${escapeHtml(j.nama_jurusan)}</span>
+            const jId = parseInt(j.id, 10);
+            const isChecked = assignedProdiIds.includes(jId);
+            const initialAlloc = existingAllocMap[jId] || (isChecked ? 1 : '');
+
+            const row = document.createElement('div');
+            row.className = 'prodi-row-item';
+            row.style.cssText = `display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 12px; background: ${isChecked ? '#ffffff' : '#f8fafc'}; border: 1px solid ${isChecked ? '#93c5fd' : '#e2e8f0'}; border-radius: 8px; transition: all 0.2s;`;
+
+            row.innerHTML = `
+                <label style="display: flex; align-items: center; gap: 10px; font-size: 0.825rem; color: #1e293b; cursor: pointer; user-select: none; flex: 1; margin: 0;">
+                    <input type="checkbox" value="${jId}" class="chk-modal-prodi" ${isChecked ? 'checked' : ''} style="cursor: pointer; width: 16px; height: 16px;">
+                    <div>
+                        <span style="font-weight: 600;">${escapeHtml(j.nama_jurusan)}</span>
+                        <span style="font-size: 0.725rem; color: #64748b; margin-left: 4px;">(${escapeHtml(j.jenjang || 'S1')})</span>
+                    </div>
+                </label>
+                <div class="prodi-alloc-box" style="display: ${(isBreakdown && isChecked) ? 'flex' : 'none'}; align-items: center; gap: 6px;">
+                    <span style="font-size: 0.75rem; font-weight: 700; color: #4338ca;">Jatah:</span>
+                    <input type="number" class="input-modal-prodi-alloc" data-jid="${jId}" min="1" value="${initialAlloc}" placeholder="0" style="width: 70px; padding: 4px 8px; border: 1.5px solid #c7d2fe; border-radius: 6px; font-size: 0.85rem; font-weight: 700; text-align: center; color: #1e1b4b;">
+                    <span style="font-size: 0.75rem; color: #64748b;">Mhs</span>
+                </div>
             `;
-            prodiContainer.appendChild(lbl);
+
+            const chk = row.querySelector('.chk-modal-prodi');
+            chk.addEventListener('change', () => {
+                toggleProdiRowState(chk);
+                syncPeminatanFilter();
+                updateModalAllocSummary();
+            });
+
+            const allocInp = row.querySelector('.input-modal-prodi-alloc');
+            allocInp?.addEventListener('input', updateModalAllocSummary);
+
+            prodiContainer.appendChild(row);
         });
     }
 
-    // Render Checkboxes Peminatan
+    // Render Checkboxes Peminatan with prodi tags
     const peminatanContainer = document.getElementById('container-checkbox-peminatan');
     if (peminatanContainer) {
         peminatanContainer.innerHTML = '';
-        const assignedPemIds = Array.isArray(unit.peminatan_ids) ? unit.peminatan_ids : [];
-        allPeminatanList.forEach(p => {
-            const isChecked = assignedPemIds.includes(parseInt(p.id));
-            const lbl = document.createElement('label');
-            lbl.style.cssText = 'display: flex; align-items: center; gap: 8px; font-size: 0.825rem; color: #334155; cursor: pointer; user-select: none; padding: 4px 6px; border-radius: 6px;';
-            lbl.innerHTML = `
-                <input type="checkbox" value="${p.id}" class="chk-modal-pem" ${isChecked ? 'checked' : ''} style="cursor: pointer;">
-                <span>${escapeHtml(p.nama)}</span>
-            `;
-            peminatanContainer.appendChild(lbl);
+        const assignedPemIds = Array.isArray(unit.peminatan_ids) ? unit.peminatan_ids.map(n => parseInt(n, 10)) : [];
+
+        // Build a lookup map of jurusan kode/nama
+        const jurusanMap = {};
+        allJurusanList.forEach(j => {
+            jurusanMap[parseInt(j.id, 10)] = j.kode || j.nama_jurusan;
         });
+
+        allPeminatanList.forEach(p => {
+            const pId = parseInt(p.id, 10);
+            const isChecked = assignedPemIds.includes(pId);
+            const jIds = Array.isArray(p.jurusan_ids) ? p.jurusan_ids : [];
+
+            // Prodi pills for this peminatan
+            const prodiPills = jIds.map(jid => {
+                const label = jurusanMap[jid] || `ID ${jid}`;
+                return `<span style="font-size: 0.675rem; background: #e0f2fe; color: #0369a1; padding: 1px 5px; border-radius: 4px; font-weight: 600;">${escapeHtml(label)}</span>`;
+            }).join(' ');
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'peminatan-item-wrapper';
+            wrapper.setAttribute('data-jurusan-ids', jIds.join(','));
+            wrapper.style.cssText = 'display: flex; align-items: flex-start; gap: 8px; font-size: 0.825rem; color: #334155; padding: 6px 8px; border-radius: 6px; background: #ffffff; border: 1px solid #e2e8f0;';
+
+            wrapper.innerHTML = `
+                <input type="checkbox" value="${pId}" class="chk-modal-pem" ${isChecked ? 'checked' : ''} style="cursor: pointer; margin-top: 3px;">
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; color: #1e293b; font-size: 0.825rem;">${escapeHtml(p.nama)}</div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 3px;">
+                        ${prodiPills || '<span style="font-size: 0.675rem; color: #94a3b8;">(Semua Prodi)</span>'}
+                    </div>
+                </div>
+            `;
+
+            peminatanContainer.appendChild(wrapper);
+        });
+
+        // Add notice element if all peminatan are hidden
+        const noticeEl = document.createElement('div');
+        noticeEl.id = 'peminatan-empty-notice';
+        noticeEl.style.cssText = 'display: none; grid-column: 1 / -1; padding: 14px; text-align: center; color: #94a3b8; font-size: 0.8rem; font-style: italic;';
+        noticeEl.innerText = 'Tidak ada bidang peminatan yang cocok dengan prodi terpilih.';
+        peminatanContainer.appendChild(noticeEl);
     }
+
+    syncPeminatanFilter();
+    updateModalAllocSummary();
 
     document.getElementById('modal-kuota').classList.remove('hidden');
 }
@@ -302,6 +554,8 @@ async function handleFormKuotaSubmit(e) {
     const entitasId = parseInt(document.getElementById('entitas-id').value, 10);
     const kuotaTotal = parseInt(document.getElementById('kuota_total').value, 10);
     const aktif = parseInt(document.getElementById('aktif').value, 10);
+    const tipeKuota = document.querySelector('input[name="modal_tipe_kuota"]:checked')?.value || 'keseluruhan';
+
     const periodeSelect = document.getElementById('select-periode-kuota');
     const periodeId = periodeSelect ? parseInt(periodeSelect.value, 10) : (currentPeriodData ? currentPeriodData.id : null);
 
@@ -312,6 +566,33 @@ async function handleFormKuotaSubmit(e) {
 
     // Kumpulkan prodi_ids terpilih
     const prodiIds = Array.from(document.querySelectorAll('.chk-modal-prodi:checked')).map(cb => parseInt(cb.value, 10));
+
+    // Kumpulkan alokasi breakdown jika mode breakdown
+    const prodiAllocations = {};
+    if (tipeKuota === 'breakdown') {
+        if (prodiIds.length === 0) {
+            showAdminAlert('Pada mode breakdown, wajib memilih minimal 1 Program Studi.', 'error');
+            return;
+        }
+
+        let sumAlloc = 0;
+        for (const jid of prodiIds) {
+            const inp = document.querySelector(`.input-modal-prodi-alloc[data-jid="${jid}"]`);
+            const val = parseInt(inp?.value, 10) || 0;
+            if (val <= 0) {
+                showAdminAlert('Setiap program studi yang dipilih wajib memiliki jatah minimal 1 mahasiswa.', 'error');
+                inp?.focus();
+                return;
+            }
+            prodiAllocations[jid] = val;
+            sumAlloc += val;
+        }
+
+        if (sumAlloc !== kuotaTotal) {
+            showAdminAlert(`Jumlah alokasi per prodi (${sumAlloc}) harus sama persis dengan Total Kuota (${kuotaTotal}).`, 'error');
+            return;
+        }
+    }
 
     // Kumpulkan peminatan_ids terpilih
     const peminatanIds = Array.from(document.querySelectorAll('.chk-modal-pem:checked')).map(cb => parseInt(cb.value, 10));
@@ -333,8 +614,10 @@ async function handleFormKuotaSubmit(e) {
                 entitas_id: entitasId,
                 periode_id: periodeId,
                 kuota_total: kuotaTotal,
+                tipe_kuota: tipeKuota,
                 aktif: aktif,
                 prodi_ids: prodiIds,
+                prodi_allocations: prodiAllocations,
                 peminatan_ids: peminatanIds
             })
         });
@@ -356,4 +639,3 @@ async function handleFormKuotaSubmit(e) {
         }
     }
 }
-

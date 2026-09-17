@@ -40,18 +40,7 @@ try {
     $pdo = Database::getInstance();
     
     // Auto-cleanup reservasi kadaluarsa agar kuota yang ditampilkan selalu fresh & akurat
-    $pdo->exec("
-        UPDATE unit_pelaksana_periode upp
-        JOIN (
-            SELECT unit_pelaksana_periode_id, COUNT(*) AS jumlah
-            FROM reservasi
-            WHERE status = 'ditahan' AND expired_at < NOW()
-            GROUP BY unit_pelaksana_periode_id
-        ) r ON upp.id = r.unit_pelaksana_periode_id
-        SET upp.kuota_tersisa = LEAST(upp.kuota_total, upp.kuota_tersisa + r.jumlah);
-        
-        UPDATE reservasi SET status = 'kadaluarsa' WHERE status = 'ditahan' AND expired_at < NOW();
-    ");
+    \App\ReservasiHelper::cleanupExpired($pdo);
     
     // Validasi periode aktif & angkatan eligible
     $stmtP = $pdo->prepare("SELECT angkatan_eligible, nama, status FROM periode WHERE id = :pid");
@@ -115,8 +104,23 @@ try {
                 e.latitude,
                 e.longitude,
                 parent.nama AS nama_parent,
+                upp.tipe_kuota,
                 upp.kuota_tersisa,
                 upp.kuota_total,
+                (
+                    SELECT upj_sub.kuota_tersisa
+                    FROM unit_periode_jurusan upj_sub
+                    WHERE upj_sub.unit_pelaksana_periode_id = upp.id
+                      AND upj_sub.jurusan_id = :mhs_jurusan_id_col
+                    LIMIT 1
+                ) AS kuota_prodi_tersisa,
+                (
+                    SELECT upj_sub.kuota_total
+                    FROM unit_periode_jurusan upj_sub
+                    WHERE upj_sub.unit_pelaksana_periode_id = upp.id
+                      AND upj_sub.jurusan_id = :mhs_jurusan_id_col2
+                    LIMIT 1
+                ) AS kuota_prodi_total,
                 (
                     6371 * acos(
                         least(1.0, greatest(-1.0,
@@ -140,18 +144,11 @@ try {
             WHERE upp.periode_id = :periode_id 
               AND upp.aktif = 1 
               AND e.aktif = 1
-              AND (
-                  -- Unit menerima prodi spesifik mahasiswa
-                  EXISTS (
-                      SELECT 1 FROM unit_periode_jurusan upj
-                      WHERE upj.unit_pelaksana_periode_id = upp.id
-                        AND upj.jurusan_id = :mhs_jurusan_id
-                  )
-                  -- ATAU unit tidak membatasi prodi (menerima semua prodi / All Majors)
-                  OR NOT EXISTS (
-                      SELECT 1 FROM unit_periode_jurusan upj2
-                      WHERE upj2.unit_pelaksana_periode_id = upp.id
-                  )
+              -- Unit hanya tampil jika menerima prodi spesifik mahasiswa
+              AND EXISTS (
+                  SELECT 1 FROM unit_periode_jurusan upj
+                  WHERE upj.unit_pelaksana_periode_id = upp.id
+                    AND upj.jurusan_id = :mhs_jurusan_id
               )
               $bboxWhere
             ORDER BY kecocokan DESC, jarak ASC
@@ -163,7 +160,9 @@ try {
             ':lat2' => $lat,
             ':lng' => $lng,
             ':periode_id' => $periodeId,
-            ':mhs_jurusan_id' => $mhsJurusanId
+            ':mhs_jurusan_id' => $mhsJurusanId,
+            ':mhs_jurusan_id_col' => $mhsJurusanId,
+            ':mhs_jurusan_id_col2' => $mhsJurusanId
         ];
 
         if ($useBoundingBox) {
@@ -186,12 +185,24 @@ try {
         $units = $runQuery(false);
     }
     
-    // Pastikan nilai float terformat baik
+    // Pastikan nilai float terformat baik & hitung sisa kuota efektif sesuai mode kuota unit
     foreach ($units as &$u) {
         $u['jarak'] = $u['jarak'] !== null ? round((float)$u['jarak'], 2) : null;
         $u['kuota_tersisa'] = (int)$u['kuota_tersisa'];
         $u['kuota_total'] = (int)$u['kuota_total'];
         $u['kecocokan'] = (int)$u['kecocokan'];
+        $u['tipe_kuota'] = $u['tipe_kuota'] ?? 'keseluruhan';
+
+        $prodiSisa = $u['kuota_prodi_tersisa'] !== null ? (int)$u['kuota_prodi_tersisa'] : null;
+        $prodiTotal = $u['kuota_prodi_total'] !== null ? (int)$u['kuota_prodi_total'] : null;
+
+        if ($u['tipe_kuota'] === 'breakdown') {
+            $u['sisa_kuota_efektif'] = $prodiSisa !== null ? min($prodiSisa, $u['kuota_tersisa']) : $u['kuota_tersisa'];
+            $u['total_kuota_efektif'] = $prodiTotal !== null ? $prodiTotal : $u['kuota_total'];
+        } else {
+            $u['sisa_kuota_efektif'] = $u['kuota_tersisa'];
+            $u['total_kuota_efektif'] = $u['kuota_total'];
+        }
     }
     unset($u);
     

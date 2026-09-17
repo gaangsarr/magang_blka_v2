@@ -30,29 +30,20 @@ $reservasiId = (int)$body['reservasi_id'];
 $mahasiswaId = Auth::getMahasiswaId();
 
 try {
-    Database::transaction(function (PDO $pdo) use ($mahasiswaId, $reservasiId) {
-        $stmtCek = $pdo->prepare("SELECT unit_pelaksana_periode_id, status FROM reservasi WHERE id = :id AND mahasiswa_id = :mid FOR UPDATE");
-        $stmtCek->execute([':id' => $reservasiId, ':mid' => $mahasiswaId]);
-        $res = $stmtCek->fetch(PDO::FETCH_ASSOC);
-
-        if (!$res) {
-            throw new \Exception('Reservasi tidak ditemukan.');
-        }
-
-        if ($res['status'] !== 'ditahan') {
-            throw new \Exception('Hanya reservasi yang sedang ditahan yang bisa dibatalkan.');
-        }
-
-        // Batalkan
-        $pdo->prepare("UPDATE reservasi SET status = 'dibatalkan' WHERE id = :id")->execute([':id' => $reservasiId]);
-        
-        // Kembalikan kuota
-        $pdo->prepare("UPDATE unit_pelaksana_periode SET kuota_tersisa = kuota_tersisa + 1 WHERE id = :upp_id")->execute([':upp_id' => $res['unit_pelaksana_periode_id']]);
+    $result = Database::transaction(function (PDO $pdo) use ($mahasiswaId, $reservasiId) {
+        return \App\ReservasiHelper::batalkanReservasi($pdo, $reservasiId, $mahasiswaId);
     });
 
+    if (!($result['ok'] ?? false)) {
+        http_response_code(400);
+        echo json_encode(['error' => $result['error'] ?? 'Gagal membatalkan reservasi.']);
+        exit;
+    }
+
     echo json_encode([
-        'ok' => true,
-        'message' => 'Reservasi dibatalkan dan kuota dikembalikan.'
+        'ok'           => true,
+        'already_done' => $result['already_done'] ?? false,
+        'message'      => $result['message'] ?? 'Reservasi berhasil dibatalkan dan kuota dikembalikan.'
     ]);
 } catch (\Exception $e) {
     http_response_code(400);
