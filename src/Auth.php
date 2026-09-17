@@ -43,7 +43,7 @@ class Auth
                     'path'     => '/',
                     'secure'   => ($_ENV['APP_ENV'] ?? 'local') !== 'local',
                     'httponly' => true,
-                    'samesite' => 'Strict',
+                    'samesite' => 'Lax',
                 ]);
                 session_start();
             }

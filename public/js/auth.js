@@ -1,48 +1,11 @@
 /**
- * auth.js — Firebase Auth: Microsoft provider login
+ * auth.js — Direct Microsoft Azure Entra ID (SSO ITPLN) Authentication
  */
 
-import { initializeApp }         from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js';
-import { getAuth, signInWithPopup, OAuthProvider, signOut }
-  from 'https://www.gstatic.com/firebasejs/11.2.0/firebase-auth.js';
+const btnLogin = document.getElementById('btn-login-microsoft');
+const errorBox = document.getElementById('error-box');
 
-const DEFAULT_CONFIG = {
-  apiKey:            '',
-  authDomain:        '',
-  projectId:         '',
-  storageBucket:     '',
-  messagingSenderId: '',
-  appId:             '',
-};
-
-const firebaseConfig = (typeof window !== 'undefined' && window.FIREBASE_CONFIG)
-  ? window.FIREBASE_CONFIG
-  : DEFAULT_CONFIG;
-
-let app, auth;
-
-try {
-  app  = initializeApp(firebaseConfig);
-  auth = getAuth(app);
-  auth.languageCode = 'id';
-} catch (err) {
-  console.error('[auth.js] Firebase init gagal:', err);
-  showError('Konfigurasi Firebase belum lengkap. Hubungi administrator.');
-}
-
-const msProvider = new OAuthProvider('microsoft.com');
-msProvider.addScope('openid');
-msProvider.addScope('profile');
-msProvider.addScope('email');
-
-const tenantId = firebaseConfig.azureTenantId;
-if (tenantId) {
-  msProvider.setCustomParameters({ tenant: tenantId });
-}
-
-const btnLogin   = document.getElementById('btn-login-microsoft');
-const errorBox   = document.getElementById('error-box');
-
+// 1. Periksa session aktif saat halaman landing dimuat
 async function checkExistingSession() {
   try {
     const res = await fetch('/api/auth/status.php', {
@@ -61,7 +24,6 @@ async function checkExistingSession() {
 }
 
 function escapeHtml(str) {
-
   if (!str && str !== 0) return '';
   return String(str)
     .replace(/&/g, '&amp;')
@@ -81,28 +43,6 @@ function updateLandingPageForLoggedInUser(data) {
   const adaPeriodeDibuka = data.ada_periode_dibuka === true;
   const sudahMendaftar = data.sudah_mendaftar === true;
   const hasRiwayat = data.has_riwayat_pendaftaran === true;
-
-  let targetUrl = '/daftar.html';
-  let labelText = 'Lanjut ke Pendaftaran';
-
-
-  if (!adaPeriodeDibuka) {
-    if (hasRiwayat) {
-      targetUrl = '/status.html';
-      labelText = 'Lihat Riwayat & Pengumuman';
-    } else {
-      targetUrl = '#';
-      labelText = 'Pendaftaran Belum Dibuka';
-    }
-  } else {
-    if (sudahMendaftar) {
-      targetUrl = '/status.html';
-      labelText = 'Lihat Status Pendaftaran';
-    } else {
-      targetUrl = '/daftar.html';
-      labelText = 'Lanjut ke Pendaftaran (' + (data.periode_aktif ? data.periode_aktif.nama : 'Periode Baru') + ')';
-    }
-  }
 
   // Update navbar links
   document.querySelectorAll('a').forEach(link => {
@@ -148,8 +88,7 @@ function updateLandingPageForLoggedInUser(data) {
           showNoPeriodeModal();
         });
       }
-    }
- else {
+    } else {
       if (sudahMendaftar) {
         btnLogin.innerHTML = `
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
@@ -192,9 +131,7 @@ function updateLandingPageForLoggedInUser(data) {
     }
   }
 
-
-
-  // Profile Dropdown
+  // Profile Dropdown Navbar Desktop
   const navbarAction = document.querySelector('.navbar-action');
   if (navbarAction) {
     navbarAction.style.display = 'flex';
@@ -279,7 +216,7 @@ function updateLandingPageForLoggedInUser(data) {
     }
   }
 
-  // Mobile Drawer Profile Card (matches status.html & daftar.html)
+  // Mobile Drawer Profile Card
   const mobileProfile = document.getElementById('mobileDrawerProfile');
   if (mobileProfile) {
     mobileProfile.style.display = 'flex';
@@ -291,7 +228,7 @@ function updateLandingPageForLoggedInUser(data) {
     if (mobileMeta) mobileMeta.textContent = (user && user.nim ? user.nim : '-') + (user && user.jurusan ? ' • ' + user.jurusan : '');
   }
 
-  // Mobile Action (Identical to status.html & daftar.html)
+  // Mobile Action Logout Button
   const mobileMenuAction = document.querySelector('.mobile-menu-action');
   if (mobileMenuAction) {
     mobileMenuAction.style.marginTop = '10px';
@@ -312,7 +249,6 @@ function updateLandingPageForLoggedInUser(data) {
       });
     }
   }
-
 }
 
 function showNoPeriodeModal() {
@@ -324,35 +260,7 @@ function showNoPeriodeModal() {
   }
 }
 
-function alertIneligibleAngkatan(data) {
-
-  const modal = document.getElementById('modalIneligibleAngkatan');
-  const textEligible = document.getElementById('textModalEligibleAngkatan');
-  const textMhs = document.getElementById('textModalMhsAngkatan');
-  const btnLogout = document.getElementById('btnModalLogoutIneligible');
-
-  if (textEligible) textEligible.innerText = data.angkatan_eligible || '-';
-  if (textMhs) textMhs.innerText = data.mhs_angkatan || '-';
-
-  if (btnLogout) {
-    btnLogout.onclick = async () => {
-      try {
-        await fetch('/api/auth/logout.php', { method: 'POST', credentials: 'same-origin' });
-      } catch (_) {}
-      sessionStorage.clear();
-      localStorage.clear();
-      window.location.reload();
-    };
-  }
-
-  if (modal) {
-    modal.classList.remove('hidden');
-  } else {
-    alert(`Mohon maaf, pendaftaran periode magang saat ini hanya dibuka untuk Mahasiswa Angkatan (${data.angkatan_eligible}).\n\nAngkatan Anda (${data.mhs_angkatan}) belum / tidak diizinkan untuk mendaftar.`);
-  }
-}
-
-function showAuthLoading(title = 'Menghubungkan Akun...', desc = 'Membuka jendela autentikasi Microsoft SSO Kampus...') {
+function showAuthLoading(title = 'Menghubungkan Akun...', desc = 'Mengalihkan ke halaman autentikasi Microsoft ITPLN...') {
   const overlay = document.getElementById('authLoadingOverlay');
   const titleEl = document.getElementById('authLoadingTitle');
   const descEl = document.getElementById('authLoadingDesc');
@@ -366,94 +274,6 @@ function showAuthLoading(title = 'Menghubungkan Akun...', desc = 'Membuka jendel
   setLoading(true);
 }
 
-function updateAuthLoading(title, desc) {
-  const titleEl = document.getElementById('authLoadingTitle');
-  const descEl = document.getElementById('authLoadingDesc');
-  if (titleEl && title) titleEl.innerText = title;
-  if (descEl && desc) descEl.innerText = desc;
-}
-
-function hideAuthLoading() {
-  const overlay = document.getElementById('authLoadingOverlay');
-  if (overlay) {
-    overlay.classList.remove('active');
-    overlay.setAttribute('aria-hidden', 'true');
-  }
-  setLoading(false);
-}
-
-async function handleMicrosoftLogin() {
-  if (!auth) {
-    showError('Firebase belum siap. Coba refresh halaman.');
-    return;
-  }
-
-  clearError();
-  showAuthLoading('Menghubungkan Akun...', 'Membuka jendela autentikasi Microsoft SSO Kampus...');
-
-  try {
-    const result = await signInWithPopup(auth, msProvider);
-
-    // Popup selesai diotorisasi, sekarang verifikasi token & database session
-    updateAuthLoading('Memverifikasi Identitas...', 'Mencocokkan data akun kampus (@itpln.ac.id) dengan sistem...');
-
-    const user   = result.user;
-    const idToken = await user.getIdToken(false);
-
-    const verifyRes = await fetch('/api/auth/verify.php', {
-      method:      'POST',
-      credentials: 'same-origin',
-      headers:     { 'Content-Type': 'application/json' },
-      body:        JSON.stringify({ id_token: idToken }),
-    });
-
-    const verifyData = await verifyRes.json();
-
-    if (!verifyRes.ok || verifyData.error) {
-      await signOut(auth);
-      hideAuthLoading();
-      showError(verifyData.error ?? 'Login gagal. Coba lagi.');
-      return;
-    }
-
-    updateAuthLoading('Autentikasi Berhasil!', 'Menyiapkan sesi & mengalihkan halaman...');
-
-    // Transisi halus sebelum redirect
-    setTimeout(() => {
-      redirect(verifyData);
-    }, 400);
-
-  } catch (err) {
-    hideAuthLoading();
-    if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
-      // User menutup popup secara sengaja, batalkan tanpa error
-      return;
-    }
-    if (err.code === 'auth/popup-blocked') {
-      showError('Pop-up diblokir browser. Izinkan pop-up untuk situs ini dan coba lagi.');
-      return;
-    }
-    console.error('[auth.js] Login error:', err);
-    showError('Terjadi kesalahan saat login. Coba lagi atau hubungi Tim REMATE ITPLN.');
-  }
-}
-
-function redirect(serverResponse) {
-  if (serverResponse.is_admin && serverResponse.redirect_url) {
-    window.location.href = serverResponse.redirect_url;
-    return;
-  }
-  if (serverResponse.sudah_mendaftar) {
-    window.location.href = '/status.html';
-    return;
-  }
-  if (serverResponse.needs_nama) {
-    window.location.href = '/daftar.html?needs_nama=1';
-    return;
-  }
-  window.location.href = '/daftar.html';
-}
-
 function setLoading(isLoading) {
   if (!btnLogin) return;
   if (isLoading) {
@@ -461,7 +281,7 @@ function setLoading(isLoading) {
     btnLogin.disabled = true;
     btnLogin.innerHTML = `
       <span class="btn-hero-spinner"></span>
-      <span>Menghubungkan...</span>
+      <span>Mengalihkan...</span>
     `;
   } else {
     btnLogin.classList.remove('loading');
@@ -482,6 +302,7 @@ function showError(message) {
   if (!errorBox) return;
   errorBox.textContent = message;
   errorBox.classList.add('visible');
+  errorBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function clearError() {
@@ -490,8 +311,29 @@ function clearError() {
   errorBox.classList.remove('visible');
 }
 
+// 2. Alur Login Microsoft Azure Entra ID (Direct Server-Side OAuth Redirect)
+function handleMicrosoftLogin() {
+  clearError();
+  showAuthLoading('Menghubungkan Akun ITPLN...', 'Mengalihkan ke server autentikasi Microsoft SSO...');
+  setTimeout(() => {
+    window.location.href = '/api/auth/azure/login.php';
+  }, 200);
+}
+
 if (btnLogin) {
   btnLogin.addEventListener('click', handleMicrosoftLogin);
 }
 
+// 3. Tangkap pesan error dari redirect callback Microsoft jika ada (?error=...)
+const urlParams = new URLSearchParams(window.location.search);
+const errorParam = urlParams.get('error');
+if (errorParam) {
+  showError(decodeURIComponent(errorParam));
+  // Bersihkan parameter query dari URL address bar tanpa reload
+  if (window.history.replaceState) {
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+}
+
+// 4. Cek session yang sudah ada
 checkExistingSession();

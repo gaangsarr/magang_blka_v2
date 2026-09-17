@@ -66,7 +66,7 @@ Berikut adalah tumpukan perangkat lunak (*software stack*) yang diperlukan di da
                                │ (FastCGI Socket)
 ┌──────────────────────────────▼──────────────────────────────┐
 │                       PHP 8.2 / 8.3 FPM                     │
-│  (PhpSpreadsheet, PhpWord, Firebase Tokens, PDO MySQL Core) │
+│  (PhpSpreadsheet, PhpWord, Azure Entra ID, PDO MySQL Core)  │
 └──────────────────────────────┬──────────────────────────────┘
                                │ (TCP/Socket Port 3306)
 ┌──────────────────────────────▼──────────────────────────────┐
@@ -87,7 +87,7 @@ Aplikasi dibangun menggunakan **PHP versi >= 8.2** (mendukung hingga PHP 8.3). E
 - `php8.2-zip` (Ekstraksi & kompilasi file dokumen xlsx/docx)
 - `php8.2-xml` / `php8.2-simplexml` (Parser XML untuk PhpWord dan PhpSpreadsheet)
 - `php8.2-mbstring` (Pemrosesan karakter multibyte UTF-8)
-- `php8.2-curl` (Komunikasi eksternal ke Firebase & Google API)
+- `php8.2-curl` (Komunikasi eksternal ke Microsoft Graph API `/v1.0/me`)
 - `php8.2-bcmath` (Kalkulasi presisi tinggi token JWT)
 - `php8.2-fileinfo` (Validasi MIME-type keamanan upload berkas)
 
@@ -167,7 +167,7 @@ Staf teknis BSI telah diundang sebagai kolaborator pada repositori GitHub privat
 
    # 3. Salin dan sesuaikan konfigurasi environment (.env)
    cp .env.example .env
-   nano .env # (Isi kredensial DB, Firebase, dan App Key)
+   nano .env # (Isi kredensial DB, Azure Entra ID, dan Session Key)
 
    # 4. Pasang pustaka PHP via Composer (Mode Production)
    composer install --no-dev --optimize-autoloader
@@ -273,9 +273,9 @@ NIP. ......................................................
 
 ---
 
-### LAMPIRAN I: PANDUAN INTEGRASI SSO MICROSOFT 365 ITPLN (AZURE AD / ENTRA ID) & FIREBASE
+### LAMPIRAN I: PANDUAN INTEGRASI DIRECT SSO MICROSOFT 365 ITPLN (AZURE ENTRA ID)
 
-Autentikasi mahasiswa menggunakan Single Sign-On (SSO) akun resmi kampus `@itpln.ac.id`. Integrasi ini menghubungkan Microsoft Entra ID (Azure AD Tenant ITPLN) dengan Firebase Authentication.
+Autentikasi mahasiswa menggunakan Single Sign-On (SSO) akun resmi kampus `@itpln.ac.id` secara langsung via OAuth 2.0 Authorization Code Flow ke Microsoft Entra ID (tanpa pihak ketiga / tanpa Firebase).
 
 Langkah-langkah yang dimohonkan untuk dieksekusi oleh Administrator Azure AD BSI ITPLN:
 
@@ -285,16 +285,17 @@ Langkah-langkah yang dimohonkan untuk dieksekusi oleh Administrator Azure AD BSI
 3. Isi formulir registrasi:
    - **Name**: `Portal Magang ITPLN x PLN`
    - **Supported account types**: Pilih **Accounts in this organizational directory only (Institut Teknologi PLN only - Single tenant)**.
-   - **Redirect URI**: Pilih platform **Web**, isi URL penanganan autentikasi Firebase:
+   - **Redirect URI**: Pilih platform **Web**, isi URL callback aplikasi:
      ```
-     https://<firebase-project-id>.firebaseapp.com/__/auth/handler
+     https://<domain-magang>/api/auth/azure/callback.php
      ```
+     *(Contoh: `https://magang.itpln.ac.id/api/auth/azure/callback.php`)*
 4. Klik **Register**.
 
 #### 2. Pencatatan Kredensial Aplikasi
 Pada halaman **Overview** aplikasi yang baru dibuat, catat:
 - **Application (client) ID** → Kunci `AZURE_CLIENT_ID`
-- **Directory (tenant) ID** → Kunci `AZURE_TENANT_ID`
+- **Directory (tenant) ID** → Kunci `AZURE_TENANT_ID` (Default ITPLN: `7b388d18-1900-418c-a5d3-e28d7a9a38e6`)
 
 #### 3. Pembuatan Client Secret
 1. Pada bilah navigasi kiri, pilih **Certificates & secrets** → tab **Client secrets** → klik **+ New client secret**.
@@ -310,18 +311,12 @@ Pada halaman **Overview** aplikasi yang baru dibuat, catat:
    - `User.Read`
 3. Klik **Add permissions**.
 4. Klik tombol **"Grant admin consent for Institut Teknologi PLN"** dan konfirmasi.  
-   *(Langkah ini sangat penting agar mahasiswa tidak menerima prompt persetujuan berulang saat login pertama kali)*.
+   *(Langkah ini sangat krusial agar mahasiswa tidak menerima prompt persetujuan izin berulang saat login pertama kali)*.
 
 #### 5. Konfigurasi Token Claims (Nama Lengkap Mahasiswa)
 1. Pilih menu **Token configuration** → klik **+ Add optional claim**.
 2. Pilih token type **ID** → centang: `email`, `family_name`, `given_name`, dan `name`.
 3. Klik **Add** (setujui jika diminta mengaktifkan profil claim).
-
-#### 6. Menghubungkan ke Firebase Authentication
-1. Buka **[Firebase Console](https://console.firebase.google.com/)** pada project kampus.
-2. Buka menu **Build → Authentication → Sign-in method** → aktifkan provider **Microsoft**.
-3. Masukkan **Application (Client) ID** dan **Client Secret** yang diperoleh dari Azure Portal ke kolom konfigurasi Firebase.
-4. Simpan konfigurasi.
 
 ---
 
@@ -444,9 +439,15 @@ DB_NAME=blka_magang
 DB_USER=app_magang
 DB_PASS=Password_Kuat_Database_Disini
 
-# --- Autentikasi Firebase SSO ---
-FIREBASE_PROJECT_ID=magang-itpln-prod
-FIREBASE_CREDENTIALS_FILE=firebase-credentials.json
+# --- Autentikasi Microsoft Azure Entra ID (SSO ITPLN) ---
+AZURE_TENANT_ID=7b388d18-1900-418c-a5d3-e28d7a9a38e6
+AZURE_CLIENT_ID=client_id_resmi_dari_bsi
+AZURE_CLIENT_SECRET=client_secret_resmi_dari_bsi
+AZURE_REDIRECT_URI=https://magang.itpln.ac.id/api/auth/azure/callback.php
+
+# User khusus Phinx Migration CLI
+DB_MIGRATION_USER=app_migration
+DB_MIGRATION_PASS=Password_Kuat_Migrasi_Disini
 
 # --- Kunci Sesi Server ---
 # Dibuat dengan perintah: php -r "echo bin2hex(random_bytes(32));"

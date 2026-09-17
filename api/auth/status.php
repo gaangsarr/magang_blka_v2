@@ -123,7 +123,7 @@ if (Auth::isLoggedInAdmin()) {
     exit;
 }
 
-http_response_code(401);
+http_response_code(200);
 echo json_encode([
     'authenticated' => false,
     'csrf_token'    => $csrfToken
