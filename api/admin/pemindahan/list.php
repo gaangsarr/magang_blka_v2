@@ -181,6 +181,7 @@ try {
         'pagination'       => [
             'page'        => $page,
             'per_page'    => $perPage,
+            'total'       => $totalRecords,
             'total_pages' => $perPage > 0 ? (int)ceil($totalRecords / $perPage) : 1
         ]
     ]);

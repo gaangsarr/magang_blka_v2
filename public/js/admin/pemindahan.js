@@ -4,6 +4,10 @@ let csrfToken = null;
 let selectedPeriodeId = 0;
 let allPeriodeList = [];
 let currentTransferData = [];
+let currentPage = 1;
+let perPage = 25;
+let totalRecords = 0;
+let totalPages = 1;
 
 document.addEventListener('DOMContentLoaded', async () => {
     // 1. Fetch CSRF token
@@ -21,16 +25,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     const selectPeriode = document.getElementById('filter-periode');
     const selectStatus = document.getElementById('filter-status');
     const inputSearch = document.getElementById('filter-search');
+    const selectPerPage = document.getElementById('filter-per-page');
 
     if (selectPeriode) {
         selectPeriode.addEventListener('change', () => {
             selectedPeriodeId = parseInt(selectPeriode.value, 10) || 0;
+            currentPage = 1;
             loadPemindahanData();
         });
     }
 
     if (selectStatus) {
         selectStatus.addEventListener('change', () => {
+            currentPage = 1;
             loadPemindahanData();
         });
     }
@@ -40,10 +47,34 @@ document.addEventListener('DOMContentLoaded', async () => {
         inputSearch.addEventListener('input', () => {
             clearTimeout(debounceTimer);
             debounceTimer = setTimeout(() => {
+                currentPage = 1;
                 loadPemindahanData();
             }, 300);
         });
     }
+
+    if (selectPerPage) {
+        selectPerPage.addEventListener('change', () => {
+            perPage = parseInt(selectPerPage.value, 10) || 25;
+            currentPage = 1;
+            loadPemindahanData();
+        });
+    }
+
+    // Pagination button listeners
+    document.getElementById('btn-prev-pemindahan')?.addEventListener('click', () => {
+        if (currentPage > 1) {
+            currentPage--;
+            loadPemindahanData();
+        }
+    });
+
+    document.getElementById('btn-next-pemindahan')?.addEventListener('click', () => {
+        if (currentPage < totalPages) {
+            currentPage++;
+            loadPemindahanData();
+        }
+    });
 
     // 3. Modal close buttons
     document.querySelectorAll('.btn-close-modal').forEach(btn => {
@@ -112,7 +143,7 @@ async function loadPemindahanData() {
     const statusApproval = document.getElementById('filter-status')?.value || '';
     const search = document.getElementById('filter-search')?.value.trim() || '';
 
-    let url = `/api/admin/pemindahan/list.php?per_page=100`;
+    let url = `/api/admin/pemindahan/list.php?page=${currentPage}&per_page=${perPage}`;
     if (selectedPeriodeId > 0) url += `&periode_id=${selectedPeriodeId}`;
     if (statusApproval) url += `&status_approval=${encodeURIComponent(statusApproval)}`;
     if (search) url += `&search=${encodeURIComponent(search)}`;
@@ -175,21 +206,34 @@ async function loadPemindahanData() {
                 document.getElementById('stat-rejected-transfer').innerText = data.stats.ditolak || 0;
             }
 
+            // Update pagination state
+            if (data.pagination) {
+                totalRecords = Number(data.pagination.total ?? (data.total ?? 0));
+                totalPages = Number(data.pagination.total_pages ?? 1);
+                currentPage = Number(data.pagination.page ?? 1);
+            } else {
+                totalRecords = Number(data.total ?? (data.data ? data.data.length : 0));
+                totalPages = Math.ceil(totalRecords / perPage) || 1;
+            }
+
             currentTransferData = data.data || [];
             const badgeCount = document.getElementById('filtered-count-badge');
-            if (badgeCount) badgeCount.innerText = `${currentTransferData.length} Data Ditampilkan`;
+            if (badgeCount) badgeCount.innerText = `${currentTransferData.length} Baris (${totalRecords} Total)`;
 
             renderTable(currentTransferData);
+            renderPagination();
         } else {
             const infoP = document.getElementById('info-periode');
             if (infoP) infoP.innerHTML = '<span style="color: #dc2626;">Gagal memuat periode</span>';
             tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: #dc2626; padding: 32px;">${escapeHtml(data.error || 'Gagal memuat data.')}</td></tr>`;
+            renderPaginationEmpty();
         }
     } catch (err) {
         console.error('Error loadPemindahanData:', err);
         const infoP = document.getElementById('info-periode');
         if (infoP) infoP.innerHTML = '<span style="color: #dc2626;">Gagal memuat periode</span>';
         tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: #dc2626; padding: 32px;">Terjadi kesalahan jaringan saat memuat data.</td></tr>';
+        renderPaginationEmpty();
     }
 }
 
@@ -240,8 +284,10 @@ function renderTable(list) {
             actionHtml = `<span style="font-size: 0.8rem; color: #64748b; font-weight: 600;">Selesai</span>`;
         }
 
+        const rowNumber = (currentPage - 1) * perPage + idx + 1;
+
         tr.innerHTML = `
-            <td style="text-align: center; color: #64748b;">${idx + 1}</td>
+            <td style="text-align: center; color: #64748b;">${rowNumber}</td>
             <td>
                 <div style="font-weight: 700; color: #0b3d6b;">${escapeHtml(item.mahasiswa_nama || item.nama || '-')}</div>
                 <div style="font-family: monospace; font-size: 0.8rem; color: #64748b;">NIM: ${escapeHtml(item.nim || '-')}</div>
@@ -281,6 +327,98 @@ function renderTable(list) {
             if (item) openIntervensiModal(item, 'force_reject');
         });
     });
+}
+
+function renderPagination() {
+    const infoEl = document.getElementById('pagination-pemindahan-info');
+    const pagesContainer = document.getElementById('pagination-pemindahan-pages');
+    const btnPrev = document.getElementById('btn-prev-pemindahan');
+    const btnNext = document.getElementById('btn-next-pemindahan');
+
+    if (!infoEl || !pagesContainer || !btnPrev || !btnNext) return;
+
+    const start = totalRecords === 0 ? 0 : (currentPage - 1) * perPage + 1;
+    const end = Math.min(currentPage * perPage, totalRecords);
+
+    infoEl.innerHTML = totalRecords === 0
+        ? 'Menampilkan <strong>0</strong> data'
+        : `Menampilkan <strong>${start}–${end}</strong> dari <strong>${totalRecords}</strong> data`;
+
+    btnPrev.disabled = (currentPage <= 1);
+    btnNext.disabled = (currentPage >= totalPages || totalPages === 0);
+
+    pagesContainer.innerHTML = '';
+
+    if (totalPages <= 1) {
+        if (totalRecords > 0) {
+            const badge = document.createElement('span');
+            badge.className = 'admin-pagination-badge';
+            badge.innerText = `Halaman 1 / 1`;
+            pagesContainer.appendChild(badge);
+        }
+        return;
+    }
+
+    const pages = getPageNumbers(currentPage, totalPages);
+    pages.forEach(p => {
+        if (p === '...') {
+            const span = document.createElement('span');
+            span.className = 'admin-pagination-page-btn ellipsis';
+            span.innerText = '…';
+            pagesContainer.appendChild(span);
+        } else {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = `admin-pagination-page-btn ${p === currentPage ? 'active' : ''}`;
+            btn.innerText = p;
+            if (p !== currentPage) {
+                btn.addEventListener('click', () => {
+                    currentPage = p;
+                    loadPemindahanData();
+                });
+            }
+            pagesContainer.appendChild(btn);
+        }
+    });
+}
+
+function renderPaginationEmpty() {
+    const infoEl = document.getElementById('pagination-pemindahan-info');
+    const pagesContainer = document.getElementById('pagination-pemindahan-pages');
+    const btnPrev = document.getElementById('btn-prev-pemindahan');
+    const btnNext = document.getElementById('btn-next-pemindahan');
+
+    if (infoEl) infoEl.innerHTML = 'Menampilkan <strong>0</strong> data';
+    if (pagesContainer) pagesContainer.innerHTML = '';
+    if (btnPrev) btnPrev.disabled = true;
+    if (btnNext) btnNext.disabled = true;
+}
+
+function getPageNumbers(current, total) {
+    if (total <= 7) {
+        return Array.from({ length: total }, (_, i) => i + 1);
+    }
+
+    const pages = [];
+    pages.push(1);
+
+    if (current > 3) {
+        pages.push('...');
+    }
+
+    const start = Math.max(2, current - 1);
+    const end = Math.min(total - 1, current + 1);
+
+    for (let i = start; i <= end; i++) {
+        pages.push(i);
+    }
+
+    if (current < total - 2) {
+        pages.push('...');
+    }
+
+    pages.push(total);
+    return pages;
 }
 
 function openIntervensiModal(item, action) {
