@@ -34,14 +34,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($email) || !str_ends_with($email, '@itpln.ac.id')) {
         $error = 'Email harus diakhiri dengan @itpln.ac.id';
     } else {
-        // Cek Admin
-        $stmtAdmin = $pdo->prepare("SELECT id, nama, role FROM admin WHERE email = :email AND aktif = 1 LIMIT 1");
-        $stmtAdmin->execute([':email' => $email]);
+        // Cek Admin (BLKA, Super Admin, Mitra Perusahaan)
+        $stmtAdmin = $pdo->prepare("SELECT id, nama, email, username, role, entitas_id, force_password_change FROM admin WHERE (LOWER(TRIM(email)) = :email OR LOWER(TRIM(username)) = :uname) AND aktif = 1 LIMIT 1");
+        $stmtAdmin->execute([':email' => $email, ':uname' => $email]);
         $admin = $stmtAdmin->fetch(PDO::FETCH_ASSOC);
 
+        if (!$admin) {
+            $stmtMhsLookup = $pdo->prepare("SELECT id FROM mahasiswa WHERE LOWER(TRIM(email)) = :email LIMIT 1");
+            $stmtMhsLookup->execute([':email' => $email]);
+            $mhsRow = $stmtMhsLookup->fetch(PDO::FETCH_ASSOC);
+            if ($mhsRow) {
+                $stmtAdminByMhs = $pdo->prepare("SELECT id, nama, email, username, role, entitas_id, force_password_change FROM admin WHERE mahasiswa_id = :mid AND aktif = 1 LIMIT 1");
+                $stmtAdminByMhs->execute([':mid' => $mhsRow['id']]);
+                $admin = $stmtAdminByMhs->fetch(PDO::FETCH_ASSOC);
+            }
+        }
+
         if ($admin) {
-            Auth::setAdminSession((int)$admin['id'], $admin['nama'] ?: ($nama ?: 'Admin'), $admin['role']);
-            header('Location: /admin/index.html');
+            Auth::setAdminSession(
+                (int)$admin['id'], 
+                $admin['nama'] ?: ($nama ?: 'Admin'), 
+                $admin['role'] ?? 'admin_blka',
+                !empty($admin['entitas_id']) ? (int)$admin['entitas_id'] : null,
+                (bool)($admin['force_password_change'] ?? false)
+            );
+            if ($admin['role'] === 'admin_perusahaan') {
+                header('Location: /perusahaan/index.html');
+            } else {
+                header('Location: /admin/index.html');
+            }
             exit;
         }
 

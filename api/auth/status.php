@@ -30,10 +30,61 @@ header('Cache-Control: no-store');
 Auth::startSession(startPHP: true);
 $csrfToken = Auth::generateCsrfToken();
 
+// 1. Cek jika sudah login sebagai Admin
+if (Auth::isLoggedInAdmin()) {
+    $admin = Auth::getAdmin();
+    $adminRole = Auth::getAdminRole();
+    echo json_encode([
+        'authenticated' => true,
+        'role'          => 'admin',
+        'admin_role'    => $adminRole,
+        'admin_nama'    => $admin['nama'] ?? ($_SESSION['admin_nama'] ?? 'Admin'),
+        'redirect_to'   => $adminRole === 'admin_perusahaan' ? '/perusahaan/index.html' : '/admin/index.html',
+        'csrf_token'    => $csrfToken,
+    ]);
+    exit;
+}
+
+// 2. Cek jika login sebagai Mahasiswa
 if (Auth::isLoggedInMahasiswa()) {
     $mahasiswa = Auth::getMahasiswa();
     $mid = Auth::getMahasiswaId();
     $pdo = Database::getInstance();
+
+    // CEK KRUSIAL: Apakah mahasiswa ini sudah didaftarkan sebagai Admin oleh Super Admin?
+    $stmtCheckAdmin = $pdo->prepare(
+        "SELECT id, nama, role, entitas_id, force_password_change, aktif 
+         FROM admin 
+         WHERE (LOWER(TRIM(email)) = :email OR (mahasiswa_id IS NOT NULL AND mahasiswa_id = :mid)) 
+           AND aktif = 1 
+         LIMIT 1"
+    );
+    $stmtCheckAdmin->execute([
+        ':email' => strtolower(trim($mahasiswa['email'] ?? '')),
+        ':mid'   => $mid
+    ]);
+    $adminFound = $stmtCheckAdmin->fetch(PDO::FETCH_ASSOC);
+
+    if ($adminFound) {
+        // Otomatis naikkan hak akses sesi ke Admin
+        Auth::setAdminSession(
+            (int)$adminFound['id'],
+            $adminFound['nama'] ?: ($mahasiswa['nama'] ?? 'Admin'),
+            $adminFound['role'] ?? 'admin_blka',
+            !empty($adminFound['entitas_id']) ? (int)$adminFound['entitas_id'] : null,
+            (bool)($adminFound['force_password_change'] ?? false)
+        );
+
+        echo json_encode([
+            'authenticated' => true,
+            'role'          => 'admin',
+            'admin_role'    => $adminFound['role'] ?? 'admin_blka',
+            'admin_nama'    => $adminFound['nama'] ?: ($mahasiswa['nama'] ?? 'Admin'),
+            'redirect_to'   => $adminFound['role'] === 'admin_perusahaan' ? '/perusahaan/index.html' : '/admin/index.html',
+            'csrf_token'    => $csrfToken,
+        ]);
+        exit;
+    }
 
     // 1. Cek apakah sudah mendaftar di periode dibuka
     $stmt = $pdo->prepare(
@@ -112,15 +163,6 @@ if (Auth::isLoggedInMahasiswa()) {
     ]);
     exit;
 
-}
-
-if (Auth::isLoggedInAdmin()) {
-    echo json_encode([
-        'authenticated' => true,
-        'role'          => 'admin',
-        'csrf_token'    => $csrfToken,
-    ]);
-    exit;
 }
 
 http_response_code(200);

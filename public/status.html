@@ -881,6 +881,12 @@
                 const authRes = await fetch('/api/auth/status.php');
                 const authData = await authRes.json();
                 
+                if (authRes.ok && authData.role === 'admin') {
+                    const targetUrl = authData.redirect_to || (authData.admin_role === 'admin_perusahaan' ? '/perusahaan/index.html' : '/admin/index.html');
+                    window.location.replace(targetUrl);
+                    return;
+                }
+
                 if (authRes.ok && authData.user) {
                     const u = authData.user;
                     const shortName = u.nama ? u.nama.split(' ')[0] : 'Mahasiswa';

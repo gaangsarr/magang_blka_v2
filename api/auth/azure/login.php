@@ -13,16 +13,51 @@ Dotenv::createImmutable($root)->safeLoad();
 
 Auth::startSession(startPHP: true);
 
-// 1. Jika sudah login, langsung arahkan ke tujuan
-$mahasiswa = Auth::getMahasiswa();
-if ($mahasiswa) {
-    header('Location: /daftar.html');
+// 1. Jika sudah login sebagai Admin, langsung arahkan ke dashboard
+$admin = Auth::getAdmin();
+if ($admin) {
+    if ($admin['role'] === 'admin_perusahaan') {
+        header('Location: /perusahaan/index.html');
+    } else {
+        header('Location: /admin/index.html');
+    }
     exit;
 }
 
-$admin = Auth::getAdmin();
-if ($admin) {
-    header('Location: /admin/index.html');
+// Jika sudah login sebagai Mahasiswa, cek apakah akunnya kini telah didaftarkan sebagai Admin
+$mahasiswa = Auth::getMahasiswa();
+if ($mahasiswa) {
+    $pdo = App\Database::getInstance();
+    $stmtCekAdmin = $pdo->prepare(
+        "SELECT id, nama, role, entitas_id, force_password_change, aktif 
+         FROM admin 
+         WHERE (LOWER(TRIM(email)) = :email OR (mahasiswa_id IS NOT NULL AND mahasiswa_id = :mid)) 
+           AND aktif = 1 
+         LIMIT 1"
+    );
+    $stmtCekAdmin->execute([
+        ':email' => strtolower(trim($mahasiswa['email'] ?? '')),
+        ':mid'   => (int)$mahasiswa['id'],
+    ]);
+    $adm = $stmtCekAdmin->fetch(PDO::FETCH_ASSOC);
+
+    if ($adm) {
+        Auth::setAdminSession(
+            (int)$adm['id'],
+            $adm['nama'] ?: ($mahasiswa['nama'] ?? 'Admin'),
+            $adm['role'] ?? 'admin_blka',
+            !empty($adm['entitas_id']) ? (int)$adm['entitas_id'] : null,
+            (bool)($adm['force_password_change'] ?? false)
+        );
+        if ($adm['role'] === 'admin_perusahaan') {
+            header('Location: /perusahaan/index.html');
+        } else {
+            header('Location: /admin/index.html');
+        }
+        exit;
+    }
+
+    header('Location: /daftar.html');
     exit;
 }
 

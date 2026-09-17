@@ -64,6 +64,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
+        if (statusData.role === 'admin') {
+            const targetUrl = statusData.redirect_to || (statusData.admin_role === 'admin_perusahaan' ? '/perusahaan/index.html' : '/admin/index.html');
+            window.location.replace(targetUrl);
+            return;
+        }
+
         window.statusAuthData = statusData;
         window.isEligibleCohort = (statusData.is_eligible_pendaftaran_aktif !== false && statusData.is_eligible_angkatan !== false);
 

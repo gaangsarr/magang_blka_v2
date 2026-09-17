@@ -70,7 +70,7 @@ try {
 
 $azureUid    = $profile['id'];
 $displayName = trim($profile['displayName']);
-$email       = strtolower(trim($profile['mail']));
+$email       = !empty($profile['mail']) ? strtolower(trim($profile['mail'])) : strtolower(trim($profile['userPrincipalName'] ?? ''));
 
 // 6. Validasi domain email @itpln.ac.id
 if (!str_ends_with($email, '@itpln.ac.id')) {
@@ -81,21 +81,68 @@ if (!str_ends_with($email, '@itpln.ac.id')) {
 try {
     $pdo = Database::getInstance();
 
-    // 7. Cek apakah pengguna adalah Admin (Dosen/BLKA/Superadmin)
+    // 7. Cek apakah pengguna terdaftar sebagai Admin (BLKA, Super Admin, atau Mitra Perusahaan)
     $stmtAdmin = $pdo->prepare(
-        "SELECT id, nama, role, aktif FROM admin WHERE email = :email AND aktif = 1 LIMIT 1"
+        "SELECT id, nama, email, username, role, entitas_id, force_password_change, aktif 
+         FROM admin 
+         WHERE (LOWER(TRIM(email)) = :email OR LOWER(TRIM(username)) = :uname) 
+           AND aktif = 1 
+         LIMIT 1"
     );
-    $stmtAdmin->execute([':email' => $email]);
+    $stmtAdmin->execute([
+        ':email' => $email,
+        ':uname' => $email,
+    ]);
     $adminAccount = $stmtAdmin->fetch(PDO::FETCH_ASSOC);
 
+    // Fallback: Cek jika ada admin yang di-link ke akun mahasiswa dengan email ini
+    if (!$adminAccount) {
+        $stmtMhsLookup = $pdo->prepare("SELECT id FROM mahasiswa WHERE LOWER(TRIM(email)) = :email LIMIT 1");
+        $stmtMhsLookup->execute([':email' => $email]);
+        $mhsRow = $stmtMhsLookup->fetch(PDO::FETCH_ASSOC);
+        if ($mhsRow) {
+            $stmtAdminByMhs = $pdo->prepare(
+                "SELECT id, nama, email, username, role, entitas_id, force_password_change, aktif 
+                 FROM admin 
+                 WHERE mahasiswa_id = :mid AND aktif = 1 
+                 LIMIT 1"
+            );
+            $stmtAdminByMhs->execute([':mid' => $mhsRow['id']]);
+            $adminAccount = $stmtAdminByMhs->fetch(PDO::FETCH_ASSOC);
+        }
+    }
+
     if ($adminAccount) {
+        // Update nama admin jika masih kosong/default dan displayName dari Microsoft tersedia
+        if (empty($adminAccount['nama']) && !empty($displayName)) {
+            $pdo->prepare("UPDATE admin SET nama = :nama, updated_at = NOW() WHERE id = :id")
+                ->execute([':nama' => $displayName, ':id' => $adminAccount['id']]);
+            $adminAccount['nama'] = $displayName;
+        }
+
         // Berhasil login sebagai Admin
         Auth::setAdminSession(
             (int)$adminAccount['id'],
             $adminAccount['nama'] ?: ($displayName ?: 'Admin'),
-            $adminAccount['role']
+            $adminAccount['role'] ?? 'admin_blka',
+            !empty($adminAccount['entitas_id']) ? (int)$adminAccount['entitas_id'] : null,
+            (bool)($adminAccount['force_password_change'] ?? false)
         );
-        header('Location: /admin/index.html');
+
+        unset($_SESSION['oauth_state'], $_SESSION['oauth_return_to']);
+
+        // Catat log aktivitas login
+        try {
+            $pdo->prepare("INSERT INTO log_aktivitas (user_type, user_id, aktivitas, ip_address, created_at) VALUES ('admin', :uid, 'Login via SSO Microsoft Azure Entra ID', :ip, NOW())")
+                ->execute([':uid' => $adminAccount['id'], ':ip' => $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1']);
+        } catch (\Throwable $_) {}
+
+        // Arahkan ke dashboard sesuai role admin
+        if ($adminAccount['role'] === 'admin_perusahaan') {
+            header('Location: /perusahaan/index.html');
+        } else {
+            header('Location: /admin/index.html');
+        }
         exit;
     }
 

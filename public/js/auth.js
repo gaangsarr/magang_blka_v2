@@ -18,6 +18,12 @@ async function checkExistingSession() {
     const data = await res.json();
 
     if (data.authenticated) {
+      // Jika pengguna adalah Admin (BLKA/Super Admin/Perusahaan), arahkan langsung ke portal admin
+      if (data.role === 'admin') {
+        const targetUrl = data.redirect_to || (data.admin_role === 'admin_perusahaan' ? '/perusahaan/index.html' : '/admin/index.html');
+        window.location.replace(targetUrl);
+        return;
+      }
       updateLandingPageForLoggedInUser(data);
     }
   } catch (_) {}

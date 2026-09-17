@@ -75,6 +75,13 @@ class Auth
         if (session_status() === PHP_SESSION_ACTIVE && !headers_sent()) {
             session_regenerate_id(true); // QUALITY-07: Cegah Session Fixation Attack
         }
+        unset(
+            $_SESSION['admin_id'],
+            $_SESSION['admin_nama'],
+            $_SESSION['admin_role'],
+            $_SESSION['entitas_id'],
+            $_SESSION['force_password_change']
+        );
         $_SESSION['mahasiswa_id'] = $mahasiswaId;
         $_SESSION['role']         = 'mahasiswa';
         $_SESSION['created_at']   = time();
@@ -97,6 +104,7 @@ class Auth
         if (session_status() === PHP_SESSION_ACTIVE && !headers_sent()) {
             session_regenerate_id(true); // QUALITY-07: Cegah Session Fixation Attack
         }
+        unset($_SESSION['mahasiswa_id'], $_SESSION['mhs_angkatan']);
         $_SESSION['admin_id']              = $adminId;
         $_SESSION['admin_nama']            = $nama;
         $_SESSION['admin_role']            = $adminRole;
