@@ -498,6 +498,65 @@ class Auth
     }
 
     /**
+     * Membatasi jumlah request berbasis identitas pengguna (email/username).
+     *
+     * Melengkapi rateLimitByIp() untuk skenario di mana banyak user sah
+     * berbagi IP yang sama (WiFi kampus, kantor PLN di belakang NAT/proxy).
+     *
+     * Strategi hybrid yang direkomendasikan:
+     *   1. rateLimitByIp()       → limit longgar (mis. 100/menit) — cegah DDoS dari 1 IP
+     *   2. rateLimitByIdentity() → limit ketat  (mis. 5/menit)   — cegah brute-force 1 akun
+     *
+     * Data disimpan di tabel `rate_limits` yang sama, dengan prefix "id:"
+     * di kolom ip_address agar tidak tabrakan dengan data IP.
+     *
+     * @param string $identity           Identifier unik user (email, username, dsb.)
+     * @param string $action             Nama aksi (mis: 'verify_mahasiswa', 'login_admin')
+     * @param int    $maxRequests        Batas maksimal request dalam jendela waktu
+     * @param int    $timeWindowSeconds  Jendela waktu (dalam detik)
+     */
+    public static function rateLimitByIdentity(string $identity, string $action, int $maxRequests = 5, int $timeWindowSeconds = 60): void
+    {
+        if ($identity === '') {
+            return; // Tidak bisa rate-limit tanpa identifier
+        }
+
+        $pdo = Database::getInstance();
+
+        // Gunakan prefix "id:" + hash agar panjang kolom aman dan tidak bocorkan email/username
+        $key = 'id:' . hash('xxh3', strtolower(trim($identity)));
+
+        // 1. Cek jumlah percobaan dalam jendela waktu
+        $stmt = $pdo->prepare("
+            SELECT COUNT(*) 
+            FROM rate_limits 
+            WHERE ip_address = :key 
+              AND action = :action 
+              AND attempted_at >= DATE_SUB(NOW(), INTERVAL :window SECOND)
+        ");
+        $stmt->bindValue(':key', $key);
+        $stmt->bindValue(':action', $action);
+        $stmt->bindValue(':window', $timeWindowSeconds, PDO::PARAM_INT);
+        $stmt->execute();
+
+        $attempts = (int) $stmt->fetchColumn();
+
+        if ($attempts >= $maxRequests) {
+            http_response_code(429);
+            header('Content-Type: application/json; charset=utf-8');
+            header('Retry-After: ' . $timeWindowSeconds);
+            echo json_encode([
+                'error' => 'Terlalu banyak percobaan untuk akun ini. Silakan tunggu beberapa saat.'
+            ], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
+        // 2. Catat percobaan ini
+        $stmtIns = $pdo->prepare("INSERT INTO rate_limits (ip_address, action, attempted_at) VALUES (:key, :action, NOW())");
+        $stmtIns->execute([':key' => $key, ':action' => $action]);
+    }
+
+    /**
      * Sanitasi error message agar tidak membocorkan detail query/tabel di production.
      */
     public static function safeErrorMessage(\Throwable $e, string $genericMsg = 'Terjadi kesalahan sistem.'): string

@@ -90,8 +90,9 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     respond(['error' => 'Method tidak diizinkan.'], 405);
 }
 
-// Rate limiting: max 15 verifikasi per menit per IP
-Auth::rateLimitByIp('verify_mahasiswa', 15, 60);
+// Rate limiting lapis 1: max 100 verifikasi per menit per IP
+// Longgar karena di WiFi kampus banyak mahasiswa bisa share 1 IP publik
+Auth::rateLimitByIp('verify_mahasiswa', 100, 60);
 
 // ── Baca Body JSON ────────────────────────────────────────────────────────────
 $body = json_decode(file_get_contents('php://input'), true);
@@ -146,6 +147,10 @@ if (!str_ends_with($email, '@itpln.ac.id')) {
         'error' => 'Hanya akun dengan email @itpln.ac.id yang diizinkan mendaftar.'
     ], 403);
 }
+
+// Rate limiting lapis 2: max 3 verifikasi per menit per email
+// Ketat per-akun untuk cegah brute-force token pada 1 email
+Auth::rateLimitByIdentity($email, 'verify_mahasiswa', 3, 60);
 
 $pdo = Database::getInstance();
 

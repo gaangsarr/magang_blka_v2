@@ -29,8 +29,13 @@ if ($identifier === '' || $password === '') {
     exit;
 }
 
-// Rate limiting: max 5 login attempts per minute per IP
-Auth::rateLimitByIp('login_admin', 5, 60);
+// Rate limiting lapis 1: max 60 login per menit per IP
+// Longgar karena admin PLN di 1 kantor bisa share IP yang sama
+Auth::rateLimitByIp('login_admin', 60, 60);
+
+// Rate limiting lapis 2: max 5 login per menit per username/email
+// Ketat per-akun untuk cegah brute-force password 1 admin
+Auth::rateLimitByIdentity($identifier, 'login_admin', 5, 60);
 
 try {
     $pdo = Database::getInstance();
