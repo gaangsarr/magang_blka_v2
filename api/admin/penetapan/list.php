@@ -165,6 +165,29 @@ try {
     $stmt->execute();
     $list = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+    // 3. Fetch list unit untuk periode terpilih (untuk modal relocate & filter unit)
+    $stmtUnits = $pdo->prepare("
+        SELECT 
+            upp.id AS upp_id,
+            e.nama,
+            upp.kuota_total,
+            upp.kuota_tersisa,
+            GROUP_CONCAT(upj.jurusan_id) AS prodi_ids_str
+        FROM unit_pelaksana_periode upp
+        JOIN entitas_perusahaan e ON upp.entitas_id = e.id
+        LEFT JOIN unit_periode_jurusan upj ON upp.id = upj.unit_pelaksana_periode_id
+        WHERE upp.periode_id = :pid AND upp.aktif = 1
+        GROUP BY upp.id, e.nama, upp.kuota_total, upp.kuota_tersisa
+        ORDER BY e.nama ASC
+    ");
+    $stmtUnits->execute([':pid' => $periodeId]);
+    $unitList = $stmtUnits->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($unitList as &$u) {
+        $u['prodi_ids'] = !empty($u['prodi_ids_str']) ? array_map('intval', explode(',', $u['prodi_ids_str'])) : [];
+        unset($u['prodi_ids_str']);
+    }
+    unset($u);
+
     echo json_encode([
         'ok' => true,
         'periode_id' => $periodeId,
@@ -172,6 +195,7 @@ try {
         'periode_nama' => $periode['nama'],
         'all_periode' => $allPeriode,
         'jurusan_list' => $jurusanList,
+        'unit_list' => $unitList,
         'data' => $list,
         'pagination' => [
             'total' => $totalRecords,

@@ -59,10 +59,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // 2. Load Unit Options for Relocate Modals
-    await loadUnitList();
-
-    // 3. Load Penetapan Data
+    // 2. Load Penetapan Data langsung (unit pelaksana dimuat bersamaan secara efisien)
     await loadPenetapanData(null, 1);
 
     // 4. Multi-Filter Event Listeners with Server-Side Trigger
@@ -289,32 +286,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 async function loadUnitList() {
-    try {
-        const res = await fetch('/api/admin/unit/list.php');
-        const data = await res.json();
-        if (data.ok && data.data) {
-            unitList = data.data;
-
-            // Populate relocate selects
-            const selectElem = document.getElementById('relocate-new-unit');
-            const bulkSelect = document.getElementById('bulk-relocate-new-unit');
-            const filterUnit = document.getElementById('filter-unit');
-
-            if (selectElem) selectElem.innerHTML = '<option value="">-- Pilih Unit Pelaksana Tujuan --</option>';
-            if (bulkSelect) bulkSelect.innerHTML = '<option value="">-- Pilih Unit Pelaksana Tujuan --</option>';
-            if (filterUnit) filterUnit.innerHTML = '<option value="">Semua Unit Penempatan</option>';
-
-            unitList.forEach(u => {
-                const sisa = u.kuota_tersisa !== null ? u.kuota_tersisa : 0;
-                const optHtml = `<option value="${u.upp_id}" ${sisa <= 0 ? 'disabled' : ''}>${escapeHtml(u.nama)} (Sisa Kuota: ${sisa})</option>`;
-                if (selectElem) selectElem.innerHTML += optHtml;
-                if (bulkSelect) bulkSelect.innerHTML += optHtml;
-                if (filterUnit && u.upp_id) filterUnit.innerHTML += `<option value="${u.upp_id}">${escapeHtml(u.nama)}</option>`;
-            });
-        }
-    } catch (e) {
-        console.error('Gagal memuat unit:', e);
-    }
+    // Unit data sekarang dibundle secara efisien langsung di dalam loadPenetapanData
+    // untuk mencegah request terpisah 741KB ke master unit dan freeze pada DOM browser.
 }
 
 async function loadPenetapanData(targetPeriodeId = null, page = 1) {
@@ -404,11 +377,39 @@ async function loadPenetapanData(targetPeriodeId = null, page = 1) {
                 jurusanList = data.jurusan_list;
                 const selectJurusan = document.getElementById('filter-jurusan');
                 if (selectJurusan) {
-                    selectJurusan.innerHTML = '<option value="">Semua Jurusan</option>';
+                    let jOpts = '<option value="">Semua Jurusan</option>';
                     jurusanList.forEach(j => {
-                        selectJurusan.innerHTML += `<option value="${j.id}">${escapeHtml(j.nama)}</option>`;
+                        jOpts += `<option value="${j.id}">${escapeHtml(j.nama)}</option>`;
                     });
+                    selectJurusan.innerHTML = jOpts;
                 }
+            }
+
+            // Populate relocate selects and filter-unit with fast single-pass string buffer
+            if (data.unit_list && Array.isArray(data.unit_list)) {
+                unitList = data.unit_list;
+                const selectElem = document.getElementById('relocate-new-unit');
+                const bulkSelect = document.getElementById('bulk-relocate-new-unit');
+                const filterUnit = document.getElementById('filter-unit');
+
+                let relocateOpts = '<option value="">-- Pilih Unit Pelaksana Tujuan --</option>';
+                let bulkOpts = '<option value="">-- Pilih Unit Pelaksana Tujuan --</option>';
+                let filterOpts = '<option value="">Semua Unit Penempatan</option>';
+
+                const currentFilterVal = filterUnit ? filterUnit.value : '';
+
+                unitList.forEach(u => {
+                    const sisa = u.kuota_tersisa !== null ? u.kuota_tersisa : 0;
+                    const opt = `<option value="${u.upp_id}" ${sisa <= 0 ? 'disabled' : ''}>${escapeHtml(u.nama)} (Sisa Kuota: ${sisa})</option>`;
+                    relocateOpts += opt;
+                    bulkOpts += opt;
+                    const isSelected = String(u.upp_id) === String(currentFilterVal);
+                    filterOpts += `<option value="${u.upp_id}" ${isSelected ? 'selected' : ''}>${escapeHtml(u.nama)}</option>`;
+                });
+
+                if (selectElem) selectElem.innerHTML = relocateOpts;
+                if (bulkSelect) bulkSelect.innerHTML = bulkOpts;
+                if (filterUnit) filterUnit.innerHTML = filterOpts;
             }
 
             allPenetapanData = data.data || [];
