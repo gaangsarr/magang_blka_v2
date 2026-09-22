@@ -283,23 +283,23 @@
                                 <!-- Template Nomor Surat -->
                                 <div>
                                     <label class="admin-input-label" for="cfg-nomor-template">
-                                        Format Template Nomor Surat <span style="color: #ef4444;">*</span>
+                                        Format Template Nomor Surat <span style="font-size: 0.8rem; font-weight: 500; color: #64748b;">(Opsional)</span>
                                     </label>
-                                    <input type="text" id="cfg-nomor-template" class="admin-input-field" placeholder="{nomor}/Srt/1/D0/08/2026" required>
+                                    <input type="text" id="cfg-nomor-template" class="admin-input-field" placeholder="      /Srt/1/D0/09/2026 atau {nomor}/Srt/1/D0/09/2026">
                                     <div class="helper-note">
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-                                        <span>Gunakan kode <code>{nomor}</code> untuk penomoran urut otomatis (mis. 001, 002, dst).</span>
+                                        <span>Gunakan <code>{nomor}</code> untuk penomoran otomatis (001, dst), atau gunakan spasi kosong di depan (mis. <code>      /Srt/...</code>) jika nomor ditulis pena.</span>
                                     </div>
                                 </div>
 
                                 <!-- Angka Awal Nomor Surat -->
                                 <div>
                                     <label class="admin-input-label" for="cfg-nomor-start">
-                                        Nomor Awal / Mulai Dari <span style="color: #ef4444;">*</span>
+                                        Nomor Awal / Mulai Dari <span style="font-size: 0.8rem; font-weight: 500; color: #64748b;">(Opsional)</span>
                                     </label>
-                                    <input type="number" id="cfg-nomor-start" class="admin-input-field" min="1" value="1" required>
+                                    <input type="number" id="cfg-nomor-start" class="admin-input-field" min="1" placeholder="1">
                                     <div class="helper-note">
-                                        <span>Nomor urutan awal untuk unit pertama dalam daftar.</span>
+                                        <span>Hanya berlaku jika template memakai <code>{nomor}</code> (default: 1).</span>
                                     </div>
                                 </div>
 

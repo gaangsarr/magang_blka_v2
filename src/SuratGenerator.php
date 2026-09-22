@@ -261,8 +261,8 @@ class SuratGenerator
         return $stmt->execute([
             ':periode_id' => $periodeId,
             ':public_token' => $token,
-            ':nomor_surat_template' => $data['nomor_surat_template'] ?? '{nomor}/Srt/1/D0/08/2026',
-            ':nomor_surat_start' => (int)($data['nomor_surat_start'] ?? 1),
+            ':nomor_surat_template' => isset($data['nomor_surat_template']) ? rtrim((string)$data['nomor_surat_template'], "\r\n") : '',
+            ':nomor_surat_start' => !empty($data['nomor_surat_start']) ? (int)$data['nomor_surat_start'] : 1,
             ':tanggal_surat' => $data['tanggal_surat'] ?? null,
             ':perihal' => $data['perihal'] ?? null,
             ':tahun_akademik' => $data['tahun_akademik'] ?? null,
@@ -361,6 +361,9 @@ class SuratGenerator
      */
     public static function formatNomorSurat(string $template, int $number): string
     {
+        if (trim($template) === '') {
+            return '';
+        }
         $formattedNum = str_pad((string)$number, 3, '0', STR_PAD_LEFT);
         if (str_contains($template, '{nomor}')) {
             return str_replace('{nomor}', $formattedNum, $template);
@@ -371,8 +374,9 @@ class SuratGenerator
         if (str_contains($template, '{no}')) {
             return str_replace('{no}', (string)$number, $template);
         }
-        // Fallback jika tidak ada placeholder
-        return $formattedNum . '/' . ltrim($template, '/');
+        // Template tanpa placeholder nomor urut (misal: "      /Srt/1/D0/09/2026"),
+        // biarkan apa adanya tanpa memaksa nomor urut di depannya.
+        return $template;
     }
 
     /**
@@ -456,7 +460,7 @@ class SuratGenerator
             </w:tc>
             <w:tc>
               <w:tcPr><w:tcW w:w="3870" w:type="dxa"/><w:vAlign w:val="top"/></w:tcPr>
-              <w:p><w:pPr><w:spacing w:line="240" w:lineRule="auto"/></w:pPr><w:r><w:rPr><w:sz w:val="22"/></w:rPr><w:t>' . self::escapeXml($nomorSurat) . '</w:t></w:r></w:p>
+              <w:p><w:pPr><w:spacing w:line="240" w:lineRule="auto"/></w:pPr><w:r><w:rPr><w:sz w:val="22"/></w:rPr><w:t xml:space="preserve">' . self::escapeXml($nomorSurat) . '</w:t></w:r></w:p>
             </w:tc>
             <w:tc>
               <w:tcPr><w:tcW w:w="4475" w:type="dxa"/><w:vAlign w:val="top"/></w:tcPr>
@@ -843,7 +847,7 @@ class SuratGenerator
 
         $startNum = (int)($config['nomor_surat_start'] ?? 1);
         $currentSeq = $startNum + $unitIndex;
-        $nomorSurat = self::formatNomorSurat($config['nomor_surat_template'] ?? '{nomor}/Srt/1/D0/08/' . date('Y'), $currentSeq);
+        $nomorSurat = self::formatNomorSurat($config['nomor_surat_template'] ?? '', $currentSeq);
         $tanggalSurat = $config['tanggal_surat'] ?? ('Jakarta, ' . self::formatIndonesianDate(date('Y-m-d')));
         $perihal = $config['perihal'] ?? 'Penyampaian Penempatan Mahasiswa Magang PLN Group';
         $tahunAkademik = $config['tahun_akademik'] ?? (date('Y') . '/' . (date('Y') + 1));

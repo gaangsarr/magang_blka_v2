@@ -61,8 +61,9 @@ try {
 
     // Format nomor surat untuk masing-masing unit preview
     $startNum = (int)($config['nomor_surat_start'] ?? 1);
+    $template = $config['nomor_surat_template'] ?? '';
     foreach ($units as $idx => &$u) {
-        $u['nomor_surat_preview'] = SuratGenerator::formatNomorSurat($config['nomor_surat_template'] ?? '{nomor}/Srt/1/D0/08/' . date('Y'), $startNum + $idx);
+        $u['nomor_surat_preview'] = SuratGenerator::formatNomorSurat($template, $startNum + $idx);
     }
 
     echo json_encode([

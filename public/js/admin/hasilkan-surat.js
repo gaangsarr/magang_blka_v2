@@ -271,8 +271,8 @@ function populateConfigForm(config, periodeId) {
     if (!config) return;
 
     document.getElementById('cfg-periode-id').value = periodeId || '';
-    document.getElementById('cfg-nomor-template').value = config.nomor_surat_template || '{nomor}/Srt/1/D0/08/2026';
-    document.getElementById('cfg-nomor-start').value = config.nomor_surat_start || 1;
+    document.getElementById('cfg-nomor-template').value = (config.nomor_surat_template !== undefined && config.nomor_surat_template !== null) ? config.nomor_surat_template : '';
+    document.getElementById('cfg-nomor-start').value = (config.nomor_surat_start !== undefined && config.nomor_surat_start !== null && config.nomor_surat_start !== '') ? config.nomor_surat_start : '';
     document.getElementById('cfg-tanggal-surat').value = config.tanggal_surat || '';
     document.getElementById('cfg-tahun-akademik').value = config.tahun_akademik || '';
     document.getElementById('cfg-perihal').value = config.perihal || '';
@@ -295,7 +295,9 @@ function populateConfigForm(config, periodeId) {
  * Format string nomor surat dengan nomor urut
  */
 function formatNomorSuratJs(template, number) {
-    if (!template) return String(number);
+    if (!template || template.trim() === '') {
+        return '(Tulis Tangan / Belum Diisi)';
+    }
     const padded = String(number).padStart(3, '0');
     if (template.includes('{nomor}')) {
         return template.replace('{nomor}', padded);
@@ -306,19 +308,27 @@ function formatNomorSuratJs(template, number) {
     if (template.includes('{no}')) {
         return template.replace('{no}', String(number));
     }
-    return `${padded}/${template.replace(/^\/+/, '')}`;
+    // Jika template tanpa placeholder (misal "      /Srt/1/D0/09/2026"),
+    // jangan paksa prefix urutan nomor, kembalikan apa adanya.
+    return template;
 }
 
 /**
  * Update preview nomor surat di tabel saat input berubah
  */
 function updateTableNomorSuratPreview() {
-    const template = document.getElementById('cfg-nomor-template').value.trim() || '{nomor}/Srt/1/D0/08/2026';
+    const templateInput = document.getElementById('cfg-nomor-template');
+    const template = templateInput ? templateInput.value.replace(/[\r\n]+$/, '') : '';
     const startNum = parseInt(document.getElementById('cfg-nomor-start').value, 10) || 1;
 
     document.querySelectorAll('.preview-nomor-cell').forEach((cell, idx) => {
         const curNum = startNum + idx;
-        cell.innerText = formatNomorSuratJs(template, curNum);
+        const formatted = formatNomorSuratJs(template, curNum);
+        if (formatted === '(Tulis Tangan / Belum Diisi)') {
+            cell.innerHTML = `<span style="font-style: italic; color: #94a3b8; font-weight: 500;">(Tulis Tangan / Belum Diisi)</span>`;
+        } else {
+            cell.innerText = formatted;
+        }
     });
 }
 
@@ -406,7 +416,7 @@ function renderUnitsTablePage(page = 1, config = null) {
         return;
     }
 
-    const template = config?.nomor_surat_template || '{nomor}/Srt/1/D0/08/2026';
+    const template = (config?.nomor_surat_template !== undefined && config?.nomor_surat_template !== null) ? config.nomor_surat_template : '';
     const startNum = parseInt(config?.nomor_surat_start || 1, 10);
 
     const totalPages = Math.ceil(totalItems / pageSizeSurat) || 1;
@@ -422,6 +432,10 @@ function renderUnitsTablePage(page = 1, config = null) {
         const origIdx = currentUnits.findIndex(orig => orig.unit_id === u.unit_id);
         const seq = startNum + (origIdx >= 0 ? origIdx : startIdx + idx);
         const noSurat = formatNomorSuratJs(template, seq);
+        const isTulisTangan = noSurat === '(Tulis Tangan / Belum Diisi)';
+        const noSuratHtml = isTulisTangan
+            ? `<span class="preview-nomor-cell" style="font-style: italic; color: #94a3b8; font-weight: 500; font-size: 0.85rem;">(Tulis Tangan / Belum Diisi)</span>`
+            : `<code class="preview-nomor-cell" style="background: #f1f5f9; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; color: #0f172a; white-space: pre;">${escapeHtml(noSurat)}</code>`;
         const mhsCount = parseInt(u.total_mahasiswa, 10) || 0;
 
         const alamat = u.unit_alamat ? escapeHtml(u.unit_alamat) : '<span style="color: #94a3b8; font-style: italic;">Alamat belum diatur di Master Unit</span>';
@@ -430,7 +444,7 @@ function renderUnitsTablePage(page = 1, config = null) {
             <tr>
                 <td style="text-align: center; font-weight: 600; color: #64748b;">${rowNumber}</td>
                 <td>
-                    <code class="preview-nomor-cell" style="background: #f1f5f9; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; color: #0f172a;">${escapeHtml(noSurat)}</code>
+                    ${noSuratHtml}
                 </td>
                 <td>
                     <strong style="color: #0b3d6b; font-size: 0.925rem;">${escapeHtml(u.unit_nama)}</strong>
@@ -552,10 +566,15 @@ async function saveSuratConfig() {
         return;
     }
 
+    const rawTemplate = document.getElementById('cfg-nomor-template').value;
+    const nomorTemplate = rawTemplate ? rawTemplate.replace(/[\r\n]+$/, '') : '';
+    const rawStart = document.getElementById('cfg-nomor-start').value;
+    const nomorStart = rawStart !== '' ? (parseInt(rawStart, 10) || 1) : 1;
+
     const payload = {
         periode_id: currentPeriodeId,
-        nomor_surat_template: document.getElementById('cfg-nomor-template').value.trim(),
-        nomor_surat_start: parseInt(document.getElementById('cfg-nomor-start').value, 10) || 1,
+        nomor_surat_template: nomorTemplate,
+        nomor_surat_start: nomorStart,
         tanggal_surat: document.getElementById('cfg-tanggal-surat').value.trim(),
         tahun_akademik: document.getElementById('cfg-tahun-akademik').value.trim(),
         perihal: document.getElementById('cfg-perihal').value.trim(),
@@ -565,7 +584,7 @@ async function saveSuratConfig() {
         link_data_publik: document.getElementById('cfg-link-publik').value.trim()
     };
 
-    if (!payload.nomor_surat_template || !payload.tanggal_surat || !payload.perihal || !payload.jabatan_penandatangan || !payload.nama_penandatangan) {
+    if (!payload.tanggal_surat || !payload.perihal || !payload.jabatan_penandatangan || !payload.nama_penandatangan) {
         showAdminToast('Mohon lengkapi seluruh isian bertanda bintang (*).', 'warning');
         return;
     }
