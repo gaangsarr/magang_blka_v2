@@ -663,7 +663,13 @@
             document.getElementById('modal-unit-nama').innerText = item.nama_unit;
 
 
-            document.getElementById('modal-program-nama').innerText = item.program === '1_bulan' ? 'Magang 1 Bulan' : 'Magang 5 Bulan (KRS)';
+            const progMap = {
+                '1_bulan': 'Magang 1 Bulan',
+                '3_bulan': 'Magang 3 Bulan',
+                '4_bulan': 'Magang 4 Bulan',
+                '5_bulan': 'Magang 5 Bulan (KRS)'
+            };
+            document.getElementById('modal-program-nama').innerText = progMap[item.program] || item.program || '-';
             document.getElementById('modal-mhs-nama').innerText = item.nama;
             document.getElementById('modal-mhs-nim').innerText = item.nim;
             document.getElementById('modal-mhs-jurusan').innerText = item.jurusan || '-';
@@ -1010,7 +1016,13 @@
 
             tbody.innerHTML = list.map(item => {
                 const isPub = item.pengumuman_dibuka === true;
-                const progName = item.program === '1_bulan' ? '1 Bulan' : '5 Bulan (KRS)';
+                const progMapShort = {
+                    '1_bulan': '1 Bulan',
+                    '3_bulan': '3 Bulan',
+                    '4_bulan': '4 Bulan',
+                    '5_bulan': '5 Bulan (KRS)'
+                };
+                const progName = progMapShort[item.program] || item.program || '-';
                 
                 // Status Badge with SVG icons (No Emoticons)
                 let badgeHtml = '';

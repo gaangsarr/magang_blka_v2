@@ -3,6 +3,7 @@
 
 let map = null;
 let marker = null;
+let activeLocationCallback = null;
 
 /**
  * Inisialisasi peta pada elemen target
@@ -10,7 +11,11 @@ let marker = null;
  * @param {function} onLocationChange callback(lat, lng)
  */
 export function initMap(containerId, onLocationChange) {
-    // Default location: Jakarta (bisa diubah ke kampus ITPLN)
+    if (onLocationChange) {
+        activeLocationCallback = onLocationChange;
+    }
+    
+    // Default location: Jakarta (Kampus ITPLN area)
     const defaultLocation = [-6.1751, 106.8272]; 
     
     map = L.map(containerId).setView(defaultLocation, 12);
@@ -19,30 +24,33 @@ export function initMap(containerId, onLocationChange) {
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    // Saat peta diklik
+    // Saat peta diklik manual
     map.on('click', function(e) {
-        setMarker(e.latlng.lat, e.latlng.lng, onLocationChange);
+        setMarker(e.latlng.lat, e.latlng.lng, activeLocationCallback);
     });
 }
 
 /**
- * Set marker di koordinat tertentu
+ * Set marker di koordinat tertentu dan picu callback koordinat
  */
 export function setMarker(lat, lng, onLocationChange) {
+    const cb = onLocationChange || activeLocationCallback;
+
     if (marker) {
         marker.setLatLng([lat, lng]);
     } else {
         marker = L.marker([lat, lng], { draggable: true }).addTo(map);
         
-        // Update koordinat saat marker didrag
-        marker.on('dragend', function(e) {
+        // Update koordinat saat marker didrag manual
+        marker.on('dragend', function() {
             const pos = marker.getLatLng();
-            if (onLocationChange) onLocationChange(pos.lat, pos.lng);
+            const currentCb = activeLocationCallback;
+            if (currentCb) currentCb(pos.lat, pos.lng);
         });
     }
     
     map.panTo([lat, lng]);
-    if (onLocationChange) onLocationChange(lat, lng);
+    if (cb) cb(lat, lng);
 }
 
 /**
@@ -53,6 +61,7 @@ export function setMarker(lat, lng, onLocationChange) {
  */
 export async function searchLocation(query, onLocationChange, onError) {
     if (!query) return;
+    const cb = onLocationChange || activeLocationCallback;
     
     try {
         const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`);
@@ -61,18 +70,25 @@ export async function searchLocation(query, onLocationChange, onError) {
         if (data && data.length > 0) {
             const lat = parseFloat(data[0].lat);
             const lng = parseFloat(data[0].lon);
-            setMarker(lat, lng, onLocationChange);
+            setMarker(lat, lng, cb);
+            if (map) {
+                map.setView([lat, lng], 16); // Zoom in ke jalan yang dicari
+            }
+            if (cb) cb(lat, lng);
+            return true;
         } else {
-            if (onError) onError('Lokasi tidak ditemukan.');
+            if (onError) onError('Lokasi tidak ditemukan. Coba masukkan nama jalan dan daerah yang lebih spesifik.');
+            return false;
         }
     } catch (err) {
         console.error('Geocoding error:', err);
         if (onError) onError('Gagal menghubungi layanan pencarian lokasi.');
+        return false;
     }
 }
 
 /**
- * Force map untuk resize (sering terjadi bug peta terpotong jika di-init di dalam container yang disembunyikan/display:none)
+ * Force map untuk resize (mencegah bug peta terpotong jika di-init di dalam container display:none)
  */
 export function invalidateMapSize() {
     if (map) {

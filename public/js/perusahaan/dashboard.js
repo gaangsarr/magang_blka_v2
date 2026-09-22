@@ -295,10 +295,16 @@ async function loadDashboardSummary(targetPeriodeId = null) {
                 currentPeriodeId = data.periode.id;
                 let statusBadge = `<span class="badge-status badge-${data.periode.status}">${data.periode.status.toUpperCase()}</span>`;
                 
-                // Program Magang (1 Bulan / 5 Bulan)
+                // Program Magang (1 Bulan / 3 Bulan / 4 Bulan / 5 Bulan)
                 const programs = [];
                 if (data.periode.program_1_bulan) {
                     programs.push('<span class="badge-status badge-info" style="font-size: 0.775rem; font-weight: 600; background: #e0f2fe; color: #0369a1; border-color: #bae6fd;">1 Bulan</span>');
+                }
+                if (data.periode.program_3_bulan) {
+                    programs.push('<span class="badge-status badge-info" style="font-size: 0.775rem; font-weight: 600; background: #fef3c7; color: #92400e; border-color: #fde68a;">3 Bulan</span>');
+                }
+                if (data.periode.program_4_bulan) {
+                    programs.push('<span class="badge-status badge-info" style="font-size: 0.775rem; font-weight: 600; background: #e0e7ff; color: #3730a3; border-color: #c7d2fe;">4 Bulan</span>');
                 }
                 if (data.periode.program_5_bulan) {
                     programs.push('<span class="badge-status badge-info" style="font-size: 0.775rem; font-weight: 600; background: #ede9fe; color: #6d28d9; border-color: #ddd6fe;">5 Bulan (MBKM)</span>');

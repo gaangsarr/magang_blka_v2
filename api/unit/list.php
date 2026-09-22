@@ -29,6 +29,10 @@ $lat = isset($body['lat']) ? (float)$body['lat'] : null;
 $lng = isset($body['lng']) ? (float)$body['lng'] : null;
 $periodeId = isset($body['periode_id']) ? (int)$body['periode_id'] : null;
 $peminatanIds = isset($body['peminatan_ids']) && is_array($body['peminatan_ids']) ? array_map('intval', $body['peminatan_ids']) : [];
+$page = isset($body['page']) ? max(1, (int)$body['page']) : 1;
+$search = isset($body['search']) ? trim((string)$body['search']) : '';
+$limit = 10;
+$offset = ($page - 1) * $limit;
 
 if ($lat === null || $lng === null || !$periodeId) {
     http_response_code(400);
@@ -51,6 +55,7 @@ try {
         echo json_encode(['error' => 'Periode magang ini tidak sedang dibuka.']);
         exit;
     }
+    
     $mhsData = Auth::getMahasiswa();
     $mhsId = Auth::getMahasiswaId();
     $mhsJurusanId = (int)($mhsData['jurusan_id'] ?? 0);
@@ -77,141 +82,165 @@ try {
         $inClause = implode(',', $peminatanIds);
     }
 
-    // 1. Hitung Bounding Box (radius awal 300 km untuk filter indeks kasar)
-    // 1 derajat lat ~ 111 km. 1 derajat lng ~ 111 * cos(lat) km.
-    $radiusKm = 300.0;
-    $latDelta = $radiusKm / 111.0;
-    $cosLat = cos(deg2rad($lat));
-    $lngDelta = $radiusKm / (111.0 * max(0.1, abs($cosLat)));
+    // Search filter
+    $searchWhere = '';
+    $queryParams = [
+        ':lat1' => $lat,
+        ':lat2' => $lat,
+        ':lng' => $lng,
+        ':periode_id' => $periodeId,
+        ':mhs_jurusan_id' => $mhsJurusanId
+    ];
+    $countParams = [];
 
-    $latMin = $lat - $latDelta;
-    $latMax = $lat + $latDelta;
-    $lngMin = $lng - $lngDelta;
-    $lngMax = $lng + $lngDelta;
-
-    // Helper function query dengan filter prodi
-    $runQuery = function(bool $useBoundingBox) use ($pdo, $lat, $lng, $periodeId, $inClause, $mhsJurusanId, $latMin, $latMax, $lngMin, $lngMax) {
-        $bboxWhere = $useBoundingBox ? "AND (e.latitude BETWEEN :latMin AND :latMax) AND (e.longitude BETWEEN :lngMin AND :lngMax)" : "";
-        
-        $sql = "
-            SELECT 
-                upp.id AS upp_id,
-                e.id AS entitas_id,
-                e.tipe,
-                e.nama AS nama_unit,
-                e.singkatan,
-                e.alamat,
-                e.latitude,
-                e.longitude,
-                parent.nama AS nama_parent,
-                upp.tipe_kuota,
-                upp.kuota_tersisa,
-                upp.kuota_total,
-                (
-                    SELECT upj_sub.kuota_tersisa
-                    FROM unit_periode_jurusan upj_sub
-                    WHERE upj_sub.unit_pelaksana_periode_id = upp.id
-                      AND upj_sub.jurusan_id = :mhs_jurusan_id_col
-                    LIMIT 1
-                ) AS kuota_prodi_tersisa,
-                (
-                    SELECT upj_sub.kuota_total
-                    FROM unit_periode_jurusan upj_sub
-                    WHERE upj_sub.unit_pelaksana_periode_id = upp.id
-                      AND upj_sub.jurusan_id = :mhs_jurusan_id_col2
-                    LIMIT 1
-                ) AS kuota_prodi_total,
-                (
-                    6371 * acos(
-                        least(1.0, greatest(-1.0,
-                            cos(radians(:lat1)) * cos(radians(IFNULL(e.latitude, 0))) * 
-                            cos(radians(IFNULL(e.longitude, 0)) - radians(:lng)) + 
-                            sin(radians(:lat2)) * sin(radians(IFNULL(e.latitude, 0)))
-                        ))
-                    )
-                ) AS jarak,
-                (
-                    CASE 
-                        WHEN EXISTS (SELECT 1 FROM unit_periode_peminatan uppem WHERE uppem.unit_pelaksana_periode_id = upp.id) THEN
-                            (SELECT COUNT(*) FROM unit_periode_peminatan uppem2 WHERE uppem2.unit_pelaksana_periode_id = upp.id AND uppem2.peminatan_id IN ($inClause))
-                        ELSE
-                            (SELECT COUNT(*) FROM unit_peminatan up WHERE up.entitas_id = e.id AND up.peminatan_id IN ($inClause))
-                    END
-                ) AS kecocokan
-            FROM unit_pelaksana_periode upp
-            JOIN entitas_perusahaan e ON upp.entitas_id = e.id
-            LEFT JOIN entitas_perusahaan parent ON e.parent_id = parent.id
-            WHERE upp.periode_id = :periode_id 
-              AND upp.aktif = 1 
-              AND e.aktif = 1
-              -- Unit hanya tampil jika menerima prodi spesifik mahasiswa
-              AND EXISTS (
-                  SELECT 1 FROM unit_periode_jurusan upj
-                  WHERE upj.unit_pelaksana_periode_id = upp.id
-                    AND upj.jurusan_id = :mhs_jurusan_id
-              )
-              $bboxWhere
-            ORDER BY kecocokan DESC, jarak ASC
-            LIMIT 100
-        ";
-
-        $params = [
-            ':lat1' => $lat,
-            ':lat2' => $lat,
-            ':lng' => $lng,
-            ':periode_id' => $periodeId,
-            ':mhs_jurusan_id' => $mhsJurusanId,
-            ':mhs_jurusan_id_col' => $mhsJurusanId,
-            ':mhs_jurusan_id_col2' => $mhsJurusanId
-        ];
-
-        if ($useBoundingBox) {
-            $params[':latMin'] = $latMin;
-            $params[':latMax'] = $latMax;
-            $params[':lngMin'] = $lngMin;
-            $params[':lngMax'] = $lngMax;
-        }
-
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute($params);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    };
-
-    // Jalankan query dengan bounding box dulu
-    $units = $runQuery(true);
-
-    // Jika di dalam radius 300km hasilnya < 5 unit, fallback ke pencarian nasional (tanpa bounding box)
-    if (count($units) < 5) {
-        $units = $runQuery(false);
+    if ($search !== '') {
+        $searchWhere = 'AND (e.nama LIKE :s1 OR e.singkatan LIKE :s2 OR e.alamat LIKE :s3 OR parent.nama LIKE :s4)';
+        $searchVal = "%{$search}%";
+        $queryParams[':s1'] = $searchVal;
+        $queryParams[':s2'] = $searchVal;
+        $queryParams[':s3'] = $searchVal;
+        $queryParams[':s4'] = $searchVal;
+        $countParams[':s1'] = $searchVal;
+        $countParams[':s2'] = $searchVal;
+        $countParams[':s3'] = $searchVal;
+        $countParams[':s4'] = $searchVal;
     }
-    
-    // Pastikan nilai float terformat baik & hitung sisa kuota efektif sesuai mode kuota unit
+
+    // 1. Hitung total item untuk pagination
+    $countSql = "
+        SELECT COUNT(*) AS total
+        FROM entitas_perusahaan e
+        LEFT JOIN entitas_perusahaan parent ON e.parent_id = parent.id
+        WHERE 1=1 {$searchWhere}
+    ";
+    $stmtCount = $pdo->prepare($countSql);
+    $stmtCount->execute($countParams);
+    $totalItems = (int)$stmtCount->fetchColumn();
+    $totalPages = max(1, (int)ceil($totalItems / $limit));
+
+    // 2. Query data halaman saat ini
+    $sql = "
+        SELECT 
+            e.id AS entitas_id,
+            e.tipe,
+            e.nama AS nama_unit,
+            e.singkatan,
+            e.alamat,
+            e.latitude,
+            e.longitude,
+            parent.nama AS nama_parent,
+            
+            upp.id AS upp_id,
+            upp.tipe_kuota,
+            upp.kuota_tersisa,
+            upp.kuota_total,
+            
+            upj.kuota_tersisa AS kuota_prodi_tersisa,
+            upj.kuota_total   AS kuota_prodi_total,
+            
+            CASE WHEN e.latitude IS NOT NULL AND e.longitude IS NOT NULL THEN
+                6371 * ACOS(LEAST(1.0, GREATEST(-1.0,
+                    COS(RADIANS(:lat1)) * COS(RADIANS(e.latitude)) *
+                    COS(RADIANS(e.longitude) - RADIANS(:lng)) +
+                    SIN(RADIANS(:lat2)) * SIN(RADIANS(e.latitude))
+                )))
+            ELSE NULL END AS jarak,
+            
+            CASE WHEN upp.id IS NOT NULL THEN
+                CASE 
+                    WHEN EXISTS (SELECT 1 FROM unit_periode_peminatan uppem 
+                                 WHERE uppem.unit_pelaksana_periode_id = upp.id) 
+                    THEN (SELECT COUNT(*) FROM unit_periode_peminatan uppem2 
+                          WHERE uppem2.unit_pelaksana_periode_id = upp.id 
+                          AND uppem2.peminatan_id IN ({$inClause}))
+                    ELSE (SELECT COUNT(*) FROM unit_peminatan up 
+                          WHERE up.entitas_id = e.id 
+                          AND up.peminatan_id IN ({$inClause}))
+                END
+            ELSE 0 END AS kecocokan,
+            
+            CASE 
+                WHEN upp.id IS NOT NULL 
+                     AND upp.aktif = 1 
+                     AND e.aktif = 1
+                     AND upj.jurusan_id IS NOT NULL
+                     AND (
+                         CASE WHEN upp.tipe_kuota = 'breakdown'
+                              THEN LEAST(IFNULL(upj.kuota_tersisa, 0), upp.kuota_tersisa)
+                              ELSE upp.kuota_tersisa
+                         END
+                     ) > 0
+                THEN 1
+                ELSE 0
+            END AS can_select
+
+        FROM entitas_perusahaan e
+        LEFT JOIN entitas_perusahaan parent ON e.parent_id = parent.id
+        LEFT JOIN unit_pelaksana_periode upp 
+            ON upp.entitas_id = e.id AND upp.periode_id = :periode_id
+        LEFT JOIN unit_periode_jurusan upj 
+            ON upj.unit_pelaksana_periode_id = upp.id 
+            AND upj.jurusan_id = :mhs_jurusan_id
+
+        WHERE 1=1 {$searchWhere}
+
+        ORDER BY 
+            can_select DESC,
+            (CASE WHEN e.latitude IS NOT NULL AND e.longitude IS NOT NULL THEN 0 ELSE 1 END) ASC,
+            jarak ASC,
+            kecocokan DESC,
+            (CASE WHEN upp.tipe_kuota = 'breakdown' 
+                  THEN LEAST(IFNULL(upj.kuota_tersisa,0), IFNULL(upp.kuota_tersisa,0))
+                  ELSE IFNULL(upp.kuota_tersisa,0) END) DESC,
+            e.nama ASC
+
+        LIMIT " . (int)$limit . " OFFSET " . (int)$offset . "
+    ";
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($queryParams);
+    $units = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
     foreach ($units as &$u) {
-        $u['jarak'] = $u['jarak'] !== null ? round((float)$u['jarak'], 2) : null;
-        $u['kuota_tersisa'] = (int)$u['kuota_tersisa'];
-        $u['kuota_total'] = (int)$u['kuota_total'];
-        $u['kecocokan'] = (int)$u['kecocokan'];
+        $canSelect = ((int)($u['can_select'] ?? 0)) === 1;
+        $u['can_select'] = $canSelect ? 1 : 0;
+        
+        $u['jarak'] = ($canSelect && $u['jarak'] !== null) ? round((float)$u['jarak'], 2) : null;
+        $u['kecocokan'] = $canSelect ? (int)($u['kecocokan'] ?? 0) : 0;
+        
+        $u['kuota_tersisa'] = (int)($u['kuota_tersisa'] ?? 0);
+        $u['kuota_total'] = (int)($u['kuota_total'] ?? 0);
         $u['tipe_kuota'] = $u['tipe_kuota'] ?? 'keseluruhan';
 
         $prodiSisa = $u['kuota_prodi_tersisa'] !== null ? (int)$u['kuota_prodi_tersisa'] : null;
         $prodiTotal = $u['kuota_prodi_total'] !== null ? (int)$u['kuota_prodi_total'] : null;
 
-        if ($u['tipe_kuota'] === 'breakdown') {
-            $u['sisa_kuota_efektif'] = $prodiSisa !== null ? min($prodiSisa, $u['kuota_tersisa']) : $u['kuota_tersisa'];
-            $u['total_kuota_efektif'] = $prodiTotal !== null ? $prodiTotal : $u['kuota_total'];
+        if ($canSelect) {
+            if ($u['tipe_kuota'] === 'breakdown') {
+                $u['sisa_kuota_efektif'] = $prodiSisa !== null ? min($prodiSisa, $u['kuota_tersisa']) : $u['kuota_tersisa'];
+                $u['total_kuota_efektif'] = $prodiTotal !== null ? $prodiTotal : $u['kuota_total'];
+            } else {
+                $u['sisa_kuota_efektif'] = $u['kuota_tersisa'];
+                $u['total_kuota_efektif'] = $u['kuota_total'];
+            }
         } else {
-            $u['sisa_kuota_efektif'] = $u['kuota_tersisa'];
-            $u['total_kuota_efektif'] = $u['kuota_total'];
+            $u['sisa_kuota_efektif'] = 0;
+            $u['total_kuota_efektif'] = 0;
         }
     }
     unset($u);
-    
+
     echo json_encode([
         'ok' => true,
-        'data' => $units
+        'data' => $units,
+        'pagination' => [
+            'current_page' => $page,
+            'total_pages'  => $totalPages,
+            'total_items'  => $totalItems,
+            'per_page'     => $limit
+        ]
     ]);
 } catch (\Throwable $e) {
     http_response_code(500);
     echo json_encode(['error' => Auth::safeErrorMessage($e, 'Gagal memuat rekomendasi unit.')]);
 }
-

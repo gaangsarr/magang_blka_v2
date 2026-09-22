@@ -44,6 +44,8 @@ if (!preg_match('/^\d{2}:\d{2}:\d{2}$/', $jamSelesai)) {
 }
 
 $prog1 = isset($body['program_1_bulan']) ? (int)(bool)$body['program_1_bulan'] : 0;
+$prog3 = isset($body['program_3_bulan']) ? (int)(bool)$body['program_3_bulan'] : 0;
+$prog4 = isset($body['program_4_bulan']) ? (int)(bool)$body['program_4_bulan'] : 0;
 $prog5 = isset($body['program_5_bulan']) ? (int)(bool)$body['program_5_bulan'] : 0;
 $syaratTranskrip = isset($body['syarat_transkrip']) ? (int)(bool)$body['syarat_transkrip'] : 1;
 $syaratCv = isset($body['syarat_cv']) ? (int)(bool)$body['syarat_cv'] : 0;
@@ -103,6 +105,8 @@ try {
             jam_selesai = ?, 
             status = ?,
             program_1_bulan = ?, 
+            program_3_bulan = ?, 
+            program_4_bulan = ?, 
             program_5_bulan = ?, 
             syarat_transkrip = ?,
             syarat_cv = ?,
@@ -110,7 +114,7 @@ try {
             angkatan_eligible = ? 
         WHERE id = ?
     ");
-    $stmt->execute([$nama, $tglMulai, $tglSelesai, $jamSelesai, $targetStatus, $prog1, $prog5, $syaratTranskrip, $syaratCv, $syaratPorto, $angkatanEligible, $id]);
+    $stmt->execute([$nama, $tglMulai, $tglSelesai, $jamSelesai, $targetStatus, $prog1, $prog3, $prog4, $prog5, $syaratTranskrip, $syaratCv, $syaratPorto, $angkatanEligible, $id]);
 
     // Jika periode ditutup karena expired, jalankan cleanup reservasi & kuota
     if ($isExpired) {

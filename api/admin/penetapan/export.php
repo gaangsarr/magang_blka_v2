@@ -126,7 +126,13 @@ try {
 
         $rowNum = 2;
         foreach ($rows as $idx => $r) {
-            $progText = $r['program'] === '1_bulan' ? 'Magang 1 Bulan' : 'Magang 5 Bulan (KRS)';
+            $progText = match($r['program'] ?? '') {
+                '1_bulan' => 'Magang 1 Bulan',
+                '3_bulan' => 'Magang 3 Bulan',
+                '4_bulan' => 'Magang 4 Bulan',
+                '5_bulan' => 'Magang 5 Bulan (KRS)',
+                default   => $r['program'] ?? '-'
+            };
             $unitAwal = $r['unit_asal_nama'] ? $r['unit_asal_nama'] : $r['unit_nama'];
             $unitFinal = $r['unit_nama'];
             $isMoved = $r['is_dipindahkan'] == 1 ? 'YA (DIPINDAHKAN)' : 'TIDAK';
@@ -181,7 +187,13 @@ try {
     fputcsv($output, ['No', 'NIM', 'Nama Mahasiswa', 'Email', 'No. HP', 'Jurusan', 'Program Magang', 'Unit Pilihan Awal', 'Unit Penetapan Final', 'Status Penetapan', 'Dipindahkan Paksa', 'Catatan Admin', 'Alamat Domisili', 'Tanggal Pengajuan']);
 
     foreach ($rows as $idx => $r) {
-        $progText = $r['program'] === '1_bulan' ? 'Magang 1 Bulan' : 'Magang 5 Bulan (KRS)';
+        $progText = match($r['program'] ?? '') {
+            '1_bulan' => 'Magang 1 Bulan',
+            '3_bulan' => 'Magang 3 Bulan',
+            '4_bulan' => 'Magang 4 Bulan',
+            '5_bulan' => 'Magang 5 Bulan (KRS)',
+            default   => $r['program'] ?? '-'
+        };
         $unitAwal = $r['unit_asal_nama'] ? $r['unit_asal_nama'] : $r['unit_nama'];
         fputcsv($output, [
             $idx + 1,

@@ -33,6 +33,7 @@ $filterTipe     = isset($_GET['tipe']) && in_array(
 $filterParentId = isset($_GET['parent_id']) && $_GET['parent_id'] !== '' ? (int)$_GET['parent_id'] : null;
 $filterAktif    = isset($_GET['aktif']) && $_GET['aktif'] !== '' ? (int)(bool)$_GET['aktif'] : null;
 $filterMagang   = isset($_GET['menerima_magang']) && $_GET['menerima_magang'] !== '' ? (int)$_GET['menerima_magang'] : null;
+$filterKuota    = isset($_GET['filter_kuota']) && $_GET['filter_kuota'] !== '' ? trim((string)$_GET['filter_kuota']) : null;
 $search         = isset($_GET['search']) ? trim((string)$_GET['search']) : '';
 $noPaginate     = (isset($_GET['all']) && $_GET['all'] === '1') || (isset($_GET['no_paginate']) && $_GET['no_paginate'] === '1');
 $withPeminatan  = isset($_GET['with_peminatan']) && $_GET['with_peminatan'] === '1';
@@ -43,6 +44,15 @@ $offset = ($page - 1) * $limit;
 
 try {
     $pdo = Database::getInstance();
+
+    // Ambil Periode Aktif (dibuka/persiapan) atau periode terakhir
+    $stmtPeriode = $pdo->query("SELECT id, nama, status FROM periode WHERE status IN ('dibuka', 'persiapan') ORDER BY (status = 'dibuka') DESC, id DESC LIMIT 1");
+    $activePeriode = $stmtPeriode->fetch(PDO::FETCH_ASSOC);
+    if (!$activePeriode) {
+        $stmtPeriode = $pdo->query("SELECT id, nama, status FROM periode ORDER BY id DESC LIMIT 1");
+        $activePeriode = $stmtPeriode->fetch(PDO::FETCH_ASSOC);
+    }
+    $activePeriodeId = $activePeriode ? (int)$activePeriode['id'] : 0;
 
     $where  = ['1=1'];
     $params = [];
@@ -63,6 +73,15 @@ try {
         $where[]  = 'e.menerima_magang = ?';
         $params[] = $filterMagang;
     }
+    if ($filterKuota !== null) {
+        if ($filterKuota === 'dibuka') {
+            $where[] = '(upp.id IS NOT NULL AND upp.aktif = 1 AND upp.kuota_total > 0)';
+        } elseif ($filterKuota === 'belum_diset') {
+            $where[] = '(upp.id IS NULL OR upp.kuota_total = 0 OR upp.kuota_total IS NULL)';
+        } elseif ($filterKuota === 'disembunyikan') {
+            $where[] = '(upp.id IS NOT NULL AND upp.aktif = 0)';
+        }
+    }
     if ($search !== '') {
         $searchParam = '%' . $search . '%';
         $where[] = '(e.nama LIKE ? OR e.singkatan LIKE ? OR e.alamat LIKE ? OR p.nama LIKE ?)';
@@ -79,10 +98,12 @@ try {
         SELECT COUNT(*) 
         FROM entitas_perusahaan e
         LEFT JOIN entitas_perusahaan p ON e.parent_id = p.id
+        LEFT JOIN unit_pelaksana_periode upp ON e.id = upp.entitas_id AND upp.periode_id = ?
         WHERE $whereSQL
     ";
+    $countParams = array_merge([$activePeriodeId], $params);
     $countStmt = $pdo->prepare($countSql);
-    $countStmt->execute($params);
+    $countStmt->execute($countParams);
     $totalRows = (int)$countStmt->fetchColumn();
 
     // 2. Ambil data dengan Pagination
@@ -99,9 +120,15 @@ try {
             e.latitude,
             e.longitude,
             e.aktif,
-            e.menerima_magang
+            e.menerima_magang,
+            upp.id AS upp_id,
+            upp.aktif AS upp_aktif,
+            upp.tipe_kuota,
+            upp.kuota_total,
+            upp.kuota_tersisa
         FROM entitas_perusahaan e
         LEFT JOIN entitas_perusahaan p ON e.parent_id = p.id
+        LEFT JOIN unit_pelaksana_periode upp ON e.id = upp.entitas_id AND upp.periode_id = ?
         WHERE $whereSQL
         ORDER BY p.nama ASC, e.tipe ASC, e.nama ASC
     ";
@@ -110,8 +137,9 @@ try {
         $sql .= " LIMIT $limit OFFSET $offset";
     }
 
+    $queryParams = array_merge([$activePeriodeId], $params);
     $stmt = $pdo->prepare($sql);
-    $stmt->execute($params);
+    $stmt->execute($queryParams);
     $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // 3. Lampirkan peminatan_ids & prodi_ids jika diminta
@@ -216,6 +244,11 @@ try {
         $item['parent_id']       = $item['parent_id'] !== null ? (int)$item['parent_id'] : null;
         $item['aktif']           = (bool)$item['aktif'];
         $item['menerima_magang'] = (bool)$item['menerima_magang'];
+        $item['upp_id']          = $item['upp_id'] !== null ? (int)$item['upp_id'] : null;
+        $item['upp_aktif']       = $item['upp_aktif'] !== null ? (int)$item['upp_aktif'] : null;
+        $item['kuota_total']     = $item['kuota_total'] !== null ? (int)$item['kuota_total'] : null;
+        $item['kuota_tersisa']   = $item['kuota_tersisa'] !== null ? (int)$item['kuota_tersisa'] : null;
+        $item['tipe_kuota']      = $item['tipe_kuota'] ?? 'keseluruhan';
     }
     unset($item);
 
@@ -224,9 +257,10 @@ try {
     $to = $noPaginate ? $totalRows : min($totalRows, $offset + count($data));
 
     echo json_encode([
-        'ok'         => true,
-        'data'       => $data,
-        'pagination' => [
+        'ok'            => true,
+        'periode_aktif' => $activePeriode,
+        'data'          => $data,
+        'pagination'    => [
             'total'       => $totalRows,
             'page'        => $noPaginate ? 1 : $page,
             'limit'       => $noPaginate ? $totalRows : $limit,

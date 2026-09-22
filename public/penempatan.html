@@ -506,8 +506,10 @@
                         <div>
                             <select id="select-program" class="select-control">
                                 <option value="">Semua Program</option>
-                                <option value="5_bulan">Magang 5 Bulan</option>
                                 <option value="1_bulan">Magang 1 Bulan</option>
+                                <option value="3_bulan">Magang 3 Bulan</option>
+                                <option value="4_bulan">Magang 4 Bulan</option>
+                                <option value="5_bulan">Magang 5 Bulan</option>
                             </select>
                         </div>
                     </div>
@@ -724,9 +726,14 @@
             let html = '';
             rows.forEach((row, idx) => {
                 const noUrut = offset + idx + 1;
-                const progBadge = row.program === '1_bulan' 
-                    ? `<span class="badge-prog badge-prog-1">1 Bulan</span>`
-                    : `<span class="badge-prog badge-prog-5">5 Bulan</span>`;
+                let progBadge = `<span class="badge-prog badge-prog-5">5 Bulan</span>`;
+                if (row.program === '1_bulan') {
+                    progBadge = `<span class="badge-prog badge-prog-1">1 Bulan</span>`;
+                } else if (row.program === '3_bulan') {
+                    progBadge = `<span class="badge-prog" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;">3 Bulan</span>`;
+                } else if (row.program === '4_bulan') {
+                    progBadge = `<span class="badge-prog" style="background:#e0e7ff;color:#3730a3;border:1px solid #c7d2fe;">4 Bulan</span>`;
+                }
 
                 html += `
                     <tr>

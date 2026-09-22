@@ -86,14 +86,20 @@ class SuratGenerator
         $cfg = $stmt->fetch(PDO::FETCH_ASSOC);
 
         // Ambil info periode
-        $stmtP = $pdo->prepare("SELECT nama, program_1_bulan, program_5_bulan FROM periode WHERE id = ?");
+        $stmtP = $pdo->prepare("SELECT nama, program_1_bulan, program_3_bulan, program_4_bulan, program_5_bulan FROM periode WHERE id = ?");
         $stmtP->execute([$periodeId]);
-        $periode = $stmtP->fetch(PDO::FETCH_ASSOC) ?: ['nama' => 'Periode Magang', 'program_1_bulan' => 0, 'program_5_bulan' => 1];
+        $periode = $stmtP->fetch(PDO::FETCH_ASSOC) ?: ['nama' => 'Periode Magang', 'program_1_bulan' => 0, 'program_3_bulan' => 0, 'program_4_bulan' => 0, 'program_5_bulan' => 1];
 
         $currentYear = (int)date('Y');
         $nextYear = $currentYear + 1;
         $tahunAkademikDefault = $currentYear . '/' . $nextYear;
-        $progText = $periode['program_1_bulan'] && !$periode['program_5_bulan'] ? '1 Bulan' : '5 Bulan';
+        
+        $progs = [];
+        if (!empty($periode['program_1_bulan'])) $progs[] = '1 Bulan';
+        if (!empty($periode['program_3_bulan'])) $progs[] = '3 Bulan';
+        if (!empty($periode['program_4_bulan'])) $progs[] = '4 Bulan';
+        if (!empty($periode['program_5_bulan'])) $progs[] = '5 Bulan';
+        $progText = !empty($progs) ? implode(' & ', $progs) : '5 Bulan';
 
         $baseUrl = self::getBaseUrl();
         $token = $cfg['public_token'] ?? null;
@@ -180,6 +186,8 @@ class SuratGenerator
                 p.nama,
                 p.status,
                 p.program_1_bulan,
+                p.program_3_bulan,
+                p.program_4_bulan,
                 p.program_5_bulan,
                 p.pengumuman_dibuka,
                 ks.public_token,

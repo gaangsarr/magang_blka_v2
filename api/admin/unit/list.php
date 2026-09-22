@@ -69,7 +69,7 @@ try {
         LEFT JOIN entitas_perusahaan parent ON ep.parent_id = parent.id
         LEFT JOIN unit_pelaksana_periode upp 
             ON ep.id = upp.entitas_id AND upp.periode_id = :periode_id
-        WHERE ep.aktif = 1 AND ep.menerima_magang = 1
+        WHERE ep.aktif = 1
         ORDER BY FIELD(ep.tipe, 'holding', 'subholding', 'anak_perusahaan', 'unit_induk', 'unit_pelaksana', 'unit_layanan'), parent.nama ASC, ep.nama ASC
     ";
     

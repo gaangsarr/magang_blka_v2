@@ -68,7 +68,7 @@ try {
 
     if ($requestedPid > 0) {
         $stmtP = $pdo->prepare("
-            SELECT id, nama, tanggal_mulai, tanggal_selesai, status, program_1_bulan, program_5_bulan, angkatan_eligible, created_at
+            SELECT id, nama, tanggal_mulai, tanggal_selesai, status, program_1_bulan, program_3_bulan, program_4_bulan, program_5_bulan, angkatan_eligible, created_at
             FROM periode 
             WHERE id = ?
         ");
@@ -78,7 +78,7 @@ try {
 
     if (!$periodeAktif) {
         $stmtPeriode = $pdo->query("
-            SELECT id, nama, tanggal_mulai, tanggal_selesai, status, program_1_bulan, program_5_bulan, angkatan_eligible, created_at
+            SELECT id, nama, tanggal_mulai, tanggal_selesai, status, program_1_bulan, program_3_bulan, program_4_bulan, program_5_bulan, angkatan_eligible, created_at
             FROM periode 
             WHERE status IN ('dibuka', 'persiapan')
             ORDER BY (status = 'dibuka') DESC, (status = 'persiapan') DESC, id DESC
@@ -89,7 +89,7 @@ try {
 
     if (!$periodeAktif && !empty($allPeriode)) {
         $stmtFall = $pdo->prepare("
-            SELECT id, nama, tanggal_mulai, tanggal_selesai, status, program_1_bulan, program_5_bulan, angkatan_eligible, created_at
+            SELECT id, nama, tanggal_mulai, tanggal_selesai, status, program_1_bulan, program_3_bulan, program_4_bulan, program_5_bulan, angkatan_eligible, created_at
             FROM periode 
             WHERE id = ?
         ");
@@ -221,6 +221,8 @@ try {
             'tanggal_mulai'      => $periodeAktif['tanggal_mulai'] ?? null,
             'tanggal_selesai'    => $periodeAktif['tanggal_selesai'] ?? null,
             'program_1_bulan'    => (bool)($periodeAktif['program_1_bulan'] ?? false),
+            'program_3_bulan'    => (bool)($periodeAktif['program_3_bulan'] ?? false),
+            'program_4_bulan'    => (bool)($periodeAktif['program_4_bulan'] ?? false),
             'program_5_bulan'    => (bool)($periodeAktif['program_5_bulan'] ?? false),
             'angkatan_eligible'  => $periodeAktif['angkatan_eligible'] ?? null,
             'is_configured'      => $isConfigured,

@@ -175,6 +175,8 @@ try {
             'tanggal_surat' => $periode['tanggal_surat'] ?? '',
             'status' => $periode['status'],
             'program_1_bulan' => (int)$periode['program_1_bulan'],
+            'program_3_bulan' => (int)($periode['program_3_bulan'] ?? 0),
+            'program_4_bulan' => (int)($periode['program_4_bulan'] ?? 0),
             'program_5_bulan' => (int)$periode['program_5_bulan']
         ],
         'stats' => [

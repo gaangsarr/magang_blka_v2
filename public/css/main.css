@@ -305,6 +305,25 @@ h1, h2, h3, h4, h5, h6 {
   color: #888;
 }
 
+.row-disabled {
+  background-color: #f8fafc !important;
+  opacity: 0.65;
+}
+
+.row-disabled td {
+  color: #94a3b8 !important;
+}
+
+.row-disabled strong {
+  color: #64748b !important;
+}
+
+.row-disabled .btn {
+  pointer-events: none;
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 /* --- Map Container --- */
 #map-domisili {
   height: 400px;

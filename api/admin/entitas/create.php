@@ -30,7 +30,7 @@ $alamat         = trim($body['alamat'] ?? '') ?: null;
 $lat            = isset($body['latitude'])  && $body['latitude']  !== '' ? (float)$body['latitude']  : null;
 $lng            = isset($body['longitude']) && $body['longitude'] !== '' ? (float)$body['longitude'] : null;
 $aktif          = isset($body['aktif']) ? (int)(bool)$body['aktif'] : 1;
-$menerimaMagang = isset($body['menerima_magang']) ? (int)(bool)$body['menerima_magang'] : (in_array($tipe, ['unit_pelaksana', 'unit_layanan'], true) ? 1 : 0);
+$menerimaMagang = isset($body['menerima_magang']) ? (int)(bool)$body['menerima_magang'] : 1;
 $peminatanIds   = isset($body['peminatan_ids']) && is_array($body['peminatan_ids'])
     ? array_values(array_unique(array_filter(array_map('intval', $body['peminatan_ids']))))
     : [];
@@ -74,17 +74,6 @@ $parentRules = [
     'unit_pelaksana'  => ['unit_induk'],
     'unit_layanan'    => ['unit_pelaksana'],
 ];
-
-// ── Validasi peminatan jika menerima_magang = 1 ──────────────────────────────
-if ($menerimaMagang === 1 && empty($peminatanIds)) {
-    http_response_code(400);
-    echo json_encode(['error' => 'Entitas yang menerima magang wajib memiliki minimal 1 peminatan.']);
-    exit;
-}
-if ($menerimaMagang === 0) {
-    $peminatanIds = [];
-    $prodiIds = [];
-}
 
 try {
     $pdo = Database::getInstance();

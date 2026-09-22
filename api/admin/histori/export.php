@@ -80,7 +80,13 @@ try {
 
         $rowNum = 2;
         foreach ($rows as $idx => $r) {
-            $progText = $r['program'] === '1_bulan' ? 'Magang 1 Bulan' : 'Magang 5 Bulan (KRS)';
+            $progText = match($r['program'] ?? '') {
+                '1_bulan' => 'Magang 1 Bulan',
+                '3_bulan' => 'Magang 3 Bulan',
+                '4_bulan' => 'Magang 4 Bulan',
+                '5_bulan' => 'Magang 5 Bulan (KRS)',
+                default   => $r['program'] ?? '-'
+            };
 
             $sheet->setCellValue('A' . $rowNum, $idx + 1);
             $sheet->setCellValueExplicit('B' . $rowNum, (string)($r['nim'] ?? '-'), \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
@@ -120,7 +126,13 @@ try {
     fputcsv($output, ['No', 'NIM', 'Nama Mahasiswa', 'Email', 'No. HP', 'Jurusan', 'Program Magang', 'Unit Pelaksana', 'Status', 'Alamat Domisili', 'Tanggal Pengajuan']);
 
     foreach ($rows as $idx => $r) {
-        $progText = $r['program'] === '1_bulan' ? 'Magang 1 Bulan' : 'Magang 5 Bulan (KRS)';
+        $progText = match($r['program'] ?? '') {
+            '1_bulan' => 'Magang 1 Bulan',
+            '3_bulan' => 'Magang 3 Bulan',
+            '4_bulan' => 'Magang 4 Bulan',
+            '5_bulan' => 'Magang 5 Bulan (KRS)',
+            default   => $r['program'] ?? '-'
+        };
         fputcsv($output, [
             $idx + 1,
             "'" . ($r['nim'] ?? '-'),

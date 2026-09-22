@@ -109,7 +109,13 @@ function renderHistoriTablePage(page = 1) {
 
     pageItems.forEach((r, idx) => {
         const rowNumber = startIdx + idx + 1;
-        const progText = r.program === '1_bulan' ? 'Magang 1 Bulan' : 'Magang 5 Bulan (KRS)';
+        const progMap = {
+            '1_bulan': 'Magang 1 Bulan',
+            '3_bulan': 'Magang 3 Bulan',
+            '4_bulan': 'Magang 4 Bulan',
+            '5_bulan': 'Magang 5 Bulan (KRS)'
+        };
+        const progText = progMap[r.program] || r.program || '-';
         const isMoved = (r.is_dipindahkan == 1 || r.status === 'dipindahkan');
 
         let statusBadge = '<span class="badge-status badge-draft">Diajukan</span>';

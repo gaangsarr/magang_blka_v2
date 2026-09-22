@@ -43,6 +43,8 @@ if (!preg_match('/^\d{2}:\d{2}:\d{2}$/', $jamSelesai)) {
 }
 
 $prog1 = isset($body['program_1_bulan']) ? (int)(bool)$body['program_1_bulan'] : 0;
+$prog3 = isset($body['program_3_bulan']) ? (int)(bool)$body['program_3_bulan'] : 0;
+$prog4 = isset($body['program_4_bulan']) ? (int)(bool)$body['program_4_bulan'] : 0;
 $prog5 = isset($body['program_5_bulan']) ? (int)(bool)$body['program_5_bulan'] : 0;
 $syaratTranskrip = isset($body['syarat_transkrip']) ? (int)(bool)$body['syarat_transkrip'] : 1;
 $syaratCv = isset($body['syarat_cv']) ? (int)(bool)$body['syarat_cv'] : 0;
@@ -61,27 +63,90 @@ if (is_array($angkatanInput)) {
 $adminId = Auth::getAdminId();
 
 try {
-    Database::transaction(function (PDO $pdo) use ($nama, $tglMulai, $tglSelesai, $jamSelesai, $prog1, $prog5, $syaratTranskrip, $syaratCv, $syaratPorto, $angkatanEligible, $copyFromPeriodeId, $adminId) {
+    Database::transaction(function (PDO $pdo) use ($nama, $tglMulai, $tglSelesai, $jamSelesai, $prog1, $prog3, $prog4, $prog5, $syaratTranskrip, $syaratCv, $syaratPorto, $angkatanEligible, $copyFromPeriodeId, $adminId) {
         // Tutup periode lain yang sedang dibuka atau persiapan (hanya 1 periode yang boleh aktif)
         $pdo->query("UPDATE periode SET status = 'ditutup' WHERE status IN ('dibuka', 'persiapan')");
 
         $stmt = $pdo->prepare("
-            INSERT INTO periode (nama, tanggal_mulai, tanggal_selesai, jam_selesai, status, program_1_bulan, program_5_bulan, syarat_transkrip, syarat_cv, syarat_porto, angkatan_eligible) 
-            VALUES (?, ?, ?, ?, 'persiapan', ?, ?, ?, ?, ?, ?)
+            INSERT INTO periode (nama, tanggal_mulai, tanggal_selesai, jam_selesai, status, program_1_bulan, program_3_bulan, program_4_bulan, program_5_bulan, syarat_transkrip, syarat_cv, syarat_porto, angkatan_eligible) 
+            VALUES (?, ?, ?, ?, 'persiapan', ?, ?, ?, ?, ?, ?, ?, ?)
         ");
-        $stmt->execute([$nama, $tglMulai, $tglSelesai, $jamSelesai, $prog1, $prog5, $syaratTranskrip, $syaratCv, $syaratPorto, $angkatanEligible]);
+        $stmt->execute([$nama, $tglMulai, $tglSelesai, $jamSelesai, $prog1, $prog3, $prog4, $prog5, $syaratTranskrip, $syaratCv, $syaratPorto, $angkatanEligible]);
         
         $periodeId = $pdo->lastInsertId();
         
-        // Fitur Salin Kuota
+        // Fitur Salin Kuota (Salin UPP, tipe_kuota, unit_periode_jurusan, dan unit_periode_peminatan)
         if ($copyFromPeriodeId) {
-            $stmtCopy = $pdo->prepare("
-                INSERT INTO unit_pelaksana_periode (periode_id, entitas_id, kuota_total, kuota_tersisa, aktif)
-                SELECT ?, entitas_id, kuota_total, kuota_total, aktif
+            $stmtOldUpp = $pdo->prepare("
+                SELECT id, entitas_id, tipe_kuota, kuota_total, aktif
                 FROM unit_pelaksana_periode
                 WHERE periode_id = ?
             ");
-            $stmtCopy->execute([$periodeId, $copyFromPeriodeId]);
+            $stmtOldUpp->execute([$copyFromPeriodeId]);
+            $oldUpps = $stmtOldUpp->fetchAll(PDO::FETCH_ASSOC);
+
+            $stmtInsUpp = $pdo->prepare("
+                INSERT INTO unit_pelaksana_periode (periode_id, entitas_id, tipe_kuota, kuota_total, kuota_tersisa, aktif, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())
+            ");
+
+            $stmtOldUpj = $pdo->prepare("
+                SELECT jurusan_id, kuota_total
+                FROM unit_periode_jurusan
+                WHERE unit_pelaksana_periode_id = ?
+            ");
+
+            $stmtInsUpj = $pdo->prepare("
+                INSERT INTO unit_periode_jurusan (unit_pelaksana_periode_id, jurusan_id, kuota_total, kuota_tersisa)
+                VALUES (?, ?, ?, ?)
+            ");
+
+            $stmtOldPem = $pdo->prepare("
+                SELECT peminatan_id
+                FROM unit_periode_peminatan
+                WHERE unit_pelaksana_periode_id = ?
+            ");
+
+            $stmtInsPem = $pdo->prepare("
+                INSERT INTO unit_periode_peminatan (unit_pelaksana_periode_id, peminatan_id)
+                VALUES (?, ?)
+            ");
+
+            foreach ($oldUpps as $old) {
+                $oldUppId = (int)$old['id'];
+                $tipeKuota = $old['tipe_kuota'] ?? 'keseluruhan';
+                $kuotaTotal = (int)$old['kuota_total'];
+
+                $stmtInsUpp->execute([
+                    $periodeId,
+                    $old['entitas_id'],
+                    $tipeKuota,
+                    $kuotaTotal,
+                    $kuotaTotal,
+                    $old['aktif']
+                ]);
+                $newUppId = (int)$pdo->lastInsertId();
+
+                // Salin Program Studi / Jurusan
+                $stmtOldUpj->execute([$oldUppId]);
+                $oldJurusanList = $stmtOldUpj->fetchAll(PDO::FETCH_ASSOC);
+                foreach ($oldJurusanList as $oj) {
+                    $jKt = $oj['kuota_total'] !== null ? (int)$oj['kuota_total'] : null;
+                    $stmtInsUpj->execute([
+                        $newUppId,
+                        $oj['jurusan_id'],
+                        $jKt,
+                        $jKt
+                    ]);
+                }
+
+                // Salin Peminatan
+                $stmtOldPem->execute([$oldUppId]);
+                $oldPemList = $stmtOldPem->fetchAll(PDO::FETCH_COLUMN);
+                foreach ($oldPemList as $pemId) {
+                    $stmtInsPem->execute([$newUppId, $pemId]);
+                }
+            }
         }
 
         $stmtLog = $pdo->prepare("INSERT INTO log_aktivitas (admin_id, aksi, entitas_tipe, entitas_id, detail_json, ip_address) VALUES (?, 'buat_periode', 'periode', ?, ?, '127.0.0.1')");

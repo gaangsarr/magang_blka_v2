@@ -197,17 +197,65 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
 
-        // Init Map pada step 3
+        const updateCoordinates = (lat, lng) => {
+            const latInput = document.getElementById('lat');
+            const lngInput = document.getElementById('lng');
+            if (latInput) latInput.value = Number(lat).toFixed(7);
+            if (lngInput) lngInput.value = Number(lng).toFixed(7);
+            formData.lat = Number(lat);
+            formData.lng = Number(lng);
+        };
+
+        // Init Map pada step 3 (rekam koordinat saat pin diklik atau didrag)
         initMap('map-domisili', (lat, lng) => {
-            document.getElementById('lat').value = lat.toFixed(7);
-            document.getElementById('lng').value = lng.toFixed(7);
+            updateCoordinates(lat, lng);
         });
 
-        // Event Listener Map Search
-        document.getElementById('btn-search-lokasi').addEventListener('click', () => {
-            const query = document.getElementById('search-lokasi').value;
-            searchLocation(query, null, (err) => showToast(err, 'error', 'Pencarian Lokasi'));
-        });
+        // Event Listener Map Search (Tombol Cari & Tekan Enter di Keyboard)
+        const searchLokasiInput = document.getElementById('search-lokasi');
+        const btnSearchLokasi = document.getElementById('btn-search-lokasi');
+
+        const doSearchLokasi = async () => {
+            const query = (searchLokasiInput?.value || '').trim();
+            if (!query) {
+                showToast('Ketikkan nama jalan atau daerah terlebih dahulu.', 'warning', 'Pencarian Lokasi');
+                return;
+            }
+
+            if (btnSearchLokasi) {
+                btnSearchLokasi.disabled = true;
+                btnSearchLokasi.innerHTML = '<span class="spinner" style="display:inline-block;width:12px;height:12px;vertical-align:middle;margin-right:4px;"></span> Cari';
+            }
+
+            try {
+                await searchLocation(
+                    query, 
+                    (lat, lng) => {
+                        updateCoordinates(lat, lng);
+                        showToast(`Lokasi pin berhasil dipindahkan ke: ${lat.toFixed(5)}, ${lng.toFixed(5)}`, 'success', 'Lokasi Berhasil Ditetapkan');
+                    }, 
+                    (err) => showToast(err, 'error', 'Pencarian Lokasi')
+                );
+            } finally {
+                if (btnSearchLokasi) {
+                    btnSearchLokasi.disabled = false;
+                    btnSearchLokasi.innerText = 'Cari';
+                }
+            }
+        };
+
+        if (btnSearchLokasi) {
+            btnSearchLokasi.addEventListener('click', doSearchLokasi);
+        }
+
+        if (searchLokasiInput) {
+            searchLokasiInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    doSearchLokasi();
+                }
+            });
+        }
 
         let draftParsed = null;
         const savedDraft = sessionStorage.getItem('magang_draft_form');
@@ -328,6 +376,18 @@ function setupProgramOptions(periode) {
         programs.push({
             id: '1_bulan',
             title: 'Magang 1 Bulan'
+        });
+    }
+    if (periode.program_3_bulan) {
+        programs.push({
+            id: '3_bulan',
+            title: 'Magang 3 Bulan'
+        });
+    }
+    if (periode.program_4_bulan) {
+        programs.push({
+            id: '4_bulan',
+            title: 'Magang 4 Bulan'
         });
     }
     if (periode.program_5_bulan) {
@@ -582,7 +642,10 @@ async function handleNext() {
     if (currentStep === 3) {
         // Dari Step 3 ke Step 4, simpan data dan load Unit
         saveFormData();
-        const ok = await loadUnits();
+        const searchInput = document.getElementById('search-unit-input');
+        if (searchInput) searchInput.value = '';
+        unitSearchQuery = '';
+        const ok = await loadUnits(1, '');
         if (!ok) return;
     }
 
@@ -792,7 +855,16 @@ function saveFormData() {
     } catch (e) {}
 }
 
-function updateUI() {
+function scrollToFormTop() {
+    const target = document.getElementById('wizard-header') || document.querySelector('.form-container') || document.querySelector('.page-header');
+    if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+}
+
+function updateUI(shouldScroll = true) {
     // Labels
     document.querySelectorAll('.step-indicator').forEach(el => {
         const s = parseInt(el.dataset.step);
@@ -828,14 +900,22 @@ function updateUI() {
     if (currentStep === 3) {
         invalidateMapSize();
     }
+
+    if (shouldScroll) {
+        setTimeout(scrollToFormTop, 60);
+    }
 }
 
 let currentUnitsData = [];
-let filteredUnitsData = [];
 let unitCurrentPage = 1;
 const unitPerPage = 10;
+let unitTotalPages = 1;
+let unitTotalItems = 0;
+let unitSearchTimeout = null;
+let unitSearchQuery = '';
+let currentUnitRequestId = 0;
 
-function renderUnitsTable(page = 1) {
+function renderUnitsTable() {
     const tbody = document.getElementById('tbody-unit');
     const infoEl = document.getElementById('unit-page-info');
     const badgeEl = document.getElementById('unit-page-indicator');
@@ -845,11 +925,7 @@ function renderUnitsTable(page = 1) {
     if (!tbody) return;
     tbody.innerHTML = '';
     
-    const total = filteredUnitsData ? filteredUnitsData.length : 0;
-    const totalPages = Math.max(1, Math.ceil(total / unitPerPage));
-    unitCurrentPage = Math.min(Math.max(1, page), totalPages);
-
-    if (!filteredUnitsData || total === 0) {
+    if (!currentUnitsData || currentUnitsData.length === 0) {
         const mhsJur = (window.statusAuthData && window.statusAuthData.user && window.statusAuthData.user.jurusan) ? window.statusAuthData.user.jurusan : '';
         const jurMsg = mhsJur ? ` untuk Program Studi <strong>${escapeHtml(mhsJur)}</strong>` : '';
         tbody.innerHTML = `
@@ -857,13 +933,13 @@ function renderUnitsTable(page = 1) {
                 <td colspan="6" style="text-align: center; padding: 36px 20px; color: #64748b;">
                     <div style="max-width: 420px; margin: 0 auto;">
                         <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 8px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                        <div style="font-weight: 700; color: #1e293b; font-size: 0.95rem; margin-bottom: 4px;">Tidak Ada Unit yang Cocok</div>
-                        <div style="font-size: 0.825rem; color: #64748b; line-height: 1.4;">Belum ada unit/kantor magang yang membuka alokasi kuota${jurMsg} pada periode ini.</div>
+                        <div style="font-weight: 700; color: #1e293b; font-size: 0.95rem; margin-bottom: 4px;">Tidak Ada Unit yang Ditemukan</div>
+                        <div style="font-size: 0.825rem; color: #64748b; line-height: 1.4;">Tidak ada unit magang yang sesuai dengan kata kunci pencarian atau alokasi kuota${jurMsg} pada periode ini.</div>
                     </div>
                 </td>
             </tr>
         `;
-        if (infoEl) infoEl.innerText = 'Menampilkan 0 unit pelaksana';
+        if (infoEl) infoEl.innerText = 'Menampilkan 0 unit';
         if (badgeEl) badgeEl.innerText = 'Hal 1 / 1';
         if (prevBtn) prevBtn.disabled = true;
         if (nextBtn) nextBtn.disabled = true;
@@ -871,43 +947,61 @@ function renderUnitsTable(page = 1) {
     }
 
     const offset = (unitCurrentPage - 1) * unitPerPage;
-    const pageUnits = filteredUnitsData.slice(offset, offset + unitPerPage);
 
-    pageUnits.forEach((u, idx) => {
+    currentUnitsData.forEach((u, idx) => {
         const tr = document.createElement('tr');
-        const sisaEfektif = (u.sisa_kuota_efektif !== undefined) ? parseInt(u.sisa_kuota_efektif, 10) : parseInt(u.kuota_tersisa, 10);
-        const totalEfektif = (u.total_kuota_efektif !== undefined) ? parseInt(u.total_kuota_efektif, 10) : parseInt(u.kuota_total, 10);
-        const isFull = sisaEfektif <= 0;
-        if (isFull) tr.classList.add('row-full');
+        const canSelect = (u.can_select === 1 || u.can_select === '1' || u.can_select === true);
+        const sisaEfektif = (u.sisa_kuota_efektif !== undefined) ? parseInt(u.sisa_kuota_efektif, 10) : 0;
+        const totalEfektif = (u.total_kuota_efektif !== undefined) ? parseInt(u.total_kuota_efektif, 10) : 0;
         
+        if (!canSelect) {
+            tr.classList.add('row-disabled');
+        }
+
         let actionHtml = '';
-        if (isFull) {
-            actionHtml = `<span class="text-abu" style="font-weight: 600; font-size: 0.775rem;">Penuh</span>`;
-        } else {
+        if (canSelect) {
             actionHtml = `<button type="button" class="btn btn-primary" style="padding: 0.35rem 0.9rem; font-size: 0.85rem; font-weight: 600;" onclick="window.pilihUnit(${u.upp_id}, '${escapeHtml(u.nama_unit).replace(/'/g, "\\'")}')">Pilih</button>`;
+        } else {
+            actionHtml = `<button type="button" class="btn btn-primary" disabled style="padding: 0.35rem 0.9rem; font-size: 0.85rem; font-weight: 600;" title="Tidak dapat dipilih">Pilih</button>`;
         }
 
         const noUrut = offset + idx + 1;
 
-        const kuotaCellHtml = `
-            <div style="text-align: right;">
-                <span style="font-weight: 700; color: ${isFull ? '#94a3b8' : '#059669'}; font-family: monospace; font-size: 0.95rem;">
-                    ${String(sisaEfektif).padStart(2, '0')} / ${String(totalEfektif).padStart(2, '0')}
-                </span>
-            </div>
-        `;
+        let kuotaCellHtml = '';
+        if (canSelect) {
+            kuotaCellHtml = `
+                <div style="text-align: right;">
+                    <span style="font-weight: 700; color: #059669; font-family: monospace; font-size: 0.95rem;">
+                        ${String(sisaEfektif).padStart(2, '0')} / ${String(totalEfektif).padStart(2, '0')}
+                    </span>
+                </div>
+            `;
+        } else {
+            kuotaCellHtml = `
+                <div style="text-align: right;">
+                    <span style="font-weight: 700; color: #94a3b8; font-family: monospace; font-size: 0.95rem;">
+                        00 / 00
+                    </span>
+                </div>
+            `;
+        }
+
+        const jarakText = (canSelect && u.jarak !== null) ? `${u.jarak} km` : '-';
+        const peminatanHtml = canSelect 
+            ? `<span class="badge badge-gold">${u.kecocokan} Sesuai</span>`
+            : `<span class="text-abu">-</span>`;
 
         tr.innerHTML = `
             <td data-label="No" style="text-align: center; font-weight: 600; color: #64748b;">${noUrut}</td>
             <td data-label="Unit Magang">
                 <div>
-                    <strong style="color: #0b3d6b;">${escapeHtml(u.nama_unit)}</strong>
+                    <strong style="color: ${canSelect ? '#0b3d6b' : '#64748b'};">${escapeHtml(u.nama_unit)}</strong>
                     ${u.nama_parent ? `<div style="font-size: 0.75rem; color: #64748b; font-weight: 600; margin-top: 1px;">Induk: ${escapeHtml(u.nama_parent)}</div>` : ''}
                     <span class="text-sm text-abu" style="display: block; margin-top: 2px;">${escapeHtml(u.alamat || '-')}</span>
                 </div>
             </td>
-            <td data-label="Jarak">${u.jarak !== null ? u.jarak + ' km' : '-'}</td>
-            <td data-label="Peminatan"><span class="badge badge-gold">${u.kecocokan} Sesuai</span></td>
+            <td data-label="Jarak">${jarakText}</td>
+            <td data-label="Peminatan">${peminatanHtml}</td>
             <td data-label="Sisa Kuota" class="table-monospace">
                 ${kuotaCellHtml}
             </td>
@@ -916,24 +1010,28 @@ function renderUnitsTable(page = 1) {
         tbody.appendChild(tr);
     });
 
-    const start = offset + 1;
-    const end = Math.min(offset + unitPerPage, total);
+    const start = unitTotalItems === 0 ? 0 : offset + 1;
+    const end = Math.min(offset + unitPerPage, unitTotalItems);
 
-    if (infoEl) infoEl.innerText = `Menampilkan ${start}–${end} dari ${total} unit magang`;
-    if (badgeEl) badgeEl.innerText = `Hal ${unitCurrentPage} / ${totalPages}`;
+    if (infoEl) infoEl.innerText = `Menampilkan ${start}–${end} dari ${unitTotalItems} unit magang`;
+    if (badgeEl) badgeEl.innerText = `Hal ${unitCurrentPage} / ${unitTotalPages}`;
     if (prevBtn) prevBtn.disabled = (unitCurrentPage <= 1);
-    if (nextBtn) nextBtn.disabled = (unitCurrentPage >= totalPages);
+    if (nextBtn) nextBtn.disabled = (unitCurrentPage >= unitTotalPages);
 }
 
 // ----------------------------------------------------
-// Load Units (Step 4)
+// Load Units (Step 4) - Server-Side Pagination & Search
 // ----------------------------------------------------
-async function loadUnits() {
+async function loadUnits(page = 1, search = unitSearchQuery) {
     const tbody = document.getElementById('tbody-unit');
     if (tbody) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px;">Memuat unit... <div class="spinner"></div></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 24px 20px; color: #64748b;">Memuat unit magang... <div class="spinner" style="display: inline-block; vertical-align: middle; margin-left: 8px;"></div></td></tr>';
     }
     
+    unitCurrentPage = page;
+    unitSearchQuery = search;
+    const reqId = ++currentUnitRequestId;
+
     try {
         const res = await fetch('/api/unit/list.php', {
             method: 'POST',
@@ -942,58 +1040,63 @@ async function loadUnits() {
                 lat: formData.lat,
                 lng: formData.lng,
                 periode_id: formData.periode_id,
-                peminatan_ids: formData.peminatan
+                peminatan_ids: formData.peminatan,
+                page: unitCurrentPage,
+                search: unitSearchQuery
             })
         });
         
         const data = await res.json();
+        if (reqId !== currentUnitRequestId) {
+            return false;
+        }
+
         if (!res.ok) {
-            showError(data.error || 'Gagal memuat data unit pelaksana.', null, 'Gagal Memuat Unit');
+            showError(data.error || 'Gagal memuat data unit magang.', null, 'Gagal Memuat Unit');
             return false;
         }
         
         currentUnitsData = data.data || [];
-        filteredUnitsData = currentUnitsData;
-        unitCurrentPage = 1;
-        const searchInput = document.getElementById('search-unit-input');
-        if (searchInput) searchInput.value = '';
+        if (data.pagination) {
+            unitCurrentPage = data.pagination.current_page || page;
+            unitTotalPages = data.pagination.total_pages || 1;
+            unitTotalItems = data.pagination.total_items || 0;
+        } else {
+            unitTotalPages = 1;
+            unitTotalItems = currentUnitsData.length;
+        }
         
-        renderUnitsTable(1);
+        renderUnitsTable();
         return true;
     } catch (err) {
+        if (reqId !== currentUnitRequestId) return false;
         console.error(err);
-        showError('Gagal memuat unit pelaksana. Periksa jaringan Anda.', null, 'Kesalahan Jaringan');
+        showError('Gagal memuat unit magang. Periksa jaringan Anda.', null, 'Kesalahan Jaringan');
         return false;
     }
 }
 
-// Listener Pencarian Live Unit & Pagination Buttons
+// Listener Pencarian Live Unit (Debounce 500ms ke Server) & Pagination Buttons
 document.addEventListener('input', (e) => {
     if (e.target && e.target.id === 'search-unit-input') {
-        const q = (e.target.value || '').toLowerCase().trim();
-        if (!q) {
-            filteredUnitsData = currentUnitsData;
-        } else {
-            filteredUnitsData = currentUnitsData.filter(u => 
-                (u.nama_unit && u.nama_unit.toLowerCase().includes(q)) || 
-                (u.alamat && u.alamat.toLowerCase().includes(q))
-            );
-        }
-        unitCurrentPage = 1;
-        renderUnitsTable(1);
+        clearTimeout(unitSearchTimeout);
+        unitSearchTimeout = setTimeout(() => {
+            unitSearchQuery = (e.target.value || '').trim();
+            loadUnits(1, unitSearchQuery);
+        }, 500);
     }
 });
 
 document.addEventListener('click', (e) => {
     if (e.target && (e.target.id === 'btn-unit-prev' || e.target.closest('#btn-unit-prev'))) {
         if (unitCurrentPage > 1) {
-            renderUnitsTable(unitCurrentPage - 1);
+            loadUnits(unitCurrentPage - 1, unitSearchQuery);
+            scrollToFormTop();
         }
     } else if (e.target && (e.target.id === 'btn-unit-next' || e.target.closest('#btn-unit-next'))) {
-        const total = filteredUnitsData ? filteredUnitsData.length : 0;
-        const totalPages = Math.ceil(total / unitPerPage) || 1;
-        if (unitCurrentPage < totalPages) {
-            renderUnitsTable(unitCurrentPage + 1);
+        if (unitCurrentPage < unitTotalPages) {
+            loadUnits(unitCurrentPage + 1, unitSearchQuery);
+            scrollToFormTop();
         }
     }
 });
@@ -1012,7 +1115,7 @@ window.pilihUnit = function(upp_id, nama_unit) {
             const data = await res.json();
             if (!res.ok) {
                 showError(data.error || 'Gagal melakukan reservasi unit.', null, 'Reservasi Unit Gagal');
-                await loadUnits(); 
+                await loadUnits(unitCurrentPage, unitSearchQuery); 
                 return;
             }
 
@@ -1047,7 +1150,13 @@ window.pilihUnit = function(upp_id, nama_unit) {
 // ----------------------------------------------------
 function populateResume() {
     document.getElementById('resume-unit').innerText = formData.nama_unit_dipilih || '-';
-    const progText = formData.program === '1_bulan' ? 'Magang 1 Bulan' : 'Magang 5 Bulan';
+    const progMap = {
+        '1_bulan': 'Magang 1 Bulan',
+        '3_bulan': 'Magang 3 Bulan',
+        '4_bulan': 'Magang 4 Bulan',
+        '5_bulan': 'Magang 5 Bulan (KRS)'
+    };
+    const progText = progMap[formData.program] || formData.program || '-';
     document.getElementById('resume-program').innerText = `${progText} (${formData.periode_nama})`;
     document.getElementById('resume-nama').innerText = formData.nama;
     document.getElementById('resume-nim').innerText = document.getElementById('nim').value;

@@ -229,9 +229,12 @@ function renderPeriodSelector(periodes, selectedId, units = []) {
             statusText = 'Masa Persiapan';
         }
 
-        const progLabel = selectedPeriod.program_1_bulan && selectedPeriod.program_5_bulan 
-            ? '1 & 5 Bulan' 
-            : (selectedPeriod.program_1_bulan ? '1 Bulan' : '5 Bulan');
+        const activeProgs = [];
+        if (selectedPeriod.program_1_bulan) activeProgs.push('1 Bulan');
+        if (selectedPeriod.program_3_bulan) activeProgs.push('3 Bulan');
+        if (selectedPeriod.program_4_bulan) activeProgs.push('4 Bulan');
+        if (selectedPeriod.program_5_bulan) activeProgs.push('5 Bulan');
+        const progLabel = activeProgs.length > 0 ? activeProgs.join(' & ') : '-';
 
         const isAnnounced = selectedPeriod.pengumuman_dibuka == 1;
         const announcementChipClass = isAnnounced ? 'meta-chip-announcement-open' : 'meta-chip-announcement-closed';

@@ -579,9 +579,14 @@ function renderTable(dataArray) {
             statusLabel = 'Diverifikasi';
         }
 
-        const progBadge = p.program === '1_bulan' 
-            ? '<span style="font-weight: 600; font-size: 0.8rem; color: #0b3d6b; background: #e0f2fe; padding: 4px 10px; border-radius: 6px;">1 Bulan</span>'
-            : '<span style="font-weight: 600; font-size: 0.8rem; color: #4338ca; background: #e0e7ff; padding: 4px 10px; border-radius: 6px;">5 Bulan (KRS)</span>';
+        let progBadge = '<span style="font-weight: 600; font-size: 0.8rem; color: #4338ca; background: #e0e7ff; padding: 4px 10px; border-radius: 6px;">5 Bulan (KRS)</span>';
+        if (p.program === '1_bulan') {
+            progBadge = '<span style="font-weight: 600; font-size: 0.8rem; color: #0b3d6b; background: #e0f2fe; padding: 4px 10px; border-radius: 6px;">1 Bulan</span>';
+        } else if (p.program === '3_bulan') {
+            progBadge = '<span style="font-weight: 600; font-size: 0.8rem; color: #92400e; background: #fef3c7; padding: 4px 10px; border-radius: 6px;">3 Bulan</span>';
+        } else if (p.program === '4_bulan') {
+            progBadge = '<span style="font-weight: 600; font-size: 0.8rem; color: #1e1b4b; background: #ede9fe; padding: 4px 10px; border-radius: 6px;">4 Bulan</span>';
+        }
 
         const unitAwal = p.unit_asal_nama ? p.unit_asal_nama : p.unit_nama;
         const unitHasil = p.unit_nama;

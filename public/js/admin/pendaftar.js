@@ -148,9 +148,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         
         dataArray.forEach((p, idx) => {
-            const progBadge = p.program === '1_bulan' 
-                ? '<span style="font-weight: 600; font-size: 0.8rem; color: #0b3d6b; background: #e0f2fe; padding: 4px 10px; border-radius: 6px;">1 Bulan</span>'
-                : '<span style="font-weight: 600; font-size: 0.8rem; color: #4338ca; background: #e0e7ff; padding: 4px 10px; border-radius: 6px;">5 Bulan (KRS)</span>';
+            let progBadge = '<span style="font-weight: 600; font-size: 0.8rem; color: #4338ca; background: #e0e7ff; padding: 4px 10px; border-radius: 6px;">5 Bulan (KRS)</span>';
+            if (p.program === '1_bulan') {
+                progBadge = '<span style="font-weight: 600; font-size: 0.8rem; color: #0b3d6b; background: #e0f2fe; padding: 4px 10px; border-radius: 6px;">1 Bulan</span>';
+            } else if (p.program === '3_bulan') {
+                progBadge = '<span style="font-weight: 600; font-size: 0.8rem; color: #92400e; background: #fef3c7; padding: 4px 10px; border-radius: 6px;">3 Bulan</span>';
+            } else if (p.program === '4_bulan') {
+                progBadge = '<span style="font-weight: 600; font-size: 0.8rem; color: #1e1b4b; background: #ede9fe; padding: 4px 10px; border-radius: 6px;">4 Bulan</span>';
+            }
 
             const tr = document.createElement('tr');
             tr.innerHTML = `
@@ -186,7 +191,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     function showDetailModal(p) {
         document.getElementById('detail-mhs-nama').innerText = p.nama || 'Pendaftar';
         document.getElementById('detail-mhs-nim').innerText = p.nim || '-';
-        document.getElementById('detail-mhs-program').innerText = p.program === '1_bulan' ? 'Program 1 Bulan' : 'Program 5 Bulan (KRS)';
+        const progMapDetail = {
+            '1_bulan': 'Program 1 Bulan',
+            '3_bulan': 'Program 3 Bulan',
+            '4_bulan': 'Program 4 Bulan',
+            '5_bulan': 'Program 5 Bulan (KRS)'
+        };
+        document.getElementById('detail-mhs-program').innerText = progMapDetail[p.program] || p.program || '-';
         
         document.getElementById('detail-jurusan').innerText = p.nama_jurusan || '-';
         document.getElementById('detail-angkatan').innerText = p.angkatan ? `Angkatan 20${p.angkatan}` : '-';

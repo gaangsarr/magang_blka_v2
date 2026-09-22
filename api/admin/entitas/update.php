@@ -66,24 +66,6 @@ try {
         ? array_values(array_unique(array_filter(array_map('intval', $body['prodi_ids']))))
         : [];
 
-    // Jika menerima magang, pastikan ada minimal 1 peminatan
-    if ($menerimaMagang === 1) {
-        if ($hasPeminatanPayload && empty($peminatanIds)) {
-            http_response_code(400);
-            echo json_encode(['error' => 'Entitas yang menerima magang wajib memiliki minimal 1 peminatan.']);
-            exit;
-        } elseif (!$hasPeminatanPayload) {
-            // Cek apakah di DB sudah punya peminatan
-            $stmtCekPem = $pdo->prepare("SELECT COUNT(*) FROM unit_peminatan WHERE entitas_id = ?");
-            $stmtCekPem->execute([$id]);
-            if ((int)$stmtCekPem->fetchColumn() === 0) {
-                http_response_code(400);
-                echo json_encode(['error' => 'Entitas yang menerima magang wajib memiliki minimal 1 peminatan. Pilih peminatan terlebih dahulu.']);
-                exit;
-            }
-        }
-    }
-
     Database::transaction(function (PDO $pdo) use (
         $id, $nama, $singkatan, $alamat, $lat, $lng, $aktif, $menerimaMagang, 
         $hasPeminatanPayload, $peminatanIds, $hasProdiPayload, $prodiIds

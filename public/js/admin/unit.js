@@ -7,10 +7,16 @@ import { showAdminAlert } from './common.js';
 
 let csrfToken = null;
 let allUnitKuota = [];
+let filteredUnitKuota = [];
 let allJurusanList = [];
 let allPeminatanList = [];
 let currentPeriodData = null;
 let isPeriodeSelectPopulated = false;
+
+// State Pagination
+let kuotaCurrentPage = 1;
+let kuotaPerPage = 15;
+let activePopoverEl = null;
 
 function escapeHtml(unsafe) {
     return (unsafe || '').toString()
@@ -60,6 +66,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 2. Search Filter
     const searchKuotaInput = document.getElementById('search-kuota');
     if (searchKuotaInput) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const searchParam = urlParams.get('search');
+        if (searchParam) {
+            searchKuotaInput.value = searchParam;
+        }
         searchKuotaInput.addEventListener('input', applyKuotaFilter);
     }
 
@@ -74,7 +85,42 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // 4. Modal Quick Action Buttons
+    // 4. Pagination Event Listeners
+    const selectPerPage = document.getElementById('kuota-per-page');
+    if (selectPerPage) {
+        selectPerPage.addEventListener('change', (e) => {
+            kuotaPerPage = parseInt(e.target.value, 10) || 15;
+            kuotaCurrentPage = 1;
+            renderPagedTable();
+        });
+    }
+
+    document.getElementById('btn-prev-page')?.addEventListener('click', () => {
+        if (kuotaCurrentPage > 1) {
+            kuotaCurrentPage--;
+            renderPagedTable(true);
+        }
+    });
+
+    document.getElementById('btn-next-page')?.addEventListener('click', () => {
+        const totalPages = Math.ceil(filteredUnitKuota.length / kuotaPerPage) || 1;
+        if (kuotaCurrentPage < totalPages) {
+            kuotaCurrentPage++;
+            renderPagedTable(true);
+        }
+    });
+
+    // Close popover when clicking outside or resizing
+    document.addEventListener('click', (e) => {
+        if (activePopoverEl && !activePopoverEl.contains(e.target) && !e.target.closest('.badge-prodi-more')) {
+            closeProdiPopover();
+        }
+    });
+
+    window.addEventListener('resize', closeProdiPopover);
+    window.addEventListener('scroll', closeProdiPopover, true);
+
+    // 5. Modal Quick Action Buttons
     document.getElementById('btn-select-all-prodi')?.addEventListener('click', () => {
         document.querySelectorAll('.chk-modal-prodi').forEach(cb => {
             cb.checked = true;
@@ -99,25 +145,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.querySelectorAll('.chk-modal-pem').forEach(cb => cb.checked = false);
     });
 
-    // 5. Radio Mode Kuota change listener
+    // 6. Radio Mode Kuota change listener
     document.querySelectorAll('input[name="modal_tipe_kuota"]').forEach(radio => {
         radio.addEventListener('change', onModeKuotaChange);
     });
 
-    // 6. Total Kuota input change listener
+    // 7. Total Kuota input change listener
     document.getElementById('kuota_total')?.addEventListener('input', updateModalAllocSummary);
 
-    // 7. Form Kuota Submit
+    // 8. Form Kuota Submit
     const formKuota = document.getElementById('form-kuota');
     if (formKuota) {
         formKuota.addEventListener('submit', handleFormKuotaSubmit);
     }
 
-    // 8. Initial Load
+    // 9. Initial Load
     await loadUnit();
 });
 
-async function loadUnit(targetPeriodeId = null) {
+async function loadUnit(targetPeriodeId = null, preservePage = false) {
     const tbody = document.getElementById('table-unit');
     const infoEl = document.getElementById('info-periode');
     if (tbody) {
@@ -173,7 +219,7 @@ async function loadUnit(targetPeriodeId = null) {
                 }
             }
 
-            renderKuotaTable(allUnitKuota);
+            applyKuotaFilter(!preservePage);
         } else {
             if (tbody) tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: #ef4444; padding: 24px;">Gagal memuat data alokasi kuota.</td></tr>';
         }
@@ -182,12 +228,142 @@ async function loadUnit(targetPeriodeId = null) {
     }
 }
 
+function applyKuotaFilter(resetPage = true) {
+    const searchInput = document.getElementById('search-kuota');
+    const query = (searchInput ? searchInput.value : '').trim().toLowerCase();
+    if (!query) {
+        filteredUnitKuota = [...allUnitKuota];
+    } else {
+        filteredUnitKuota = allUnitKuota.filter(u => 
+            (u.nama || '').toLowerCase().includes(query) ||
+            (u.singkatan || '').toLowerCase().includes(query) ||
+            (u.nama_parent || '').toLowerCase().includes(query) ||
+            (u.tipe || '').toLowerCase().includes(query)
+        );
+    }
+
+    if (resetPage) {
+        kuotaCurrentPage = 1;
+    }
+    renderPagedTable();
+}
+
+function renderPagedTable(shouldScroll = false) {
+    closeProdiPopover();
+
+    const total = filteredUnitKuota.length;
+    const totalPages = Math.ceil(total / kuotaPerPage) || 1;
+
+    if (kuotaCurrentPage > totalPages) {
+        kuotaCurrentPage = totalPages;
+    }
+    if (kuotaCurrentPage < 1) {
+        kuotaCurrentPage = 1;
+    }
+
+    const startIdx = total === 0 ? 0 : (kuotaCurrentPage - 1) * kuotaPerPage;
+    const endIdx = Math.min(startIdx + kuotaPerPage, total);
+    const pageData = filteredUnitKuota.slice(startIdx, endIdx);
+
+    renderKuotaTable(pageData);
+
+    const infoEl = document.getElementById('pagination-info');
+    const pageNumEl = document.getElementById('pagination-page-num');
+    const btnPrev = document.getElementById('btn-prev-page');
+    const btnNext = document.getElementById('btn-next-page');
+
+    if (infoEl) {
+        if (total === 0) {
+            infoEl.innerHTML = 'Menampilkan <strong>0</strong> unit';
+        } else {
+            infoEl.innerHTML = `Menampilkan <strong>${startIdx + 1}–${endIdx}</strong> dari <strong>${total}</strong> unit`;
+        }
+    }
+
+    if (pageNumEl) {
+        pageNumEl.innerText = `Halaman ${kuotaCurrentPage} / ${totalPages}`;
+    }
+
+    if (btnPrev) {
+        btnPrev.disabled = (kuotaCurrentPage <= 1);
+    }
+    if (btnNext) {
+        btnNext.disabled = (kuotaCurrentPage >= totalPages || total === 0);
+    }
+
+    if (shouldScroll) {
+        const cardHeader = document.querySelector('.admin-card-header');
+        if (cardHeader) {
+            cardHeader.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+}
+
+function closeProdiPopover() {
+    if (activePopoverEl) {
+        activePopoverEl.remove();
+        activePopoverEl = null;
+    }
+}
+
+function openProdiPopover(anchorEl, unitName, prodiList, isBreakdown) {
+    closeProdiPopover();
+
+    const popover = document.createElement('div');
+    popover.className = 'prodi-popover-dropdown';
+
+    const titleHtml = `
+        <div class="prodi-popover-title">
+            <span>Daftar Prodi Diterima (${prodiList.length})</span>
+            <span style="font-size: 0.7rem; font-weight: 500; color: #64748b; max-width: 130px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(unitName)}">${escapeHtml(unitName)}</span>
+        </div>
+    `;
+
+    const itemsHtml = prodiList.map(p => {
+        const allocBadge = (isBreakdown && p.kuota_total !== null && p.kuota_total !== undefined)
+            ? `<span style="font-size: 0.725rem; font-weight: 700; color: #4338ca; background: #eef2ff; padding: 1px 6px; border-radius: 4px; border: 1px solid #c7d2fe;">${p.kuota_total} slot</span>`
+            : '';
+        return `
+            <div class="prodi-popover-item">
+                <span style="font-weight: 600; color: #1e293b;">${escapeHtml(p.nama_jurusan)}</span>
+                ${allocBadge}
+            </div>
+        `;
+    }).join('');
+
+    popover.innerHTML = `${titleHtml}<div class="prodi-popover-list">${itemsHtml}</div>`;
+    document.body.appendChild(popover);
+
+    const rect = anchorEl.getBoundingClientRect();
+    const popoverRect = popover.getBoundingClientRect();
+
+    let top = rect.bottom + 6;
+    let left = rect.left;
+
+    // If popover goes off bottom of screen, show above anchor
+    if (top + popoverRect.height > window.innerHeight - 10) {
+        top = rect.top - popoverRect.height - 6;
+    }
+
+    // If popover goes off right edge of screen
+    if (left + popoverRect.width > window.innerWidth - 10) {
+        left = window.innerWidth - popoverRect.width - 10;
+    }
+
+    if (left < 10) left = 10;
+
+    popover.style.top = `${Math.max(10, top)}px`;
+    popover.style.left = `${left}px`;
+
+    activePopoverEl = popover;
+}
+
 function renderKuotaTable(dataArray) {
     const tbody = document.getElementById('table-unit');
     if (!tbody) return;
 
     if (!dataArray || dataArray.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: #64748b; padding: 32px;">Belum ada kantor/unit yang membuka magang. Aktifkan toggle "Buka Magang" pada menu Hierarki PLN terlebih dahulu.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: #64748b; padding: 32px;">Tidak ada data unit yang sesuai dengan pencarian atau filter.</td></tr>';
         return;
     }
 
@@ -210,27 +386,45 @@ function renderKuotaTable(dataArray) {
             ? '<span class="badge-status" style="background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; font-size: 0.725rem; font-weight: 700;">Terbagi per Prodi</span>'
             : '<span class="badge-status" style="background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; font-size: 0.725rem; font-weight: 600;">Keseluruhan (Pool)</span>';
 
-        // Render Prodi Tags
+        // Render Prodi Tags (Clean & Compact)
         let prodiHtml = '';
         const totalJurusan = allJurusanList.length;
         const selectedJurCount = Array.isArray(u.prodi_details) ? u.prodi_details.length : 0;
 
         if (selectedJurCount === 0 || (totalJurusan > 0 && selectedJurCount >= totalJurusan && !isBreakdown)) {
-            prodiHtml = '<span class="badge-status" style="background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; font-size: 0.725rem;">Semua Prodi (Umum)</span>';
+            prodiHtml = '<span class="badge-status" style="background: #f8fafc; color: #475569; border: 1px solid #cbd5e1; font-size: 0.72rem; font-weight: 600;">Semua Prodi (Umum)</span>';
         } else {
-            const tags = u.prodi_details.map(p => {
-                const allocText = (isBreakdown && p.kuota_total !== null) 
-                    ? ` <strong style="color: #4338ca;">(${p.kuota_total} slot)</strong>` 
-                    : '';
-                return `<span class="badge-status" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; font-size: 0.725rem; margin: 2px 2px; display: inline-flex; align-items: center; gap: 4px;" title="${escapeHtml(p.nama_jurusan)}">${escapeHtml(p.nama_jurusan)}${allocText}</span>`;
-            }).join('');
-            prodiHtml = `<div style="max-width: 260px; display: flex; flex-wrap: wrap; gap: 2px;">${tags}</div>`;
+            const fullTooltip = u.prodi_details.map(p => {
+                const alloc = (isBreakdown && p.kuota_total !== null && p.kuota_total !== undefined) ? ` (${p.kuota_total} slot)` : '';
+                return `• ${p.nama_jurusan}${alloc}`;
+            }).join('\n');
+
+            if (selectedJurCount <= 2) {
+                const tags = u.prodi_details.map(p => {
+                    const allocText = (isBreakdown && p.kuota_total !== null && p.kuota_total !== undefined) 
+                        ? ` <strong style="color: #4338ca;">(${p.kuota_total})</strong>` 
+                        : '';
+                    return `<span class="badge-prodi-item" title="${escapeHtml(p.nama_jurusan)}">${escapeHtml(p.nama_jurusan)}${allocText}</span>`;
+                }).join('');
+                prodiHtml = `<div class="prodi-tag-container" title="${escapeHtml(fullTooltip)}">${tags}</div>`;
+            } else {
+                const firstTwo = u.prodi_details.slice(0, 2).map(p => {
+                    const allocText = (isBreakdown && p.kuota_total !== null && p.kuota_total !== undefined) 
+                        ? ` <strong style="color: #4338ca;">(${p.kuota_total})</strong>` 
+                        : '';
+                    return `<span class="badge-prodi-item" title="${escapeHtml(p.nama_jurusan)}">${escapeHtml(p.nama_jurusan)}${allocText}</span>`;
+                }).join('');
+                const remaining = selectedJurCount - 2;
+                const moreBtn = `<button type="button" class="badge-prodi-more btn-show-all-prodi" title="${escapeHtml(fullTooltip)}">+${remaining} lainnya</button>`;
+                prodiHtml = `<div class="prodi-tag-container">${firstTwo}${moreBtn}</div>`;
+            }
         }
 
-        // Render Peminatan Tags
+        // Render Peminatan Tags with hover list
         let peminatanHtml = '';
         if (Array.isArray(u.peminatan_details) && u.peminatan_details.length > 0) {
-            peminatanHtml = `<span class="badge-status" style="background: #fefce8; color: #a16207; border: 1px solid #fef08a; font-size: 0.725rem; font-weight: 700;">${u.peminatan_details.length} Peminatan</span>`;
+            const pemTooltip = u.peminatan_details.map(p => `• ${p.nama}`).join('\n');
+            peminatanHtml = `<span class="badge-status" style="background: #fefce8; color: #a16207; border: 1px solid #fef08a; font-size: 0.725rem; font-weight: 700; cursor: default;" title="${escapeHtml(pemTooltip)}">${u.peminatan_details.length} Peminatan</span>`;
         } else {
             peminatanHtml = '<span style="color: #94a3b8; font-size: 0.8rem;">-</span>';
         }
@@ -260,25 +454,16 @@ function renderKuotaTable(dataArray) {
             openKuotaModal(u);
         });
 
+        const moreBtn = tr.querySelector('.btn-show-all-prodi');
+        if (moreBtn) {
+            moreBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openProdiPopover(e.currentTarget, u.nama, u.prodi_details, isBreakdown);
+            });
+        }
+
         tbody.appendChild(tr);
     });
-}
-
-function applyKuotaFilter() {
-    const query = document.getElementById('search-kuota').value.trim().toLowerCase();
-    if (!query) {
-        renderKuotaTable(allUnitKuota);
-        return;
-    }
-
-    const filtered = allUnitKuota.filter(u => 
-        (u.nama || '').toLowerCase().includes(query) ||
-        (u.singkatan || '').toLowerCase().includes(query) ||
-        (u.nama_parent || '').toLowerCase().includes(query) ||
-        (u.tipe || '').toLowerCase().includes(query)
-    );
-
-    renderKuotaTable(filtered);
 }
 
 function onModeKuotaChange() {
@@ -626,7 +811,7 @@ async function handleFormKuotaSubmit(e) {
         if (res.ok && data.ok) {
             document.getElementById('modal-kuota').classList.add('hidden');
             showAdminAlert('Alokasi kuota unit berhasil disimpan!', 'success');
-            await loadUnit(periodeId);
+            await loadUnit(periodeId, true);
         } else {
             showAdminAlert(data.error || 'Gagal menyimpan kuota unit.', 'error');
         }

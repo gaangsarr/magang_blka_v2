@@ -109,6 +109,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const hourVal = document.getElementById('create-jam_hour').value;
         const minVal = document.getElementById('create-jam_minute').value;
+        const selectedProg = document.querySelector('input[name="create_program"]:checked')?.value || '1';
 
         const payload = {
             nama: document.getElementById('create-nama').value,
@@ -116,8 +117,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             tanggal_selesai: document.getElementById('create-tanggal_selesai').value,
             jam_selesai: `${hourVal}:${minVal}`,
             angkatan_eligible: selectedAngkatan,
-            program_1_bulan: document.getElementById('create-prog1').checked ? 1 : 0,
-            program_5_bulan: document.getElementById('create-prog1').checked ? 0 : 1,
+            program_1_bulan: selectedProg === '1' ? 1 : 0,
+            program_3_bulan: selectedProg === '3' ? 1 : 0,
+            program_4_bulan: selectedProg === '4' ? 1 : 0,
+            program_5_bulan: selectedProg === '5' ? 1 : 0,
             syarat_transkrip: document.getElementById('create-syarat-transkrip').checked,
             syarat_cv: document.getElementById('create-syarat-cv').checked,
             syarat_porto: document.getElementById('create-syarat-porto').checked,
@@ -138,7 +141,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 document.getElementById('create-jam_hour').value = '23';
                 document.getElementById('create-jam_minute').value = '59';
                 document.getElementById('create-prog1').checked = true;
-                document.getElementById('create-prog5').checked = false;
                 loadPeriode();
             } else {
                 alert(data.error || 'Gagal membuat periode.');
@@ -161,6 +163,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const editHour = document.getElementById('edit-jam_hour').value;
         const editMin = document.getElementById('edit-jam_minute').value;
+        const selectedEditProg = document.querySelector('input[name="edit_program"]:checked')?.value || '1';
 
         const payload = {
             id: parseInt(document.getElementById('edit-periode-id').value),
@@ -170,8 +173,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             jam_selesai: `${editHour}:${editMin}`,
             status: document.getElementById('edit-status') ? document.getElementById('edit-status').value : undefined,
             angkatan_eligible: selectedAngkatan,
-            program_1_bulan: document.getElementById('edit-prog1').checked ? 1 : 0,
-            program_5_bulan: document.getElementById('edit-prog1').checked ? 0 : 1,
+            program_1_bulan: selectedEditProg === '1' ? 1 : 0,
+            program_3_bulan: selectedEditProg === '3' ? 1 : 0,
+            program_4_bulan: selectedEditProg === '4' ? 1 : 0,
+            program_5_bulan: selectedEditProg === '5' ? 1 : 0,
             syarat_transkrip: document.getElementById('edit-syarat-transkrip').checked,
             syarat_cv: document.getElementById('edit-syarat-cv').checked,
             syarat_porto: document.getElementById('edit-syarat-porto').checked
@@ -348,7 +353,7 @@ async function loadPeriode() {
                     <td>${badgeHTML}</td>
                     <td>
                         <span style="font-weight: 600; font-size: 0.825rem; color: #0b3d6b; background: #f1f5f9; padding: 3px 8px; border-radius: 6px;">
-                            ${p.program_1_bulan == 1 ? 'Magang 1 Bulan' : (p.program_5_bulan == 1 ? 'Magang 5 Bulan' : '-')}
+                            ${p.program_1_bulan == 1 ? 'Magang 1 Bulan' : (p.program_3_bulan == 1 ? 'Magang 3 Bulan' : (p.program_4_bulan == 1 ? 'Magang 4 Bulan' : (p.program_5_bulan == 1 ? 'Magang 5 Bulan' : '-')))}
                         </span>
                     </td>
                     <td>
@@ -386,9 +391,15 @@ window.openEditModal = function(periodeId) {
     document.getElementById('edit-jam_hour').value = h || '23';
     document.getElementById('edit-jam_minute').value = m || '59';
 
-    const isProg1 = (p.program_1_bulan == 1 && p.program_5_bulan != 1) || (p.program_1_bulan == 1);
-    document.getElementById('edit-prog1').checked = isProg1;
-    document.getElementById('edit-prog5').checked = !isProg1;
+    if (p.program_3_bulan == 1) {
+        document.getElementById('edit-prog3').checked = true;
+    } else if (p.program_4_bulan == 1) {
+        document.getElementById('edit-prog4').checked = true;
+    } else if (p.program_5_bulan == 1) {
+        document.getElementById('edit-prog5').checked = true;
+    } else {
+        document.getElementById('edit-prog1').checked = true;
+    }
     
     const editTranskrip = document.getElementById('edit-syarat-transkrip');
     const editCv = document.getElementById('edit-syarat-cv');
