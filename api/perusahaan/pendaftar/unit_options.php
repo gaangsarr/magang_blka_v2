@@ -40,6 +40,8 @@ try {
             ep.nama AS nama_unit,
             ep.singkatan,
             ep.alamat,
+            ep.latitude,
+            ep.longitude,
             parent.nama AS nama_parent
         FROM unit_pelaksana_periode upp
         JOIN entitas_perusahaan ep ON upp.entitas_id = ep.id

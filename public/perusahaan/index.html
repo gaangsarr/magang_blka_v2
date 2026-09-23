@@ -1357,6 +1357,38 @@
             line-height: 1.5 !important;
             display: block !important;
         }
+
+        /* Sticky Bulk Action Toolbar for Perusahaan */
+        .bulk-toolbar-perusahaan-sticky {
+            display: none;
+            position: sticky;
+            top: 70px;
+            z-index: 95;
+            background: #ffffff;
+            border: 1.5px solid #16a34a;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            padding: 12px 20px;
+            box-shadow: 0 10px 25px -5px rgba(22, 163, 74, 0.22), 0 4px 10px rgba(0, 0, 0, 0.06);
+            animation: modalSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @media (max-width: 768px) {
+            .bulk-toolbar-perusahaan-sticky {
+                top: 52px;
+                padding: 10px 14px;
+            }
+        }
+        .bulk-toolbar-perusahaan-sticky button {
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .bulk-toolbar-perusahaan-sticky button:hover {
+            filter: brightness(1.08);
+            transform: translateY(-1px);
+        }
+        .bulk-toolbar-perusahaan-sticky button:active {
+            transform: translateY(0);
+        }
     </style>
 </head>
 <body class="perusahaan-body">
@@ -1818,25 +1850,25 @@
                 </div>
             </div>
 
-            <!-- Floating Bulk Action Bar (Visible when checkboxes selected) -->
-            <div id="bulk-toolbar-perusahaan" class="admin-card" style="display: none; background: #f0fdf4; border: 1px solid #bbf7d0; margin-bottom: 16px; padding: 12px 20px;">
+            <!-- Floating / Sticky Bulk Action Bar (Visible when checkboxes selected) -->
+            <div id="bulk-toolbar-perusahaan" class="bulk-toolbar-perusahaan-sticky" style="display: none;">
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <span style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 9999px; background: #16a34a; color: white; font-weight: bold; font-size: 0.8rem;" id="bulk-selected-count">0</span>
-                        <span style="font-size: 0.9rem; font-weight: 600; color: #166534;">Peserta dipilih</span>
+                        <span style="font-size: 0.925rem; font-weight: 700; color: #166534;">Mahasiswa Dipilih</span>
                     </div>
                     <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                        <button type="button" id="btn-bulk-approve" class="btn-portal-primary" style="background: #16a34a; border-color: #16a34a; color: #ffffff; font-size: 0.85rem; padding: 6px 14px; font-weight: 700;">
+                        <button type="button" id="btn-bulk-approve" class="btn-portal-primary" style="background: #16a34a; border-color: #16a34a; color: #ffffff; font-size: 0.85rem; padding: 7px 16px; font-weight: 700; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                            <span>Terima Masal</span>
+                            <span>Setujui Terpilih</span>
                         </button>
-                        <button type="button" id="btn-bulk-relocate" class="btn-portal-primary" style="background: #d97706; border-color: #d97706; color: #ffffff; font-size: 0.85rem; padding: 6px 14px; font-weight: 700;">
+                        <button type="button" id="btn-bulk-relocate" class="btn-portal-primary" style="background: #d97706; border-color: #d97706; color: #ffffff; font-size: 0.85rem; padding: 7px 16px; font-weight: 700; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
-                            <span>Pindahkan Masal</span>
+                            <span>Pindahkan Terpilih</span>
                         </button>
-                        <button type="button" id="btn-bulk-reject" class="btn-portal-primary" style="background: #ef4444; border-color: #ef4444; color: #ffffff; font-size: 0.85rem; padding: 6px 14px; font-weight: 700;">
+                        <button type="button" id="btn-bulk-reject" class="btn-portal-primary" style="background: #ef4444; border-color: #ef4444; color: #ffffff; font-size: 0.85rem; padding: 7px 16px; font-weight: 700; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-                            <span>Tolak Masal</span>
+                            <span>Tolak Terpilih</span>
                         </button>
                     </div>
                 </div>
@@ -2160,8 +2192,8 @@
     <!-- MODAL PERUSAHAAN: PINDAHKAN PESERTA -->
     <!-- ========================================== -->
     <div id="modal-perusahaan-relocate" class="modal-overlay hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 16px;">
-        <div style="background: #fff; border-radius: 16px; width: 100%; max-width: 520px; padding: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; overflow-x: hidden; box-sizing: border-box;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #e2e8f0;">
+        <div style="background: #fff; border-radius: 16px; width: 100%; max-width: 720px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); max-height: 90vh; overflow: hidden; box-sizing: border-box; display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 24px 16px; border-bottom: 1px solid #e2e8f0; flex-shrink: 0; background: #fff;">
                 <h3 style="margin: 0; font-size: 1.15rem; color: #d97706; font-weight: 700; display: flex; align-items: center; gap: 8px;">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
                     <span>Ajukan Pemindahan Peserta</span>
@@ -2169,28 +2201,44 @@
                 <button type="button" class="btn-close-modal" data-target="modal-perusahaan-relocate" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b; line-height: 1;">&times;</button>
             </div>
 
-            <form id="form-perusahaan-relocate">
-                <input type="hidden" id="perusahaan-relocate-id">
-                <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 14px; margin-bottom: 16px;">
-                    <div style="font-size: 0.85rem; color: #92400e;"><strong>Mahasiswa:</strong> <span id="perusahaan-relocate-mhs">-</span></div>
-                    <div style="font-size: 0.825rem; color: #b45309; margin-top: 4px;">Unit penerima akan menerima notifikasi dan wajib menyetujui pemindahan ini.</div>
+            <form id="form-perusahaan-relocate" style="display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; margin: 0; overflow: hidden;">
+                <!-- Scrollable Form Body -->
+                <div style="padding: 20px 24px; overflow-y: auto; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 16px;">
+                    <input type="hidden" id="perusahaan-relocate-id">
+                    <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 14px;">
+                        <div style="font-size: 0.85rem; color: #92400e;"><strong>Mahasiswa:</strong> <span id="perusahaan-relocate-mhs">-</span></div>
+                        <div style="font-size: 0.825rem; color: #b45309; margin-top: 4px;">Unit penerima akan menerima notifikasi dan wajib menyetujui pemindahan ini.</div>
+                    </div>
+
+                    <div class="admin-input-group" style="margin-bottom: 0;">
+                        <label class="admin-input-label">Pilih Unit Pelaksana Tujuan <span style="color: red;">*</span></label>
+                        <input type="hidden" id="perusahaan-relocate-unit" required>
+                        <div class="unit-picker-box" id="p-relocate-unit-picker-box">
+                            <div class="unit-picker-search-wrap">
+                                <svg class="unit-picker-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                                <input type="text" id="p-relocate-search-input" class="unit-picker-search-input" placeholder="Cari nama unit, kota, atau program studi...">
+                                <button type="button" id="p-relocate-search-clear" class="unit-picker-search-clear">&times;</button>
+                            </div>
+                            <div class="unit-picker-stats-bar">
+                                <span id="p-relocate-stats-count">Memuat unit...</span>
+                                <span style="font-size: 0.725rem; color: #0284c7; font-weight: 600;">Rekomendasi Terbaik di Atas</span>
+                            </div>
+                            <div id="p-relocate-cards-container" class="unit-cards-scroll custom-scrollbar">
+                                <div class="unit-picker-empty">Memuat daftar unit...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 4px;">
+                        <label class="admin-input-label" for="perusahaan-relocate-alasan">Alasan Pemindahan <span style="color: red;">*</span></label>
+                        <textarea id="perusahaan-relocate-alasan" class="admin-input-field" rows="3" placeholder="Contoh: Kuota spesifik penuh, diarahkan ke unit yang relevan." required style="width: 100%; max-width: 100%; box-sizing: border-box; resize: vertical; font-family: inherit; line-height: 1.5; min-height: 80px;"></textarea>
+                    </div>
                 </div>
 
-                <div style="margin-bottom: 14px;">
-                    <label class="admin-input-label" for="perusahaan-relocate-unit">Pilih Unit Pelaksana Tujuan <span style="color: red;">*</span></label>
-                    <select id="perusahaan-relocate-unit" class="admin-input-field" required>
-                        <option value="">-- Memuat pilihan unit --</option>
-                    </select>
-                </div>
-
-                <div style="margin-bottom: 18px;">
-                    <label class="admin-input-label" for="perusahaan-relocate-alasan">Alasan Pemindahan <span style="color: red;">*</span></label>
-                    <textarea id="perusahaan-relocate-alasan" class="admin-input-field" rows="3" placeholder="Contoh: Kuota spesifik penuh, diarahkan ke unit yang relevan." required style="width: 100%; max-width: 100%; box-sizing: border-box; resize: vertical; font-family: inherit; line-height: 1.5; min-height: 80px;"></textarea>
-                </div>
-
-                <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                    <button type="button" class="btn-portal-outline btn-close-modal" data-target="modal-perusahaan-relocate">Batal</button>
-                    <button type="submit" id="btn-submit-p-relocate" class="btn-portal-primary" style="background: #d97706; border-color: #d97706; font-weight: 700;">
+                <!-- Sticky Footer -->
+                <div style="display: flex; justify-content: flex-end; gap: 12px; padding: 16px 24px; border-top: 1px solid #e2e8f0; background: #f8fafc; flex-shrink: 0; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px;">
+                    <button type="button" class="btn-portal-outline btn-close-modal" data-target="modal-perusahaan-relocate" style="padding: 10px 20px;">Batal</button>
+                    <button type="submit" id="btn-submit-p-relocate" class="btn-portal-primary" style="background: #d97706; border-color: #d97706; font-weight: 700; padding: 10px 22px;">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
                         <span>Ajukan Pemindahan</span>
                     </button>
@@ -2203,8 +2251,8 @@
     <!-- MODAL PERUSAHAAN: PINDAHKAN MASAL PESERTA -->
     <!-- ========================================== -->
     <div id="modal-perusahaan-bulk-relocate" class="modal-overlay hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 16px;">
-        <div style="background: #fff; border-radius: 16px; width: 100%; max-width: 520px; padding: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; overflow-x: hidden; box-sizing: border-box;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #e2e8f0;">
+        <div style="background: #fff; border-radius: 16px; width: 100%; max-width: 720px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); max-height: 90vh; overflow: hidden; box-sizing: border-box; display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 24px 16px; border-bottom: 1px solid #e2e8f0; flex-shrink: 0; background: #fff;">
                 <h3 style="margin: 0; font-size: 1.15rem; color: #d97706; font-weight: 700; display: flex; align-items: center; gap: 8px;">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
                     <span>Pemindahan Masal ke Unit Lain</span>
@@ -2212,26 +2260,49 @@
                 <button type="button" class="btn-close-modal" data-target="modal-perusahaan-bulk-relocate" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b; line-height: 1;">&times;</button>
             </div>
 
-            <form id="form-perusahaan-bulk-relocate">
-                <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 14px; margin-bottom: 16px;">
-                    <div style="font-size: 0.85rem; color: #92400e;">Pindahkan seluruh <strong id="bulk-relocate-modal-count">0</strong> mahasiswa terpilih ke unit baru secara sekaligus.</div>
+            <form id="form-perusahaan-bulk-relocate" style="display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; margin: 0; overflow: hidden;">
+                <!-- Scrollable Form Body -->
+                <div style="padding: 20px 24px; overflow-y: auto; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 14px;">
+                    <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 14px;">
+                        <div style="font-size: 0.85rem; color: #92400e;">Pindahkan seluruh <strong id="bulk-relocate-modal-count">0</strong> mahasiswa terpilih ke unit baru secara sekaligus.</div>
+                    </div>
+
+                    <div id="p-bulk-algo-banner" class="unit-algo-banner">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                        <div id="p-bulk-algo-text">
+                            <strong>Algoritma Rekomendasi Unit:</strong> Diurutkan berdasarkan unit yang menerima seluruh prodi rombongan (<span id="p-bulk-prodi-summary">-</span>) dan kuota mencukupi.
+                        </div>
+                    </div>
+
+                    <div class="admin-input-group" style="margin-bottom: 0;">
+                        <label class="admin-input-label">Pilih Unit Pelaksana Tujuan <span style="color: red;">*</span></label>
+                        <input type="hidden" id="bulk-relocate-unit" required>
+                        <div class="unit-picker-box" id="p-bulk-unit-picker-box">
+                            <div class="unit-picker-search-wrap">
+                                <svg class="unit-picker-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                                <input type="text" id="p-bulk-relocate-search-input" class="unit-picker-search-input" placeholder="Cari unit tujuan pemindahan massal...">
+                                <button type="button" id="p-bulk-relocate-search-clear" class="unit-picker-search-clear">&times;</button>
+                            </div>
+                            <div class="unit-picker-stats-bar">
+                                <span id="p-bulk-relocate-stats-count">Memuat unit...</span>
+                                <span style="font-size: 0.725rem; color: #0284c7; font-weight: 600;">Rekomendasi Terbaik di Atas</span>
+                            </div>
+                            <div id="p-bulk-relocate-cards-container" class="unit-cards-scroll custom-scrollbar">
+                                <div class="unit-picker-empty">Memuat daftar unit...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 4px;">
+                        <label class="admin-input-label" for="bulk-relocate-alasan">Alasan Pemindahan Masal <span style="color: red;">*</span></label>
+                        <textarea id="bulk-relocate-alasan" class="admin-input-field" rows="3" placeholder="Contoh: Alokasi kelompok magang ke unit pelaksana terkait." required style="width: 100%; max-width: 100%; box-sizing: border-box; resize: vertical; font-family: inherit; line-height: 1.5; min-height: 80px;"></textarea>
+                    </div>
                 </div>
 
-                <div style="margin-bottom: 14px;">
-                    <label class="admin-input-label" for="bulk-relocate-unit">Pilih Unit Pelaksana Tujuan <span style="color: red;">*</span></label>
-                    <select id="bulk-relocate-unit" class="admin-input-field" required>
-                        <option value="">-- Memuat pilihan unit --</option>
-                    </select>
-                </div>
-
-                <div style="margin-bottom: 18px;">
-                    <label class="admin-input-label" for="bulk-relocate-alasan">Alasan Pemindahan Masal <span style="color: red;">*</span></label>
-                    <textarea id="bulk-relocate-alasan" class="admin-input-field" rows="3" placeholder="Contoh: Alokasi kelompok magang ke unit pelaksana terkait." required style="width: 100%; max-width: 100%; box-sizing: border-box; resize: vertical; font-family: inherit; line-height: 1.5; min-height: 80px;"></textarea>
-                </div>
-
-                <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                    <button type="button" class="btn-portal-outline btn-close-modal" data-target="modal-perusahaan-bulk-relocate">Batal</button>
-                    <button type="submit" id="btn-submit-p-bulk-relocate" class="btn-portal-primary" style="background: #d97706; border-color: #d97706; font-weight: 700;">
+                <!-- Sticky Footer -->
+                <div style="display: flex; justify-content: flex-end; gap: 12px; padding: 16px 24px; border-top: 1px solid #e2e8f0; background: #f8fafc; flex-shrink: 0; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px;">
+                    <button type="button" class="btn-portal-outline btn-close-modal" data-target="modal-perusahaan-bulk-relocate" style="padding: 10px 20px;">Batal</button>
+                    <button type="submit" id="btn-submit-p-bulk-relocate" class="btn-portal-primary" style="background: #d97706; border-color: #d97706; font-weight: 700; padding: 10px 22px;">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
                         <span>Proses Pemindahan Masal</span>
                     </button>
@@ -2244,36 +2315,40 @@
     <!-- MODAL PERUSAHAAN: RESPON APPROVAL PEMINDAHAN MASUK -->
     <!-- ========================================== -->
     <div id="modal-perusahaan-transfer-response" class="modal-overlay hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 16px;">
-        <div style="background: #fff; border-radius: 16px; width: 100%; max-width: 500px; padding: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; overflow-x: hidden; box-sizing: border-box;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #e2e8f0;">
+        <div style="background: #fff; border-radius: 16px; width: 100%; max-width: 650px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); max-height: 90vh; overflow: hidden; box-sizing: border-box; display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 24px 16px; border-bottom: 1px solid #e2e8f0; flex-shrink: 0; background: #fff;">
                 <h3 id="tr-resp-title" style="margin: 0; font-size: 1.15rem; font-weight: 700;">Konfirmasi Pemindahan Masuk</h3>
                 <button type="button" class="btn-close-modal" data-target="modal-perusahaan-transfer-response" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b; line-height: 1;">&times;</button>
             </div>
 
-            <form id="form-perusahaan-transfer-response">
-                <input type="hidden" id="tr-resp-id">
-                <input type="hidden" id="tr-resp-action">
-                
-                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; margin-bottom: 16px;">
-                    <div style="font-size: 0.85rem; color: #334155;"><strong>Mahasiswa:</strong> <span id="tr-resp-mhs">-</span></div>
-                    <div style="font-size: 0.85rem; color: #334155; margin-top: 4px;"><strong>Prodi / NIM:</strong> <span id="tr-resp-prodi">-</span></div>
-                    <div style="font-size: 0.85rem; color: #334155; margin-top: 4px;"><strong>Dari Unit:</strong> <span id="tr-resp-unit-asal" style="font-weight: 600; color: #0284c7;">-</span></div>
-                    <div style="font-size: 0.85rem; color: #334155; margin-top: 6px; padding-top: 6px; border-top: 1px dashed #cbd5e1;">
-                        <strong>Alasan Pemindahan Asal:</strong>
-                        <div id="tr-resp-alasan" style="font-style: italic; color: #64748b; margin-top: 2px; word-break: break-word; overflow-wrap: anywhere;">-</div>
+            <form id="form-perusahaan-transfer-response" style="display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; margin: 0; overflow: hidden;">
+                <!-- Scrollable Form Body -->
+                <div style="padding: 20px 24px; overflow-y: auto; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 14px;">
+                    <input type="hidden" id="tr-resp-id">
+                    <input type="hidden" id="tr-resp-action">
+                    
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px;">
+                        <div style="font-size: 0.85rem; color: #334155;"><strong>Mahasiswa:</strong> <span id="tr-resp-mhs">-</span></div>
+                        <div style="font-size: 0.85rem; color: #334155; margin-top: 4px;"><strong>Prodi / NIM:</strong> <span id="tr-resp-prodi">-</span></div>
+                        <div style="font-size: 0.85rem; color: #334155; margin-top: 4px;"><strong>Dari Unit:</strong> <span id="tr-resp-unit-asal" style="font-weight: 600; color: #0284c7;">-</span></div>
+                        <div style="font-size: 0.85rem; color: #334155; margin-top: 6px; padding-top: 6px; border-top: 1px dashed #cbd5e1;">
+                            <strong>Alasan Pemindahan Asal:</strong>
+                            <div id="tr-resp-alasan" style="font-style: italic; color: #64748b; margin-top: 2px; word-break: break-word; overflow-wrap: anywhere;">-</div>
+                        </div>
+                    </div>
+
+                    <div id="tr-resp-alert" class="alert hidden" style="margin-bottom: 0; font-size: 0.85rem;"></div>
+
+                    <div style="margin-bottom: 4px;">
+                        <label class="admin-input-label" for="tr-resp-catatan" id="tr-resp-catatan-label">Catatan Approval (Opsional)</label>
+                        <textarea id="tr-resp-catatan" class="admin-input-field" rows="3" placeholder="Masukkan catatan..." style="width: 100%; max-width: 100%; box-sizing: border-box; resize: vertical; font-family: inherit; line-height: 1.5; min-height: 80px;"></textarea>
                     </div>
                 </div>
 
-                <div id="tr-resp-alert" class="alert hidden" style="margin-bottom: 16px; font-size: 0.85rem;"></div>
-
-                <div style="margin-bottom: 18px;">
-                    <label class="admin-input-label" for="tr-resp-catatan" id="tr-resp-catatan-label">Catatan Approval (Opsional)</label>
-                    <textarea id="tr-resp-catatan" class="admin-input-field" rows="3" placeholder="Masukkan catatan..." style="width: 100%; max-width: 100%; box-sizing: border-box; resize: vertical; font-family: inherit; line-height: 1.5; min-height: 80px;"></textarea>
-                </div>
-
-                <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                    <button type="button" class="btn-portal-outline btn-close-modal" data-target="modal-perusahaan-transfer-response">Batal</button>
-                    <button type="submit" id="btn-confirm-transfer-resp" class="btn-portal-primary">
+                <!-- Sticky Footer -->
+                <div style="display: flex; justify-content: flex-end; gap: 12px; padding: 16px 24px; border-top: 1px solid #e2e8f0; background: #f8fafc; flex-shrink: 0; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px;">
+                    <button type="button" class="btn-portal-outline btn-close-modal" data-target="modal-perusahaan-transfer-response" style="padding: 10px 20px;">Batal</button>
+                    <button type="submit" id="btn-confirm-transfer-resp" class="btn-portal-primary" style="padding: 10px 22px;">
                         <span>Konfirmasi</span>
                     </button>
                 </div>

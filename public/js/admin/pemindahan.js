@@ -315,7 +315,7 @@ function renderTable(list) {
     tbody.querySelectorAll('.btn-blka-approve').forEach(btn => {
         btn.addEventListener('click', () => {
             const pemId = parseInt(btn.getAttribute('data-id'), 10);
-            const item = currentTransferData.find(t => t.id === pemId);
+            const item = currentTransferData.find(t => parseInt(t.id, 10) === pemId);
             if (item) openIntervensiModal(item, 'force_approve');
         });
     });
@@ -323,7 +323,7 @@ function renderTable(list) {
     tbody.querySelectorAll('.btn-blka-reject').forEach(btn => {
         btn.addEventListener('click', () => {
             const pemId = parseInt(btn.getAttribute('data-id'), 10);
-            const item = currentTransferData.find(t => t.id === pemId);
+            const item = currentTransferData.find(t => parseInt(t.id, 10) === pemId);
             if (item) openIntervensiModal(item, 'force_reject');
         });
     });
@@ -427,7 +427,7 @@ function openIntervensiModal(item, action) {
 
     document.getElementById('intervensi-id').value = item.id;
     document.getElementById('intervensi-action').value = action;
-    document.getElementById('intervensi-mhs').innerText = `${item.mahasiswa_nama} (NIM: ${item.nim || '-'})`;
+    document.getElementById('intervensi-mhs').innerText = `${item.mahasiswa_nama || item.nama || '-'} (NIM: ${item.nim || '-'})`;
     document.getElementById('intervensi-unit-asal').innerText = item.unit_asal_nama || '-';
     document.getElementById('intervensi-unit-tujuan').innerText = item.unit_tujuan_nama || '-';
     document.getElementById('intervensi-catatan').value = '';

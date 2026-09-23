@@ -154,6 +154,7 @@ try {
             p.catatan_admin,
             p.submitted_at,
             p.alamat, p.rt, p.rw, p.kelurahan, p.kecamatan, p.kota_kabupaten, p.provinsi,
+            p.latitude, p.longitude,
             m.id AS mahasiswa_id,
             m.nim,
             m.email,

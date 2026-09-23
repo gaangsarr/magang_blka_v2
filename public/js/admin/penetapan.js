@@ -4,6 +4,7 @@
  */
 
 import { showAdminAlert, showAdminConfirm, showAdminToast } from './common.js';
+import { setupUnitPicker } from './unit_picker.js';
 
 let csrfToken = null;
 let allPenetapanData = [];
@@ -115,6 +116,44 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Form Bulk Relocate Submit
     document.getElementById('form-bulk-relocate')?.addEventListener('submit', async (e) => {
         e.preventDefault();
+        const targetUppIdVal = document.getElementById('bulk-relocate-new-unit').value;
+        if (!targetUppIdVal) {
+            showAdminAlert('Silakan pilih salah satu unit pelaksana tujuan terlebih dahulu.', 'warning');
+            return;
+        }
+
+        const targetUppId = parseInt(targetUppIdVal, 10);
+        const targetUnit = unitList.find(u => parseInt(u.upp_id, 10) === targetUppId);
+        const selectedCount = selectedIds.size;
+
+        // Validasi ketersediaan kuota unit tujuan untuk rombongan
+        if (targetUnit && targetUnit.kuota_tersisa !== null && targetUnit.kuota_tersisa < selectedCount) {
+            const proceedQuota = await showAdminConfirm(
+                `Sisa kuota unit tujuan (${targetUnit.nama || targetUnit.nama_unit}) hanya ${targetUnit.kuota_tersisa} slot, sedangkan rombongan yang dipindahkan berjumlah ${selectedCount} mahasiswa.\n\nApakah Anda yakin ingin tetap memindahkan melebihi kapasitas kuota resmi?`,
+                'Peringatan Kapasitas Kuota',
+                'warning',
+                'Ya, Tetap Lanjutkan',
+                'Batal'
+            );
+            if (!proceedQuota) return;
+        }
+
+        // Validasi kesesuaian prodi seluruh mahasiswa rombongan
+        if (targetUnit && Array.isArray(targetUnit.prodi_ids) && targetUnit.prodi_ids.length > 0) {
+            const selectedMhs = allPenetapanData.filter(item => selectedIds.has(parseInt(item.pendaftaran_id, 10)));
+            const mismatchedMhs = selectedMhs.filter(m => !targetUnit.prodi_ids.includes(parseInt(m.jurusan_id, 10)));
+            if (mismatchedMhs.length > 0) {
+                const proceedProdi = await showAdminConfirm(
+                    `Terdapat ${mismatchedMhs.length} dari ${selectedCount} mahasiswa yang jurusannya tidak tercantum pada unit tujuan (${targetUnit.nama || targetUnit.nama_unit}).\n\nApakah Anda yakin ingin tetap memindahkan rombongan ke unit ini?`,
+                    'Peringatan Kesesuaian Prodi Rombongan',
+                    'warning',
+                    'Ya, Tetap Pindahkan Rombongan',
+                    'Batal'
+                );
+                if (!proceedProdi) return;
+            }
+        }
+
         const btn = document.getElementById('btn-submit-bulk-relocate');
         btn.disabled = true;
         btn.innerText = 'Memproses...';
@@ -124,7 +163,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             pendaftaran_ids: Array.from(selectedIds),
             status: 'dipindahkan',
             action: 'dipindahkan',
-            new_unit_pelaksana_periode_id: parseInt(document.getElementById('bulk-relocate-new-unit').value),
+            new_unit_pelaksana_periode_id: targetUppId,
             catatan_admin: bulkCatatan,
             alasan_pemindahan: bulkCatatan,
             catatan: bulkCatatan
@@ -158,22 +197,41 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('form-relocate')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        const pendaftaranId = parseInt(document.getElementById('relocate-pendaftaran-id').value);
-        const targetUppId = parseInt(document.getElementById('relocate-new-unit').value);
-        const targetUnit = unitList.find(u => parseInt(u.upp_id) === targetUppId);
-        const mhsItem = allPenetapanData.find(item => parseInt(item.pendaftaran_id) === pendaftaranId);
+        const pendaftaranId = parseInt(document.getElementById('relocate-pendaftaran-id').value, 10);
+        const targetUppIdVal = document.getElementById('relocate-new-unit').value;
+        if (!targetUppIdVal) {
+            showAdminAlert('Silakan pilih salah satu unit pelaksana tujuan terlebih dahulu.', 'warning');
+            return;
+        }
 
+        const targetUppId = parseInt(targetUppIdVal, 10);
+        const targetUnit = unitList.find(u => parseInt(u.upp_id, 10) === targetUppId);
+        const mhsItem = allPenetapanData.find(item => parseInt(item.pendaftaran_id, 10) === pendaftaranId);
+
+        // Validasi kuota unit penuh
+        if (targetUnit && targetUnit.kuota_tersisa !== null && targetUnit.kuota_tersisa <= 0) {
+            const proceedQuota = await showAdminConfirm(
+                `Sisa kuota pada unit tujuan (${targetUnit.nama || targetUnit.nama_unit}) telah penuh (0 slot).\n\nApakah Anda yakin tetap ingin memaksakan pemindahan mahasiswa ke unit ini?`,
+                'Peringatan Kuota Penuh',
+                'warning',
+                'Ya, Tetap Pindahkan',
+                'Batal'
+            );
+            if (!proceedQuota) return;
+        }
+
+        // Validasi kesesuaian prodi individual
         if (targetUnit && mhsItem && Array.isArray(targetUnit.prodi_ids) && targetUnit.prodi_ids.length > 0) {
-            const mhsJurId = parseInt(mhsItem.jurusan_id);
+            const mhsJurId = parseInt(mhsItem.jurusan_id, 10);
             if (!targetUnit.prodi_ids.includes(mhsJurId)) {
-                const proceed = await showAdminConfirm(
-                    `Unit tujuan (${targetUnit.nama}) tidak membuka alokasi untuk Program Studi ${mhsItem.jurusan_nama || 'mahasiswa ini'}. Apakah Anda yakin tetap ingin memindahkan paksa?`,
+                const proceedProdi = await showAdminConfirm(
+                    `Unit tujuan (${targetUnit.nama || targetUnit.nama_unit}) tidak membuka alokasi untuk Program Studi ${mhsItem.jurusan_nama || 'mahasiswa ini'}.\n\nApakah Anda yakin tetap ingin memindahkan paksa?`,
                     'Peringatan Kesesuaian Prodi',
                     'warning',
                     'Ya, Tetap Pindahkan',
                     'Batal'
                 );
-                if (!proceed) return;
+                if (!proceedProdi) return;
             }
         }
 
@@ -385,30 +443,18 @@ async function loadPenetapanData(targetPeriodeId = null, page = 1) {
                 }
             }
 
-            // Populate relocate selects and filter-unit with fast single-pass string buffer
+            // Simpan daftar unit & isi filter-unit
             if (data.unit_list && Array.isArray(data.unit_list)) {
                 unitList = data.unit_list;
-                const selectElem = document.getElementById('relocate-new-unit');
-                const bulkSelect = document.getElementById('bulk-relocate-new-unit');
                 const filterUnit = document.getElementById('filter-unit');
-
-                let relocateOpts = '<option value="">-- Pilih Unit Pelaksana Tujuan --</option>';
-                let bulkOpts = '<option value="">-- Pilih Unit Pelaksana Tujuan --</option>';
                 let filterOpts = '<option value="">Semua Unit Penempatan</option>';
-
                 const currentFilterVal = filterUnit ? filterUnit.value : '';
 
                 unitList.forEach(u => {
-                    const sisa = u.kuota_tersisa !== null ? u.kuota_tersisa : 0;
-                    const opt = `<option value="${u.upp_id}" ${sisa <= 0 ? 'disabled' : ''}>${escapeHtml(u.nama)} (Sisa Kuota: ${sisa})</option>`;
-                    relocateOpts += opt;
-                    bulkOpts += opt;
                     const isSelected = String(u.upp_id) === String(currentFilterVal);
                     filterOpts += `<option value="${u.upp_id}" ${isSelected ? 'selected' : ''}>${escapeHtml(u.nama)}</option>`;
                 });
 
-                if (selectElem) selectElem.innerHTML = relocateOpts;
-                if (bulkSelect) bulkSelect.innerHTML = bulkOpts;
                 if (filterUnit) filterUnit.innerHTML = filterOpts;
             }
 
@@ -711,9 +757,32 @@ async function handleBulkApprove() {
 
 function handleBulkRelocateOpen() {
     if (selectedIds.size === 0) return;
+    const selectedMhs = allPenetapanData.filter(item => selectedIds.has(parseInt(item.pendaftaran_id, 10)));
+    
     document.getElementById('bulk-relocate-count').innerText = selectedIds.size;
     document.getElementById('bulk-relocate-catatan').value = '';
+
+    const distinctProdis = Array.from(new Set(selectedMhs.map(m => m.jurusan_nama).filter(Boolean)));
+    const summaryEl = document.getElementById('bulk-prodi-summary');
+    if (summaryEl) {
+        summaryEl.innerText = distinctProdis.length > 0 ? distinctProdis.join(', ') : 'Semua Jurusan';
+    }
+
     showModal('modal-bulk-relocate');
+
+    setupUnitPicker({
+        searchInputId: 'bulk-relocate-search-input',
+        clearBtnId: 'bulk-relocate-search-clear',
+        statsCountId: 'bulk-relocate-stats-count',
+        cardsContainerId: 'bulk-relocate-cards-container',
+        hiddenInputId: 'bulk-relocate-new-unit',
+        units: unitList,
+        context: {
+            isBulk: true,
+            selectedMhs: selectedMhs,
+            requiredCount: selectedMhs.length
+        }
+    });
 }
 
 async function handleBulkReject() {
@@ -747,24 +816,60 @@ async function handleBulkReject() {
 
 // Individual Modal Openers
 window.openRelocateModal = function(id, nama, unitAsal) {
+    const mhsItem = allPenetapanData.find(item => parseInt(item.pendaftaran_id, 10) === parseInt(id, 10));
     document.getElementById('relocate-pendaftaran-id').value = id;
-    document.getElementById('relocate-mhs-nama').innerText = nama;
+    document.getElementById('relocate-mhs-nama').innerText = (mhsItem && mhsItem.nama) ? mhsItem.nama : nama;
+    
+    const nimEl = document.getElementById('relocate-mhs-nim');
+    if (nimEl) {
+        nimEl.innerText = (mhsItem && mhsItem.nim) ? mhsItem.nim : '-';
+    }
+
+    const prodiEl = document.getElementById('relocate-mhs-prodi');
+    if (prodiEl) {
+        prodiEl.innerText = (mhsItem && mhsItem.jurusan_nama) ? mhsItem.jurusan_nama : '-';
+    }
+
     document.getElementById('relocate-unit-asal').innerText = unitAsal;
     document.getElementById('relocate-catatan').value = '';
+    
     showModal('modal-relocate');
+
+    setupUnitPicker({
+        searchInputId: 'relocate-search-input',
+        clearBtnId: 'relocate-search-clear',
+        statsCountId: 'relocate-stats-count',
+        cardsContainerId: 'relocate-cards-container',
+        hiddenInputId: 'relocate-new-unit',
+        units: unitList,
+        context: {
+            isBulk: false,
+            mhs: mhsItem
+        }
+    });
 };
 
 window.openApproveModal = function(id, nama, unitNama) {
+    const mhsItem = allPenetapanData.find(item => parseInt(item.pendaftaran_id, 10) === parseInt(id, 10));
     document.getElementById('approve-pendaftaran-id').value = id;
-    document.getElementById('approve-mhs-nama').innerText = nama;
+    document.getElementById('approve-mhs-nama').innerText = (mhsItem && mhsItem.nama) ? mhsItem.nama : nama;
+    const nimEl = document.getElementById('approve-mhs-nim');
+    if (nimEl) {
+        nimEl.innerText = (mhsItem && mhsItem.nim) ? mhsItem.nim : '-';
+    }
     document.getElementById('approve-unit-nama').innerText = unitNama;
     document.getElementById('approve-catatan').value = '';
     showModal('modal-approve');
 };
 
 window.openRejectModal = function(id, nama) {
+    const mhsItem = allPenetapanData.find(item => parseInt(item.pendaftaran_id, 10) === parseInt(id, 10));
     document.getElementById('reject-pendaftaran-id').value = id;
-    document.getElementById('reject-mhs-nama').innerText = nama;
+    document.getElementById('reject-mhs-nama').innerText = (mhsItem && mhsItem.nama) ? mhsItem.nama : nama;
+    const nimEl = document.getElementById('reject-mhs-nim');
+    if (nimEl) {
+        nimEl.innerText = (mhsItem && mhsItem.nim) ? mhsItem.nim : '-';
+    }
     document.getElementById('reject-catatan').value = '';
     showModal('modal-reject');
 };

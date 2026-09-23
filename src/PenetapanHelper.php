@@ -204,7 +204,7 @@ class PenetapanHelper
             }
         } else {
             // Cek apakah unit tujuan (mode keseluruhan) membuka kuota untuk Program Studi mahasiswa ini
-            $stmtUpj = $pdo->prepare("SELECT id FROM unit_periode_jurusan WHERE unit_pelaksana_periode_id = :upp_id AND jurusan_id = :jid");
+            $stmtUpj = $pdo->prepare("SELECT 1 FROM unit_periode_jurusan WHERE unit_pelaksana_periode_id = :upp_id AND jurusan_id = :jid");
             $stmtUpj->execute([':upp_id' => $newUppId, ':jid' => $jurusanId]);
             $upjExists = $stmtUpj->fetchColumn();
 

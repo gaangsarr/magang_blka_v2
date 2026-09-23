@@ -8,22 +8,37 @@
     <link rel="icon" type="image/png" href="/assets/img/logo_itpln.png">
     <link rel="apple-touch-icon" href="/assets/img/logo_itpln.png">
     <link rel="stylesheet" href="/css/main.css">
-    <link rel="stylesheet" href="/css/admin.css">
+    <link rel="stylesheet" href="/css/admin.css?v=3.2">
     <style>
         .bulk-action-bar {
             display: none;
+            position: sticky;
+            top: 16px;
+            z-index: 95;
             align-items: center;
             justify-content: space-between;
             background: #0b3d6b;
             color: #ffffff;
-            padding: 12px 20px;
-            border-radius: 14px;
+            padding: 14px 22px;
+            border-radius: 12px;
             margin-bottom: 20px;
-            box-shadow: 0 10px 25px rgba(11, 61, 107, 0.25);
+            box-shadow: 0 10px 25px -5px rgba(11, 61, 107, 0.35), 0 4px 12px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             animation: modalSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            backdrop-filter: blur(8px);
         }
         .bulk-action-bar.active {
             display: flex;
+        }
+        .bulk-action-bar button {
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .bulk-action-bar button:hover {
+            filter: brightness(1.1);
+            transform: translateY(-1px);
+        }
+        .bulk-action-bar button:active {
+            transform: translateY(0);
         }
         .filter-grid-bar {
             display: grid;
@@ -219,7 +234,7 @@
 
     <!-- Modal Pemindahan Paksa Unit (Individual) -->
     <div id="modal-relocate" class="auth-modal-backdrop hidden" role="dialog" aria-modal="true">
-        <div class="auth-modal-card modal-card-structured" style="max-width: 520px;">
+        <div class="auth-modal-card modal-card-structured" style="max-width: 720px;">
             <div class="modal-card-header">
                 <button type="button" class="auth-modal-close" onclick="hideModal('modal-relocate')">&times;</button>
                 <h3 class="auth-modal-title" style="margin-bottom: 4px; color: #d97706; display: flex; align-items: center; gap: 8px;">
@@ -233,21 +248,44 @@
                 <input type="hidden" id="relocate-pendaftaran-id">
                 
                 <div class="modal-card-body">
-                    <div style="background: #fffbebf5; border: 1px solid #fde68a; border-radius: 12px; padding: 14px; margin-bottom: 18px;">
-                        <div style="font-size: 0.85rem; color: #92400e;"><strong>Mahasiswa:</strong> <span id="relocate-mhs-nama" style="font-weight: 700;">-</span></div>
-                        <div style="font-size: 0.85rem; color: #92400e; margin-top: 2px;"><strong>Unit Pilihan Awal:</strong> <span id="relocate-unit-asal" style="font-weight: 700;">-</span></div>
+                    <div style="background: #fffbebf5; border: 1px solid #fde68a; border-radius: 12px; padding: 14px 16px; margin-bottom: 16px; display: flex; flex-direction: column; gap: 6px;">
+                        <div style="font-size: 0.875rem; color: #92400e; display: flex; flex-wrap: wrap; gap: 8px;">
+                            <span style="font-weight: 600; min-width: 125px; color: #78350f;">Mahasiswa:</span>
+                            <span id="relocate-mhs-nama" style="font-weight: 700; color: #451a03;">-</span>
+                            <span style="color: #92400e;">(NIM: <strong id="relocate-mhs-nim" style="font-family: monospace;">-</strong>)</span>
+                        </div>
+                        <div style="font-size: 0.875rem; color: #92400e; display: flex; flex-wrap: wrap; gap: 8px;">
+                            <span style="font-weight: 600; min-width: 125px; color: #78350f;">Program Studi:</span>
+                            <span id="relocate-mhs-prodi" style="font-weight: 600; color: #78350f;">-</span>
+                        </div>
+                        <div style="font-size: 0.875rem; color: #92400e; display: flex; flex-wrap: wrap; gap: 8px;">
+                            <span style="font-weight: 600; min-width: 125px; color: #78350f;">Unit Pilihan Awal:</span>
+                            <span id="relocate-unit-asal" style="font-weight: 700; color: #b45309;">-</span>
+                        </div>
                     </div>
 
                     <div class="admin-input-group">
-                        <label class="admin-input-label" for="relocate-new-unit">Pilih Unit Pelaksana Tujuan (Baru)</label>
-                        <select id="relocate-new-unit" class="admin-input-field" style="padding-left: 14px;" required>
-                            <option value="">-- Memuat daftar unit --</option>
-                        </select>
+                        <label class="admin-input-label">Pilih Unit Pelaksana Tujuan (Baru) <span style="color: #ef4444;">*</span></label>
+                        <input type="hidden" id="relocate-new-unit" required>
+                        <div class="unit-picker-box" id="relocate-unit-picker-box">
+                            <div class="unit-picker-search-wrap">
+                                <svg class="unit-picker-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                                <input type="text" id="relocate-search-input" class="unit-picker-search-input" placeholder="Cari nama unit, kota, atau program studi...">
+                                <button type="button" id="relocate-search-clear" class="unit-picker-search-clear">&times;</button>
+                            </div>
+                            <div class="unit-picker-stats-bar">
+                                <span id="relocate-stats-count">Memuat unit...</span>
+                                <span style="font-size: 0.725rem; color: #0284c7; font-weight: 600;">Diurutkan dari yang paling sesuai</span>
+                            </div>
+                            <div id="relocate-cards-container" class="unit-cards-scroll custom-scrollbar">
+                                <div class="unit-picker-empty">Memuat daftar unit...</div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="admin-input-group" style="margin-bottom: 0;">
                         <label class="admin-input-label" for="relocate-catatan">Catatan / Alasan Pemindahan (Opsional)</label>
-                        <textarea id="relocate-catatan" class="admin-input-field" style="padding-left: 14px; min-height: 80px;" rows="3" placeholder="Contoh: Kuota PLN Cawang telah dipenuhi. Mahasiswa dialokasikan ke PLN UID Jakarta Raya per kebijakan BLKA."></textarea>
+                        <textarea id="relocate-catatan" class="admin-input-field" style="padding-left: 14px; min-height: 70px;" rows="2" placeholder="Contoh: Kuota PLN Cawang telah dipenuhi. Mahasiswa dialokasikan ke PLN UID Jakarta Raya per kebijakan BLKA."></textarea>
                     </div>
                 </div>
 
@@ -261,7 +299,7 @@
 
     <!-- Modal Pemindahan Paksa Massal (Bulk) -->
     <div id="modal-bulk-relocate" class="auth-modal-backdrop hidden" role="dialog" aria-modal="true">
-        <div class="auth-modal-card modal-card-structured" style="max-width: 520px;">
+        <div class="auth-modal-card modal-card-structured" style="max-width: 720px;">
             <div class="modal-card-header">
                 <button type="button" class="auth-modal-close" onclick="hideModal('modal-bulk-relocate')">&times;</button>
                 <h3 class="auth-modal-title" style="margin-bottom: 4px; color: #d97706; display: flex; align-items: center; gap: 8px;">
@@ -273,16 +311,35 @@
 
             <form id="form-bulk-relocate" style="display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; overflow: hidden; margin: 0;">
                 <div class="modal-card-body">
+                    <div id="bulk-algo-banner" class="unit-algo-banner" style="margin-bottom: 14px;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                        <div id="bulk-algo-text">
+                            <strong>Algoritma Rekomendasi Unit:</strong> Diurutkan berdasarkan unit yang menerima seluruh prodi rombongan mahasiswa terpilih (<span id="bulk-prodi-summary">-</span>) dan memiliki sisa kuota yang mencukupi.
+                        </div>
+                    </div>
+
                     <div class="admin-input-group">
-                        <label class="admin-input-label" for="bulk-relocate-new-unit">Pilih Unit Pelaksana Tujuan (Baru)</label>
-                        <select id="bulk-relocate-new-unit" class="admin-input-field" style="padding-left: 14px;" required>
-                            <option value="">-- Memuat daftar unit --</option>
-                        </select>
+                        <label class="admin-input-label">Pilih Unit Pelaksana Tujuan (Baru) <span style="color: #ef4444;">*</span></label>
+                        <input type="hidden" id="bulk-relocate-new-unit" required>
+                        <div class="unit-picker-box" id="bulk-unit-picker-box">
+                            <div class="unit-picker-search-wrap">
+                                <svg class="unit-picker-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                                <input type="text" id="bulk-relocate-search-input" class="unit-picker-search-input" placeholder="Cari unit tujuan pemindahan massal...">
+                                <button type="button" id="bulk-relocate-search-clear" class="unit-picker-search-clear">&times;</button>
+                            </div>
+                            <div class="unit-picker-stats-bar">
+                                <span id="bulk-relocate-stats-count">Memuat unit...</span>
+                                <span style="font-size: 0.725rem; color: #0284c7; font-weight: 600;">Rekomendasi Terbaik di Atas</span>
+                            </div>
+                            <div id="bulk-relocate-cards-container" class="unit-cards-scroll custom-scrollbar">
+                                <div class="unit-picker-empty">Memuat daftar unit...</div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="admin-input-group" style="margin-bottom: 0;">
                         <label class="admin-input-label" for="bulk-relocate-catatan">Catatan / Alasan Pemindahan Massal (Opsional)</label>
-                        <textarea id="bulk-relocate-catatan" class="admin-input-field" style="padding-left: 14px; min-height: 80px;" rows="3" placeholder="Contoh: Dialokasikan secara kelompok ke unit pelaksana terpilih."></textarea>
+                        <textarea id="bulk-relocate-catatan" class="admin-input-field" style="padding-left: 14px; min-height: 70px;" rows="2" placeholder="Contoh: Dialokasikan secara kelompok ke unit pelaksana terpilih."></textarea>
                     </div>
                 </div>
 
@@ -310,9 +367,16 @@
                 <input type="hidden" id="approve-pendaftaran-id">
                 
                 <div class="modal-card-body">
-                    <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; padding: 14px; margin-bottom: 18px;">
-                        <div style="font-size: 0.85rem; color: #065f46;"><strong>Mahasiswa:</strong> <span id="approve-mhs-nama" style="font-weight: 700;">-</span></div>
-                        <div style="font-size: 0.85rem; color: #065f46; margin-top: 2px;"><strong>Unit Penempatan:</strong> <span id="approve-unit-nama" style="font-weight: 700;">-</span></div>
+                    <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; padding: 14px 16px; margin-bottom: 18px; display: flex; flex-direction: column; gap: 6px;">
+                        <div style="font-size: 0.875rem; color: #065f46; display: flex; flex-wrap: wrap; gap: 8px;">
+                            <span style="font-weight: 600; min-width: 125px; color: #064e3b;">Mahasiswa:</span>
+                            <span id="approve-mhs-nama" style="font-weight: 700;">-</span>
+                            <span style="color: #065f46;">(NIM: <strong id="approve-mhs-nim" style="font-family: monospace;">-</strong>)</span>
+                        </div>
+                        <div style="font-size: 0.875rem; color: #065f46; display: flex; flex-wrap: wrap; gap: 8px;">
+                            <span style="font-weight: 600; min-width: 125px; color: #064e3b;">Unit Penempatan:</span>
+                            <span id="approve-unit-nama" style="font-weight: 700;">-</span>
+                        </div>
                     </div>
 
                     <div class="admin-input-group" style="margin-bottom: 0;">
@@ -345,8 +409,12 @@
                 <input type="hidden" id="reject-pendaftaran-id">
                 
                 <div class="modal-card-body">
-                    <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 14px; margin-bottom: 18px;">
-                        <div style="font-size: 0.85rem; color: #991b1b;"><strong>Mahasiswa:</strong> <span id="reject-mhs-nama" style="font-weight: 700;">-</span></div>
+                    <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 14px 16px; margin-bottom: 18px; display: flex; flex-direction: column; gap: 6px;">
+                        <div style="font-size: 0.875rem; color: #991b1b; display: flex; flex-wrap: wrap; gap: 8px;">
+                            <span style="font-weight: 600; min-width: 125px; color: #7f1d1d;">Mahasiswa:</span>
+                            <span id="reject-mhs-nama" style="font-weight: 700;">-</span>
+                            <span style="color: #991b1b;">(NIM: <strong id="reject-mhs-nim" style="font-family: monospace;">-</strong>)</span>
+                        </div>
                     </div>
 
                     <div class="admin-input-group" style="margin-bottom: 0;">

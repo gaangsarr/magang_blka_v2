@@ -141,6 +141,8 @@ try {
             p.cv_path,
             p.porto_path,
             p.unit_pelaksana_periode_id,
+            p.latitude,
+            p.longitude,
             e.nama AS unit_nama,
             p.unit_pelaksana_periode_asal_id,
             e_asal.nama AS unit_asal_nama
@@ -169,22 +171,56 @@ try {
     $stmtUnits = $pdo->prepare("
         SELECT 
             upp.id AS upp_id,
-            e.nama,
+            upp.entitas_id,
+            e.nama AS nama_unit,
+            e.nama AS nama,
+            e.singkatan,
+            e.alamat,
+            e.latitude,
+            e.longitude,
+            parent.nama AS nama_parent,
             upp.kuota_total,
             upp.kuota_tersisa,
-            GROUP_CONCAT(upj.jurusan_id) AS prodi_ids_str
+            upp.tipe_kuota
         FROM unit_pelaksana_periode upp
         JOIN entitas_perusahaan e ON upp.entitas_id = e.id
-        LEFT JOIN unit_periode_jurusan upj ON upp.id = upj.unit_pelaksana_periode_id
+        LEFT JOIN entitas_perusahaan parent ON e.parent_id = parent.id
         WHERE upp.periode_id = :pid AND upp.aktif = 1
-        GROUP BY upp.id, e.nama, upp.kuota_total, upp.kuota_tersisa
         ORDER BY e.nama ASC
     ");
     $stmtUnits->execute([':pid' => $periodeId]);
     $unitList = $stmtUnits->fetchAll(PDO::FETCH_ASSOC);
+
+    $uppIds = array_column($unitList, 'upp_id');
+    $prodiMap = [];
+    if (!empty($uppIds)) {
+        $inClause = implode(',', array_fill(0, count($uppIds), '?'));
+        $stmtUpj = $pdo->prepare("
+            SELECT upj.unit_pelaksana_periode_id, upj.jurusan_id, upj.kuota_total, upj.kuota_tersisa, j.nama_jurusan
+            FROM unit_periode_jurusan upj
+            JOIN jurusan j ON upj.jurusan_id = j.id
+            WHERE upj.unit_pelaksana_periode_id IN ({$inClause})
+            ORDER BY j.nama_jurusan ASC
+        ");
+        $stmtUpj->execute($uppIds);
+        while ($row = $stmtUpj->fetch(PDO::FETCH_ASSOC)) {
+            $uId = (int)$row['unit_pelaksana_periode_id'];
+            if (!isset($prodiMap[$uId])) {
+                $prodiMap[$uId] = [];
+            }
+            $prodiMap[$uId][] = [
+                'jurusan_id'    => (int)$row['jurusan_id'],
+                'nama_jurusan'  => $row['nama_jurusan'],
+                'kuota_total'   => $row['kuota_total'] !== null ? (int)$row['kuota_total'] : null,
+                'kuota_tersisa' => $row['kuota_tersisa'] !== null ? (int)$row['kuota_tersisa'] : null,
+            ];
+        }
+    }
+
     foreach ($unitList as &$u) {
-        $u['prodi_ids'] = !empty($u['prodi_ids_str']) ? array_map('intval', explode(',', $u['prodi_ids_str'])) : [];
-        unset($u['prodi_ids_str']);
+        $uId = (int)$u['upp_id'];
+        $u['prodi_list'] = $prodiMap[$uId] ?? [];
+        $u['prodi_ids'] = array_column($u['prodi_list'], 'jurusan_id');
     }
     unset($u);
 
