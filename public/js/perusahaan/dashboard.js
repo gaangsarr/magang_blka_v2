@@ -58,6 +58,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     initPendaftarModule();
     initTransferModule();
     initProfilModule();
+    initRosterModule();
+    initSideDrawer();
     initModalCloseButtons();
 
     // 3. Load Data Awal
@@ -100,10 +102,18 @@ function initTabs() {
         });
     });
 
-    document.querySelectorAll('.btn-nav-to-tab').forEach(btn => {
+    document.querySelectorAll('.btn-nav-to-tab, .btn-quick-nav-tab').forEach(btn => {
         btn.addEventListener('click', () => {
-            const targetTab = btn.getAttribute('data-target');
-            switchTab(targetTab);
+            const targetTab = btn.getAttribute('data-target') || btn.getAttribute('data-tab');
+            if (targetTab) switchTab(targetTab);
+        });
+    });
+
+    // Wire Phase Stepper items
+    document.querySelectorAll('.phase-step-item').forEach(stepItem => {
+        stepItem.addEventListener('click', () => {
+            const targetTab = stepItem.getAttribute('data-target-tab');
+            if (targetTab) switchTab(targetTab);
         });
     });
 }
@@ -125,10 +135,11 @@ function switchTab(tabId) {
         }
     });
 
-    // Scroll halus ke atas saat ganti tab di layar HP
-    if (window.innerWidth <= 768) {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    // Scroll halus ke atas saat ganti tab agar konten tab baru mulai dari paling atas
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // Sync Phase Stepper Highlight
+    updatePhaseStepperHighlight(tabId);
 
     // Trigger tab-specific refresh if needed
     if (tabId === 'tab-kuota') {
@@ -139,6 +150,8 @@ function switchTab(tabId) {
         loadTransferData(currentTransferSubtab);
     } else if (tabId === 'tab-profil') {
         loadProfilData();
+    } else if (tabId === 'tab-roster') {
+        loadRosterData();
     }
 }
 
@@ -241,6 +254,7 @@ async function loadDashboardSummary(targetPeriodeId = null) {
 
         if (data.ok) {
             currentSummary = data;
+            updateExecutiveContextAndChecklist(data);
 
             // Check force password change
             if (data.user?.force_password_change) {
@@ -352,7 +366,7 @@ async function loadDashboardSummary(targetPeriodeId = null) {
                     <div style="font-weight: 700; color: #1e293b; font-size: 1rem; margin-bottom: 2px;">${escapeHtml(pic.nama)}</div>
                     <div style="font-size: 0.825rem; color: #0b3d6b; font-weight: 600; margin-bottom: 12px;">${escapeHtml(pic.jabatan || 'Penanggung Jawab Unit')}</div>
                     <div style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: #475569; margin-bottom: 6px;">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><line x1="12" x2="12.01" y1="18" y2="18"/></svg>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><circle cx="12" cy="18" r="1" fill="currentColor"/></svg>
                         <span>WhatsApp / HP: <strong>${escapeHtml(pic.kontak || '-')}</strong></span>
                     </div>
                     <div style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: #475569;">
@@ -369,55 +383,74 @@ async function loadDashboardSummary(targetPeriodeId = null) {
     }
 }
 
+let toastDismissTimeout = null;
+
 function renderNotificationBanner(notif) {
     const bannerContainer = document.getElementById('banner-container');
     if (!bannerContainer) return;
     bannerContainer.innerHTML = '';
+    if (toastDismissTimeout) {
+        clearTimeout(toastDismissTimeout);
+        toastDismissTimeout = null;
+    }
 
     if (!notif) return;
 
     let bannerClass = 'banner-info';
-    let iconSvg = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>`;
+    let iconSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="1.2" fill="currentColor" stroke="none"/></svg>`;
 
     if (notif.type === 'success') {
         bannerClass = 'banner-success';
-        iconSvg = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`;
+        iconSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`;
     } else if (notif.type === 'warning') {
         bannerClass = 'banner-warning';
-        iconSvg = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>`;
+        iconSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><circle cx="12" cy="17" r="1.2" fill="currentColor" stroke="none"/></svg>`;
     }
 
-    bannerContainer.innerHTML = `
-        <div class="notification-banner ${bannerClass}">
-            <div class="banner-top-row">
-                <div class="banner-icon-box">${iconSvg}</div>
-                <div class="banner-title-box">
-                    <h4 class="banner-title">${escapeHtml(notif.title)}</h4>
-                </div>
+    const toastEl = document.createElement('div');
+    toastEl.className = `notification-banner ${bannerClass}`;
+    toastEl.innerHTML = `
+        <div class="banner-body">
+            <div class="banner-icon-box">${iconSvg}</div>
+            <div class="banner-text-box">
+                <h4 class="banner-title">${escapeHtml(notif.title)}</h4>
+                <p class="banner-desc">${escapeHtml(notif.message)}</p>
                 ${notif.can_edit ? `
-                    <button class="btn-portal-primary btn-nav-to-tab banner-desktop-btn" data-target="tab-kuota">
-                        <span>Atur Kuota Sekarang</span>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-                    </button>
+                    <div class="banner-action-wrap">
+                        <button type="button" class="btn-toast-action btn-nav-to-tab" data-target="tab-kuota">
+                            <span>Atur Kuota</span>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                        </button>
+                    </div>
                 ` : ''}
             </div>
-            <p class="banner-desc">${escapeHtml(notif.message)}</p>
-            ${notif.can_edit ? `
-                <div class="banner-mobile-action">
-                    <button class="btn-portal-primary btn-nav-to-tab" data-target="tab-kuota" style="width: 100%; justify-content: center; padding: 10px 16px; font-size: 0.85rem; font-weight: 700; border-radius: 10px;">
-                        <span>Atur Kuota & Prodi Sekarang</span>
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-                    </button>
-                </div>
-            ` : ''}
+            <button type="button" class="btn-toast-close" title="Tutup" aria-label="Tutup">&times;</button>
         </div>
     `;
 
-    bannerContainer.querySelectorAll('.btn-nav-to-tab').forEach(btn => {
+    bannerContainer.appendChild(toastEl);
+
+    const closeToast = () => {
+        toastEl.classList.add('toast-hiding');
+        setTimeout(() => {
+            if (toastEl.parentNode) toastEl.parentNode.removeChild(toastEl);
+        }, 300);
+    };
+
+    const btnClose = toastEl.querySelector('.btn-toast-close');
+    if (btnClose) btnClose.addEventListener('click', closeToast);
+
+    toastEl.querySelectorAll('.btn-nav-to-tab').forEach(btn => {
         btn.addEventListener('click', () => {
             switchTab(btn.getAttribute('data-target'));
+            closeToast();
         });
     });
+
+    // Auto dismiss after 9 seconds
+    toastDismissTimeout = setTimeout(() => {
+        closeToast();
+    }, 9000);
 }
 
 function updateToggleCardVisual(isMenerima) {
@@ -627,17 +660,32 @@ function renderPeminatanForStep3() {
     matchingPeminatan.forEach(pem => {
         const checkedClass = pem.is_selected ? 'checked' : '';
         const card = document.createElement('label');
-        card.className = `custom-checkbox-card ${checkedClass}`;
-        card.style.display = 'flex';
-        card.style.flexDirection = 'column';
-        card.style.gap = '6px';
+        card.className = `custom-checkbox-card peminatan-compact-card ${checkedClass}`;
+
+        // Cari program studi yang terhubung dan relevan dengan pilihan di Langkah 2
+        let matchedJurusan = (pem.jurusan_ids || [])
+            .filter(jid => selectedJids.includes(jid))
+            .map(jid => wizardJurusanData.find(j => j.id === jid))
+            .filter(Boolean);
+
+        if (matchedJurusan.length === 0) {
+            matchedJurusan = (pem.jurusan_ids || [])
+                .map(jid => wizardJurusanData.find(j => j.id === jid))
+                .filter(Boolean);
+        }
+
+        const prodiTagsHtml = matchedJurusan.map(j => {
+            const jenjangPrefix = j.jenjang && !j.nama_jurusan.startsWith(j.jenjang) ? `${j.jenjang} ` : '';
+            const prodiLabel = `${jenjangPrefix}${j.nama_jurusan}`;
+            return `<span class="peminatan-prodi-tag">${escapeHtml(prodiLabel)}</span>`;
+        }).join('');
 
         card.innerHTML = `
-            <div style="display: flex; align-items: center; gap: 8px;">
+            <div class="peminatan-header-row">
                 <input type="checkbox" class="chk-peminatan" value="${pem.id}" ${pem.is_selected ? 'checked' : ''}>
-                <span style="font-size: 0.875rem; font-weight: 700; color: #1e293b;">${escapeHtml(pem.nama_peminatan)}</span>
+                <span class="peminatan-name">${escapeHtml(pem.nama_peminatan)}</span>
             </div>
-            ${pem.deskripsi ? `<span style="font-size: 0.775rem; color: #64748b; line-height: 1.3;">${escapeHtml(pem.deskripsi)}</span>` : ''}
+            ${prodiTagsHtml ? `<div class="peminatan-prodi-tags">${prodiTagsHtml}</div>` : ''}
         `;
 
         card.querySelector('input').addEventListener('change', (e) => {
@@ -1005,7 +1053,7 @@ async function loadKuotaData(periodeId = 0) {
                 if (isDibuka && hasExistingKuota) {
                     lockAlert.innerHTML = `
                         <div style="display: flex; align-items: center; gap: 8px; color: #92400e; background: #fffbeb; border: 1px solid #fde68a; padding: 12px 16px; border-radius: 8px; font-size: 0.85rem; line-height: 1.4;">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="1.2" fill="currentColor" stroke="none"/></svg>
                             <span><strong>Pemberitahuan Periode DIBUKA:</strong> Anda <strong>hanya dapat menambah kuota</strong> (minimal ${existingTotalKuota} mahasiswa). Metode kuota terkunci dan unit aktif tidak dapat dinonaktifkan.</span>
                         </div>
                     `;
@@ -1174,15 +1222,6 @@ function initPendaftarModule() {
     if (searchInput) searchInput.addEventListener('input', () => { mhsPage = 1; loadPendaftarData(); });
     if (statusFilter) statusFilter.addEventListener('change', () => { mhsPage = 1; loadPendaftarData(); });
     if (progFilter) progFilter.addEventListener('change', () => { mhsPage = 1; loadPendaftarData(); });
-
-    // Export Excel
-    const btnExport = document.getElementById('btn-export-pendaftar');
-    if (btnExport) {
-        btnExport.addEventListener('click', () => {
-            const url = `/api/perusahaan/pendaftar/export.php` + (currentPeriodeId > 0 ? `?periode_id=${currentPeriodeId}` : '');
-            window.location.href = url;
-        });
-    }
 
     // Modal Detail
     const modalDetail = document.getElementById('modal-detail-mhs');
@@ -1644,7 +1683,7 @@ function renderPendaftarTable(list) {
         let statusBadge = `<span class="badge-status badge-${mhs.status}">${mhs.status.toUpperCase()}</span>`;
         if (mhs.is_dipindahkan) {
             statusBadge += `<div style="font-size: 0.7rem; color: #4338ca; font-weight: 700; margin-top: 3px; display: inline-flex; align-items: center; gap: 3px;">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 3h5v5"/><path d="M4 20L21 3"/><path d="M21 16v5h-5"/></svg>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M4 20L21 3"/><path d="M21 16v5h-5"/></svg>
                 <span>Dipindahkan</span>
             </div>`;
         }
@@ -1656,6 +1695,15 @@ function renderPendaftarTable(list) {
         if (mhs.is_dipindahkan) {
             tr.style.backgroundColor = 'rgba(99, 102, 241, 0.03)';
         }
+        tr.style.cursor = 'pointer';
+        tr.addEventListener('click', (e) => {
+            // Jangan buka drawer jika klik checkbox atau tombol aksi
+            if (e.target.closest('input[type="checkbox"]') || e.target.closest('button') || e.target.closest('a')) {
+                return;
+            }
+            openCandidateDrawer(mhs);
+        });
+
         tr.innerHTML = `
             <td style="text-align: center;">
                 <input type="checkbox" class="chk-mhs-pendaftar" value="${mhs.id}" ${isChecked ? 'checked' : ''} style="width: 17px; height: 17px; accent-color: #0b3d6b; cursor: pointer;">
@@ -1680,11 +1728,11 @@ function renderPendaftarTable(list) {
             </td>
             <td>
                 <div style="font-size: 0.825rem; color: #1e293b; display: flex; align-items: center; gap: 4px;">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><line x1="12" x2="12.01" y1="18" y2="18"/></svg>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><circle cx="12" cy="18" r="1" fill="currentColor"/></svg>
                     <span>${escapeHtml(mhs.no_hp)}</span>
                 </div>
                 <div style="font-size: 0.75rem; color: #64748b; display: flex; align-items: center; gap: 4px; margin-top: 2px;">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
                     <span>${escapeHtml(mhs.email)}</span>
                 </div>
             </td>
@@ -1693,38 +1741,38 @@ function renderPendaftarTable(list) {
                 <div class="action-cell-stack">
                     <div class="action-row-docs">
                         <button type="button" class="btn-doc-pill pill-detail btn-view-mhs" data-id="${mhs.id}" title="Lihat Detail Pendaftar">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
                             <span>Detail</span>
                         </button>
                         ${mhs.transkrip_path ? `
                         <button type="button" class="btn-doc-pill pill-transkrip btn-transkrip-mhs" data-id="${mhs.id}" data-nama="${escapeHtml(mhs.nama)}" data-nim="${escapeHtml(mhs.nim)}" title="Pratinjau Transkrip Nilai (PDF)">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                             <span>Transkrip</span>
                         </button>` : ''}
                         ${mhs.cv_path ? `
                         <button type="button" class="btn-doc-pill pill-cv btn-cv-mhs" data-id="${mhs.id}" data-nama="${escapeHtml(mhs.nama)}" data-nim="${escapeHtml(mhs.nim)}" title="Pratinjau Curriculum Vitae / CV (PDF)">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><circle cx="12" cy="12" r="2.5"/><path d="M8 18c0-1.8 1.8-3 4-3s4 1.2 4 3"/></svg>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><circle cx="12" cy="12" r="2.5"/><path d="M8 18c0-1.8 1.8-3 4-3s4 1.2 4 3"/></svg>
                             <span>CV</span>
                         </button>` : ''}
                         ${mhs.porto_path ? `
                         <button type="button" class="btn-doc-pill pill-porto btn-porto-mhs" data-id="${mhs.id}" data-nama="${escapeHtml(mhs.nama)}" data-nim="${escapeHtml(mhs.nim)}" title="Pratinjau Portofolio (PDF)">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
                             <span>Porto</span>
                         </button>` : ''}
                     </div>
                     <div class="action-row-decision">
                         ${mhs.status !== 'diterima' ? `
                         <button type="button" class="btn-action-pill pill-approve btn-act-approve" data-id="${mhs.id}" title="Terima Mahasiswa">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                             <span>Terima</span>
                         </button>` : ''}
                         <button type="button" class="btn-action-pill pill-relocate btn-act-relocate" data-id="${mhs.id}" title="Ajukan Pemindahan ke Unit Lain">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/></svg>
                             <span>Pindahkan</span>
                         </button>
                         ${mhs.status !== 'ditolak' ? `
                         <button type="button" class="btn-action-pill pill-reject btn-act-reject" data-id="${mhs.id}" title="Tolak Pendaftaran">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
                             <span>Tolak</span>
                         </button>` : ''}
                     </div>
@@ -1794,7 +1842,7 @@ function renderPendaftarTable(list) {
         btn.addEventListener('click', () => {
             const mhsId = parseInt(btn.getAttribute('data-id'));
             const mhs = currentMhsList.find(item => item.id === mhsId);
-            if (mhs) showMhsDetailModal(mhs);
+            if (mhs) openCandidateDrawer(mhs);
         });
     });
 
@@ -1810,7 +1858,7 @@ function showMhsDetailModal(mhs) {
         transferAlertHtml = `
             <div style="background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 10px; padding: 14px 16px; margin-bottom: 20px; text-align: left;">
                 <div style="display: flex; align-items: center; gap: 8px; font-weight: 700; color: #3730a3; font-size: 0.875rem; margin-bottom: 6px;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 3h5v5"/><path d="M4 20L21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/></svg>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M4 20L21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/></svg>
                     <span>Pendaftar Hasil Pemindahan Unit</span>
                 </div>
                 <div style="font-size: 0.825rem; color: #4338ca; line-height: 1.4;">
@@ -1857,7 +1905,7 @@ function showMhsDetailModal(mhs) {
             <div class="mhs-detail-item">
                 <div class="mhs-detail-label">Kontak WhatsApp / HP</div>
                 <div class="mhs-detail-val" style="display: flex; align-items: center; gap: 6px;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><line x1="12" x2="12.01" y1="18" y2="18"/></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><circle cx="12" cy="18" r="1" fill="currentColor"/></svg>
                     <span>${escapeHtml(mhs.no_hp)}</span>
                 </div>
             </div>
@@ -2352,11 +2400,11 @@ function renderTransferTable(list, subtab) {
                 actionHtml = `
                     <div style="display: inline-flex; gap: 6px; align-items: center; justify-content: center;">
                         <button type="button" class="btn-portal-primary btn-tr-approve" data-id="${item.id}" style="padding: 5px 12px; font-size: 0.775rem; background: #16a34a; border-color: #16a34a;">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                             <span>Terima</span>
                         </button>
                         <button type="button" class="btn-portal-outline btn-tr-reject" data-id="${item.id}" style="padding: 5px 12px; font-size: 0.775rem; color: #dc2626; border-color: #fecaca; background: #fef2f2;">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                             <span>Tolak</span>
                         </button>
                     </div>
@@ -2456,4 +2504,505 @@ function initModalCloseButtons() {
             }
         });
     });
+}
+
+
+// ==========================================
+// PHASE STEPPER & SMART ACTION SYNC
+// ==========================================
+function updatePhaseLifecycle(summary) {
+    if (!summary) return;
+    const periode = summary.periode;
+    const stats = summary.stats || {};
+    const unverifiedCount = stats.belum_dicek !== undefined ? stats.belum_dicek : (stats.total || 0);
+    const acceptedCount = stats.diterima || 0;
+    const isConfigured = Boolean(periode?.is_configured && periode?.upp);
+
+    const s1 = document.getElementById('stepper-fase-1');
+    const s2 = document.getElementById('stepper-fase-2');
+    const s3 = document.getElementById('stepper-fase-3');
+    const badge1 = document.getElementById('badge-icon-fase-1');
+    const badge2 = document.getElementById('badge-icon-fase-2');
+    const badge3 = document.getElementById('badge-icon-fase-3');
+    const chip1 = document.getElementById('chip-fase-1-status');
+    const chip2 = document.getElementById('chip-fase-2-status');
+    const chip3 = document.getElementById('chip-fase-3-status');
+    const heroFase = document.getElementById('hero-fase-status-text');
+
+    // Reset base classes
+    [s1, s2, s3].forEach(el => el?.classList.remove('is-completed', 'is-active', 'is-upcoming', 'is-urgent'));
+
+    if (!periode) {
+        s1?.classList.add('is-upcoming');
+        s2?.classList.add('is-upcoming');
+        s3?.classList.add('is-upcoming');
+        if (heroFase) heroFase.innerText = 'Periode Belum Aktif';
+        return;
+    }
+
+    // KONDISI 1: Unit BELUM mengatur kuota pada periode ini
+    if (!isConfigured) {
+        s1?.classList.add('is-active', 'is-urgent');
+        if (badge1) badge1.innerHTML = '1';
+        if (chip1) {
+            chip1.innerText = 'Perlu Diatur';
+            chip1.style.background = '#fef2f2';
+            chip1.style.color = '#dc2626';
+            chip1.style.borderColor = '#fecaca';
+        }
+
+        s2?.classList.add('is-upcoming');
+        if (badge2) badge2.innerHTML = '2';
+        if (chip2) {
+            chip2.innerText = 'Menunggu Kuota Unit';
+            chip2.style.background = '#f8fafc';
+            chip2.style.color = '#64748b';
+            chip2.style.borderColor = '#e2e8f0';
+        }
+
+        s3?.classList.add('is-upcoming');
+        if (badge3) badge3.innerHTML = '3';
+        if (chip3) {
+            chip3.innerText = 'Menunggu Penetapan';
+            chip3.style.background = '#f8fafc';
+            chip3.style.color = '#64748b';
+            chip3.style.borderColor = '#e2e8f0';
+        }
+
+        if (heroFase) heroFase.innerText = 'Fase 1: Setup Kuota Unit (Belum Diatur)';
+        return;
+    }
+
+    // KONDISI 2: Unit SUDAH mengatur kuota
+    // Fase 1 SELESAI (Centang Hijau)
+    s1?.classList.add('is-completed');
+    if (badge1) badge1.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+    if (chip1) {
+        chip1.innerText = 'Terkonfirmasi';
+        chip1.style.background = '#ecfdf5';
+        chip1.style.color = '#065f46';
+        chip1.style.borderColor = '#a7f3d0';
+    }
+
+    const pStatus = (periode.status || '').toLowerCase();
+
+    if (pStatus === 'persiapan') {
+        s2?.classList.add('is-upcoming');
+        if (badge2) badge2.innerHTML = '2';
+        if (chip2) {
+            chip2.innerText = 'Menunggu Pendaftaran';
+            chip2.style.background = '#f8fafc';
+            chip2.style.color = '#64748b';
+            chip2.style.borderColor = '#e2e8f0';
+        }
+
+        s3?.classList.add('is-upcoming');
+        if (badge3) badge3.innerHTML = '3';
+        if (chip3) {
+            chip3.innerText = 'Menunggu Penetapan';
+            chip3.style.background = '#f8fafc';
+            chip3.style.color = '#64748b';
+            chip3.style.borderColor = '#e2e8f0';
+        }
+
+        if (heroFase) heroFase.innerText = 'Fase 1: Setup Kuota Selesai';
+    } else if (pStatus === 'dibuka' || pStatus === 'buka') {
+        s2?.classList.add('is-active');
+        if (badge2) badge2.innerHTML = '2';
+        if (chip2) {
+            chip2.innerText = unverifiedCount > 0 ? `${unverifiedCount} Menunggu Review` : 'Semua Berkas Direview';
+            chip2.style.background = '#e0f7fa';
+            chip2.style.color = '#006064';
+            chip2.style.borderColor = '#80deea';
+        }
+
+        s3?.classList.add('is-upcoming');
+        if (badge3) badge3.innerHTML = '3';
+        if (chip3) {
+            chip3.innerText = acceptedCount > 0 ? `${acceptedCount} Terpilih` : 'Menunggu Penetapan';
+            chip3.style.background = '#f8fafc';
+            chip3.style.color = '#64748b';
+            chip3.style.borderColor = '#e2e8f0';
+        }
+
+        if (heroFase) heroFase.innerText = 'Fase 2: Seleksi & Verifikasi Berkas';
+    } else if (pStatus === 'tutup' || pStatus === 'selesai') {
+        s2?.classList.add('is-completed');
+        if (badge2) badge2.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+        if (chip2) {
+            chip2.innerText = 'Seleksi Ditutup';
+            chip2.style.background = '#ecfdf5';
+            chip2.style.color = '#065f46';
+            chip2.style.borderColor = '#a7f3d0';
+        }
+
+        s3?.classList.add('is-active');
+        if (badge3) badge3.innerHTML = '3';
+        if (chip3) {
+            chip3.innerText = `${acceptedCount} Mahasiswa Sah`;
+            chip3.style.background = '#ecfdf5';
+            chip3.style.color = '#065f46';
+            chip3.style.borderColor = '#a7f3d0';
+        }
+
+        if (heroFase) heroFase.innerText = 'Fase 3: Roster Mahasiswa Sah';
+    }
+}
+
+function updatePhaseStepperHighlight(activeTab) {
+    const s1 = document.getElementById('stepper-fase-1');
+    const s2 = document.getElementById('stepper-fase-2');
+    const s3 = document.getElementById('stepper-fase-3');
+
+    [s1, s2, s3].forEach(el => el?.classList.remove('is-tab-focused'));
+
+    if (activeTab === 'tab-kuota') {
+        s1?.classList.add('is-tab-focused');
+    } else if (activeTab === 'tab-pendaftar' || activeTab === 'tab-pemindahan') {
+        s2?.classList.add('is-tab-focused');
+    } else if (activeTab === 'tab-roster') {
+        s3?.classList.add('is-tab-focused');
+    }
+}
+
+function updateExecutiveContextAndChecklist(summary) {
+    if (!summary) return;
+    const entitas = summary.entitas;
+    const periode = summary.periode;
+    const stats = summary.stats || {};
+    const unverifiedCount = stats.belum_dicek !== undefined ? stats.belum_dicek : 0;
+    const transferCount = summary.pending_transfer_count || 0;
+    const acceptedCount = stats.diterima || 0;
+
+    // 1. Context Hero Bar
+    const heroUnit = document.getElementById('hero-unit-name');
+    if (heroUnit) heroUnit.innerText = entitas?.nama || 'Portal Mitra Unit PLN';
+
+    const heroPic = document.getElementById('hero-pic-info');
+    if (heroPic) {
+        const pNama = entitas?.pic?.nama || entitas?.pic_nama || '';
+        const pJabatan = entitas?.pic?.jabatan || entitas?.pic_jabatan || '';
+        const picNama = pNama ? `PIC: ${pNama}` : 'PIC Belum Dilengkapi';
+        const picJabatan = pJabatan ? ` (${pJabatan})` : '';
+        heroPic.innerText = `${picNama}${picJabatan} • ${entitas?.alamat || 'Unit PLN'}`;
+    }
+
+    const heroPeriode = document.getElementById('hero-periode-text');
+    if (heroPeriode) {
+        heroPeriode.innerText = periode?.nama ? `${periode.nama} (${(periode.status || '').toUpperCase()})` : 'Tidak Ada Periode Aktif';
+    }
+
+    // 2. Lifecycle Stepper Sync
+    updatePhaseLifecycle(summary);
+
+    // 3. Action Checklist
+    const actPendaftarCount = document.getElementById('act-pendaftar-count');
+    if (actPendaftarCount) actPendaftarCount.innerText = unverifiedCount;
+
+    const actTransferCount = document.getElementById('act-transfer-count');
+    if (actTransferCount) actTransferCount.innerText = transferCount;
+
+    const rowVerifikasi = document.getElementById('row-act-verifikasi');
+    if (rowVerifikasi) {
+        if (unverifiedCount === 0) {
+            rowVerifikasi.style.opacity = '0.6';
+        } else {
+            rowVerifikasi.style.opacity = '1';
+        }
+    }
+
+    const rowTransfer = document.getElementById('row-act-transfer');
+    if (rowTransfer) {
+        if (transferCount === 0) {
+            rowTransfer.style.display = 'none';
+        } else {
+            rowTransfer.style.display = 'flex';
+        }
+    }
+
+    const actKuotaSummary = document.getElementById('act-kuota-summary');
+    if (actKuotaSummary && periode?.upp) {
+        const totalK = parseInt(periode.upp.kuota_total || 0, 10);
+        const sisaK = parseInt(periode.upp.kuota_tersisa || 0, 10);
+        actKuotaSummary.innerText = `Kuota Terisi: ${totalK - sisaK} / ${totalK} Kursi Mahasiswa`;
+    }
+
+    const actionCounter = document.getElementById('action-checklist-counter');
+    if (actionCounter) {
+        const totalUrgent = unverifiedCount + transferCount;
+        actionCounter.innerText = totalUrgent > 0 ? `${totalUrgent} Aksi Mendesak Perlu Tindakan` : 'Semua Tugas Selesai ✓';
+    }
+
+    const badgeRoster = document.getElementById('badge-roster-count');
+    if (badgeRoster) {
+        if (acceptedCount > 0) {
+            badgeRoster.innerText = acceptedCount;
+            badgeRoster.classList.remove('hidden');
+        } else {
+            badgeRoster.classList.add('hidden');
+        }
+    }
+}
+
+// ==========================================
+// CANDIDATE SLIDING SIDE DRAWER
+// ==========================================
+let currentDrawerMhs = null;
+
+function initSideDrawer() {
+    const backdrop = document.getElementById('drawer-backdrop');
+    const btnClose = document.getElementById('btn-close-drawer');
+    const btnApprove = document.getElementById('drawer-btn-approve');
+    const btnRelocate = document.getElementById('drawer-btn-relocate');
+    const btnReject = document.getElementById('drawer-btn-reject');
+
+    if (backdrop) backdrop.addEventListener('click', closeCandidateDrawer);
+    if (btnClose) btnClose.addEventListener('click', closeCandidateDrawer);
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeCandidateDrawer();
+    });
+
+    if (btnApprove) {
+        btnApprove.addEventListener('click', () => {
+            if (currentDrawerMhs) {
+                closeCandidateDrawer();
+                openApproveModal(currentDrawerMhs);
+            }
+        });
+    }
+
+    if (btnRelocate) {
+        btnRelocate.addEventListener('click', () => {
+            if (currentDrawerMhs) {
+                closeCandidateDrawer();
+                openRelocateModal(currentDrawerMhs);
+            }
+        });
+    }
+
+    if (btnReject) {
+        btnReject.addEventListener('click', () => {
+            if (currentDrawerMhs) {
+                closeCandidateDrawer();
+                openRejectModal(currentDrawerMhs);
+            }
+        });
+    }
+}
+
+function openCandidateDrawer(mhs) {
+    currentDrawerMhs = mhs;
+    const drawer = document.getElementById('drawer-candidate');
+    const backdrop = document.getElementById('drawer-backdrop');
+    if (!drawer || !backdrop) return;
+
+    // Populate Data
+    const namaEl = document.getElementById('drawer-mhs-nama');
+    const nimEl = document.getElementById('drawer-mhs-nim');
+    const avatarEl = document.getElementById('drawer-avatar');
+    const statusBadgeEl = document.getElementById('drawer-status-badge');
+    const durasiEl = document.getElementById('drawer-durasi');
+    const ipkSksEl = document.getElementById('drawer-ipk-sks');
+    const peminatanEl = document.getElementById('drawer-peminatan');
+    const kontakEl = document.getElementById('drawer-kontak');
+    const docsContainer = document.getElementById('drawer-docs-container');
+    const notesEl = document.getElementById('drawer-notes');
+
+    if (namaEl) namaEl.innerText = mhs.nama || '-';
+    if (nimEl) nimEl.innerText = `NIM: ${mhs.nim} • ${mhs.jurusan_nama || '-'} (${mhs.angkatan || '-'})`;
+    if (avatarEl) avatarEl.innerText = (mhs.nama || 'M').charAt(0).toUpperCase();
+    if (statusBadgeEl) {
+        statusBadgeEl.innerHTML = `<span class="badge-status badge-${mhs.status}">${(mhs.status || '').toUpperCase()}</span>`;
+    }
+    if (durasiEl) durasiEl.innerText = mhs.program || 'Magang Reguler';
+    if (ipkSksEl) ipkSksEl.innerText = `IPK: ${mhs.ipk || '-'} | SKS: ${mhs.jumlah_sks || '-'} SKS`;
+    if (peminatanEl) {
+        const pemText = mhs.peminatan && mhs.peminatan.length > 0 ? mhs.peminatan.join(', ') : 'Umum / Tidak Spesifik';
+        peminatanEl.innerText = pemText;
+    }
+    if (kontakEl) {
+        kontakEl.innerHTML = `
+            <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                <span>WhatsApp: <strong>${escapeHtml(mhs.no_hp || '-')}</strong></span>
+                <span>•</span>
+                <span>Email: <strong>${escapeHtml(mhs.email || '-')}</strong></span>
+            </div>
+        `;
+    }
+
+    // Populate Docs
+    if (docsContainer) {
+        docsContainer.innerHTML = '';
+        let hasAnyDoc = false;
+
+        if (mhs.transkrip_path) {
+            hasAnyDoc = true;
+            docsContainer.innerHTML += `
+                <div class="drawer-doc-card">
+                    <div class="drawer-doc-info">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #0284c7;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        <span>Transkrip Nilai Akademik Resmi</span>
+                    </div>
+                    <a href="/api/admin/transkrip/download.php?pendaftaran_id=${mhs.id}" target="_blank" class="drawer-doc-btn">
+                        <span>Lihat PDF</span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                    </a>
+                </div>
+            `;
+        }
+
+        if (mhs.cv_path) {
+            hasAnyDoc = true;
+            docsContainer.innerHTML += `
+                <div class="drawer-doc-card">
+                    <div class="drawer-doc-info">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #10b981;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><circle cx="12" cy="12" r="2.5"/><path d="M8 18c0-1.8 1.8-3 4-3s4 1.2 4 3"/></svg>
+                        <span>Curriculum Vitae (CV) Kandidat</span>
+                    </div>
+                    <a href="/api/admin/cv/download.php?pendaftaran_id=${mhs.id}" target="_blank" class="drawer-doc-btn">
+                        <span>Lihat PDF</span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                    </a>
+                </div>
+            `;
+        }
+
+        if (mhs.porto_path) {
+            hasAnyDoc = true;
+            docsContainer.innerHTML += `
+                <div class="drawer-doc-card">
+                    <div class="drawer-doc-info">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #7c3aed;"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                        <span>Portofolio Hasil Karya</span>
+                    </div>
+                    <a href="/api/admin/porto/download.php?pendaftaran_id=${mhs.id}" target="_blank" class="drawer-doc-btn">
+                        <span>Lihat PDF</span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                    </a>
+                </div>
+            `;
+        }
+
+        if (!hasAnyDoc) {
+            docsContainer.innerHTML = '<span style="font-size: 0.825rem; color: #94a3b8; font-style: italic;">Mahasiswa belum mengunggah dokumen opsional.</span>';
+        }
+    }
+
+    if (notesEl) {
+        notesEl.innerText = mhs.catatan_admin || 'Belum ada catatan internal unit untuk kandidat ini.';
+    }
+
+    // Toggle Decision Buttons based on current status
+    const btnApprove = document.getElementById('drawer-btn-approve');
+    const btnReject = document.getElementById('drawer-btn-reject');
+    if (btnApprove) btnApprove.style.display = mhs.status === 'diterima' ? 'none' : 'inline-flex';
+    if (btnReject) btnReject.style.display = mhs.status === 'ditolak' ? 'none' : 'inline-flex';
+
+    // Slide in
+    backdrop.classList.add('is-open');
+    drawer.classList.add('is-open');
+    drawer.setAttribute('aria-hidden', 'false');
+}
+
+function closeCandidateDrawer() {
+    const drawer = document.getElementById('drawer-candidate');
+    const backdrop = document.getElementById('drawer-backdrop');
+    if (drawer) {
+        drawer.classList.remove('is-open');
+        drawer.setAttribute('aria-hidden', 'true');
+    }
+    if (backdrop) backdrop.classList.remove('is-open');
+    currentDrawerMhs = null;
+}
+
+// ==========================================
+// FASE 3: ROSTER MAHASISWA SAH
+// ==========================================
+function initRosterModule() {
+    const btnExportRoster = document.getElementById('btn-export-roster');
+    if (btnExportRoster) {
+        btnExportRoster.addEventListener('click', () => {
+            const originalHtml = btnExportRoster.innerHTML;
+            btnExportRoster.disabled = true;
+            btnExportRoster.style.opacity = '0.75';
+            btnExportRoster.innerHTML = `
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation: spin 1s linear infinite;"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                <span>Menyiapkan Arsip ZIP...</span>
+            `;
+
+            const params = new URLSearchParams();
+            params.set('status', 'diterima');
+            if (currentPeriodeId > 0) {
+                params.set('periode_id', currentPeriodeId);
+            }
+            window.location.href = `/api/perusahaan/pendaftar/export.php?${params.toString()}`;
+
+            setTimeout(() => {
+                btnExportRoster.disabled = false;
+                btnExportRoster.style.opacity = '1';
+                btnExportRoster.innerHTML = originalHtml;
+            }, 3500);
+        });
+    }
+}
+
+async function loadRosterData() {
+    const container = document.getElementById('roster-grid-container');
+    if (!container) return;
+
+    try {
+        let url = `/api/perusahaan/pendaftar/list.php?per_page=100&filter_status=diterima`;
+        if (currentPeriodeId > 0) url += `&periode_id=${currentPeriodeId}`;
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (data.ok && Array.isArray(data.data) && data.data.length > 0) {
+            container.innerHTML = '';
+            data.data.forEach(mhs => {
+                const card = document.createElement('div');
+                card.className = 'roster-card';
+                const cleanPhone = (mhs.no_hp || '').replace(/[^0-9]/g, '');
+                const waNumber = cleanPhone.startsWith('0') ? '62' + cleanPhone.slice(1) : cleanPhone;
+                
+                card.innerHTML = `
+                    <div class="roster-card-header">
+                        <div class="roster-card-avatar">${escapeHtml((mhs.nama || 'M').charAt(0).toUpperCase())}</div>
+                        <div class="roster-card-info">
+                            <span class="roster-card-name">${escapeHtml(mhs.nama)}</span>
+                            <span class="roster-card-nim">NIM: ${escapeHtml(mhs.nim)} • ${escapeHtml(mhs.jurusan_nama)}</span>
+                        </div>
+                    </div>
+                    <div style="font-size: 0.8rem; color: #475569; display: flex; flex-direction: column; gap: 4px;">
+                        <div><strong>Program:</strong> ${escapeHtml(mhs.program || '-')}</div>
+                        <div><strong>IPK:</strong> ${escapeHtml(mhs.ipk || '-')} (SKS: ${escapeHtml(mhs.jumlah_sks || '-')})</div>
+                        <div><strong>Peminatan:</strong> ${escapeHtml((mhs.peminatan && mhs.peminatan.length > 0) ? mhs.peminatan.join(', ') : 'Umum')}</div>
+                    </div>
+                    <div class="roster-contact-actions">
+                        ${waNumber ? `
+                        <a href="https://wa.me/${waNumber}" target="_blank" class="btn-roster-contact btn-roster-wa">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                            <span>Hubungi WA</span>
+                        </a>` : ''}
+                        ${mhs.email ? `
+                        <a href="mailto:${escapeHtml(mhs.email)}" class="btn-roster-contact btn-roster-email">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                            <span>Email</span>
+                        </a>` : ''}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        } else {
+            container.innerHTML = `
+                <div class="admin-card" style="grid-column: 1 / -1; padding: 40px 24px; text-align: center; color: var(--brand-muted);">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 12px; color: #94a3b8;"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                    <div style="font-weight: 700; font-size: 1rem; color: var(--brand-navy); margin-bottom: 4px;">Belum Ada Mahasiswa Berstatus Diterima</div>
+                    <p style="font-size: 0.85rem; margin: 0;">Silakan lakukan verifikasi penerimaan di tab <strong>Verifikasi Peserta</strong> terlebih dahulu.</p>
+                </div>
+            `;
+        }
+    } catch (e) {
+        console.error('Error loadRosterData:', e);
+    }
 }

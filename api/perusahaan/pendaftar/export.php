@@ -45,27 +45,35 @@ try {
     $entitas = $stmtE->fetch(PDO::FETCH_ASSOC);
     $unitNama = $entitas['nama'] ?? 'Unit Mitra';
 
-    // 2. Ambil Periode
+    // 2. Ambil Periode Beserta Persyaratan Berkas
     $periodeId = (int)($_GET['periode_id'] ?? 0);
     $periode = null;
     if ($periodeId > 0) {
-        $stmtP = $pdo->prepare("SELECT id, nama FROM periode WHERE id = ?");
+        $stmtP = $pdo->prepare("SELECT id, nama, status, syarat_transkrip, syarat_cv, syarat_porto FROM periode WHERE id = ?");
         $stmtP->execute([$periodeId]);
         $periode = $stmtP->fetch(PDO::FETCH_ASSOC);
     }
     if (!$periode) {
-        $stmtP = $pdo->query("SELECT id, nama FROM periode WHERE status IN ('dibuka', 'persiapan') ORDER BY id DESC LIMIT 1");
+        $stmtP = $pdo->query("SELECT id, nama, status, syarat_transkrip, syarat_cv, syarat_porto FROM periode WHERE status IN ('dibuka', 'persiapan') ORDER BY id DESC LIMIT 1");
         $periode = $stmtP->fetch(PDO::FETCH_ASSOC);
     }
     if (!$periode) {
-        $stmtP = $pdo->query("SELECT id, nama FROM periode ORDER BY id DESC LIMIT 1");
+        $stmtP = $pdo->query("SELECT id, nama, status, syarat_transkrip, syarat_cv, syarat_porto FROM periode ORDER BY id DESC LIMIT 1");
         $periode = $stmtP->fetch(PDO::FETCH_ASSOC);
     }
 
     $pid = $periode ? (int)$periode['id'] : 0;
     $periodeNama = $periode ? $periode['nama'] : 'Semua Periode';
 
-    // 3. Query Data
+    // 3. Query Data Pendaftar
+    $statusFilter = isset($_GET['status']) && $_GET['status'] !== '' ? trim($_GET['status']) : '';
+    $whereStatus = '';
+    $queryParams = [':pid' => $pid, ':eid' => $entitasId];
+    if ($statusFilter !== '') {
+        $whereStatus = " AND p.status = :status ";
+        $queryParams[':status'] = $statusFilter;
+    }
+
     $stmtData = $pdo->prepare("
         SELECT 
             p.id AS pendaftaran_id,
@@ -78,6 +86,9 @@ try {
             p.status,
             p.submitted_at,
             p.alamat, p.rt, p.rw, p.kelurahan, p.kecamatan, p.kota_kabupaten, p.provinsi,
+            p.transkrip_path,
+            p.cv_path,
+            p.porto_path,
             m.nim,
             m.email,
             m.angkatan,
@@ -86,10 +97,10 @@ try {
         JOIN mahasiswa m ON p.mahasiswa_id = m.id
         JOIN unit_pelaksana_periode upp ON p.unit_pelaksana_periode_id = upp.id
         LEFT JOIN jurusan j ON m.jurusan_id = j.id
-        WHERE p.periode_id = :pid AND upp.entitas_id = :eid
+        WHERE p.periode_id = :pid AND upp.entitas_id = :eid {$whereStatus}
         ORDER BY p.submitted_at DESC
     ");
-    $stmtData->execute([':pid' => $pid, ':eid' => $entitasId]);
+    $stmtData->execute($queryParams);
     $rows = $stmtData->fetchAll(PDO::FETCH_ASSOC);
 
     // Ambil peminatan
@@ -111,25 +122,61 @@ try {
         }
     }
 
+    // Helper format alamat lengkap mahasiswa
+    $formatAlamat = function(array $r): string {
+        $parts = [];
+        if (!empty($r['alamat'])) {
+            $parts[] = trim((string)$r['alamat']);
+        }
+        $rtrw = [];
+        if (!empty($r['rt'])) {
+            $rtrw[] = 'RT ' . trim((string)$r['rt']);
+        }
+        if (!empty($r['rw'])) {
+            $rtrw[] = 'RW ' . trim((string)$r['rw']);
+        }
+        if (!empty($rtrw)) {
+            $parts[] = implode('/', $rtrw);
+        }
+        if (!empty($r['kelurahan'])) {
+            $parts[] = 'Kel. ' . trim((string)$r['kelurahan']);
+        }
+        if (!empty($r['kecamatan'])) {
+            $parts[] = 'Kec. ' . trim((string)$r['kecamatan']);
+        }
+        if (!empty($r['kota_kabupaten'])) {
+            $parts[] = trim((string)$r['kota_kabupaten']);
+        }
+        if (!empty($r['provinsi'])) {
+            $parts[] = trim((string)$r['provinsi']);
+        }
+        return !empty($parts) ? implode(', ', $parts) : '-';
+    };
+
+    $isRoster = ($statusFilter === 'diterima');
+    $sheetTitle = $isRoster ? 'Roster Peserta Sah' : 'Daftar Pendaftar';
+    $mainHeading = $isRoster ? ('ROSTER RESMI MAHASISWA MAGANG (DITERIMA): ' . strtoupper($unitNama)) : ('DAFTAR PENDAFTAR MAGANG: ' . strtoupper($unitNama));
+
+    // 4. Bangun Spreadsheet Rekapitulasi Data
     $spreadsheet = new Spreadsheet();
     $sheet = $spreadsheet->getActiveSheet();
-    $sheet->setTitle('Daftar Pendaftar');
+    $sheet->setTitle($sheetTitle);
 
-    // Title
-    $sheet->mergeCells('A1:L1');
-    $sheet->setCellValue('A1', 'DAFTAR PENDAFTAR MAGANG — ' . strtoupper($unitNama));
+    // Title Block
+    $sheet->mergeCells('A1:M1');
+    $sheet->setCellValue('A1', $mainHeading);
     $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FF004687'));
     $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
-    $sheet->mergeCells('A2:L2');
-    $sheet->setCellValue('A2', 'Periode: ' . $periodeNama . ' | Total Pendaftar: ' . count($rows) . ' Mahasiswa | Diekspor: ' . date('d-m-Y H:i:s'));
+    $sheet->mergeCells('A2:M2');
+    $sheet->setCellValue('A2', 'Periode: ' . $periodeNama . ' | Total Mahasiswa: ' . count($rows) . ' Mahasiswa | Diekspor: ' . date('d-m-Y H:i:s'));
     $sheet->getStyle('A2')->getFont()->setSize(10)->setItalic(true);
     $sheet->getStyle('A2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
-    // Table Header
+    // Table Headers (Kolom M ditambahkan untuk Alamat Mahasiswa)
     $headers = [
         'No', 'NIM', 'Nama Mahasiswa', 'L/P', 'Program Studi', 'Angkatan', 
-        'IPK', 'SKS', 'Program', 'Peminatan', 'No. WhatsApp / HP', 'Email Kampus'
+        'IPK', 'SKS', 'Program', 'Peminatan', 'No. WhatsApp / HP', 'Email Kampus', 'Alamat Lengkap Mahasiswa'
     ];
     $colLetter = 'A';
     foreach ($headers as $h) {
@@ -137,12 +184,12 @@ try {
         $colLetter++;
     }
 
-    $sheet->getStyle('A4:L4')->applyFromArray([
+    $sheet->getStyle('A4:M4')->applyFromArray([
         'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
         'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '004687']],
         'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
     ]);
-    $sheet->getRowDimension(4)->setRowHeight(25);
+    $sheet->getRowDimension(4)->setRowHeight(26);
 
     $rowNum = 5;
     $no = 1;
@@ -162,6 +209,7 @@ try {
         $sheet->setCellValue('J' . $rowNum, $peminatanStr);
         $sheet->setCellValue('K' . $rowNum, $r['no_hp'] ?? '-');
         $sheet->setCellValue('L' . $rowNum, $r['email']);
+        $sheet->setCellValue('M' . $rowNum, $formatAlamat($r));
 
         $sheet->getStyle('A' . $rowNum)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         $sheet->getStyle('B' . $rowNum)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
@@ -176,26 +224,144 @@ try {
 
     $lastRow = $rowNum - 1;
     if ($lastRow >= 4) {
-        $sheet->getStyle('A4:L' . $lastRow)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FFCBD5E1'));
+        $sheet->getStyle('A4:M' . $lastRow)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FFCBD5E1'));
     }
 
-    foreach (range('A', 'L') as $col) {
+    foreach (range('A', 'M') as $col) {
         $sheet->getColumnDimension($col)->setAutoSize(true);
     }
 
     $cleanUnitName = preg_replace('/[^a-zA-Z0-9]/', '_', $unitNama);
-    $fileName = 'Pendaftar_' . $cleanUnitName . '_' . date('Ymd_His') . '.xlsx';
+    $requestedFormat = strtolower(trim((string)($_GET['format'] ?? '')));
 
-    header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    header('Content-Disposition: attachment; filename="' . $fileName . '"');
-    header('Cache-Control: max-age=0');
+    // 5. Cek apakah pengguna hanya meminta format Excel saja
+    if ($requestedFormat === 'excel' || $requestedFormat === 'xlsx') {
+        $prefix = $isRoster ? 'Roster_Resmi_' : 'Pendaftar_';
+        $fileName = $prefix . $cleanUnitName . '_' . date('Ymd_His') . '.xlsx';
 
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename="' . $fileName . '"');
+        header('Cache-Control: max-age=0');
+
+        $writer = new Xlsx($spreadsheet);
+        $writer->save('php://output');
+        exit;
+    }
+
+    // 6. DEFAULT: Buat Paket ZIP Lengkap (File Excel Rekap + Folder Berkas Tiap Mahasiswa)
+    $storageRoot = realpath($root . '/storage');
+
+    // Cek syarat berkas wajib pada periode ini
+    $reqTranskrip = !isset($periode['syarat_transkrip']) || (int)$periode['syarat_transkrip'] === 1;
+    $reqCv        = isset($periode['syarat_cv']) && (int)$periode['syarat_cv'] === 1;
+    $reqPorto     = isset($periode['syarat_porto']) && (int)$periode['syarat_porto'] === 1;
+
+    // Jika seluruh flag syarat 0 (misal data periode legacy), aktifkan berkas yang tersedia
+    if (!$reqTranskrip && !$reqCv && !$reqPorto) {
+        $reqTranskrip = true;
+        $reqCv = true;
+        $reqPorto = true;
+    }
+
+    $tempExcelPath = tempnam(sys_get_temp_dir(), 'remate_xlsx_');
     $writer = new Xlsx($spreadsheet);
-    $writer->save('php://output');
+    $writer->save($tempExcelPath);
+
+    $tempZipPath = tempnam(sys_get_temp_dir(), 'remate_zip_');
+    $zip = new \ZipArchive();
+    $zipRes = $zip->open($tempZipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
+    if ($zipRes !== true) {
+        throw new \RuntimeException("Gagal menginisialisasi arsip ZIP di server.");
+    }
+
+    // 6.1 Tambahkan File Excel ke Root Arsip ZIP
+    $excelFileNameInZip = ($isRoster ? 'Rekap_Roster_Resmi_' : 'Rekap_Pendaftar_') . $cleanUnitName . '_' . date('Ymd_His') . '.xlsx';
+    $zip->addFile($tempExcelPath, $excelFileNameInZip);
+
+    // 6.2 Tambahkan Folder Dokumen per Mahasiswa
+    foreach ($rows as $r) {
+        $cleanNim = preg_replace('/[^a-zA-Z0-9_\-]/', '', (string)$r['nim']);
+        $cleanNama = preg_replace('/[\\\\\/:\*\?"<>\|\r\n\t]/', '', (string)$r['nama_snapshot']);
+        $cleanNama = trim(preg_replace('/\s+/', ' ', $cleanNama));
+        if ($cleanNama === '') {
+            $cleanNama = 'Mahasiswa';
+        }
+
+        $studentFolder = "{$cleanNim} - {$cleanNama}";
+        $zip->addEmptyDir($studentFolder);
+
+        $hasFileAdded = false;
+
+        // Berkas Transkrip Nilai (sesuai syarat periode)
+        if ($reqTranskrip && !empty($r['transkrip_path']) && $storageRoot) {
+            $tRel = ltrim((string)$r['transkrip_path'], '/\\');
+            $tFull = realpath($storageRoot . DIRECTORY_SEPARATOR . $tRel);
+            if ($tFull && str_starts_with($tFull, $storageRoot) && is_file($tFull)) {
+                $ext = strtolower(pathinfo($tFull, PATHINFO_EXTENSION)) ?: 'pdf';
+                $zip->addFile($tFull, "{$studentFolder}/Transkrip_Nilai_{$cleanNim}.{$ext}");
+                $hasFileAdded = true;
+            }
+        }
+
+        // Berkas Curriculum Vitae / CV (sesuai syarat periode)
+        if ($reqCv && !empty($r['cv_path']) && $storageRoot) {
+            $cRel = ltrim((string)$r['cv_path'], '/\\');
+            $cFull = realpath($storageRoot . DIRECTORY_SEPARATOR . $cRel);
+            if ($cFull && str_starts_with($cFull, $storageRoot) && is_file($cFull)) {
+                $ext = strtolower(pathinfo($cFull, PATHINFO_EXTENSION)) ?: 'pdf';
+                $zip->addFile($cFull, "{$studentFolder}/Curriculum_Vitae_{$cleanNim}.{$ext}");
+                $hasFileAdded = true;
+            }
+        }
+
+        // Berkas Portofolio (sesuai syarat periode)
+        if ($reqPorto && !empty($r['porto_path']) && $storageRoot) {
+            $pRel = ltrim((string)$r['porto_path'], '/\\');
+            $pFull = realpath($storageRoot . DIRECTORY_SEPARATOR . $pRel);
+            if ($pFull && str_starts_with($pFull, $storageRoot) && is_file($pFull)) {
+                $ext = strtolower(pathinfo($pFull, PATHINFO_EXTENSION)) ?: 'pdf';
+                $zip->addFile($pFull, "{$studentFolder}/Portofolio_{$cleanNim}.{$ext}");
+                $hasFileAdded = true;
+            }
+        }
+
+        // Jika tidak ada berkas fisik yang berhasil dilampirkan, sertakan catatan informasi
+        if (!$hasFileAdded) {
+            $infoContent = "INFORMASI BERKAS PENDAFTARAN:\n";
+            $infoContent .= "Nama Mahasiswa : {$r['nama_snapshot']}\n";
+            $infoContent .= "NIM            : {$r['nim']}\n";
+            $infoContent .= "Program Studi  : " . ($r['nama_jurusan'] ?? '-') . "\n";
+            $infoContent .= "Status Berkas  : Mahasiswa tidak memiliki lampiran berkas yang diunggah atau berkas belum diarsipkan.\n";
+            $zip->addFromString("{$studentFolder}/CATATAN_BERKAS.txt", $infoContent);
+        }
+    }
+
+    $zip->close();
+
+    $zipDownloadName = ($isRoster ? 'Arsip_Roster_Sah_' : 'Arsip_Pendaftar_') . $cleanUnitName . '_' . date('Ymd_His') . '.zip';
+
+    while (ob_get_level() > 0) {
+        ob_end_clean();
+    }
+
+    header('Content-Type: application/zip');
+    header('Content-Disposition: attachment; filename="' . $zipDownloadName . '"');
+    header('Content-Length: ' . (string)filesize($tempZipPath));
+    header('Cache-Control: max-age=0, must-revalidate');
+    header('Pragma: public');
+
+    readfile($tempZipPath);
+
+    @unlink($tempExcelPath);
+    @unlink($tempZipPath);
     exit;
 
 } catch (\Throwable $e) {
     http_response_code(500);
     $debug = ($_ENV['APP_DEBUG'] ?? 'false') === 'true';
-    echo $debug ? ("Gagal mengekspor pendaftar: " . htmlspecialchars($e->getMessage())) : "Gagal mengekspor data pendaftar. Silakan coba lagi.";
+    echo $debug ? ("Gagal mengekspor data: " . htmlspecialchars($e->getMessage())) : "Gagal mengekspor data pendaftar. Silakan coba lagi.";
 }

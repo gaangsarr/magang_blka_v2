@@ -183,33 +183,42 @@ try {
             $statsPendaftar['belum_dicek'] = $pendingCheckCount;
         }
 
-        // Susun Action Banner
+        // Susun Action Banner (Persuasive for Setup Kuota)
         if (!$isConfigured) {
-            $bannerNotification = [
-                'type'        => 'warning',
-                'title'       => "Periode {$periodeAktif['nama']} (Kuota Belum Dikonfigurasi)",
-                'message'     => 'Unit Anda belum mengatur kuota dan program studi untuk periode ini. Silakan atur kuota dan jurusan pada menu Pengaturan Kuota agar unit Anda dapat menerima pendaftar.',
-                'can_edit'    => true,
-            ];
+            if ($periodeStatus === 'persiapan') {
+                $bannerNotification = [
+                    'type'        => 'warning',
+                    'title'       => 'Masa Persiapan',
+                    'message'     => 'Atur kuota & jurusan sekarang agar unit siap menerima mahasiswa.',
+                    'can_edit'    => true,
+                ];
+            } else {
+                $bannerNotification = [
+                    'type'        => 'warning',
+                    'title'       => 'Atur Kuota Unit',
+                    'message'     => "Kuota periode {$periodeAktif['nama']} belum diatur. Atur kuota agar unit dapat menerima pendaftar.",
+                    'can_edit'    => true,
+                ];
+            }
         } elseif ($periodeStatus === 'persiapan') {
             $bannerNotification = [
                 'type'        => 'info',
-                'title'       => "Periode {$periodeAktif['nama']} (Tahap Persiapan)",
-                'message'     => 'Pendaftaran mahasiswa belum dibuka. Pengaturan kuota unit Anda telah tersimpan dan dapat disesuaikan kembali pada menu Pengaturan Kuota sebelum masa pendaftaran dibuka.',
+                'title'       => 'Masa Persiapan',
+                'message'     => 'Kuota tersimpan. Anda masih dapat menyesuaikannya sebelum pendaftaran dibuka.',
                 'can_edit'    => true,
             ];
         } elseif ($periodeStatus === 'dibuka') {
             $bannerNotification = [
                 'type'        => 'success',
-                'title'       => "Periode {$periodeAktif['nama']} (Pendaftaran Dibuka)",
-                'message'     => 'Pendaftaran mahasiswa sedang aktif dan live. Anda dapat memantau dan memverifikasi pendaftar yang masuk ke unit Anda pada menu Verifikasi Peserta.',
+                'title'       => 'Pendaftaran Dibuka',
+                'message'     => "Periode {$periodeAktif['nama']} sedang berjalan.",
                 'can_edit'    => false,
             ];
         } else {
             $bannerNotification = [
                 'type'        => 'neutral',
-                'title'       => "Periode {$periodeAktif['nama']} (" . strtoupper($periodeStatus) . ")",
-                'message'     => 'Status periode saat ini sedang dalam tahap ' . strtoupper($periodeStatus) . '.',
+                'title'       => 'Pendaftaran Ditutup',
+                'message'     => "Periode {$periodeAktif['nama']} telah selesai.",
                 'can_edit'    => false,
             ];
         }
@@ -259,6 +268,10 @@ try {
             'longitude'       => $entitas['longitude'],
             'menerima_magang' => (bool)$entitas['menerima_magang'],
             'parent_nama'     => $entitas['parent_nama'] ?? 'PLN Group',
+            'pic_nama'        => $entitas['pic_nama'] ?? '',
+            'pic_jabatan'     => $entitas['pic_jabatan'] ?? '',
+            'pic_kontak'      => $entitas['pic_kontak'] ?? '',
+            'pic_email'       => $entitas['pic_email'] ?? '',
             'pic'             => [
                 'nama'    => $entitas['pic_nama'] ?? '',
                 'jabatan' => $entitas['pic_jabatan'] ?? '',

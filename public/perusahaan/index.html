@@ -10,1386 +10,8 @@
     <!-- Main & Admin CSS -->
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/admin.css">
-    <style>
-        :root {
-            --brand-primary: #0b3d6b;
-            --brand-primary-dark: #072744;
-            --brand-accent: #0284c7;
-            --brand-surface: #ffffff;
-            --brand-bg: #f8fafc;
-            --brand-border: #e2e8f0;
-            --brand-text: #0f172a;
-            --brand-muted: #64748b;
-        }
-
-        *, *::before, *::after {
-            box-sizing: border-box;
-        }
-
-        body.perusahaan-body {
-            background-color: var(--brand-bg);
-            color: var(--brand-text);
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        /* Top Navigation Bar */
-        .perusahaan-navbar {
-            background: #ffffff;
-            border-bottom: 1px solid var(--brand-border);
-            padding: 12px 28px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
-            gap: 16px;
-        }
-
-        .navbar-brand-group {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            min-width: 0;
-        }
-
-        .navbar-logos {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-shrink: 0;
-        }
-
-        .navbar-logos img {
-            height: 32px;
-            width: auto;
-            object-fit: contain;
-        }
-
-        .navbar-brand-info {
-            display: flex;
-            flex-direction: column;
-            line-height: 1.15;
-        }
-
-        .navbar-brand-title {
-            font-size: 1.05rem;
-            font-weight: 800;
-            color: #0b3d6b;
-            letter-spacing: -0.02em;
-        }
-
-        .navbar-brand-subtitle {
-            font-size: 0.725rem;
-            color: #64748b;
-            font-weight: 500;
-        }
-
-        .navbar-user-card {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-shrink: 0;
-        }
-
-        .navbar-company-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 6px 14px;
-            font-size: 0.825rem;
-            font-weight: 600;
-            color: #1e293b;
-            max-width: 320px;
-        }
-
-        .navbar-company-badge span {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .company-badge-icon {
-            width: 20px;
-            height: 20px;
-            border-radius: 6px;
-            background: #eff6ff;
-            color: #0b3d6b;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .btn-logout-perusahaan {
-            background: #ffffff;
-            color: #dc2626;
-            border: 1px solid #fecaca;
-            padding: 7px 14px;
-            border-radius: 8px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.15s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            white-space: nowrap;
-        }
-
-        .btn-logout-perusahaan:hover {
-            background: #fef2f2;
-            border-color: #f87171;
-        }
-
-        .perusahaan-container {
-            max-width: 1280px;
-            margin: 0 auto;
-            padding: 24px 20px 60px;
-        }
-
-        /* Action Banner Redesigned */
-        .notification-banner {
-            border-radius: 14px;
-            padding: 18px 22px;
-            margin-bottom: 24px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
-            border: 1px solid transparent;
-        }
-
-        .notification-banner.banner-info {
-            background: #f0f9ff;
-            border-color: #bae6fd;
-            color: #0369a1;
-        }
-
-        .notification-banner.banner-success {
-            background: #f0fdf4;
-            border-color: #bbf7d0;
-            color: #15803d;
-        }
-
-        .notification-banner.banner-warning {
-            background: #fffbeb;
-            border-color: #fde68a;
-            color: #92400e;
-        }
-
-        .banner-top-row {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            width: 100%;
-        }
-
-        .banner-icon-box {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
-            background: #ffffff;
-            flex-shrink: 0;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-        }
-
-        .notification-banner.banner-info .banner-icon-box {
-            color: #0284c7;
-        }
-
-        .notification-banner.banner-success .banner-icon-box {
-            color: #16a34a;
-        }
-
-        .banner-title-box {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .banner-title {
-            font-weight: 800;
-            font-size: 0.975rem;
-            color: #0f172a;
-            margin: 0;
-            line-height: 1.3;
-        }
-
-        .banner-desc {
-            font-size: 0.85rem;
-            color: #334155;
-            margin: 0;
-            line-height: 1.55;
-            word-break: break-word;
-        }
-
-        .banner-desktop-btn {
-            font-size: 0.8rem;
-            padding: 8px 16px;
-            flex-shrink: 0;
-        }
-
-        .banner-mobile-action {
-            display: none;
-            margin-top: 4px;
-        }
-
-        /* Desktop Navigation Tabs (Horizontal Pill Bar) */
-        .perusahaan-nav-tabs {
-            display: flex;
-            gap: 6px;
-            background: #ffffff;
-            padding: 6px;
-            border-radius: 12px;
-            border: 1px solid var(--brand-border);
-            margin-bottom: 24px;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: none;
-        }
-
-        .perusahaan-nav-tabs::-webkit-scrollbar {
-            display: none;
-        }
-
-        .perusahaan-nav-btn {
-            background: none;
-            border: none;
-            padding: 10px 18px;
-            border-radius: 8px;
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: var(--brand-muted);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.2s;
-            white-space: nowrap;
-            flex-shrink: 0;
-        }
-
-        .perusahaan-nav-btn:hover {
-            color: var(--brand-primary);
-            background: #f1f5f9;
-        }
-
-        .perusahaan-nav-btn.active {
-            background: var(--brand-primary);
-            color: #ffffff;
-        }
-
-        /* Mobile Bottom Floating Dock Navigation */
-        .mobile-bottom-dock {
-            display: none; /* Hidden on Desktop */
-        }
-
-        .p-tab-pane {
-            display: none;
-        }
-
-        .p-tab-pane.active {
-            display: block;
-        }
-
-        /* Stat Grid */
-        .perusahaan-stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-
-        .p-stat-card {
-            background: #ffffff;
-            border: 1px solid var(--brand-border);
-            border-radius: 14px;
-            padding: 20px 22px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
-            gap: 12px;
-        }
-
-        .p-stat-info {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            min-width: 0;
-        }
-
-        .p-stat-val {
-            font-size: 1.85rem;
-            font-weight: 800;
-            color: var(--brand-primary);
-            line-height: 1.1;
-        }
-
-        .p-stat-label {
-            font-size: 0.825rem;
-            color: var(--brand-muted);
-            font-weight: 500;
-        }
-
-        .p-stat-icon-wrap {
-            width: 46px;
-            height: 46px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-        /* Responsive Layout Grids */
-        .p-overview-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 20px;
-            align-items: start;
-        }
-
-        .p-profil-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 24px;
-            align-items: start;
-        }
-
-        .p-form-grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 16px;
-        }
-
-        .p-card-header-flex {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 16px;
-            flex-wrap: wrap;
-        }
-
-        .p-card-header-select {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .p-card-body {
-            padding: 0 24px 24px;
-        }
-
-        /* Unified Master Control Card (Tab 2) */
-        .p-control-card {
-            background: #ffffff;
-            border: 1.5px solid #e2e8f0;
-            border-radius: 14px;
-            padding: 16px 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
-            transition: all 0.25s ease;
-        }
-
-        .p-control-card.active-accepting {
-            border-color: #86efac;
-            background: #f0fdf4;
-        }
-
-        .p-control-card.inactive-accepting {
-            border-color: #fca5a5;
-            background: #fef2f2;
-        }
-
-        .p-control-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .p-control-title-box {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .p-control-status-row {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin-bottom: 4px;
-        }
-
-        .p-control-title {
-            font-size: 0.95rem;
-            font-weight: 800;
-            color: #0f172a;
-        }
-
-        .p-control-desc {
-            font-size: 0.8rem;
-            color: #64748b;
-            margin: 0;
-            line-height: 1.4;
-        }
-
-        .p-chips-row {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin-top: 12px;
-            padding-top: 12px;
-            border-top: 1px dashed #e2e8f0;
-        }
-
-        .p-chip-item {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 4px 10px;
-            font-size: 0.775rem;
-            color: #475569;
-        }
-
-        .p-chip-item strong {
-            color: #0b3d6b;
-            font-weight: 700;
-        }
-
-        /* Filter & Search Bar */
-        .p-filter-bar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            flex-wrap: wrap;
-            padding: 16px 20px;
-        }
-
-        .p-filter-inputs {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-            flex: 1;
-            min-width: 0;
-        }
-
-        .p-filter-search {
-            width: 280px;
-            flex-shrink: 0;
-        }
-
-        .p-filter-select {
-            width: 155px;
-            flex-shrink: 0;
-        }
-
-        /* Checkboxes Grid */
-        .checkbox-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 12px;
-            margin-top: 12px;
-        }
-
-        .custom-checkbox-card {
-            border: 1px solid var(--brand-border);
-            border-radius: 10px;
-            padding: 12px 16px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            cursor: pointer;
-            background: #ffffff;
-            transition: all 0.15s ease;
-            user-select: none;
-            word-break: break-word;
-        }
-
-        .custom-checkbox-card:hover {
-            border-color: #93c5fd;
-            background: #f8fafc;
-        }
-
-        .custom-checkbox-card.checked {
-            border-color: var(--brand-primary);
-            background: #eff6ff;
-        }
-
-        .custom-checkbox-card.checked span {
-            color: var(--brand-primary) !important;
-            font-weight: 700 !important;
-        }
-
-        .custom-checkbox-card input[type="checkbox"] {
-            margin: 0;
-            accent-color: var(--brand-primary);
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-            flex-shrink: 0;
-        }
-
-        /* Buttons */
-        .btn-portal-primary {
-            background: var(--brand-primary);
-            color: #ffffff;
-            border: 1px solid transparent;
-            padding: 9px 18px;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.15s ease;
-            white-space: nowrap;
-        }
-
-        .btn-portal-primary:hover {
-            background: var(--brand-primary-dark);
-        }
-
-        .btn-portal-outline {
-            background: #ffffff;
-            color: #334155;
-            border: 1px solid #cbd5e1;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.15s ease;
-            white-space: nowrap;
-        }
-
-        .btn-portal-outline:hover {
-            background: #f8fafc;
-            border-color: #94a3b8;
-        }
-
-        /* Modals */
-        .force-modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(15, 23, 42, 0.7);
-            backdrop-filter: blur(4px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 99999;
-            padding: 16px;
-        }
-
-        .force-modal-box {
-            background: #ffffff;
-            border-radius: 16px;
-            width: 100%;
-            max-width: 560px;
-            padding: 32px;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        .force-header-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            background: #eff6ff;
-            color: var(--brand-primary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 16px;
-        }
-
-        /* Detail Modal Items */
-        .mhs-detail-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 14px;
-            margin-top: 16px;
-        }
-
-        .mhs-detail-item {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 10px;
-            padding: 12px 14px;
-            word-break: break-word;
-        }
-
-        .mhs-detail-label {
-            font-size: 0.75rem;
-            color: #64748b;
-            text-transform: uppercase;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-            margin-bottom: 4px;
-        }
-
-        .mhs-detail-val {
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: #1e293b;
-        }
-
-        @keyframes fadeInSlideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-8px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .spin-animation {
-            animation: spin 0.8s linear infinite;
-        }
-
-        @keyframes spin {
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        /* Modern Contrasting Toggle Switch */
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 50px;
-            height: 28px;
-            flex-shrink: 0;
-            user-select: none;
-        }
-
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-            position: absolute;
-        }
-
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #cbd5e1;
-            border: 2px solid #94a3b8;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border-radius: 34px;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.08);
-        }
-
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 20px;
-            width: 20px;
-            left: 2px;
-            bottom: 2px;
-            background-color: #ffffff;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border-radius: 50%;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.25);
-        }
-
-        .switch input:checked + .slider {
-            background: #059669;
-            border-color: #047857;
-        }
-
-        .switch input:checked + .slider:before {
-            transform: translateX(22px);
-            background-color: #ffffff;
-        }
-
-        .switch:hover .slider {
-            filter: brightness(1.05);
-        }
-
-        .switch input:focus-visible + .slider {
-            outline: 2px solid #0284c7;
-            outline-offset: 2px;
-        }
-
-        .p-table-responsive {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            width: 100%;
-        }
-
-        .badge-notif-red {
-            background: #ef4444;
-            color: #ffffff;
-            font-size: 0.7rem;
-            font-weight: 800;
-            border-radius: 9999px;
-            padding: 2px 7px;
-            margin-left: 6px;
-            line-height: 1;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 1px 3px rgba(239, 68, 68, 0.4);
-            animation: pulseSubtle 2s infinite;
-        }
-
-        @keyframes pulseSubtle {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.08); }
-        }
-
-        .btn-subtab {
-            padding: 8px 18px;
-            font-size: 0.85rem;
-            font-weight: 700;
-            border-radius: 8px;
-            border: 1.5px solid #cbd5e1;
-            background: #ffffff;
-            color: #64748b;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.2s ease;
-        }
-
-        .btn-subtab:hover {
-            background: #f8fafc;
-            border-color: #94a3b8;
-        }
-
-        .btn-subtab.active {
-            border-color: #0b3d6b;
-            background: #0b3d6b;
-            color: #ffffff;
-        }
-
-        /* ======================================================== */
-        /* RESPONSIVE MEDIA QUERIES (TABLET & MOBILE OPTIMIZATIONS) */
-        /* ======================================================== */
-
-        /* Tablet (<= 1024px) */
-        @media (max-width: 1024px) {
-            .perusahaan-navbar {
-                padding: 12px 20px;
-            }
-            .perusahaan-container {
-                padding: 20px 16px 60px;
-            }
-            .p-overview-grid {
-                grid-template-columns: 1fr;
-                gap: 16px;
-            }
-            .p-profil-grid {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
-        }
-
-        /* Mobile & Small Tablets (<= 768px) */
-        @media (max-width: 768px) {
-            .perusahaan-navbar {
-                padding: 10px 14px;
-                gap: 10px;
-            }
-            .navbar-brand-group {
-                gap: 10px;
-            }
-            .navbar-logos img {
-                height: 26px;
-            }
-            .navbar-brand-title {
-                font-size: 0.95rem;
-            }
-            .navbar-brand-subtitle {
-                font-size: 0.65rem;
-            }
-            .navbar-company-badge {
-                display: none;
-            }
-            .btn-logout-perusahaan {
-                padding: 6px 10px;
-                font-size: 0.75rem;
-            }
-
-            /* Sembunyikan Nav Tabs Horizontal Atas di Mobile */
-            .perusahaan-nav-tabs {
-                display: none;
-            }
-
-            /* Berikan ruang padding bawah agar konten tidak tertimpa Dock Bawah */
-            .perusahaan-container {
-                padding: 14px 12px 100px;
-            }
-
-            /* Tampilkan Bottom Dock Navigation Melayang di HP */
-            .mobile-bottom-dock {
-                display: flex;
-                position: fixed;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                height: 64px;
-                background: rgba(255, 255, 255, 0.96);
-                backdrop-filter: blur(16px);
-                -webkit-backdrop-filter: blur(16px);
-                border-top: 1px solid #e2e8f0;
-                box-shadow: 0 -4px 20px rgba(0, 70, 135, 0.08);
-                z-index: 9999;
-                align-items: center;
-                justify-content: space-around;
-                padding: 0 4px;
-                padding-bottom: env(safe-area-inset-bottom, 0px);
-            }
-
-            .mobile-bottom-nav-item {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                gap: 3px;
-                flex: 1;
-                height: 100%;
-                background: none;
-                border: none;
-                padding: 6px 2px;
-                cursor: pointer;
-                color: #64748b;
-                transition: all 0.2s ease;
-                -webkit-tap-highlight-color: transparent;
-                user-select: none;
-            }
-
-            .mobile-bottom-nav-item .nav-icon-wrap {
-                width: 40px;
-                height: 26px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                border-radius: 12px;
-                transition: all 0.2s ease;
-            }
-
-            .mobile-bottom-nav-item .nav-label {
-                font-size: 0.7rem;
-                font-weight: 600;
-                letter-spacing: -0.01em;
-                transition: all 0.2s ease;
-                white-space: nowrap;
-            }
-
-            /* Active State Dock */
-            .mobile-bottom-nav-item.active {
-                color: #0b3d6b;
-            }
-
-            .mobile-bottom-nav-item.active .nav-icon-wrap {
-                background: #eff6ff;
-                color: #0b3d6b;
-                transform: scale(1.05);
-            }
-
-            .mobile-bottom-nav-item.active .nav-label {
-                font-weight: 800;
-                color: #0b3d6b;
-            }
-
-            .mobile-bottom-nav-item:active {
-                transform: scale(0.95);
-            }
-
-            .notification-banner {
-                padding: 16px;
-                gap: 10px;
-                margin-bottom: 18px;
-            }
-            .banner-desktop-btn {
-                display: none;
-            }
-            .banner-mobile-action {
-                display: block;
-                width: 100%;
-            }
-            .banner-title {
-                font-size: 0.925rem;
-            }
-            .banner-desc {
-                font-size: 0.825rem;
-            }
-            .perusahaan-stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 10px;
-                margin-bottom: 16px;
-            }
-            .p-stat-card {
-                padding: 14px 14px;
-                border-radius: 12px;
-            }
-            .p-stat-val {
-                font-size: 1.45rem;
-            }
-            .p-stat-label {
-                font-size: 0.75rem;
-            }
-            .p-stat-icon-wrap {
-                width: 36px;
-                height: 36px;
-                border-radius: 10px;
-            }
-            .p-stat-icon-wrap svg {
-                width: 18px;
-                height: 18px;
-            }
-            .p-card-body {
-                padding: 0 16px 20px;
-            }
-            .p-card-header-flex {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 12px;
-            }
-            .p-card-header-select {
-                flex-direction: column;
-                align-items: stretch;
-                width: 100%;
-            }
-            .p-card-header-select select {
-                width: 100% !important;
-                max-width: 100% !important;
-            }
-            .p-control-card {
-                padding: 14px 16px;
-                margin-bottom: 16px;
-            }
-            .p-control-title {
-                font-size: 0.875rem;
-            }
-            .p-control-desc {
-                font-size: 0.775rem;
-            }
-            #input-kuota-total {
-                max-width: 100% !important;
-            }
-            .checkbox-grid {
-                grid-template-columns: 1fr;
-                gap: 8px;
-            }
-            .custom-checkbox-card {
-                padding: 10px 12px;
-            }
-            .p-filter-bar {
-                flex-direction: column !important;
-                align-items: stretch !important;
-                gap: 12px;
-                padding: 14px 16px;
-            }
-            .p-filter-inputs {
-                display: flex !important;
-                flex-direction: column !important;
-                align-items: stretch !important;
-                width: 100% !important;
-                gap: 8px;
-            }
-            .p-filter-search,
-            .p-filter-select,
-            .p-filter-inputs input,
-            .p-filter-inputs select {
-                width: 100% !important;
-                max-width: 100% !important;
-            }
-            #btn-export-pendaftar {
-                width: 100% !important;
-                justify-content: center;
-            }
-            #pendaftar-pagination {
-                flex-direction: column;
-                gap: 12px;
-                text-align: center;
-            }
-            .p-form-grid-2 {
-                grid-template-columns: 1fr;
-                gap: 12px;
-                margin-bottom: 14px;
-            }
-            .force-modal-box {
-                padding: 20px 16px;
-                border-radius: 14px;
-            }
-            .mhs-detail-grid {
-                grid-template-columns: 1fr;
-                gap: 10px;
-            }
-            #btn-save-kuota-wrapper,
-            #btn-save-kuota {
-                width: 100%;
-            }
-            #btn-save-kuota {
-                justify-content: center;
-            }
-            #btn-save-profil,
-            #btn-save-password {
-                width: 100%;
-                justify-content: center;
-            }
-        }
-
-        /* Extra Small Phones (<= 440px) */
-        @media (max-width: 440px) {
-            .navbar-unit-name {
-                max-width: 130px;
-            }
-        }
-
-        /* ==========================================
-           WIZARD STEPPER & KUOTA FORM STYLES
-           ========================================== */
-        .kuota-wizard-stepper {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 28px;
-            padding: 16px 24px;
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 14px;
-            box-shadow: 0 2px 8px -2px rgba(15, 23, 42, 0.05);
-            position: relative;
-        }
-
-        .wizard-step-indicator {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            cursor: pointer;
-            position: relative;
-            z-index: 2;
-            padding: 6px 10px;
-            border-radius: 10px;
-            transition: all 0.2s ease;
-        }
-
-        .wizard-step-indicator:hover {
-            background: #f8fafc;
-        }
-
-        .step-badge {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.875rem;
-            font-weight: 800;
-            background: #f1f5f9;
-            color: #64748b;
-            border: 2px solid #cbd5e1;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            flex-shrink: 0;
-        }
-
-        .step-label {
-            font-size: 0.875rem;
-            font-weight: 700;
-            color: #64748b;
-            letter-spacing: -0.01em;
-            transition: color 0.2s ease;
-            white-space: nowrap;
-        }
-
-        .wizard-step-indicator.active .step-badge {
-            background: #0b3d6b;
-            color: #ffffff;
-            border-color: #0b3d6b;
-            box-shadow: 0 1px 3px rgba(11, 61, 107, 0.2);
-            transform: none;
-        }
-
-        .wizard-step-indicator.active .step-label {
-            color: #0b3d6b;
-            font-weight: 700;
-        }
-
-        .wizard-step-indicator.completed .step-badge {
-            background: #059669;
-            color: #ffffff;
-            border-color: #059669;
-            box-shadow: 0 1px 3px rgba(5, 150, 105, 0.2);
-        }
-
-        .wizard-step-indicator.completed .step-label {
-            color: #059669;
-            font-weight: 600;
-        }
-
-        .step-divider-line {
-            flex: 1;
-            height: 2px;
-            background: #e2e8f0;
-            margin: 0 16px;
-            position: relative;
-        }
-
-        /* Wizard Panes */
-        .wizard-step-pane {
-            animation: fadeInPane 0.25s ease-out;
-        }
-
-        @keyframes fadeInPane {
-            from {
-                opacity: 0;
-                transform: translateY(6px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Mode Kuota Radio Cards */
-        .mode-kuota-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 18px;
-            margin-top: 12px;
-        }
-
-        .mode-kuota-card {
-            border: 1.5px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 20px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            background: #ffffff;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            position: relative;
-            box-shadow: none;
-        }
-
-        .mode-kuota-card:hover {
-            border-color: #cbd5e1;
-            background: #f8fafc;
-            transform: none;
-            box-shadow: none;
-        }
-
-        .mode-kuota-card.selected {
-            border-color: #0b3d6b;
-            background: #f8fafc;
-            box-shadow: 0 0 0 1px #0b3d6b;
-        }
-
-        .mode-card-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-        }
-
-        .mode-card-title {
-            font-size: 0.95rem;
-            font-weight: 700;
-            color: #0f172a;
-            letter-spacing: -0.01em;
-        }
-
-        .mode-kuota-card.selected .mode-card-title {
-            color: #0b3d6b;
-        }
-
-        .mode-card-desc {
-            font-size: 0.825rem;
-            color: #64748b;
-            line-height: 1.5;
-            margin: 0;
-        }
-
-        /* Breakdown Allocation Row */
-        .prodi-alloc-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 16px;
-            background: #ffffff;
-            border: 1.5px solid #e2e8f0;
-            border-radius: 12px;
-            transition: all 0.2s ease;
-            gap: 12px;
-        }
-
-        .prodi-alloc-row:hover {
-            border-color: #cbd5e1;
-            background: #f8fafc;
-        }
-
-        .prodi-alloc-row.checked {
-            border-color: #0b3d6b;
-            background: #f8fafc;
-            box-shadow: none;
-        }
-
-        .prodi-alloc-input {
-            width: 75px;
-            padding: 6px 10px;
-            border: 1.5px solid #0b3d6b;
-            border-radius: 8px;
-            font-size: 0.95rem;
-            font-weight: 700;
-            text-align: center;
-            color: #0f172a;
-            background: #ffffff;
-            outline: none;
-            transition: border-color 0.15s ease;
-        }
-
-        .prodi-alloc-input:focus {
-            box-shadow: 0 0 0 3px rgba(0, 70, 135, 0.15);
-        }
-
-        /* Allocation Summary Bar */
-        .alloc-calc-bar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 14px 20px;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 14px;
-            box-shadow: none;
-        }
-
-        /* Review Summary Box */
-        .wizard-review-box {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 14px;
-            padding: 22px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .review-section-title {
-            font-size: 0.9rem;
-            font-weight: 800;
-            color: #0b3d6b;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .review-badges-wrap {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        @media (max-width: 768px) {
-            .kuota-wizard-stepper {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 12px;
-                padding: 14px 16px;
-            }
-            .step-divider-line {
-                display: none;
-            }
-            .wizard-step-indicator {
-                padding: 8px 12px;
-                background: #f8fafc;
-            }
-        }
-
-        /* Modal and Textarea Sizing Fix */
-        .modal-overlay {
-            box-sizing: border-box;
-        }
-
-        .modal-overlay * {
-            box-sizing: border-box;
-        }
-
-        textarea.admin-input-field {
-            width: 100% !important;
-            max-width: 100% !important;
-            min-width: 0 !important;
-            box-sizing: border-box !important;
-            resize: vertical !important;
-            font-family: inherit !important;
-            font-size: 0.9rem !important;
-            line-height: 1.5 !important;
-            display: block !important;
-        }
-
-        /* Sticky Bulk Action Toolbar for Perusahaan */
-        .bulk-toolbar-perusahaan-sticky {
-            display: none;
-            position: sticky;
-            top: 70px;
-            z-index: 95;
-            background: #ffffff;
-            border: 1.5px solid #16a34a;
-            border-radius: 12px;
-            margin-bottom: 16px;
-            padding: 12px 20px;
-            box-shadow: 0 10px 25px -5px rgba(22, 163, 74, 0.22), 0 4px 10px rgba(0, 0, 0, 0.06);
-            animation: modalSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        @media (max-width: 768px) {
-            .bulk-toolbar-perusahaan-sticky {
-                top: 52px;
-                padding: 10px 14px;
-            }
-        }
-        .bulk-toolbar-perusahaan-sticky button {
-            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .bulk-toolbar-perusahaan-sticky button:hover {
-            filter: brightness(1.08);
-            transform: translateY(-1px);
-        }
-        .bulk-toolbar-perusahaan-sticky button:active {
-            transform: translateY(0);
-        }
-    </style>
+    <!-- Perusahaan Enterprise CSS -->
+    <link rel="stylesheet" href="/css/perusahaan.css?v=20260925v13">
 </head>
 <body class="perusahaan-body">
 
@@ -1407,12 +29,16 @@
         </div>
 
         <div class="navbar-user-card">
-            <div class="navbar-company-badge" id="badge-unit-pill">
+            <button type="button" class="navbar-company-badge btn-nav-to-tab" data-target="tab-profil" id="badge-unit-pill" title="Klik untuk mengelola Profil Unit & PIC">
                 <div class="company-badge-icon">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M8 10h.01"/><path d="M16 10h.01"/><path d="M8 14h.01"/><path d="M16 14h.01"/></svg>
                 </div>
                 <span id="header-unit-nama">Memuat Unit...</span>
-            </div>
+            </button>
+            <button type="button" class="btn-navbar-profil btn-nav-to-tab" data-target="tab-profil" title="Pengaturan Profil Unit & PIC">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                <span>Profil & PIC</span>
+            </button>
             <button id="btn-logout" class="btn-logout-perusahaan" title="Keluar dari Portal">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
                 <span>Keluar</span>
@@ -1423,39 +49,123 @@
     <!-- Main Workspace Container -->
     <div class="perusahaan-container">
 
-        <!-- In-App Notification Action Banner -->
-        <div id="banner-container"></div>
-
-        <!-- Desktop Navigation Tabs (Horizontal Pill Bar) -->
-        <div class="perusahaan-nav-tabs">
-            <button class="perusahaan-nav-btn active" data-tab="tab-overview">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
-                <span>Ringkasan & Status</span>
-            </button>
-            <button class="perusahaan-nav-btn" data-tab="tab-kuota">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/><line x1="1" x2="7" y1="14" y2="14"/><line x1="9" x2="15" y1="8" y2="8"/><line x1="17" x2="23" y1="16" y2="16"/></svg>
-                <span>Pengaturan Kuota & Prodi</span>
-            </button>
-            <button class="perusahaan-nav-btn" data-tab="tab-pendaftar">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                <span>Verifikasi Peserta</span>
-                <span id="badge-pendaftar-pending" class="badge-notif-red hidden">0</span>
-            </button>
-            <button class="perusahaan-nav-btn" data-tab="tab-pemindahan">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" x2="21" y1="20" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" x2="21" y1="15" y2="21"/><line x1="4" x2="9" y1="4" y2="9"/></svg>
-                <span>Pemindahan Peserta</span>
-                <span id="badge-transfer-pending" class="badge-notif-red hidden">0</span>
-            </button>
-            <button class="perusahaan-nav-btn" data-tab="tab-profil">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M8 10h.01"/><path d="M16 10h.01"/><path d="M8 14h.01"/><path d="M16 14h.01"/></svg>
-                <span>Profil Unit & PIC</span>
-            </button>
+        <!-- Executive Context Bar -->
+        <div class="exec-context-bar">
+            <div class="exec-context-title-group">
+                <h1 id="hero-unit-name">Portal Mitra Unit PLN</h1>
+                <p>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    <span id="hero-pic-info">Memuat data PIC unit...</span>
+                </p>
+            </div>
+            <div class="exec-context-badges">
+                <div class="badge-context-pill pill-periode" id="badge-hero-periode">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    <span id="hero-periode-text">Memuat Periode...</span>
+                </div>
+                <div class="badge-context-pill pill-unit" id="badge-hero-status-fase">
+                    <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#00A2B9;"></span>
+                    <span id="hero-fase-status-text">Fase 2: Seleksi Berkas</span>
+                </div>
+            </div>
         </div>
 
         <!-- ========================================== -->
         <!-- TAB 1: OVERVIEW -->
         <!-- ========================================== -->
         <div class="p-tab-pane active" id="tab-overview">
+
+            <!-- SIKLUS TAHAPAN MAGANG (Phase Stepper) -->
+            <div class="phase-stepper-card">
+                <div class="phase-stepper-header">
+                    <div class="phase-stepper-title">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                        <span>Siklus Tahapan Magang</span>
+                    </div>
+                    <span class="phase-stepper-hint">Klik fase untuk langsung membuka lembar kerja terkait</span>
+                </div>
+                <div class="phase-stepper-grid">
+                    <!-- Fase 1: Setup Kuota & Profil -->
+                    <div class="phase-step-item" id="stepper-fase-1" data-target-tab="tab-kuota" title="Klik untuk cek pengaturan kuota & profil">
+                        <div class="phase-step-badge" id="badge-icon-fase-1">1</div>
+                        <div class="phase-step-content">
+                            <span class="phase-step-name">Fase 1: Setup Kuota & Profil</span>
+                            <span class="phase-step-sub">Kebutuhan Kuota & Syarat Prodi</span>
+                            <span class="phase-step-status-chip" id="chip-fase-1-status">Memuat...</span>
+                        </div>
+                    </div>
+
+                    <div class="phase-divider-arrow">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                    </div>
+
+                    <!-- Fase 2: Seleksi & Verifikasi -->
+                    <div class="phase-step-item" id="stepper-fase-2" data-target-tab="tab-pendaftar" title="Fase pendaftaran & seleksi berkas">
+                        <div class="phase-step-badge" id="badge-icon-fase-2">2</div>
+                        <div class="phase-step-content">
+                            <span class="phase-step-name">Fase 2: Seleksi & Verifikasi</span>
+                            <span class="phase-step-sub">Review Berkas & Keputusan</span>
+                            <span class="phase-step-status-chip" id="chip-fase-2-status">Memuat...</span>
+                        </div>
+                    </div>
+
+                    <div class="phase-divider-arrow">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                    </div>
+
+                    <!-- Fase 3: Roster Mahasiswa Sah -->
+                    <div class="phase-step-item" id="stepper-fase-3" data-target-tab="tab-roster" title="Klik untuk melihat roster mahasiswa sah">
+                        <div class="phase-step-badge" id="badge-icon-fase-3">3</div>
+                        <div class="phase-step-content">
+                            <span class="phase-step-name">Fase 3: Roster Mahasiswa Sah</span>
+                            <span class="phase-step-sub">Daftar Lolos & Pelaksanaan</span>
+                            <span class="phase-step-status-chip" id="chip-fase-3-status">Memuat...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TUGAS MENDESAK HARI INI (Action Checklist) -->
+            <div class="action-checklist-card" id="action-checklist-box">
+                <div class="action-checklist-header">
+                    <div class="action-checklist-title">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                        <span>Tugas Mendesak Hari Ini</span>
+                    </div>
+                    <span style="font-size: 0.775rem; color: var(--brand-muted); font-weight: 700;" id="action-checklist-counter">2 Aksi Perlu Ditinjau</span>
+                </div>
+                <div class="action-checklist-items" id="action-checklist-items">
+                    <div class="action-check-row" id="row-act-verifikasi">
+                        <div class="action-check-left">
+                            <svg class="action-check-icon-urgent" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="1.2" fill="currentColor" stroke="none"/></svg>
+                            <span><strong id="act-pendaftar-count">0</strong> Berkas Pendaftar Masuk Menunggu Keputusan Seleksi</span>
+                        </div>
+                        <button type="button" class="action-btn-shortcut btn-quick-nav-tab" data-tab="tab-pendaftar">
+                            <span>Verifikasi Sekarang</span>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                        </button>
+                    </div>
+                    <div class="action-check-row" id="row-act-transfer">
+                        <div class="action-check-left">
+                            <svg class="action-check-icon-urgent" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="1.2" fill="currentColor" stroke="none"/></svg>
+                            <span><strong id="act-transfer-count">0</strong> Permohonan Pemindahan Masuk dari Unit Lain</span>
+                        </div>
+                        <button type="button" class="action-btn-shortcut btn-quick-nav-tab" data-tab="tab-pemindahan" style="background: #0284c7;">
+                            <span>Tinjau Pemindahan</span>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                        </button>
+                    </div>
+                    <div class="action-check-row" id="row-act-kuota">
+                        <div class="action-check-left">
+                            <svg class="action-check-icon-done" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                            <span id="act-kuota-summary">Pengaturan Kuota & Syarat Prodi Aktif</span>
+                        </div>
+                        <button type="button" class="btn-portal-outline btn-quick-nav-tab" data-tab="tab-kuota" style="padding: 4px 10px; font-size: 0.75rem;">
+                            <span>Ubah Kuota</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
             <!-- Stats Grid -->
             <div class="perusahaan-stats-grid">
                 <div class="p-stat-card">
@@ -1770,7 +480,7 @@
                                 <div class="wizard-review-box" style="margin-bottom: 24px;">
                                     <div>
                                         <div class="review-section-title">
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                                             <span>Kapasitas & Skema Kuota</span>
                                         </div>
                                         <div style="display: flex; align-items: center; gap: 12px; font-size: 0.9rem; flex-wrap: wrap;">
@@ -1782,7 +492,7 @@
 
                                     <div style="border-top: 1px solid #e2e8f0; padding-top: 12px;">
                                         <div class="review-section-title">
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
                                             <span>Program Studi yang Diterima</span>
                                             <span id="rev-prodi-count" class="badge-status badge-info" style="font-size: 0.7rem; padding: 1px 6px;">0 Prodi</span>
                                         </div>
@@ -1791,7 +501,7 @@
 
                                     <div style="border-top: 1px solid #e2e8f0; padding-top: 12px;">
                                         <div class="review-section-title">
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/></svg>
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
                                             <span>Bidang Peminatan Dibuka</span>
                                             <span id="rev-pem-count" class="badge-status badge-info" style="font-size: 0.7rem; padding: 1px 6px;">0 Bidang</span>
                                         </div>
@@ -1837,15 +547,7 @@
                             <option value="1_bulan">1 Bulan</option>
                             <option value="3_bulan">3 Bulan</option>
                             <option value="4_bulan">4 Bulan</option>
-                            <option value="5_bulan">5 Bulan</option>
                         </select>
-                    </div>
-
-                    <div>
-                        <button id="btn-export-pendaftar" class="btn-portal-primary">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-                            <span>Ekspor Excel (.xlsx)</span>
-                        </button>
                     </div>
                 </div>
             </div>
@@ -1917,12 +619,12 @@
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
                     <div style="display: flex; gap: 8px;">
                         <button type="button" id="btn-subtab-transfer-masuk" class="btn-subtab active">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
                             <span>Pemindahan Masuk</span>
                             <span id="badge-transfer-masuk-count" class="badge-notif-red hidden" style="position: static; margin-left: 6px;">0</span>
                         </button>
                         <button type="button" id="btn-subtab-transfer-keluar" class="btn-subtab">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
                             <span>Pemindahan Keluar (Histori)</span>
                         </button>
                     </div>
@@ -1955,6 +657,32 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- TAB 6: ROSTER MAHASISWA SAH (FASE 3) -->
+        <!-- ========================================== -->
+        <div class="p-tab-pane" id="tab-roster">
+            <div class="roster-header-bar">
+                <div>
+                    <h2 style="font-size: 1.15rem; font-weight: 800; color: var(--brand-navy); margin: 0 0 4px 0;">Daftar Mahasiswa Resmi Ditetapkan (Roster Final)</h2>
+                    <p style="font-size: 0.85rem; color: var(--brand-muted); margin: 0;">Mahasiswa yang telah sah dinyatakan diterima dan siap melaksanakan program magang di unit Anda.</p>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" id="btn-export-roster" class="btn-portal-primary" style="background: #047857; border-color: #047857;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+                        <span>Unduh Berkas Roster (ZIP & Excel)</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="roster-grid" id="roster-grid-container">
+                <div class="admin-card" style="grid-column: 1 / -1; padding: 40px 24px; text-align: center; color: var(--brand-muted);">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 12px; color: #94a3b8;"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                    <div style="font-weight: 700; font-size: 1rem; color: var(--brand-navy); margin-bottom: 4px;">Menunggu Penetapan Periode Selesai</div>
+                    <p style="font-size: 0.85rem; margin: 0;">Mahasiswa yang telah disetujui akan muncul di sini setelah pengumuman kelulusan resmi dipublikasikan oleh Kampus ITPLN.</p>
                 </div>
             </div>
         </div>
@@ -2056,6 +784,128 @@
 
     </div>
 
+    <!-- ========================================== -->
+    <!-- STICKY FULL-WIDTH BOTTOM NAVIGATION BAR -->
+    <!-- ========================================== -->
+    <nav class="perusahaan-bottom-bar" aria-label="Navigasi Utama Portal">
+        <div class="perusahaan-bottom-bar-inner">
+            <div class="perusahaan-nav-tabs">
+                <button type="button" class="perusahaan-nav-btn active" data-tab="tab-overview">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+                    <span>Ringkasan & Status</span>
+                </button>
+                <button type="button" class="perusahaan-nav-btn" data-tab="tab-kuota">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/><line x1="1" x2="7" y1="14" y2="14"/><line x1="9" x2="15" y1="8" y2="8"/><line x1="17" x2="23" y1="16" y2="16"/></svg>
+                    <span>Pengaturan Kuota & Prodi</span>
+                </button>
+                <button type="button" class="perusahaan-nav-btn" data-tab="tab-pendaftar">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    <span>Verifikasi Peserta</span>
+                    <span id="badge-pendaftar-pending" class="badge-notif-red hidden">0</span>
+                </button>
+                <button type="button" class="perusahaan-nav-btn" data-tab="tab-pemindahan">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/></svg>
+                    <span>Pemindahan Peserta</span>
+                    <span id="badge-transfer-pending" class="badge-notif-red hidden">0</span>
+                </button>
+                <button type="button" class="perusahaan-nav-btn" data-tab="tab-roster">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                    <span>Roster Mahasiswa Sah</span>
+                    <span id="badge-roster-count" class="badge-notif-red hidden" style="background: #10b981;">0</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ========================================== -->
+    <!-- FLOATING ACTION TOAST (TOP RIGHT) -->
+    <!-- ========================================== -->
+    <div id="banner-container" class="floating-banner-container"></div>
+
+    <!-- ========================================== -->
+    <!-- SLIDING SIDE DRAWER (CANDIDATE INSPECTION) -->
+    <!-- ========================================== -->
+    <div id="drawer-backdrop" class="drawer-backdrop"></div>
+    <div id="drawer-candidate" class="drawer-panel" aria-hidden="true">
+        <div class="drawer-header">
+            <div class="drawer-header-left">
+                <div class="drawer-avatar" id="drawer-avatar">M</div>
+                <div>
+                    <h3 class="drawer-title-mhs" id="drawer-mhs-nama">Nama Mahasiswa</h3>
+                    <p class="drawer-sub-mhs" id="drawer-mhs-nim">NIM: - • Program Studi</p>
+                </div>
+            </div>
+            <button type="button" class="btn-drawer-close" id="btn-close-drawer" title="Tutup Panel (Esc)">&times;</button>
+        </div>
+
+        <div class="drawer-body">
+            <div>
+                <div class="drawer-section-title">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    <span>Status & Informasi Seleksi</span>
+                </div>
+                <div class="drawer-meta-grid">
+                    <div class="drawer-meta-item">
+                        <span class="drawer-meta-label">Status Saat Ini</span>
+                        <span class="drawer-meta-val" id="drawer-status-badge">-</span>
+                    </div>
+                    <div class="drawer-meta-item">
+                        <span class="drawer-meta-label">Durasi Program</span>
+                        <span class="drawer-meta-val" id="drawer-durasi">-</span>
+                    </div>
+                    <div class="drawer-meta-item">
+                        <span class="drawer-meta-label">IPK / SKS Selesai</span>
+                        <span class="drawer-meta-val" id="drawer-ipk-sks">-</span>
+                    </div>
+                    <div class="drawer-meta-item">
+                        <span class="drawer-meta-label">Peminatan Unit</span>
+                        <span class="drawer-meta-val" id="drawer-peminatan">-</span>
+                    </div>
+                    <div class="drawer-meta-item" style="grid-column: 1 / -1;">
+                        <span class="drawer-meta-label">Kontak Mahasiswa</span>
+                        <span class="drawer-meta-val" id="drawer-kontak">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="drawer-section-title">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    <span>Dokumen Persyaratan Mahasiswa</span>
+                </div>
+                <div class="drawer-docs-list" id="drawer-docs-container">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+
+            <div id="drawer-selection-history-wrap">
+                <div class="drawer-section-title">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    <span>Catatan Keputusan Internal Unit</span>
+                </div>
+                <div style="background: #f8fafc; border: 1px solid var(--brand-border); border-radius: var(--radius-sm); padding: 12px; font-size: 0.85rem; color: #475569;" id="drawer-notes">
+                    Tidak ada catatan khusus.
+                </div>
+            </div>
+        </div>
+
+        <!-- Sticky Decision Footer -->
+        <div class="drawer-footer-actions">
+            <button type="button" class="btn-portal-outline" id="drawer-btn-reject" style="color: #dc2626; border-color: #fca5a5;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                <span>Tolak Berkas</span>
+            </button>
+            <button type="button" class="btn-portal-outline" id="drawer-btn-relocate" style="color: #b45309; border-color: #fde68a;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/></svg>
+                <span>Pindahkan Unit</span>
+            </button>
+            <button type="button" class="btn-portal-primary" id="drawer-btn-approve" style="background: #16a34a; border-color: #16a34a;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>Terima Mahasiswa</span>
+            </button>
+        </div>
+    </div>
+
     <!-- Mobile Floating Bottom Navigation Dock (App-Like Bar) -->
     <nav class="mobile-bottom-dock" aria-label="Navigasi Menu Mobile">
         <button type="button" class="mobile-bottom-nav-item active" data-tab="tab-overview" title="Ringkasan & Status">
@@ -2082,17 +932,17 @@
 
         <button type="button" class="mobile-bottom-nav-item" data-tab="tab-pemindahan" title="Pemindahan Peserta">
             <div class="nav-icon-wrap" style="position: relative;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/></svg>
                 <span id="badge-transfer-pending-mobile" class="badge-notif-red hidden" style="position: absolute; top: -6px; right: -8px;">0</span>
             </div>
             <span class="nav-label">Pemindahan</span>
         </button>
 
-        <button type="button" class="mobile-bottom-nav-item" data-tab="tab-profil" title="Profil Unit & PIC">
+        <button type="button" class="mobile-bottom-nav-item" data-tab="tab-roster" title="Roster Mahasiswa Sah">
             <div class="nav-icon-wrap">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M8 10h.01"/><path d="M16 10h.01"/><path d="M8 14h.01"/><path d="M16 14h.01"/></svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
             </div>
-            <span class="nav-label">Profil PIC</span>
+            <span class="nav-label">Roster</span>
         </button>
     </nav>
 
@@ -2123,7 +973,7 @@
         <div style="background: #fff; border-radius: 16px; width: 100%; max-width: 480px; padding: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; overflow-x: hidden; box-sizing: border-box;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #e2e8f0;">
                 <h3 style="margin: 0; font-size: 1.15rem; color: #16a34a; font-weight: 700; display: flex; align-items: center; gap: 8px;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                     <span>Konfirmasi Penerimaan</span>
                 </h3>
                 <button type="button" class="btn-close-modal" data-target="modal-perusahaan-approve" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b; line-height: 1;">&times;</button>
@@ -2144,7 +994,7 @@
                 <div style="display: flex; justify-content: flex-end; gap: 10px;">
                     <button type="button" class="btn-portal-outline btn-close-modal" data-target="modal-perusahaan-approve">Batal</button>
                     <button type="submit" id="btn-submit-p-approve" class="btn-portal-primary" style="background: #16a34a; border-color: #16a34a;">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                         <span>Ya, Terima Mahasiswa</span>
                     </button>
                 </div>
@@ -2159,7 +1009,7 @@
         <div style="background: #fff; border-radius: 16px; width: 100%; max-width: 480px; padding: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; overflow-x: hidden; box-sizing: border-box;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #e2e8f0;">
                 <h3 style="margin: 0; font-size: 1.15rem; color: #dc2626; font-weight: 700; display: flex; align-items: center; gap: 8px;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
                     <span>Konfirmasi Penolakan</span>
                 </h3>
                 <button type="button" class="btn-close-modal" data-target="modal-perusahaan-reject" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b; line-height: 1;">&times;</button>
@@ -2180,7 +1030,7 @@
                 <div style="display: flex; justify-content: flex-end; gap: 10px;">
                     <button type="button" class="btn-portal-outline btn-close-modal" data-target="modal-perusahaan-reject">Batal</button>
                     <button type="submit" id="btn-submit-p-reject" class="btn-portal-primary" style="background: #dc2626; border-color: #dc2626;">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                         <span>Konfirmasi Tolak</span>
                     </button>
                 </div>
@@ -2195,7 +1045,7 @@
         <div style="background: #fff; border-radius: 16px; width: 100%; max-width: 720px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); max-height: 90vh; overflow: hidden; box-sizing: border-box; display: flex; flex-direction: column;">
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 24px 16px; border-bottom: 1px solid #e2e8f0; flex-shrink: 0; background: #fff;">
                 <h3 style="margin: 0; font-size: 1.15rem; color: #d97706; font-weight: 700; display: flex; align-items: center; gap: 8px;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/></svg>
                     <span>Ajukan Pemindahan Peserta</span>
                 </h3>
                 <button type="button" class="btn-close-modal" data-target="modal-perusahaan-relocate" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b; line-height: 1;">&times;</button>
@@ -2215,7 +1065,7 @@
                         <input type="hidden" id="perusahaan-relocate-unit" required>
                         <div class="unit-picker-box" id="p-relocate-unit-picker-box">
                             <div class="unit-picker-search-wrap">
-                                <svg class="unit-picker-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                                <svg class="unit-picker-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                                 <input type="text" id="p-relocate-search-input" class="unit-picker-search-input" placeholder="Cari nama unit, kota, atau program studi...">
                                 <button type="button" id="p-relocate-search-clear" class="unit-picker-search-clear">&times;</button>
                             </div>
@@ -2239,7 +1089,7 @@
                 <div style="display: flex; justify-content: flex-end; gap: 12px; padding: 16px 24px; border-top: 1px solid #e2e8f0; background: #f8fafc; flex-shrink: 0; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px;">
                     <button type="button" class="btn-portal-outline btn-close-modal" data-target="modal-perusahaan-relocate" style="padding: 10px 20px;">Batal</button>
                     <button type="submit" id="btn-submit-p-relocate" class="btn-portal-primary" style="background: #d97706; border-color: #d97706; font-weight: 700; padding: 10px 22px;">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/></svg>
                         <span>Ajukan Pemindahan</span>
                     </button>
                 </div>
@@ -2254,7 +1104,7 @@
         <div style="background: #fff; border-radius: 16px; width: 100%; max-width: 720px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); max-height: 90vh; overflow: hidden; box-sizing: border-box; display: flex; flex-direction: column;">
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 24px 16px; border-bottom: 1px solid #e2e8f0; flex-shrink: 0; background: #fff;">
                 <h3 style="margin: 0; font-size: 1.15rem; color: #d97706; font-weight: 700; display: flex; align-items: center; gap: 8px;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/></svg>
                     <span>Pemindahan Masal ke Unit Lain</span>
                 </h3>
                 <button type="button" class="btn-close-modal" data-target="modal-perusahaan-bulk-relocate" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b; line-height: 1;">&times;</button>
@@ -2268,7 +1118,7 @@
                     </div>
 
                     <div id="p-bulk-algo-banner" class="unit-algo-banner">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><circle cx="12" cy="8" r="1.2" fill="currentColor" stroke="none"/></svg>
                         <div id="p-bulk-algo-text">
                             <strong>Algoritma Rekomendasi Unit:</strong> Diurutkan berdasarkan unit yang menerima seluruh prodi rombongan (<span id="p-bulk-prodi-summary">-</span>) dan kuota mencukupi.
                         </div>
@@ -2279,7 +1129,7 @@
                         <input type="hidden" id="bulk-relocate-unit" required>
                         <div class="unit-picker-box" id="p-bulk-unit-picker-box">
                             <div class="unit-picker-search-wrap">
-                                <svg class="unit-picker-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                                <svg class="unit-picker-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                                 <input type="text" id="p-bulk-relocate-search-input" class="unit-picker-search-input" placeholder="Cari unit tujuan pemindahan massal...">
                                 <button type="button" id="p-bulk-relocate-search-clear" class="unit-picker-search-clear">&times;</button>
                             </div>
@@ -2414,6 +1264,6 @@
     </div>
 
     <!-- Main Logic Script -->
-    <script type="module" src="/js/perusahaan/dashboard.js"></script>
+    <script type="module" src="/js/perusahaan/dashboard.js?v=20260925v13"></script>
 </body>
 </html>
