@@ -223,9 +223,11 @@ button.navbar-company-badge:hover {
    2. MAIN WORKSPACE CONTAINER & CONTEXT HEADER
    ============================================================ */
 .perusahaan-container {
-  max-width: 1320px;
+  max-width: 1680px;
+  width: 100%;
   margin: 0 auto;
-  padding: 24px 24px 84px;
+  padding: 20px 24px 84px;
+  box-sizing: border-box;
 }
 
 /* Executive Context Bar */
@@ -1113,7 +1115,7 @@ button.navbar-company-badge:hover {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
-  font-size: 0.85rem;
+  font-size: 0.775rem;
 }
 
 .admin-table thead tr {
@@ -1122,17 +1124,17 @@ button.navbar-company-badge:hover {
 }
 
 .admin-table th {
-  padding: 11px 14px;
-  font-size: 0.775rem;
+  padding: 8px 10px;
+  font-size: 0.72rem;
   font-weight: 800;
   color: #475569;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.03em;
   white-space: nowrap;
 }
 
 .admin-table td {
-  padding: 12px 14px;
+  padding: 7px 10px;
   border-bottom: 1px solid var(--brand-border);
   vertical-align: middle;
   color: var(--brand-text);
@@ -1149,6 +1151,112 @@ button.navbar-company-badge:hover {
 
 .admin-table tbody tr.row-selected {
   background-color: #eff6ff;
+}
+
+/* High-Density Peminatan Stack (Up to 3 Pilihan) */
+.mhs-peminatan-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-width: 210px;
+}
+
+.p-peminatan-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  padding: 1.5px 5px;
+  font-size: 0.71rem;
+  font-weight: 600;
+  color: #334155;
+  line-height: 1.25;
+  transition: all 0.15s ease;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.p-peminatan-tag:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.p-peminatan-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  color: #475569;
+  font-size: 0.625rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.p-peminatan-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 175px;
+}
+
+/* High-Density Berkas / Dokumen Stack (Transkrip, CV, Porto) */
+.mhs-docs-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  align-items: center;
+}
+
+.mhs-docs-stack .btn-doc-pill {
+  width: 100%;
+  max-width: 95px;
+  padding: 2.5px 6px;
+  font-size: 0.7rem;
+  justify-content: flex-start;
+  gap: 3px;
+  box-sizing: border-box;
+}
+
+.mhs-docs-stack .btn-doc-pill span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* High-Density Action Stack */
+.pendaftar-action-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+  min-width: 125px;
+}
+
+.pendaftar-action-stack .btn-doc-pill.pill-detail {
+  width: 100%;
+  max-width: 120px;
+  justify-content: center;
+  padding: 2.5px 8px;
+  font-size: 0.71rem;
+}
+
+.pendaftar-action-stack .action-row-decision {
+  display: flex;
+  gap: 3px;
+  justify-content: center;
+  width: 100%;
+}
+
+.pendaftar-action-stack .btn-action-pill {
+  padding: 2.5px 6px;
+  font-size: 0.71rem;
+  justify-content: center;
+  white-space: nowrap;
 }
 
 /* Candidate Mini Badge */

@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/admin.css">
     <!-- Perusahaan Enterprise CSS -->
-    <link rel="stylesheet" href="/css/perusahaan.css?v=20260925v13">
+    <link rel="stylesheet" href="/css/perusahaan.css?v=20260925v15">
 </head>
 <body class="perusahaan-body">
 
@@ -582,21 +582,22 @@
                     <table class="admin-table">
                         <thead>
                             <tr>
-                                <th style="width: 36px; text-align: center;"><input type="checkbox" id="check-all-pendaftar" title="Pilih Semua"></th>
-                                <th style="width: 40px; text-align: center;">No</th>
-                                <th>Mahasiswa (NIM & Nama)</th>
-                                <th>Program Studi</th>
-                                <th style="width: 80px; text-align: center;">Program</th>
-                                <th style="width: 80px; text-align: center;">IPK / SKS</th>
-                                <th>Peminatan Dipilih</th>
-                                <th>Kontak Mahasiswa</th>
-                                <th style="width: 100px; text-align: center;">Status</th>
-                                <th style="min-width: 240px; text-align: center; white-space: nowrap;">Aksi</th>
+                                <th style="width: 32px; text-align: center;"><input type="checkbox" id="check-all-pendaftar" title="Pilih Semua"></th>
+                                <th style="width: 36px; text-align: center;">No</th>
+                                <th style="min-width: 165px;">Mahasiswa (NIM & Nama)</th>
+                                <th style="min-width: 145px;">Program Studi</th>
+                                <th style="width: 75px; text-align: center;">Program</th>
+                                <th style="width: 75px; text-align: center;">IPK / SKS</th>
+                                <th style="min-width: 185px;">Peminatan Dipilih</th>
+                                <th style="min-width: 155px;">Kontak Mahasiswa</th>
+                                <th style="width: 105px; text-align: center;">Berkas</th>
+                                <th style="width: 85px; text-align: center;">Status</th>
+                                <th style="min-width: 135px; text-align: center; white-space: nowrap;">Aksi</th>
                             </tr>
                         </thead>
                         <tbody id="table-live-pendaftar">
                             <tr>
-                                <td colspan="10" style="text-align: center; color: #64748b; padding: 32px;">Memuat data pendaftar masuk...</td>
+                                <td colspan="11" style="text-align: center; color: #64748b; padding: 28px;">Memuat data pendaftar masuk...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -887,22 +888,6 @@
                     Tidak ada catatan khusus.
                 </div>
             </div>
-        </div>
-
-        <!-- Sticky Decision Footer -->
-        <div class="drawer-footer-actions">
-            <button type="button" class="btn-portal-outline" id="drawer-btn-reject" style="color: #dc2626; border-color: #fca5a5;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-                <span>Tolak Berkas</span>
-            </button>
-            <button type="button" class="btn-portal-outline" id="drawer-btn-relocate" style="color: #b45309; border-color: #fde68a;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/></svg>
-                <span>Pindahkan Unit</span>
-            </button>
-            <button type="button" class="btn-portal-primary" id="drawer-btn-approve" style="background: #16a34a; border-color: #16a34a;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                <span>Terima Mahasiswa</span>
-            </button>
         </div>
     </div>
 
@@ -1264,6 +1249,6 @@
     </div>
 
     <!-- Main Logic Script -->
-    <script type="module" src="/js/perusahaan/dashboard.js?v=20260925v13"></script>
+    <script type="module" src="/js/perusahaan/dashboard.js?v=20260925v15"></script>
 </body>
 </html>

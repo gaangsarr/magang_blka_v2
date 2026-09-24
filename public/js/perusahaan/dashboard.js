@@ -1675,19 +1675,34 @@ function renderPendaftarTable(list) {
     if (checkAll) checkAll.checked = false;
 
     if (!list || list.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: #64748b; padding: 32px;">Belum ada pendaftar mahasiswa pada kriteria pencarian ini.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="11" style="text-align: center; color: #64748b; padding: 28px;">Belum ada pendaftar mahasiswa pada kriteria pencarian ini.</td></tr>';
         return;
     }
 
     list.forEach((mhs, idx) => {
         let statusBadge = `<span class="badge-status badge-${mhs.status}">${mhs.status.toUpperCase()}</span>`;
         if (mhs.is_dipindahkan) {
-            statusBadge += `<div style="font-size: 0.7rem; color: #4338ca; font-weight: 700; margin-top: 3px; display: inline-flex; align-items: center; gap: 3px;">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M4 20L21 3"/><path d="M21 16v5h-5"/></svg>
+            statusBadge += `<div style="font-size: 0.675rem; color: #4338ca; font-weight: 700; margin-top: 3px; display: inline-flex; align-items: center; gap: 3px;">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M4 20L21 3"/><path d="M21 16v5h-5"/></svg>
                 <span>Dipindahkan</span>
             </div>`;
         }
-        const peminatanText = mhs.peminatan && mhs.peminatan.length > 0 ? mhs.peminatan.join(', ') : '-';
+
+        // Peminatan Pilihan (1, 2, 3) dalam bentuk Tag Stack Rapi
+        let peminatanHtml = '<span style="font-size: 0.72rem; color: #94a3b8; font-style: italic;">-</span>';
+        if (Array.isArray(mhs.peminatan) && mhs.peminatan.length > 0) {
+            peminatanHtml = `
+                <div class="mhs-peminatan-stack">
+                    ${mhs.peminatan.map((pem, pIdx) => `
+                        <span class="p-peminatan-tag" title="Pilihan ${pIdx + 1}: ${escapeHtml(pem)}">
+                            <span class="p-peminatan-num">${pIdx + 1}</span>
+                            <span class="p-peminatan-text">${escapeHtml(pem)}</span>
+                        </span>
+                    `).join('')}
+                </div>
+            `;
+        }
+
         const rowNum = ((mhsPage - 1) * mhsPerPage) + (idx + 1);
         const isChecked = selectedPendaftarIds.has(mhs.id);
 
@@ -1704,75 +1719,93 @@ function renderPendaftarTable(list) {
             openCandidateDrawer(mhs);
         });
 
+        // Berkas Dokumen Upload (Transkrip, CV, Porto)
+        let docsHtml = '';
+        if (mhs.transkrip_path) {
+            docsHtml += `
+                <button type="button" class="btn-doc-pill pill-transkrip btn-transkrip-mhs" data-id="${mhs.id}" data-nama="${escapeHtml(mhs.nama)}" data-nim="${escapeHtml(mhs.nim)}" title="Pratinjau Transkrip Nilai (PDF)">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    <span>Transkrip</span>
+                </button>
+            `;
+        }
+        if (mhs.cv_path) {
+            docsHtml += `
+                <button type="button" class="btn-doc-pill pill-cv btn-cv-mhs" data-id="${mhs.id}" data-nama="${escapeHtml(mhs.nama)}" data-nim="${escapeHtml(mhs.nim)}" title="Pratinjau Curriculum Vitae / CV (PDF)">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><circle cx="12" cy="12" r="2.5"/></svg>
+                    <span>CV</span>
+                </button>
+            `;
+        }
+        if (mhs.porto_path) {
+            docsHtml += `
+                <button type="button" class="btn-doc-pill pill-porto btn-porto-mhs" data-id="${mhs.id}" data-nama="${escapeHtml(mhs.nama)}" data-nim="${escapeHtml(mhs.nim)}" title="Pratinjau Portofolio Karya (PDF)">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                    <span>Portofolio</span>
+                </button>
+            `;
+        }
+        if (!docsHtml) {
+            docsHtml = '<span style="font-size: 0.72rem; color: #94a3b8; font-style: italic;">-</span>';
+        }
+
         tr.innerHTML = `
             <td style="text-align: center;">
-                <input type="checkbox" class="chk-mhs-pendaftar" value="${mhs.id}" ${isChecked ? 'checked' : ''} style="width: 17px; height: 17px; accent-color: #0b3d6b; cursor: pointer;">
+                <input type="checkbox" class="chk-mhs-pendaftar" value="${mhs.id}" ${isChecked ? 'checked' : ''} style="width: 16px; height: 16px; accent-color: #0b3d6b; cursor: pointer;">
             </td>
-            <td style="text-align: center; color: #64748b;">${rowNum}</td>
+            <td style="text-align: center; color: #64748b; font-size: 0.75rem;">${rowNum}</td>
             <td>
-                <div style="font-weight: 700; color: #0b3d6b;">${escapeHtml(mhs.nama)}</div>
-                <div style="font-family: monospace; font-size: 0.8rem; color: #64748b;">NIM: ${escapeHtml(mhs.nim)} (${escapeHtml(mhs.jenis_kelamin || '-')})</div>
+                <div style="font-weight: 700; color: #0b3d6b; font-size: 0.8125rem; line-height: 1.25;">${escapeHtml(mhs.nama)}</div>
+                <div style="font-family: monospace; font-size: 0.72rem; color: #64748b; margin-top: 2px;">NIM: ${escapeHtml(mhs.nim)} (${escapeHtml(mhs.jenis_kelamin || '-')})</div>
             </td>
             <td>
-                <div style="font-weight: 600; color: #1e293b;">${escapeHtml(mhs.jurusan_nama)}</div>
-                <div style="font-size: 0.775rem; color: #64748b;">Angkatan: ${escapeHtml(mhs.angkatan)}</div>
+                <div style="font-weight: 600; color: #1e293b; font-size: 0.775rem; line-height: 1.25;">${escapeHtml(mhs.jurusan_nama)}</div>
+                <div style="font-size: 0.72rem; color: #64748b; margin-top: 2px;">Angkatan: ${escapeHtml(mhs.angkatan)}</div>
             </td>
             <td style="text-align: center;">
-                <span style="font-size: 0.775rem; font-weight: 600; background: #f1f5f9; padding: 4px 8px; border-radius: 6px;">${escapeHtml(mhs.program)}</span>
+                <span style="font-size: 0.71rem; font-weight: 600; background: #f1f5f9; border: 1px solid #e2e8f0; padding: 2px 6px; border-radius: 4px; white-space: nowrap;">${escapeHtml(mhs.program)}</span>
             </td>
-            <td style="text-align: center; font-size: 0.85rem;">
+            <td style="text-align: center; font-size: 0.775rem; font-variant-numeric: tabular-nums;">
                 <strong>${escapeHtml(mhs.ipk)}</strong> / ${escapeHtml(mhs.jumlah_sks)} SKS
             </td>
-            <td style="font-size: 0.825rem; color: #334155; max-width: 180px;">
-                ${escapeHtml(peminatanText)}
+            <td>
+                ${peminatanHtml}
             </td>
             <td>
-                <div style="font-size: 0.825rem; color: #1e293b; display: flex; align-items: center; gap: 4px;">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><circle cx="12" cy="18" r="1" fill="currentColor"/></svg>
-                    <span>${escapeHtml(mhs.no_hp)}</span>
+                <div style="font-size: 0.75rem; color: #1e293b; display: flex; align-items: center; gap: 4px;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><circle cx="12" cy="18" r="1" fill="currentColor"/></svg>
+                    <span style="font-variant-numeric: tabular-nums;">${escapeHtml(mhs.no_hp)}</span>
                 </div>
-                <div style="font-size: 0.75rem; color: #64748b; display: flex; align-items: center; gap: 4px; margin-top: 2px;">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-                    <span>${escapeHtml(mhs.email)}</span>
+                <div style="font-size: 0.72rem; color: #64748b; display: flex; align-items: center; gap: 4px; margin-top: 2px;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                    <span style="overflow: hidden; text-overflow: ellipsis; max-width: 145px; white-space: nowrap;">${escapeHtml(mhs.email)}</span>
                 </div>
             </td>
-            <td style="text-align: center;">${statusBadge}</td>
-            <td style="white-space: nowrap;">
-                <div class="action-cell-stack">
-                    <div class="action-row-docs">
-                        <button type="button" class="btn-doc-pill pill-detail btn-view-mhs" data-id="${mhs.id}" title="Lihat Detail Pendaftar">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                            <span>Detail</span>
-                        </button>
-                        ${mhs.transkrip_path ? `
-                        <button type="button" class="btn-doc-pill pill-transkrip btn-transkrip-mhs" data-id="${mhs.id}" data-nama="${escapeHtml(mhs.nama)}" data-nim="${escapeHtml(mhs.nim)}" title="Pratinjau Transkrip Nilai (PDF)">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                            <span>Transkrip</span>
-                        </button>` : ''}
-                        ${mhs.cv_path ? `
-                        <button type="button" class="btn-doc-pill pill-cv btn-cv-mhs" data-id="${mhs.id}" data-nama="${escapeHtml(mhs.nama)}" data-nim="${escapeHtml(mhs.nim)}" title="Pratinjau Curriculum Vitae / CV (PDF)">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><circle cx="12" cy="12" r="2.5"/><path d="M8 18c0-1.8 1.8-3 4-3s4 1.2 4 3"/></svg>
-                            <span>CV</span>
-                        </button>` : ''}
-                        ${mhs.porto_path ? `
-                        <button type="button" class="btn-doc-pill pill-porto btn-porto-mhs" data-id="${mhs.id}" data-nama="${escapeHtml(mhs.nama)}" data-nim="${escapeHtml(mhs.nim)}" title="Pratinjau Portofolio (PDF)">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-                            <span>Porto</span>
-                        </button>` : ''}
-                    </div>
+            <td style="text-align: center; vertical-align: middle;">
+                <div class="mhs-docs-stack">
+                    ${docsHtml}
+                </div>
+            </td>
+            <td style="text-align: center; vertical-align: middle;">${statusBadge}</td>
+            <td style="white-space: nowrap; text-align: center; vertical-align: middle;">
+                <div class="pendaftar-action-stack">
+                    <button type="button" class="btn-doc-pill pill-detail btn-view-mhs" data-id="${mhs.id}" title="Lihat Profil & Drawer Berkas">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                        <span>Detail</span>
+                    </button>
                     <div class="action-row-decision">
                         ${mhs.status !== 'diterima' ? `
                         <button type="button" class="btn-action-pill pill-approve btn-act-approve" data-id="${mhs.id}" title="Terima Mahasiswa">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                             <span>Terima</span>
                         </button>` : ''}
                         <button type="button" class="btn-action-pill pill-relocate btn-act-relocate" data-id="${mhs.id}" title="Ajukan Pemindahan ke Unit Lain">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/></svg>
-                            <span>Pindahkan</span>
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/></svg>
+                            <span>Pindah</span>
                         </button>
                         ${mhs.status !== 'ditolak' ? `
                         <button type="button" class="btn-action-pill pill-reject btn-act-reject" data-id="${mhs.id}" title="Tolak Pendaftaran">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
                             <span>Tolak</span>
                         </button>` : ''}
                     </div>
@@ -2752,9 +2785,6 @@ let currentDrawerMhs = null;
 function initSideDrawer() {
     const backdrop = document.getElementById('drawer-backdrop');
     const btnClose = document.getElementById('btn-close-drawer');
-    const btnApprove = document.getElementById('drawer-btn-approve');
-    const btnRelocate = document.getElementById('drawer-btn-relocate');
-    const btnReject = document.getElementById('drawer-btn-reject');
 
     if (backdrop) backdrop.addEventListener('click', closeCandidateDrawer);
     if (btnClose) btnClose.addEventListener('click', closeCandidateDrawer);
@@ -2762,33 +2792,6 @@ function initSideDrawer() {
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') closeCandidateDrawer();
     });
-
-    if (btnApprove) {
-        btnApprove.addEventListener('click', () => {
-            if (currentDrawerMhs) {
-                closeCandidateDrawer();
-                openApproveModal(currentDrawerMhs);
-            }
-        });
-    }
-
-    if (btnRelocate) {
-        btnRelocate.addEventListener('click', () => {
-            if (currentDrawerMhs) {
-                closeCandidateDrawer();
-                openRelocateModal(currentDrawerMhs);
-            }
-        });
-    }
-
-    if (btnReject) {
-        btnReject.addEventListener('click', () => {
-            if (currentDrawerMhs) {
-                closeCandidateDrawer();
-                openRejectModal(currentDrawerMhs);
-            }
-        });
-    }
 }
 
 function openCandidateDrawer(mhs) {
@@ -2892,12 +2895,6 @@ function openCandidateDrawer(mhs) {
     if (notesEl) {
         notesEl.innerText = mhs.catatan_admin || 'Belum ada catatan internal unit untuk kandidat ini.';
     }
-
-    // Toggle Decision Buttons based on current status
-    const btnApprove = document.getElementById('drawer-btn-approve');
-    const btnReject = document.getElementById('drawer-btn-reject');
-    if (btnApprove) btnApprove.style.display = mhs.status === 'diterima' ? 'none' : 'inline-flex';
-    if (btnReject) btnReject.style.display = mhs.status === 'ditolak' ? 'none' : 'inline-flex';
 
     // Slide in
     backdrop.classList.add('is-open');
