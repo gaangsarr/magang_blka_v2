@@ -63,7 +63,8 @@ if ($mahasiswa) {
 
 // 2. Cek apakah kredensial Azure sudah dikonfigurasi
 if (!AzureAuth::isConfigured()) {
-    if (AzureAuth::isDevMockAllowed()) {
+    $isLocalhost = in_array($_SERVER['REMOTE_ADDR'] ?? '', ['127.0.0.1', '::1'], true);
+    if (AzureAuth::isDevMockAllowed() && $isLocalhost) {
         // Mode development lokal: arahkan ke halaman Mock Login
         header('Location: /api/auth/azure/mock.php');
         exit;
@@ -87,7 +88,11 @@ setcookie('azure_oauth_state', $state, [
 ]);
 
 if (!empty($_GET['return_to'])) {
-    $_SESSION['oauth_return_to'] = filter_var($_GET['return_to'], FILTER_SANITIZE_URL);
+    $returnTo = (string)$_GET['return_to'];
+    // SECURITY: Hanya izinkan path lokal (dimulai / tapi bukan //) untuk mencegah Open Redirect
+    if (str_starts_with($returnTo, '/') && !str_starts_with($returnTo, '//')) {
+        $_SESSION['oauth_return_to'] = $returnTo;
+    }
 }
 
 // Pastikan session tersimpan ke disk sebelum redirect

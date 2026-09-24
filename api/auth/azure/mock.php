@@ -12,7 +12,10 @@ use App\AzureAuth;
 $root = dirname(__DIR__, 3);
 Dotenv::createImmutable($root)->safeLoad();
 
-if (!AzureAuth::isDevMockAllowed()) {
+// SECURITY: Double guard — APP_ENV check + localhost IP check
+// Bahkan jika .env hilang (fallback ke 'local'), mock tetap tidak bisa diakses dari remote
+$isLocalhost = in_array($_SERVER['REMOTE_ADDR'] ?? '', ['127.0.0.1', '::1'], true);
+if (!AzureAuth::isDevMockAllowed() || !$isLocalhost) {
     header('Location: /login.html');
     exit;
 }

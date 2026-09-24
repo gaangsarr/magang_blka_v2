@@ -65,7 +65,17 @@ try {
 
     $filePath = $root . '/storage/' . $row['porto_path'];
 
-    if (!file_exists($filePath) || !is_readable($filePath)) {
+    // SECURITY: Validasi realpath untuk mencegah path traversal
+    $storageRoot = realpath($root . '/storage');
+    $realFilePath = realpath($filePath);
+    if (!$realFilePath || !$storageRoot || !str_starts_with($realFilePath, $storageRoot)) {
+        http_response_code(403);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['error' => 'Akses file tidak diizinkan.']);
+        exit;
+    }
+
+    if (!is_readable($realFilePath)) {
         http_response_code(404);
         header('Content-Type: application/json; charset=utf-8');
         echo json_encode(['error' => 'File Portofolio tidak ditemukan di server.']);
