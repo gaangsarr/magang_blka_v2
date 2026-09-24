@@ -783,11 +783,36 @@
             const isMoved = item.is_dipindahkan;
             const isPub = item.pengumuman_dibuka === true;
 
-            if (!isPub || st === 'menunggu_pengumuman') {
+            if (st === 'ditolak' || item.raw_status === 'ditolak') {
+                const canReregister = (item.bisa_daftar_ulang === true || (item.is_periode_aktif && item.periode_status === 'dibuka'));
+                const alasanText = item.catatan_admin ? `<div style="margin-top: 10px; padding: 10px 14px; background: #fff5f5; border-left: 3px solid #ef4444; border-radius: 6px; font-size: 0.825rem; color: #7f1d1d;"><strong>Alasan Penolakan:</strong> ${escapeHtml(item.catatan_admin)}</div>` : '';
+                const reregisterBtn = canReregister ? `
+                    <div style="margin-top: 14px;">
+                        <a href="/daftar.html" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px; text-decoration: none; padding: 10px 18px; font-weight: 700; border-radius: 8px; background: #0b3d6b; color: #ffffff;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
+                            <span>Pilih Unit Lain &amp; Daftar Ulang</span>
+                        </a>
+                    </div>
+                ` : '';
+
+                alertBox.innerHTML = `
+                    <div style="padding: 16px 20px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; color: #991b1b;">
+                        <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; display: flex; align-items: center; gap: 8px;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                            <span>Pengajuan Ditolak</span>
+                        </div>
+                        <p style="margin: 0; font-size: 0.85rem; line-height: 1.5; color: #991b1b;">
+                            Mohon maaf, pengajuan magang Anda pada unit <strong>${escapeHtml(item.nama_unit)}</strong> belum berhasil disetujui untuk periode ${escapeHtml(item.periode_nama)}.
+                        </p>
+                        ${alasanText}
+                        ${reregisterBtn}
+                    </div>
+                `;
+            } else if (!isPub || st === 'menunggu_pengumuman') {
                 alertBox.innerHTML = `
                     <div style="padding: 16px 20px; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 12px; color: #0369a1;">
                         <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; display: flex; align-items: center; gap: 8px;">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                             <span>Dalam Proses Peninjauan & Seleksi</span>
                         </div>
                         <p style="margin: 0; font-size: 0.85rem; line-height: 1.5; color: #0369a1;">
@@ -799,7 +824,7 @@
                 alertBox.innerHTML = `
                     <div style="padding: 16px 20px; background: #fffbebf5; border: 1px solid #fde68a; border-radius: 12px; color: #92400e;">
                         <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; display: flex; align-items: center; gap: 8px;">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                             <span>Ditetapkan (Dipindahkan ke Unit Lain)</span>
                         </div>
                         <p style="margin: 0; font-size: 0.85rem; line-height: 1.5; color: #78350f;">
@@ -811,7 +836,7 @@
                 alertBox.innerHTML = `
                     <div style="padding: 16px 20px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; color: #065f46;">
                         <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; display: flex; align-items: center; gap: 8px;">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                             <span>Selamat! Pengajuan Magang Anda Diterima</span>
                         </div>
                         <p style="margin: 0; font-size: 0.85rem; line-height: 1.5; color: #065f46;">
@@ -819,23 +844,11 @@
                         </p>
                     </div>
                 `;
-            } else if (st === 'ditolak') {
-                alertBox.innerHTML = `
-                    <div style="padding: 16px 20px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; color: #991b1b;">
-                        <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; display: flex; align-items: center; gap: 8px;">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-                            <span>Pengajuan Belum Dapat Diterima</span>
-                        </div>
-                        <p style="margin: 0; font-size: 0.85rem; line-height: 1.5; color: #991b1b;">
-                            Mohon maaf, pengajuan magang Anda belum dapat disetujui pada periode ${escapeHtml(item.periode_nama)}.
-                        </p>
-                    </div>
-                `;
             } else {
                 alertBox.innerHTML = `
                     <div style="padding: 16px 20px; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 12px; color: #0369a1;">
                         <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; display: flex; align-items: center; gap: 8px;">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
                             <span>Pendaftaran Berhasil Disimpan</span>
                         </div>
                         <p style="margin: 0; font-size: 0.85rem; line-height: 1.5; color: #0369a1;">
@@ -963,28 +976,69 @@
                 // Kasus: Memiliki riwayat pendaftaran
                 registrationsList = json.data;
                 if (historyCard) historyCard.classList.remove('hidden');
-                if (emptyStateCard) emptyStateCard.classList.add('hidden');
                 if (historySubtitle) historySubtitle.innerText = `Menampilkan ${registrationsList.length} riwayat gelombang pendaftaran`;
 
-                // Banner Ajakan Jika Ada Periode Baru yang Belum Didaftari & Eligible
+                // Banner Ajakan Jika Ada Periode Baru yang Belum Didaftari & Eligible / Ditolak Bisa Daftar Ulang
                 if (newPeriodBanner) {
-                    if (json.ada_periode_dibuka && !json.sudah_mendaftar_periode_aktif && json.periode_aktif_saat_ini && authData.is_eligible_pendaftaran_aktif !== false) {
-
+                    const rejectedActiveItem = registrationsList.find(r => r.bisa_daftar_ulang || (r.is_periode_aktif && (r.status === 'ditolak' || r.raw_status === 'ditolak') && r.periode_status === 'dibuka'));
+                    if (rejectedActiveItem) {
+                        const rawPeriodName = (rejectedActiveItem.periode_nama || (json.periode_aktif_saat_ini ? json.periode_aktif_saat_ini.nama : '')).trim();
+                        const periodeDisplay = rawPeriodName 
+                            ? (rawPeriodName.toLowerCase().startsWith('periode') ? rawPeriodName : `Periode ${rawPeriodName}`) 
+                            : '';
+                        const cardTitle = periodeDisplay ? `Pendaftaran Ulang Tersedia (${escapeHtml(periodeDisplay)})` : 'Pendaftaran Ulang Tersedia';
+                        newPeriodBanner.innerHTML = `
+                            <div class="card" style="margin-bottom: 24px; padding: 20px 24px; border: 1px solid #fed7aa; border-left: 4px solid #f97316; background: #fffaf0;">
+                                <div style="display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;">
+                                    <div style="flex: 1; min-width: 260px; display: flex; align-items: flex-start; gap: 14px;">
+                                        <div style="width: 40px; height: 40px; border-radius: 10px; background: #ffedd5; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid #fed7aa;">
+                                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <circle cx="12" cy="12" r="10"></circle>
+                                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                            </svg>
+                                        </div>
+                                        <div style="flex: 1;">
+                                            <div style="font-size: 0.95rem; font-weight: 700; color: #9a3412; margin-bottom: 4px;">
+                                                ${cardTitle}
+                                            </div>
+                                            <p style="margin: 0; color: #7c2d12; font-size: 0.875rem; line-height: 1.5;">
+                                                Pengajuan Anda pada unit <strong>${escapeHtml(rejectedActiveItem.nama_unit)}</strong> belum berhasil diterima${rejectedActiveItem.catatan_admin ? ` (Alasan: <em>"${escapeHtml(rejectedActiveItem.catatan_admin)}"</em>)` : ''}. Karena periode masih dibuka, Anda berhak memilih unit magang lain yang masih memiliki kuota.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <a href="/daftar.html" class="btn" style="background: #ea580c; color: #ffffff; padding: 10px 20px; font-size: 0.875rem; font-weight: 700; text-decoration: none; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;">
+                                        <span>Pilih Unit Lain &amp; Daftar Ulang</span>
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                                    </a>
+                                </div>
+                            </div>
+                        `;
+                        newPeriodBanner.classList.remove('hidden');
+                    } else if (json.ada_periode_dibuka && !json.sudah_mendaftar_periode_aktif && json.periode_aktif_saat_ini && authData.is_eligible_pendaftaran_aktif !== false) {
+                        const rawNewPeriodName = (json.periode_aktif_saat_ini.nama || '').trim();
+                        const newPeriodDisplay = rawNewPeriodName
+                            ? (rawNewPeriodName.toLowerCase().startsWith('periode') ? rawNewPeriodName : `Periode ${rawNewPeriodName}`)
+                            : 'Periode Baru';
                         newPeriodBanner.innerHTML = `
                             <div class="card" style="margin-bottom: 24px; padding: 20px 24px; border: 1px solid #e2e8f0; border-left: 4px solid #0b3d6b; background: #ffffff;">
                                 <div style="display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;">
-                                    <div style="flex: 1; min-width: 260px;">
-                                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0b3d6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                                            <span style="font-size: 0.95rem; font-weight: 700; color: #0b3d6b;">Pendaftaran Periode Baru Telah Dibuka</span>
+                                    <div style="flex: 1; min-width: 260px; display: flex; align-items: flex-start; gap: 14px;">
+                                        <div style="width: 40px; height: 40px; border-radius: 10px; background: #e0f2fe; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid #bae6fd;">
+                                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0b3d6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                                         </div>
-                                        <p style="margin: 0; color: #64748b; font-size: 0.875rem; line-height: 1.5;">
-                                            Pendaftaran untuk <strong>Periode ${escapeHtml(json.periode_aktif_saat_ini.nama)}</strong> saat ini sedang aktif dan dapat Anda daftari.
-                                        </p>
+                                        <div style="flex: 1;">
+                                            <div style="font-size: 0.95rem; font-weight: 700; color: #0b3d6b; margin-bottom: 4px;">
+                                                Pendaftaran Periode Baru Telah Dibuka
+                                            </div>
+                                            <p style="margin: 0; color: #64748b; font-size: 0.875rem; line-height: 1.5;">
+                                                Pendaftaran untuk <strong>${escapeHtml(newPeriodDisplay)}</strong> saat ini sedang aktif dan dapat Anda daftari.
+                                            </p>
+                                        </div>
                                     </div>
                                     <a href="/daftar.html" class="btn" style="background: #0b3d6b; color: #ffffff; padding: 10px 20px; font-size: 0.875rem; font-weight: 600; text-decoration: none; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;">
-                                        <span>Daftar di Periode ${escapeHtml(json.periode_aktif_saat_ini.nama)}</span>
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                                        <span>Daftar di ${escapeHtml(newPeriodDisplay)}</span>
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
                                     </a>
                                 </div>
                             </div>
@@ -1026,7 +1080,16 @@
                 
                 // Status Badge with SVG icons (No Emoticons)
                 let badgeHtml = '';
-                if (!isPub || item.status === 'menunggu_pengumuman') {
+                if (item.status === 'ditolak' || item.raw_status === 'ditolak') {
+                    const reregPill = item.bisa_daftar_ulang ? `<div style="margin-top: 4px;"><a href="/daftar.html" style="font-size: 0.72rem; color: #1d4ed8; background: #dbeafe; border: 1px solid #bfdbfe; padding: 2px 7px; border-radius: 4px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;"><span>Daftar Ulang</span><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a></div>` : '';
+                    badgeHtml = `<div>
+                        <span class="badge-result ditolak">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                            <span>Ditolak</span>
+                        </span>
+                        ${reregPill}
+                    </div>`;
+                } else if (!isPub || item.status === 'menunggu_pengumuman') {
                     badgeHtml = `<span class="badge-result pending">
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                         <span>Menunggu Pengumuman</span>
@@ -1040,11 +1103,6 @@
                     badgeHtml = `<span class="badge-result diterima">
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                         <span>Diterima</span>
-                    </span>`;
-                } else if (item.status === 'ditolak') {
-                    badgeHtml = `<span class="badge-result ditolak">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-                        <span>Tidak Lolos</span>
                     </span>`;
                 } else {
                     badgeHtml = `<span class="badge-result pending">

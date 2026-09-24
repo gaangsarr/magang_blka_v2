@@ -78,7 +78,7 @@ try {
     }
 
     $periodeId = (int)$selectedPeriode['id'];
-    $canEdit = in_array($selectedPeriode['status'], ['persiapan', 'draft'], true);
+    $canEdit = in_array($selectedPeriode['status'], ['persiapan', 'draft', 'dibuka'], true);
 
     // 2. Ambil master entitas untuk status menerima magang
     $stmtE = $pdo->prepare("SELECT menerima_magang FROM entitas_perusahaan WHERE id = ?");

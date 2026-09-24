@@ -185,6 +185,21 @@ if ($cleanRw === '' || !preg_match('/^[0-9]{1,5}$/', $cleanRw)) {
 $body['rt'] = $cleanRt;
 $body['rw'] = $cleanRw;
 
+// Validasi Batasan Umum IPK (0.00 - 4.00) dan SKS (0 - 150)
+$userIpk = (float)$body['ipk'];
+if ($userIpk < 0.0 || $userIpk > 4.00) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Nilai IPK tidak valid. Harus berada di antara 0.00 dan 4.00.']);
+    exit;
+}
+
+$userSks = (int)$body['jumlah_sks'];
+if ($userSks < 0 || $userSks > 150) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Jumlah SKS yang sudah ditempuh tidak boleh bernilai negatif dan tidak boleh lebih dari 150 SKS.']);
+    exit;
+}
+
 // Validasi Syarat Program 5 Bulan jika dipilih
 if ($body['program'] === '5_bulan') {
     $pdo = Database::getInstance();
@@ -232,13 +247,29 @@ try {
             }
         }
 
-        // 1b. Validasi belum pernah submit di periode ini
-        $stmtCek = $pdo->prepare("SELECT id FROM pendaftaran WHERE mahasiswa_id = :mid AND periode_id = :pid");
+        // 1b. Validasi status pendaftaran sebelumnya pada periode ini
+        $stmtCek = $pdo->prepare("SELECT id, status, unit_pelaksana_periode_id, catatan_admin, submitted_at FROM pendaftaran WHERE mahasiswa_id = :mid AND periode_id = :pid FOR UPDATE");
         $stmtCek->execute([':mid' => $mahasiswaId, ':pid' => $periodeId]);
-        if ($stmtCek->fetch()) {
-            throw new \Exception("Anda sudah terdaftar pada periode ini.");
+        $existingPendaftaran = $stmtCek->fetch(PDO::FETCH_ASSOC);
+
+        $isReRegistration = false;
+        if ($existingPendaftaran) {
+            if ($existingPendaftaran['status'] !== 'ditolak') {
+                throw new \Exception("Anda sudah terdaftar pada periode ini.");
+            }
+            // Mahasiswa berstatus ditolak tidak boleh mendaftar kembali ke unit yang sama yang menolaknya
+            if ((int)$existingPendaftaran['unit_pelaksana_periode_id'] === $uppId) {
+                throw new \Exception("Anda telah ditolak dari unit ini. Silakan pilih unit pelaksana lain yang tersedia.");
+            }
+            $isReRegistration = true;
         }
 
+        // Cek juga dari histori penolakan pada periode ini
+        $stmtHistori = $pdo->prepare("SELECT 1 FROM pendaftaran_histori_penolakan WHERE mahasiswa_id = :mid AND periode_id = :pid AND unit_pelaksana_periode_id = :upp_id LIMIT 1");
+        $stmtHistori->execute([':mid' => $mahasiswaId, ':pid' => $periodeId, ':upp_id' => $uppId]);
+        if ($stmtHistori->fetch()) {
+            throw new \Exception("Anda telah ditolak dari unit ini. Silakan pilih unit pelaksana lain yang tersedia.");
+        }
 
         // 2. Validasi reservasi
         $stmtRes = $pdo->prepare("SELECT status, expired_at FROM reservasi WHERE id = :id AND mahasiswa_id = :mid FOR UPDATE");
@@ -255,54 +286,139 @@ try {
             throw new \Exception("Waktu reservasi Anda telah habis. Silakan pilih unit pelaksana kembali.");
         }
 
-        // 3. Insert Pendaftaran
-        $stmtInsert = $pdo->prepare("
-            INSERT INTO pendaftaran (
-                mahasiswa_id, periode_id, reservasi_id, unit_pelaksana_periode_id, 
-                program, nama_snapshot, jenis_kelamin, ipk, jumlah_sks, no_hp, 
-                alamat, rt, rw, kelurahan, kecamatan, kota_kabupaten, provinsi, latitude, longitude,
-                transkrip_path, transkrip_uploaded_at,
-                cv_path, cv_uploaded_at,
-                porto_path, porto_uploaded_at
-            ) VALUES (
-                :mid, :pid, :rid, :upp_id,
-                :prog, :nama, :jk, :ipk, :sks, :hp,
-                :almt, :rt, :rw, :kel, :kec, :kota, :prov, :lat, :lng,
-                :transkrip_path, :transkrip_uploaded_at,
-                :cv_path, :cv_uploaded_at,
-                :porto_path, :porto_uploaded_at
-            )
-        ");
-        
-        $stmtInsert->execute([
-            ':mid'                   => $mahasiswaId,
-            ':pid'                   => $periodeId,
-            ':rid'                   => $reservasiId,
-            ':upp_id'                => $uppId,
-            ':prog'                  => $body['program'],
-            ':nama'                  => $body['nama'],
-            ':jk'                    => $body['jenis_kelamin'],
-            ':ipk'                   => (float)$body['ipk'],
-            ':sks'                   => (int)$body['jumlah_sks'],
-            ':hp'                    => $body['no_hp'],
-            ':almt'                  => $body['alamat_lengkap'],
-            ':rt'                    => $body['rt'],
-            ':rw'                    => $body['rw'],
-            ':kel'                   => $body['kelurahan'],
-            ':kec'                   => $body['kecamatan'],
-            ':kota'                  => $body['kota_kabupaten'],
-            ':prov'                  => $body['provinsi'],
-            ':lat'                   => (float)$body['lat'],
-            ':lng'                   => (float)$body['lng'],
-            ':transkrip_path'        => $transkripPath,
-            ':transkrip_uploaded_at' => $transkripPath ? date('Y-m-d H:i:s') : null,
-            ':cv_path'               => $cvPath,
-            ':cv_uploaded_at'        => $cvPath ? date('Y-m-d H:i:s') : null,
-            ':porto_path'            => $portoPath,
-            ':porto_uploaded_at'     => $portoPath ? date('Y-m-d H:i:s') : null,
-        ]);
-        
-        $pendaftaranId = $pdo->lastInsertId();
+        if ($isReRegistration) {
+            $pendaftaranId = (int)$existingPendaftaran['id'];
+
+            // 3a. Arsipkan data penolakan lama ke pendaftaran_histori_penolakan
+            $stmtLogHistori = $pdo->prepare("
+                INSERT INTO pendaftaran_histori_penolakan (
+                    pendaftaran_id, mahasiswa_id, periode_id, unit_pelaksana_periode_id, catatan_admin, ditolak_pada, created_at
+                ) VALUES (
+                    :p_id, :mid, :pid, :old_upp_id, :catatan, :ditolak_pada, NOW()
+                )
+            ");
+            $stmtLogHistori->execute([
+                ':p_id'         => $pendaftaranId,
+                ':mid'          => $mahasiswaId,
+                ':pid'          => $periodeId,
+                ':old_upp_id'   => (int)$existingPendaftaran['unit_pelaksana_periode_id'],
+                ':catatan'      => $existingPendaftaran['catatan_admin'],
+                ':ditolak_pada' => $existingPendaftaran['submitted_at'] ?? date('Y-m-d H:i:s'),
+            ]);
+
+            // 3b. Update baris pendaftaran eksisting dengan unit baru, reset status ke 'diajukan'
+            $stmtUpdate = $pdo->prepare("
+                UPDATE pendaftaran SET
+                    reservasi_id = :rid,
+                    unit_pelaksana_periode_id = :upp_id,
+                    program = :prog,
+                    nama_snapshot = :nama,
+                    jenis_kelamin = :jk,
+                    ipk = :ipk,
+                    jumlah_sks = :sks,
+                    no_hp = :hp,
+                    alamat = :almt,
+                    rt = :rt,
+                    rw = :rw,
+                    kelurahan = :kel,
+                    kecamatan = :kec,
+                    kota_kabupaten = :kota,
+                    provinsi = :prov,
+                    latitude = :lat,
+                    longitude = :lng,
+                    transkrip_path = :transkrip_path,
+                    transkrip_uploaded_at = :transkrip_uploaded_at,
+                    cv_path = :cv_path,
+                    cv_uploaded_at = :cv_uploaded_at,
+                    porto_path = :porto_path,
+                    porto_uploaded_at = :porto_uploaded_at,
+                    status = 'diajukan',
+                    catatan_admin = NULL,
+                    is_dipindahkan = 0,
+                    unit_pelaksana_periode_asal_id = NULL,
+                    submitted_at = NOW()
+                WHERE id = :id
+            ");
+
+            $stmtUpdate->execute([
+                ':id'                    => $pendaftaranId,
+                ':rid'                   => $reservasiId,
+                ':upp_id'                => $uppId,
+                ':prog'                  => $body['program'],
+                ':nama'                  => $body['nama'],
+                ':jk'                    => $body['jenis_kelamin'],
+                ':ipk'                   => (float)$body['ipk'],
+                ':sks'                   => (int)$body['jumlah_sks'],
+                ':hp'                    => $body['no_hp'],
+                ':almt'                  => $body['alamat_lengkap'],
+                ':rt'                    => $body['rt'],
+                ':rw'                    => $body['rw'],
+                ':kel'                   => $body['kelurahan'],
+                ':kec'                   => $body['kecamatan'],
+                ':kota'                  => $body['kota_kabupaten'],
+                ':prov'                  => $body['provinsi'],
+                ':lat'                   => (float)$body['lat'],
+                ':lng'                   => (float)$body['lng'],
+                ':transkrip_path'        => $transkripPath,
+                ':transkrip_uploaded_at' => $transkripPath ? date('Y-m-d H:i:s') : null,
+                ':cv_path'               => $cvPath,
+                ':cv_uploaded_at'        => $cvPath ? date('Y-m-d H:i:s') : null,
+                ':porto_path'            => $portoPath,
+                ':porto_uploaded_at'     => $portoPath ? date('Y-m-d H:i:s') : null,
+            ]);
+
+            // Bersihkan peminatan lama
+            $pdo->prepare("DELETE FROM pendaftaran_peminatan WHERE pendaftaran_id = ?")->execute([$pendaftaranId]);
+        } else {
+            // 3. Insert Pendaftaran Baru
+            $stmtInsert = $pdo->prepare("
+                INSERT INTO pendaftaran (
+                    mahasiswa_id, periode_id, reservasi_id, unit_pelaksana_periode_id, 
+                    program, nama_snapshot, jenis_kelamin, ipk, jumlah_sks, no_hp, 
+                    alamat, rt, rw, kelurahan, kecamatan, kota_kabupaten, provinsi, latitude, longitude,
+                    transkrip_path, transkrip_uploaded_at,
+                    cv_path, cv_uploaded_at,
+                    porto_path, porto_uploaded_at
+                ) VALUES (
+                    :mid, :pid, :rid, :upp_id,
+                    :prog, :nama, :jk, :ipk, :sks, :hp,
+                    :almt, :rt, :rw, :kel, :kec, :kota, :prov, :lat, :lng,
+                    :transkrip_path, :transkrip_uploaded_at,
+                    :cv_path, :cv_uploaded_at,
+                    :porto_path, :porto_uploaded_at
+                )
+            ");
+            
+            $stmtInsert->execute([
+                ':mid'                   => $mahasiswaId,
+                ':pid'                   => $periodeId,
+                ':rid'                   => $reservasiId,
+                ':upp_id'                => $uppId,
+                ':prog'                  => $body['program'],
+                ':nama'                  => $body['nama'],
+                ':jk'                    => $body['jenis_kelamin'],
+                ':ipk'                   => (float)$body['ipk'],
+                ':sks'                   => (int)$body['jumlah_sks'],
+                ':hp'                    => $body['no_hp'],
+                ':almt'                  => $body['alamat_lengkap'],
+                ':rt'                    => $body['rt'],
+                ':rw'                    => $body['rw'],
+                ':kel'                   => $body['kelurahan'],
+                ':kec'                   => $body['kecamatan'],
+                ':kota'                  => $body['kota_kabupaten'],
+                ':prov'                  => $body['provinsi'],
+                ':lat'                   => (float)$body['lat'],
+                ':lng'                   => (float)$body['lng'],
+                ':transkrip_path'        => $transkripPath,
+                ':transkrip_uploaded_at' => $transkripPath ? date('Y-m-d H:i:s') : null,
+                ':cv_path'               => $cvPath,
+                ':cv_uploaded_at'        => $cvPath ? date('Y-m-d H:i:s') : null,
+                ':porto_path'            => $portoPath,
+                ':porto_uploaded_at'     => $portoPath ? date('Y-m-d H:i:s') : null,
+            ]);
+            
+            $pendaftaranId = (int)$pdo->lastInsertId();
+        }
 
         // 4. Update status reservasi
         $pdo->prepare("UPDATE reservasi SET status = 'dikonfirmasi' WHERE id = :id")

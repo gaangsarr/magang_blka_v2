@@ -26,7 +26,7 @@ $input = json_decode(file_get_contents('php://input'), true) ?? [];
 $pendaftaranId = isset($input['pendaftaran_id']) ? (int)$input['pendaftaran_id'] : 0;
 $statusTarget = trim((string)($input['status'] ?? '')); // 'diterima', 'dipindahkan', 'ditolak', 'diajukan'
 $newUppId = isset($input['new_unit_pelaksana_periode_id']) ? (int)$input['new_unit_pelaksana_periode_id'] : null;
-$catatanAdmin = trim((string)($input['catatan_admin'] ?? $input['alasan_pemindahan'] ?? $input['catatan'] ?? $input['alasan'] ?? ''));
+$catatanAdmin = trim((string)($input['catatan_admin'] ?? $input['alasan_penolakan'] ?? $input['alasan_pemindahan'] ?? $input['catatan'] ?? $input['alasan'] ?? ''));
 
 if ($pendaftaranId <= 0 || $statusTarget === '') {
     http_response_code(400);

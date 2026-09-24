@@ -85,6 +85,36 @@ try {
             }
         }
 
+        // Validasi pendaftaran aktif & pembatasan unit yang menolak mahasiswa
+        $stmtCekReg = $pdo->prepare("
+            SELECT id, status, unit_pelaksana_periode_id 
+            FROM pendaftaran 
+            WHERE mahasiswa_id = :mid AND periode_id = :pid
+        ");
+        $stmtCekReg->execute([':mid' => $mahasiswaId, ':pid' => (int)$upp['periode_id']]);
+        $existingReg = $stmtCekReg->fetch(PDO::FETCH_ASSOC);
+
+        if ($existingReg) {
+            if ($existingReg['status'] !== 'ditolak') {
+                throw new \Exception('Anda sudah memiliki pendaftaran aktif pada periode ini.');
+            }
+            // Mahasiswa berstatus ditolak tidak boleh memilih kembali unit yang sama yang menolaknya
+            if ((int)$existingReg['unit_pelaksana_periode_id'] === $uppId) {
+                throw new \Exception('Anda telah ditolak dari unit ini. Silakan pilih unit pelaksana lain yang tersedia.');
+            }
+        }
+
+        // Cek juga dari histori penolakan pada periode ini
+        $stmtCekHistori = $pdo->prepare("
+            SELECT 1 FROM pendaftaran_histori_penolakan 
+            WHERE mahasiswa_id = :mid AND periode_id = :pid AND unit_pelaksana_periode_id = :upp_id 
+            LIMIT 1
+        ");
+        $stmtCekHistori->execute([':mid' => $mahasiswaId, ':pid' => (int)$upp['periode_id'], ':upp_id' => $uppId]);
+        if ($stmtCekHistori->fetch()) {
+            throw new \Exception('Anda telah ditolak dari unit ini. Silakan pilih unit pelaksana lain yang tersedia.');
+        }
+
         // Validasi kesesuaian Program Studi (Prodi) mahasiswa
         $mhsData = Auth::getMahasiswa();
         $mhsJurusanId = (int)($mhsData['jurusan_id'] ?? 0);

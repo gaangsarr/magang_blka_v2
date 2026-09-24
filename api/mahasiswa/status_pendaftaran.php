@@ -63,18 +63,28 @@ try {
     $rawList = $stmtAllReg->fetchAll(PDO::FETCH_ASSOC);
 
     $isRegisteredInActive = false;
+    $isDitolakInActive = false;
+    $bisaDaftarUlangActive = false;
     $processedList = [];
 
     foreach ($rawList as $row) {
         $isPengumumanBuka = (bool)($row['pengumuman_dibuka'] ?? false);
         $isThisPeriodActive = ($activePeriode && (int)$row['periode_id'] === (int)$activePeriode['id']);
-        
+        $isDitolak = ($row['status'] === 'ditolak');
+
         if ($isThisPeriodActive) {
-            $isRegisteredInActive = true;
+            if ($isDitolak) {
+                $isDitolakInActive = true;
+                $bisaDaftarUlangActive = ($activePeriode['status'] === 'dibuka');
+                $isRegisteredInActive = false; // Mahasiswa ditolak bisa mendaftar ulang
+            } else {
+                $isRegisteredInActive = true;
+            }
         }
 
         $displayStatus = $row['status'];
-        if (!$isPengumumanBuka) {
+        // Jika ditolak, mahasiswa langsung dapat melihat status ditolak agar bisa daftar ulang
+        if (!$isPengumumanBuka && !$isDitolak) {
             $displayStatus = 'menunggu_pengumuman';
         }
 
@@ -103,14 +113,15 @@ try {
             'pengumuman_dibuka' => $isPengumumanBuka,
             'status'            => $displayStatus,
             'raw_status'        => $row['status'],
+            'bisa_daftar_ulang' => ($isThisPeriodActive && $isDitolak && (bool)$activePeriode && $activePeriode['status'] === 'dibuka'),
             'program'           => $row['program'],
             'nama'              => $row['nama'],
             'nim'               => $row['nim'],
             'jurusan'           => $row['jurusan_nama'] ?? '-',
-            'nama_unit'         => $isPengumumanBuka ? $row['nama_unit'] : ($row['nama_unit_asal'] ?: $row['nama_unit']),
-            'nama_unit_asal'    => $isPengumumanBuka ? $row['nama_unit_asal'] : null,
+            'nama_unit'         => ($isPengumumanBuka || $isDitolak) ? $row['nama_unit'] : ($row['nama_unit_asal'] ?: $row['nama_unit']),
+            'nama_unit_asal'    => ($isPengumumanBuka || $isDitolak) ? $row['nama_unit_asal'] : null,
             'is_dipindahkan'    => $isPengumumanBuka ? (bool)$row['is_dipindahkan'] : false,
-            'catatan_admin'     => null,
+            'catatan_admin'     => ($isDitolak || $isPengumumanBuka) ? $row['catatan_admin'] : null,
             'pic_narahubung'    => $picNarahubung,
             'submitted_at'      => $row['submitted_at'],
             'id'                => (int)$row['pendaftaran_id'],
@@ -133,6 +144,8 @@ try {
         'total'                        => count($processedList),
         'ada_periode_dibuka'           => (bool)$activePeriode,
         'sudah_mendaftar_periode_aktif'=> $isRegisteredInActive,
+        'is_ditolak_periode_aktif'     => $isDitolakInActive,
+        'bisa_daftar_ulang'            => $bisaDaftarUlangActive,
         'periode_aktif_saat_ini'       => $activePeriode ? [
             'id'   => (int)$activePeriode['id'],
             'nama' => $activePeriode['nama'],

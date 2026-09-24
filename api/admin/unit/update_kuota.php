@@ -111,8 +111,14 @@ try {
         $entitasId, $periodeId, $kuotaBaru, $tipeKuota, $aktif, $adminId, 
         $hasProdiPayload, $prodiIds, $allocMap, $hasPeminatanPayload, $peminatanIds
     ) {
+        // Ambil info status periode
+        $stmtPeriode = $pdo->prepare("SELECT id, nama, status FROM periode WHERE id = ?");
+        $stmtPeriode->execute([$periodeId]);
+        $periodeData = $stmtPeriode->fetch(PDO::FETCH_ASSOC);
+        $isPeriodeDibuka = ($periodeData && $periodeData['status'] === 'dibuka');
+
         // Cek apakah sudah ada di unit_pelaksana_periode
-        $stmtCek = $pdo->prepare("SELECT id, kuota_total, kuota_tersisa FROM unit_pelaksana_periode WHERE entitas_id = ? AND periode_id = ? FOR UPDATE");
+        $stmtCek = $pdo->prepare("SELECT id, tipe_kuota, kuota_total, kuota_tersisa, aktif FROM unit_pelaksana_periode WHERE entitas_id = ? AND periode_id = ? FOR UPDATE");
         $stmtCek->execute([$entitasId, $periodeId]);
         $existing = $stmtCek->fetch(PDO::FETCH_ASSOC);
         
@@ -121,13 +127,57 @@ try {
 
         if ($existing) {
             $uppId = (int)$existing['id'];
+            $oldKuotaTotal = (int)$existing['kuota_total'];
+            $oldTipeKuota = $existing['tipe_kuota'] ?? 'keseluruhan';
+            $oldAktif = (int)$existing['aktif'];
+
+            // ATURAN KETAT SAAT PERIODE SEDANG DIBUKA
+            if ($isPeriodeDibuka) {
+                // 1. Metode alokasi kuota terkunci, tidak boleh diubah
+                if ($tipeKuota !== $oldTipeKuota && $oldKuotaTotal > 0) {
+                    $metodeLamaText = ($oldTipeKuota === 'breakdown') ? 'Breakdown per Program Studi' : 'Kuota Gabungan (Pool)';
+                    throw new \Exception("Metode alokasi kuota tidak dapat diubah dari $metodeLamaText saat periode pendaftaran sedang dibuka.");
+                }
+
+                // 2. Kuota total tidak boleh dikurangi
+                if ($kuotaBaru < $oldKuotaTotal) {
+                    throw new \Exception("Total kuota tidak dapat dikurangi saat status periode sedang dibuka (sebelumnya $oldKuotaTotal slot, kuota hanya dapat ditambah atau tetap).");
+                }
+
+                // 3. Unit yang sudah aktif membuka kuota tidak boleh dinonaktifkan
+                if ($oldAktif === 1 && $oldKuotaTotal > 0 && (int)$aktif === 0) {
+                    throw new \Exception("Unit yang telah memiliki alokasi kuota aktif tidak dapat dinonaktifkan saat periode sedang dibuka.");
+                }
+
+                // 4. Jika mode breakdown, kuota tiap prodi tidak boleh dikurangi dari alokasi sebelumnya
+                if ($tipeKuota === 'breakdown') {
+                    $stmtOldUpj = $pdo->prepare("SELECT jurusan_id, kuota_total FROM unit_periode_jurusan WHERE unit_pelaksana_periode_id = ?");
+                    $stmtOldUpj->execute([$uppId]);
+                    $oldUpjMap = [];
+                    foreach ($stmtOldUpj->fetchAll(PDO::FETCH_ASSOC) as $ou) {
+                        $oldUpjMap[(int)$ou['jurusan_id']] = (int)($ou['kuota_total'] ?? 0);
+                    }
+
+                    foreach ($oldUpjMap as $oldJid => $oldJQuota) {
+                        if ($oldJQuota > 0) {
+                            $newJQuota = $allocMap[$oldJid] ?? 0;
+                            if (!in_array($oldJid, $prodiIds, true) || $newJQuota < $oldJQuota) {
+                                $stmtJn = $pdo->prepare("SELECT nama_jurusan FROM jurusan WHERE id = ?");
+                                $stmtJn->execute([$oldJid]);
+                                $jName = $stmtJn->fetchColumn() ?: "ID $oldJid";
+                                throw new \Exception("Alokasi kuota untuk program studi $jName tidak boleh dikurangi saat periode sedang dibuka (sebelumnya $oldJQuota slot).");
+                            }
+                        }
+                    }
+                }
+            }
 
             // Cek pendaftaran dan reservasi aktif
             $stmtUsedP = $pdo->prepare("
                 SELECT m.jurusan_id, COUNT(*) as jml
                 FROM pendaftaran p
                 JOIN mahasiswa m ON p.mahasiswa_id = m.id
-                WHERE p.unit_pelaksana_periode_id = ?
+                WHERE p.unit_pelaksana_periode_id = ? AND p.status != 'ditolak'
                 GROUP BY m.jurusan_id
             ");
             $stmtUsedP->execute([$uppId]);

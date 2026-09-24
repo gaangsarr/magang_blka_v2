@@ -92,6 +92,40 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
+        // Tampilkan Banner Pendaftaran Ulang jika ditolak pada periode aktif
+        if (statusData.is_ditolak_periode_aktif) {
+            const reregNotice = document.getElementById('reregistration-notice-banner');
+            const unitDitolakNama = escapeHtml(statusData.unit_ditolak_nama || 'unit pilihan sebelumnya');
+            const alasanDitolak = statusData.alasan_penolakan ? `<div style="margin-top: 6px; font-size: 0.825rem; color: #991b1b; background: #fee2e2; padding: 6px 12px; border-radius: 6px;"><strong>Alasan Penolakan:</strong> ${escapeHtml(statusData.alasan_penolakan)}</div>` : '';
+            const rawPeriodeName = (statusData.periode_ditolak_nama || (statusData.periode_aktif ? statusData.periode_aktif.nama : '') || '').trim();
+            const pDisplay = rawPeriodeName ? (rawPeriodeName.toLowerCase().startsWith('periode') ? rawPeriodeName : `Periode ${rawPeriodeName}`) : '';
+            const bannerTitle = pDisplay ? `Pendaftaran Ulang (${escapeHtml(pDisplay)})` : 'Pendaftaran Ulang Periode Aktif';
+
+            if (reregNotice) {
+                reregNotice.className = '';
+                reregNotice.style.cssText = 'margin-bottom: 20px; padding: 14px 18px; background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 12px; display: flex; align-items: flex-start; gap: 12px; color: #92400e;';
+                reregNotice.innerHTML = `
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 2px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 2px;">${bannerTitle}</div>
+                        <div style="font-size: 0.85rem; line-height: 1.5; color: #78350f;">
+                            Pengajuan magang Anda sebelumnya di <strong>${unitDitolakNama}</strong> belum disetujui. Karena periode pendaftaran masih dibuka, Anda berhak mendaftar kembali dengan memilih <strong>unit pelaksana lain</strong> yang masih memiliki kuota.
+                        </div>
+                        ${alasanDitolak}
+                    </div>
+                `;
+            }
+
+            const unitStepNotice = document.getElementById('reregistration-unit-banner');
+            if (unitStepNotice) {
+                unitStepNotice.className = '';
+                unitStepNotice.style.cssText = 'margin-bottom: 16px; padding: 12px 16px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; font-size: 0.85rem; color: #991b1b; display: flex; align-items: center; gap: 10px;';
+                unitStepNotice.innerHTML = `
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink: 0;"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                    <span>Unit <strong>${unitDitolakNama}</strong> telah menolak pengajuan Anda sebelumnya dan dinonaktifkan. Silakan pilih unit lain pada tabel di bawah.</span>
+                `;
+            }
+        }
 
         // Fill User Profile Data in Profile Dropdown & Header
         if (statusData.user) {
@@ -190,12 +224,37 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Live validation IPK
         const ipkInput = document.getElementById('ipk');
-        ipkInput.addEventListener('input', function() {
-            let val = parseFloat(this.value);
-            if (val > 4) {
-                this.value = '4.00';
-            }
-        });
+        if (ipkInput) {
+            ipkInput.addEventListener('input', function() {
+                let val = parseFloat(this.value);
+                if (val > 4) {
+                    this.value = '4.00';
+                }
+            });
+        }
+
+        // Live validation SKS (tidak boleh minus dan maksimal 150)
+        const sksInput = document.getElementById('jumlah_sks');
+        if (sksInput) {
+            sksInput.addEventListener('keydown', function(e) {
+                if (e.key === '-' || e.key === 'e' || e.key === 'E' || e.key === '+') {
+                    e.preventDefault();
+                }
+            });
+            sksInput.addEventListener('input', function() {
+                if (this.value.includes('-')) {
+                    this.value = this.value.replace(/-/g, '');
+                }
+                if (this.value !== '') {
+                    let val = parseInt(this.value, 10);
+                    if (isNaN(val) || val < 0) {
+                        this.value = '0';
+                    } else if (val > 150) {
+                        this.value = '150';
+                    }
+                }
+            });
+        }
 
         const updateCoordinates = (lat, lng) => {
             const latInput = document.getElementById('lat');
@@ -744,6 +803,18 @@ function validateStep(step) {
             return false;
         }
 
+        // Validasi Umum SKS (tidak boleh minus dan maksimal 150 SKS)
+        const sksRaw = (document.getElementById('jumlah_sks')?.value || '').trim();
+        const sksNum = parseInt(sksRaw, 10);
+        if (isNaN(sksNum) || sksNum < 0) {
+            showError('Jumlah SKS yang sudah ditempuh tidak boleh bernilai negatif (minimal 0 SKS).', 'jumlah_sks', 'Jumlah SKS Tidak Valid');
+            return false;
+        }
+        if (sksNum > 150) {
+            showError('Jumlah SKS yang sudah ditempuh tidak boleh lebih dari 150 SKS.', 'jumlah_sks', 'Batas Maksimal SKS');
+            return false;
+        }
+
         // Syarat Program 5 Bulan
         const selectedProg = document.querySelector('input[name="program"]:checked')?.value || formData.program;
         if (selectedProg === '5_bulan') {
@@ -950,7 +1021,13 @@ function renderUnitsTable() {
 
     currentUnitsData.forEach((u, idx) => {
         const tr = document.createElement('tr');
-        const canSelect = (u.can_select === 1 || u.can_select === '1' || u.can_select === true);
+        const isRejectedPrevUnit = Boolean(
+            window.statusAuthData &&
+            window.statusAuthData.unit_ditolak_sebelumnya_upp_id &&
+            parseInt(u.upp_id, 10) === parseInt(window.statusAuthData.unit_ditolak_sebelumnya_upp_id, 10)
+        );
+
+        const canSelect = (u.can_select === 1 || u.can_select === '1' || u.can_select === true) && !isRejectedPrevUnit;
         const sisaEfektif = (u.sisa_kuota_efektif !== undefined) ? parseInt(u.sisa_kuota_efektif, 10) : 0;
         const totalEfektif = (u.total_kuota_efektif !== undefined) ? parseInt(u.total_kuota_efektif, 10) : 0;
         
@@ -959,7 +1036,9 @@ function renderUnitsTable() {
         }
 
         let actionHtml = '';
-        if (canSelect) {
+        if (isRejectedPrevUnit) {
+            actionHtml = `<button type="button" class="btn btn-secondary" disabled style="padding: 0.35rem 0.9rem; font-size: 0.8rem; background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; cursor: not-allowed;" title="Anda telah ditolak dari unit ini pada periode ini. Silakan pilih unit lain.">Ditolak</button>`;
+        } else if (canSelect) {
             actionHtml = `<button type="button" class="btn btn-primary" style="padding: 0.35rem 0.9rem; font-size: 0.85rem; font-weight: 600;" onclick="window.pilihUnit(${u.upp_id}, '${escapeHtml(u.nama_unit).replace(/'/g, "\\'")}')">Pilih</button>`;
         } else {
             actionHtml = `<button type="button" class="btn btn-primary" disabled style="padding: 0.35rem 0.9rem; font-size: 0.85rem; font-weight: 600;" title="Tidak dapat dipilih">Pilih</button>`;
@@ -991,6 +1070,10 @@ function renderUnitsTable() {
             ? `<span class="badge badge-gold">${u.kecocokan} Sesuai</span>`
             : `<span class="text-abu">-</span>`;
 
+        const rejectedBadge = isRejectedPrevUnit 
+            ? `<div style="margin-top: 4px;"><span style="background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; font-size: 0.7rem; font-weight: 700; padding: 2px 7px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>Ditolak Sebelumnya</span></div>` 
+            : '';
+
         tr.innerHTML = `
             <td data-label="No" style="text-align: center; font-weight: 600; color: #64748b;">${noUrut}</td>
             <td data-label="Unit Magang">
@@ -998,6 +1081,7 @@ function renderUnitsTable() {
                     <strong style="color: ${canSelect ? '#0b3d6b' : '#64748b'};">${escapeHtml(u.nama_unit)}</strong>
                     ${u.nama_parent ? `<div style="font-size: 0.75rem; color: #64748b; font-weight: 600; margin-top: 1px;">Induk: ${escapeHtml(u.nama_parent)}</div>` : ''}
                     <span class="text-sm text-abu" style="display: block; margin-top: 2px;">${escapeHtml(u.alamat || '-')}</span>
+                    ${rejectedBadge}
                 </div>
             </td>
             <td data-label="Jarak">${jarakText}</td>

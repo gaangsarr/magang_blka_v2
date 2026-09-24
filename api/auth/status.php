@@ -86,14 +86,22 @@ if (Auth::isLoggedInMahasiswa()) {
         exit;
     }
 
-    // 1. Cek apakah sudah mendaftar di periode dibuka
+    // 1. Cek apakah ada pendaftaran di periode dibuka
     $stmt = $pdo->prepare(
-        "SELECT COUNT(*) FROM pendaftaran p
+        "SELECT p.id, p.status, p.unit_pelaksana_periode_id, p.catatan_admin, upp.entitas_id, e.nama AS nama_unit, pr.nama AS nama_periode
+         FROM pendaftaran p
          JOIN periode pr ON p.periode_id = pr.id
-         WHERE p.mahasiswa_id = :mid AND pr.status = 'dibuka'"
+         JOIN unit_pelaksana_periode upp ON p.unit_pelaksana_periode_id = upp.id
+         JOIN entitas_perusahaan e ON upp.entitas_id = e.id
+         WHERE p.mahasiswa_id = :mid AND pr.status = 'dibuka'
+         LIMIT 1"
     );
     $stmt->execute([':mid' => $mid]);
-    $sudahMendaftar = (int) $stmt->fetchColumn() > 0;
+    $pendaftaranAktif = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    $isDitolakPeriodeAktif = ($pendaftaranAktif && $pendaftaranAktif['status'] === 'ditolak');
+    // Jika ditolak, mahasiswa TIDAK dianggap sudah terkunci mendaftar (bisa mendaftar ulang)
+    $sudahMendaftar = ($pendaftaranAktif && $pendaftaranAktif['status'] !== 'ditolak');
 
     // 1b. Cek apakah pernah mendaftar di periode manapun (riwayat)
     $stmtRiwayat = $pdo->prepare("SELECT COUNT(*) FROM pendaftaran WHERE mahasiswa_id = :mid");
@@ -144,6 +152,12 @@ if (Auth::isLoggedInMahasiswa()) {
             'nama' => $activePeriode['nama'],
         ] : null,
         'sudah_mendaftar'        => $sudahMendaftar,
+        'is_ditolak_periode_aktif' => $isDitolakPeriodeAktif,
+        'bisa_daftar_ulang'      => $isDitolakPeriodeAktif && (bool)$activePeriode,
+        'unit_ditolak_sebelumnya_upp_id' => $isDitolakPeriodeAktif ? (int)$pendaftaranAktif['unit_pelaksana_periode_id'] : null,
+        'unit_ditolak_nama'      => $isDitolakPeriodeAktif ? $pendaftaranAktif['nama_unit'] : null,
+        'alasan_penolakan'       => $isDitolakPeriodeAktif ? $pendaftaranAktif['catatan_admin'] : null,
+        'periode_ditolak_nama'   => $isDitolakPeriodeAktif ? ($pendaftaranAktif['nama_periode'] ?? ($activePeriode['nama'] ?? null)) : null,
         'has_riwayat_pendaftaran'=> $hasRiwayat,
         'is_eligible_pendaftaran_aktif' => $isEligibleAngkatan,
         'is_eligible_angkatan'   => $isEligibleAngkatan,

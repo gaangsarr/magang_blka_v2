@@ -130,7 +130,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateModalAllocSummary();
     });
     document.getElementById('btn-clear-prodi')?.addEventListener('click', () => {
-        document.querySelectorAll('.chk-modal-prodi').forEach(cb => {
+        document.querySelectorAll('.chk-modal-prodi:not(:disabled)').forEach(cb => {
             cb.checked = false;
             toggleProdiRowState(cb);
         });
@@ -623,6 +623,51 @@ function openKuotaModal(unit) {
     }
     onModeKuotaChange();
 
+    const isDibuka = (currentPeriodData?.status === 'dibuka');
+    const existingTotalKuota = parseInt(unit.kuota_total, 10) || 0;
+    const hasExistingKuota = Boolean(unit.upp_id && existingTotalKuota > 0);
+
+    const radioKeseluruhan = document.querySelector('input[name="modal_tipe_kuota"][value="keseluruhan"]');
+    const radioBreakdown = document.querySelector('input[name="modal_tipe_kuota"][value="breakdown"]');
+    const inputTotal = document.getElementById('kuota_total');
+    const selectAktif = document.getElementById('aktif');
+
+    let lockBadge = document.getElementById('modal-kuota-lock-badge');
+    if (!lockBadge) {
+        lockBadge = document.createElement('div');
+        lockBadge.id = 'modal-kuota-lock-badge';
+        const formKuota = document.getElementById('form-kuota');
+        if (formKuota) formKuota.prepend(lockBadge);
+    }
+
+    if (isDibuka && hasExistingKuota) {
+        lockBadge.style.cssText = 'display: block; padding: 10px 14px; margin-bottom: 14px; background: #fffbeb; color: #92400e; border: 1px solid #fde68a; border-radius: 8px; font-size: 0.825rem; font-weight: 600; line-height: 1.4;';
+        lockBadge.innerHTML = '🔒 <strong>Periode DIBUKA:</strong> Kuota unit hanya dapat ditambah (minimal ' + existingTotalKuota + ' mahasiswa). Metode alokasi terkunci dan unit aktif tidak dapat dinonaktifkan.';
+
+        if (radioKeseluruhan) radioKeseluruhan.disabled = true;
+        if (radioBreakdown) radioBreakdown.disabled = true;
+        if (inputTotal) {
+            inputTotal.min = existingTotalKuota;
+            inputTotal.title = `Minimal ${existingTotalKuota} saat periode DIBUKA`;
+        }
+        if (selectAktif) {
+            const optNonaktif = selectAktif.querySelector('option[value="0"]');
+            if (optNonaktif) optNonaktif.disabled = true;
+        }
+    } else {
+        if (lockBadge) lockBadge.style.display = 'none';
+        if (radioKeseluruhan) radioKeseluruhan.disabled = false;
+        if (radioBreakdown) radioBreakdown.disabled = false;
+        if (inputTotal) {
+            inputTotal.min = 0;
+            inputTotal.title = '';
+        }
+        if (selectAktif) {
+            const optNonaktif = selectAktif.querySelector('option[value="0"]');
+            if (optNonaktif) optNonaktif.disabled = false;
+        }
+    }
+
     // Map existing prodi allocations
     const existingAllocMap = {};
     if (Array.isArray(unit.prodi_details)) {
@@ -644,14 +689,15 @@ function openKuotaModal(unit) {
             const jId = parseInt(j.id, 10);
             const isChecked = assignedProdiIds.includes(jId);
             const initialAlloc = existingAllocMap[jId] || (isChecked ? 1 : '');
+            const isAllocatedLocked = isDibuka && hasExistingKuota && isChecked && (existingAllocMap[jId] > 0);
 
             const row = document.createElement('div');
             row.className = 'prodi-row-item';
             row.style.cssText = `display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 12px; background: ${isChecked ? '#ffffff' : '#f8fafc'}; border: 1px solid ${isChecked ? '#93c5fd' : '#e2e8f0'}; border-radius: 8px; transition: all 0.2s;`;
 
             row.innerHTML = `
-                <label style="display: flex; align-items: center; gap: 10px; font-size: 0.825rem; color: #1e293b; cursor: pointer; user-select: none; flex: 1; margin: 0;">
-                    <input type="checkbox" value="${jId}" class="chk-modal-prodi" ${isChecked ? 'checked' : ''} style="cursor: pointer; width: 16px; height: 16px;">
+                <label style="display: flex; align-items: center; gap: 10px; font-size: 0.825rem; color: #1e293b; cursor: ${isAllocatedLocked ? 'default' : 'pointer'}; user-select: none; flex: 1; margin: 0;">
+                    <input type="checkbox" value="${jId}" class="chk-modal-prodi" ${isChecked ? 'checked' : ''} ${isAllocatedLocked ? 'disabled title="Prodi sudah dialokasikan kuota pada periode DIBUKA dan tidak dapat dinonaktifkan"' : ''} style="cursor: ${isAllocatedLocked ? 'not-allowed' : 'pointer'}; width: 16px; height: 16px;">
                     <div>
                         <span style="font-weight: 600;">${escapeHtml(j.nama_jurusan)}</span>
                         <span style="font-size: 0.725rem; color: #64748b; margin-left: 4px;">(${escapeHtml(j.jenjang || 'S1')})</span>
@@ -659,7 +705,7 @@ function openKuotaModal(unit) {
                 </label>
                 <div class="prodi-alloc-box" style="display: ${(isBreakdown && isChecked) ? 'flex' : 'none'}; align-items: center; gap: 6px;">
                     <span style="font-size: 0.75rem; font-weight: 700; color: #4338ca;">Jatah:</span>
-                    <input type="number" class="input-modal-prodi-alloc" data-jid="${jId}" min="1" value="${initialAlloc}" placeholder="0" style="width: 70px; padding: 4px 8px; border: 1.5px solid #c7d2fe; border-radius: 6px; font-size: 0.85rem; font-weight: 700; text-align: center; color: #1e1b4b;">
+                    <input type="number" class="input-modal-prodi-alloc" data-jid="${jId}" min="${isAllocatedLocked ? existingAllocMap[jId] : 1}" value="${initialAlloc}" placeholder="0" style="width: 70px; padding: 4px 8px; border: 1.5px solid #c7d2fe; border-radius: 6px; font-size: 0.85rem; font-weight: 700; text-align: center; color: #1e1b4b;" ${isAllocatedLocked ? `title="Minimal ${existingAllocMap[jId]} saat periode DIBUKA"` : ''}>
                     <span style="font-size: 0.75rem; color: #64748b;">Mhs</span>
                 </div>
             `;

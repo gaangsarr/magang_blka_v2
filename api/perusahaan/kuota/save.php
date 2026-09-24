@@ -72,8 +72,8 @@ try {
 
     $isSuperAdmin = ($admin && ($admin['role'] === 'super_admin' || $admin['role'] === 'superadmin'));
 
-    // Jika bukan Super Admin, hanya boleh edit di status persiapan atau draft
-    if (!$isSuperAdmin && !in_array($periode['status'], ['persiapan', 'draft'], true)) {
+    // Jika bukan Super Admin, hanya boleh edit di status persiapan, draft, atau dibuka (hanya boleh tambah kuota saat dibuka)
+    if (!$isSuperAdmin && !in_array($periode['status'], ['persiapan', 'draft', 'dibuka'], true)) {
         http_response_code(403);
         echo json_encode(['error' => "Pengaturan kuota periode '{$periode['nama']}' sudah dikunci karena status periode saat ini adalah '" . strtoupper($periode['status']) . "'. Hubungi Super Admin BLKA jika butuh penyesuaian."]);
         exit;
@@ -118,10 +118,63 @@ try {
     }
 
     // Cek entitas eksisting UPP
-    $stmtUppCheck = $pdo->prepare("SELECT id, kuota_total, kuota_tersisa FROM unit_pelaksana_periode WHERE entitas_id = :eid AND periode_id = :pid LIMIT 1");
+    $stmtUppCheck = $pdo->prepare("SELECT id, tipe_kuota, kuota_total, kuota_tersisa, aktif FROM unit_pelaksana_periode WHERE entitas_id = :eid AND periode_id = :pid LIMIT 1");
     $stmtUppCheck->execute([':eid' => $entitasId, ':pid' => $periodeId]);
     $existingUpp = $stmtUppCheck->fetch(PDO::FETCH_ASSOC);
     $uppId = $existingUpp ? (int)$existingUpp['id'] : 0;
+
+    $isPeriodeDibuka = ($periode['status'] === 'dibuka');
+    if ($existingUpp && $isPeriodeDibuka) {
+        $oldTotal = (int)$existingUpp['kuota_total'];
+        $oldTipeKuota = $existingUpp['tipe_kuota'] ?? 'keseluruhan';
+        $oldAktif = (int)$existingUpp['aktif'];
+
+        // 1. Metode alokasi kuota terkunci
+        if ($tipeKuota !== $oldTipeKuota && $oldTotal > 0) {
+            $metodeLamaText = ($oldTipeKuota === 'breakdown') ? 'Breakdown per Program Studi' : 'Kuota Gabungan (Pool)';
+            http_response_code(400);
+            echo json_encode(['error' => "Metode alokasi kuota tidak dapat diubah dari $metodeLamaText saat periode pendaftaran sedang dibuka."]);
+            exit;
+        }
+
+        // 2. Kuota total tidak boleh dikurangi
+        if ($menerimaMagang && $kuotaTotal < $oldTotal) {
+            http_response_code(400);
+            echo json_encode(['error' => "Total kuota tidak dapat dikurangi saat status periode sedang dibuka (sebelumnya $oldTotal slot, kuota hanya dapat ditambah atau tetap)."]);
+            exit;
+        }
+
+        // 3. Unit yang sudah aktif membuka kuota tidak boleh dinonaktifkan
+        if ($oldAktif === 1 && $oldTotal > 0 && !$menerimaMagang) {
+            http_response_code(400);
+            echo json_encode(['error' => "Unit yang telah memiliki alokasi kuota aktif tidak dapat dinonaktifkan saat periode sedang dibuka."]);
+            exit;
+        }
+
+        // 4. Jika mode breakdown, kuota tiap prodi tidak boleh dikurangi dari alokasi sebelumnya
+        if ($menerimaMagang && $tipeKuota === 'breakdown') {
+            $stmtOldUpj = $pdo->prepare("SELECT jurusan_id, kuota_total FROM unit_periode_jurusan WHERE unit_pelaksana_periode_id = ?");
+            $stmtOldUpj->execute([$uppId]);
+            $oldUpjMap = [];
+            foreach ($stmtOldUpj->fetchAll(PDO::FETCH_ASSOC) as $ou) {
+                $oldUpjMap[(int)$ou['jurusan_id']] = (int)($ou['kuota_total'] ?? 0);
+            }
+
+            foreach ($oldUpjMap as $oldJid => $oldJQuota) {
+                if ($oldJQuota > 0) {
+                    $newJQuota = $allocMap[$oldJid] ?? 0;
+                    if (!in_array($oldJid, $jurusanIds, true) || $newJQuota < $oldJQuota) {
+                        $stmtJn = $pdo->prepare("SELECT nama_jurusan FROM jurusan WHERE id = ?");
+                        $stmtJn->execute([$oldJid]);
+                        $jName = $stmtJn->fetchColumn() ?: "ID $oldJid";
+                        http_response_code(400);
+                        echo json_encode(['error' => "Alokasi kuota untuk program studi $jName tidak boleh dikurangi saat periode sedang dibuka (sebelumnya $oldJQuota slot)."]);
+                        exit;
+                    }
+                }
+            }
+        }
+    }
 
     // Periksa mahasiswa terdaftar / reservasi jika UPP sudah ada
     $usedPerJurusan = [];
@@ -131,7 +184,7 @@ try {
             SELECT m.jurusan_id, COUNT(*) as jml
             FROM pendaftaran p
             JOIN mahasiswa m ON p.mahasiswa_id = m.id
-            WHERE p.unit_pelaksana_periode_id = ?
+            WHERE p.unit_pelaksana_periode_id = ? AND p.status != 'ditolak'
             GROUP BY m.jurusan_id
         ");
         $stmtUsedP->execute([$uppId]);

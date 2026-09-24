@@ -657,6 +657,8 @@
 
                     <!-- Ineligible Notice Banner (Rendered dynamically if not eligible) -->
                     <div id="ineligible-program-banner" class="hidden"></div>
+                    <!-- Re-registration Notice Banner (Rendered dynamically if student was rejected in active period) -->
+                    <div id="reregistration-notice-banner" class="hidden"></div>
                     
                     <div class="form-group" style="margin-bottom: 0;">
                         <label class="form-label" style="font-weight: 700; color: #0b3d6b; margin-bottom: 12px; display: block;">Daftar Program & Syarat Angkatan</label>
@@ -738,7 +740,7 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label" for="jumlah_sks">Jumlah SKS yang Sudah Ditempuh</label>
-                            <input type="number" id="jumlah_sks" class="form-input text-mono" min="0" placeholder="100" required>
+                            <input type="number" id="jumlah_sks" class="form-input text-mono" min="0" max="150" placeholder="100" required>
                         </div>
                     </div>
 
@@ -1068,6 +1070,9 @@
                     <h3>Pilihan Unit Magang</h3>
                     <p class="text-abu" style="margin-bottom: var(--space-4);">Pilih satu unit magang PLN. Kuota akan ditahan sementara selama <strong id="durasi-reservasi-label" style="color: #0b3d6b;">waktu reservasi</strong> untuk konfirmasi.</p>
                     
+                    <!-- Re-registration Unit Banner -->
+                    <div id="reregistration-unit-banner" class="hidden"></div>
+
                     <div style="margin-bottom: var(--space-4); position: relative; max-width: 450px;">
                         <input type="text" id="search-unit-input" class="form-input" placeholder="Cari nama unit atau alamat..." style="padding-left: 38px; height: 42px; border-radius: 10px; font-size: 0.9rem;">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); pointer-events: none;">

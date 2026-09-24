@@ -820,7 +820,7 @@ function initKuotaModule() {
         updateAllocSummary();
     });
     document.getElementById('btn-deselect-all-prodi')?.addEventListener('click', () => {
-        document.querySelectorAll('.chk-prodi').forEach(c => {
+        document.querySelectorAll('.chk-prodi:not(:disabled)').forEach(c => {
             c.checked = false;
             c.closest('.custom-checkbox-card')?.classList.remove('checked');
             const row = c.closest('.prodi-alloc-row');
@@ -996,9 +996,23 @@ async function loadKuotaData(periodeId = 0) {
             const lockAlert = document.getElementById('kuota-lock-alert');
             const btnSave = document.getElementById('btn-save-kuota');
             const canEdit = data.selected_periode?.can_edit;
+            const isDibuka = (data.selected_periode?.status === 'dibuka');
+            const k = data.kuota;
+            const existingTotalKuota = parseInt(k?.kuota_total, 10) || 0;
+            const hasExistingKuota = Boolean(k?.upp_id && existingTotalKuota > 0);
 
             if (canEdit) {
-                lockAlert.classList.add('hidden');
+                if (isDibuka && hasExistingKuota) {
+                    lockAlert.innerHTML = `
+                        <div style="display: flex; align-items: center; gap: 8px; color: #92400e; background: #fffbeb; border: 1px solid #fde68a; padding: 12px 16px; border-radius: 8px; font-size: 0.85rem; line-height: 1.4;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            <span><strong>Pemberitahuan Periode DIBUKA:</strong> Anda <strong>hanya dapat menambah kuota</strong> (minimal ${existingTotalKuota} mahasiswa). Metode kuota terkunci dan unit aktif tidak dapat dinonaktifkan.</span>
+                        </div>
+                    `;
+                    lockAlert.classList.remove('hidden');
+                } else {
+                    lockAlert.classList.add('hidden');
+                }
                 if (btnSave) btnSave.disabled = false;
             } else {
                 lockAlert.innerHTML = `
@@ -1012,7 +1026,6 @@ async function loadKuotaData(periodeId = 0) {
             }
 
             // Populate Form Fields
-            const k = data.kuota;
             const toggleMenerima = document.getElementById('toggle-menerima-magang');
             const inputKuota = document.getElementById('input-kuota-total');
             const detailContainer = document.getElementById('kuota-detail-container');
@@ -1034,6 +1047,13 @@ async function loadKuotaData(periodeId = 0) {
 
             if (toggleMenerima) {
                 toggleMenerima.checked = k ? k.menerima_magang : true;
+                if (isDibuka && hasExistingKuota) {
+                    toggleMenerima.disabled = true;
+                    toggleMenerima.title = 'Unit yang telah membuka kuota tidak dapat dinonaktifkan saat periode DIBUKA';
+                } else {
+                    toggleMenerima.disabled = false;
+                    toggleMenerima.title = '';
+                }
                 updateToggleCardVisual(toggleMenerima.checked);
                 if (toggleMenerima.checked) {
                     detailContainer.style.opacity = '1';
@@ -1046,6 +1066,13 @@ async function loadKuotaData(periodeId = 0) {
 
             if (inputKuota) {
                 inputKuota.value = k ? k.kuota_total : 5;
+                if (isDibuka && hasExistingKuota) {
+                    inputKuota.min = existingTotalKuota;
+                    inputKuota.title = `Minimal ${existingTotalKuota} saat periode DIBUKA`;
+                } else {
+                    inputKuota.min = 1;
+                    inputKuota.title = '';
+                }
             }
 
             // Set Mode
@@ -1058,6 +1085,26 @@ async function loadKuotaData(periodeId = 0) {
                 modeCardKeseluruhan?.click();
             }
 
+            if (isDibuka && hasExistingKuota) {
+                if (modeCardKeseluruhan) {
+                    modeCardKeseluruhan.style.pointerEvents = 'none';
+                    modeCardKeseluruhan.title = 'Metode kuota dikunci selama periode DIBUKA';
+                }
+                if (modeCardBreakdown) {
+                    modeCardBreakdown.style.pointerEvents = 'none';
+                    modeCardBreakdown.title = 'Metode kuota dikunci selama periode DIBUKA';
+                }
+            } else {
+                if (modeCardKeseluruhan) {
+                    modeCardKeseluruhan.style.pointerEvents = 'auto';
+                    modeCardKeseluruhan.title = '';
+                }
+                if (modeCardBreakdown) {
+                    modeCardBreakdown.style.pointerEvents = 'auto';
+                    modeCardBreakdown.title = '';
+                }
+            }
+
             // Render Prodi Checkboxes with optional allocation input
             const prodiGrid = document.getElementById('prodi-checkboxes');
             if (prodiGrid && wizardJurusanData) {
@@ -1066,17 +1113,19 @@ async function loadKuotaData(periodeId = 0) {
                     const checkedClass = j.is_selected ? 'checked' : '';
                     const labelProdi = (j.jenjang ? `${j.jenjang} - ` : '') + j.nama_jurusan;
                     const defaultAlloc = j.kuota_total || 1;
+                    const existingProdiAlloc = parseInt(j.kuota_total, 10) || 0;
+                    const isLockedProdi = isDibuka && hasExistingKuota && j.is_selected && (existingProdiAlloc > 0);
 
                     const card = document.createElement('div');
                     card.className = `prodi-alloc-row ${checkedClass}`;
                     card.innerHTML = `
-                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; flex: 1;">
-                            <input type="checkbox" class="chk-prodi" value="${j.id}" ${j.is_selected ? 'checked' : ''} style="cursor: pointer; width: 17px; height: 17px;">
+                        <label style="display: flex; align-items: center; gap: 10px; cursor: ${isLockedProdi ? 'default' : 'pointer'}; flex: 1;">
+                            <input type="checkbox" class="chk-prodi" value="${j.id}" ${j.is_selected ? 'checked' : ''} ${isLockedProdi ? 'disabled title="Prodi sudah dialokasikan kuota pada periode DIBUKA dan tidak dapat dinonaktifkan"' : ''} style="cursor: ${isLockedProdi ? 'not-allowed' : 'pointer'}; width: 17px; height: 17px;">
                             <span style="font-size: 0.875rem; font-weight: 700; color: #1e293b;">${escapeHtml(labelProdi)}</span>
                         </label>
                         <div class="prodi-alloc-input-wrap" style="display: ${initMode === 'breakdown' ? 'flex' : 'none'}; align-items: center; gap: 6px;">
                             <label for="alloc-prodi-${j.id}" style="font-size: 0.775rem; color: #64748b;">Kuota:</label>
-                            <input type="number" id="alloc-prodi-${j.id}" class="prodi-alloc-input" min="1" max="1000" value="${defaultAlloc}" style="${!j.is_selected ? 'opacity: 0.4; pointer-events: none;' : ''}">
+                            <input type="number" id="alloc-prodi-${j.id}" class="prodi-alloc-input" min="${isLockedProdi ? existingProdiAlloc : 1}" max="1000" value="${defaultAlloc}" style="${!j.is_selected ? 'opacity: 0.4; pointer-events: none;' : ''}" ${isLockedProdi ? `title="Minimal ${existingProdiAlloc} saat periode DIBUKA"` : ''}>
                         </div>
                     `;
 
@@ -1374,7 +1423,7 @@ function initPendaftarModule() {
             const res = await fetch('/api/perusahaan/pendaftar/update_status.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
-                body: JSON.stringify({ pendaftaran_id: pId, status: 'ditolak', alasan_penolakan: alasan })
+                body: JSON.stringify({ pendaftaran_id: pId, status: 'ditolak', alasan_penolakan: alasan, catatan: alasan, catatan_admin: alasan })
             });
             const data = await res.json();
             if (res.ok && data.ok) {
