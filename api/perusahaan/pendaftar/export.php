@@ -196,5 +196,6 @@ try {
 
 } catch (\Throwable $e) {
     http_response_code(500);
-    echo "Gagal mengekspor pendaftar: " . htmlspecialchars($e->getMessage());
+    $debug = ($_ENV['APP_DEBUG'] ?? 'false') === 'true';
+    echo $debug ? ("Gagal mengekspor pendaftar: " . htmlspecialchars($e->getMessage())) : "Gagal mengekspor data pendaftar. Silakan coba lagi.";
 }

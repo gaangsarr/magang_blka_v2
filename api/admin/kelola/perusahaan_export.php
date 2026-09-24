@@ -286,5 +286,6 @@ try {
 
 } catch (\Throwable $e) {
     http_response_code(500);
-    echo "Terjadi kesalahan saat mengekspor data: " . htmlspecialchars($e->getMessage());
+    $debug = ($_ENV['APP_DEBUG'] ?? 'false') === 'true';
+    echo $debug ? ("Terjadi kesalahan saat mengekspor data: " . htmlspecialchars($e->getMessage())) : "Terjadi kesalahan saat mengekspor data. Silakan coba lagi.";
 }

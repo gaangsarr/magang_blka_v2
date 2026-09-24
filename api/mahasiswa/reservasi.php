@@ -5,6 +5,7 @@ require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
 use Dotenv\Dotenv;
 use App\Database;
 use App\Auth;
+use App\UserException;
 
 $root = dirname(__DIR__, 2);
 Dotenv::createImmutable($root)->safeLoad();
@@ -59,11 +60,11 @@ try {
         $upp = $stmtUpp->fetch(PDO::FETCH_ASSOC);
 
         if (!$upp) {
-            throw new \Exception('Unit pelaksana tidak ditemukan.');
+            throw new UserException('Unit pelaksana tidak ditemukan.');
         }
 
         if ($upp['status_periode'] !== 'dibuka') {
-            throw new \Exception('Periode magang untuk unit ini tidak sedang dibuka.');
+            throw new UserException('Periode magang untuk unit ini tidak sedang dibuka.');
         }
 
         // Failsafe pengecekan jam server
@@ -72,7 +73,7 @@ try {
             'jam_selesai'     => $upp['jam_selesai'] ?? null
         ])) {
             \App\PeriodeHelper::closeExpiredPeriodes($pdo);
-            throw new \Exception('Periode pendaftaran magang telah ditutup.');
+            throw new UserException('Periode pendaftaran magang telah ditutup.');
         }
 
         if (!empty($upp['angkatan_eligible'])) {
@@ -81,7 +82,7 @@ try {
             $fullAngkatan = $mhsAngkatan < 100 ? (2000 + $mhsAngkatan) : $mhsAngkatan;
             $eligibleList = array_map('trim', explode(',', $upp['angkatan_eligible']));
             if (!in_array((string)$fullAngkatan, $eligibleList, true) && !in_array((string)$mhsAngkatan, $eligibleList, true)) {
-                throw new \Exception("Pendaftaran periode {$upp['nama_periode']} dikhususkan untuk Angkatan " . implode(', ', $eligibleList) . ".");
+                throw new UserException("Pendaftaran periode {$upp['nama_periode']} dikhususkan untuk Angkatan " . implode(', ', $eligibleList) . ".");
             }
         }
 
@@ -96,11 +97,11 @@ try {
 
         if ($existingReg) {
             if ($existingReg['status'] !== 'ditolak') {
-                throw new \Exception('Anda sudah memiliki pendaftaran aktif pada periode ini.');
+                throw new UserException('Anda sudah memiliki pendaftaran aktif pada periode ini.');
             }
             // Mahasiswa berstatus ditolak tidak boleh memilih kembali unit yang sama yang menolaknya
             if ((int)$existingReg['unit_pelaksana_periode_id'] === $uppId) {
-                throw new \Exception('Anda telah ditolak dari unit ini. Silakan pilih unit pelaksana lain yang tersedia.');
+                throw new UserException('Anda telah ditolak dari unit ini. Silakan pilih unit pelaksana lain yang tersedia.');
             }
         }
 
@@ -112,7 +113,7 @@ try {
         ");
         $stmtCekHistori->execute([':mid' => $mahasiswaId, ':pid' => (int)$upp['periode_id'], ':upp_id' => $uppId]);
         if ($stmtCekHistori->fetch()) {
-            throw new \Exception('Anda telah ditolak dari unit ini. Silakan pilih unit pelaksana lain yang tersedia.');
+            throw new UserException('Anda telah ditolak dari unit ini. Silakan pilih unit pelaksana lain yang tersedia.');
         }
 
         // Validasi kesesuaian Program Studi (Prodi) mahasiswa
@@ -135,19 +136,19 @@ try {
         $upjRow = $stmtUpj->fetch(PDO::FETCH_ASSOC);
 
         if (!$upjRow) {
-            throw new \Exception('Unit magang ini tidak membuka kuota untuk Program Studi Anda.');
+            throw new UserException('Unit magang ini tidak membuka kuota untuk Program Studi Anda.');
         }
 
         // Validasi kuota prodi jika mode breakdown
         if (($upp['tipe_kuota'] ?? '') === 'breakdown') {
             if ((int)($upjRow['kuota_tersisa'] ?? 0) <= 0) {
-                throw new \Exception('Maaf, kuota untuk Program Studi Anda di unit ini sudah habis atau sedang direservasi orang lain.');
+                throw new UserException('Maaf, kuota untuk Program Studi Anda di unit ini sudah habis atau sedang direservasi orang lain.');
             }
         }
 
         // Validasi kuota total unit
         if ((int)$upp['kuota_tersisa'] <= 0) {
-            throw new \Exception('Maaf, kuota untuk unit pelaksana ini sudah habis atau sedang direservasi orang lain.');
+            throw new UserException('Maaf, kuota untuk unit pelaksana ini sudah habis atau sedang direservasi orang lain.');
         }
 
         // 3. Kurangi kuota unit
@@ -188,10 +189,10 @@ try {
         'ok' => true,
         'data' => $result
     ]);
-} catch (\Exception $e) {
+} catch (UserException $e) {
     http_response_code(400);
     echo json_encode(['error' => $e->getMessage()]);
 } catch (\Throwable $e) {
     http_response_code(500);
-    echo json_encode(['error' => 'Terjadi kesalahan sistem.']);
+    echo json_encode(['error' => Auth::safeErrorMessage($e, 'Terjadi kesalahan sistem saat memproses reservasi.')]);
 }

@@ -25,6 +25,11 @@ class Database
             $user    = $_ENV['DB_USER']   ?? '';
             $pass    = $_ENV['DB_PASS']   ?? '';
 
+            // SECURITY: Paksa APP_DEBUG=false di production, mencegah kebocoran stack trace
+            if (($_ENV['APP_ENV'] ?? 'production') === 'production') {
+                $_ENV['APP_DEBUG'] = 'false';
+            }
+
             $dsn = "mysql:host={$host};port={$port};dbname={$name};charset=utf8mb4";
 
             try {

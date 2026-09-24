@@ -6,6 +6,7 @@ require_once dirname(__DIR__, 3) . '/vendor/autoload.php';
 use Dotenv\Dotenv;
 use App\Database;
 use App\Auth;
+use App\UserException;
 
 $root = dirname(__DIR__, 3);
 Dotenv::createImmutable($root)->safeLoad();
@@ -136,17 +137,17 @@ try {
                 // 1. Metode alokasi kuota terkunci, tidak boleh diubah
                 if ($tipeKuota !== $oldTipeKuota && $oldKuotaTotal > 0) {
                     $metodeLamaText = ($oldTipeKuota === 'breakdown') ? 'Breakdown per Program Studi' : 'Kuota Gabungan (Pool)';
-                    throw new \Exception("Metode alokasi kuota tidak dapat diubah dari $metodeLamaText saat periode pendaftaran sedang dibuka.");
+                    throw new UserException("Metode alokasi kuota tidak dapat diubah dari $metodeLamaText saat periode pendaftaran sedang dibuka.");
                 }
 
                 // 2. Kuota total tidak boleh dikurangi
                 if ($kuotaBaru < $oldKuotaTotal) {
-                    throw new \Exception("Total kuota tidak dapat dikurangi saat status periode sedang dibuka (sebelumnya $oldKuotaTotal slot, kuota hanya dapat ditambah atau tetap).");
+                    throw new UserException("Total kuota tidak dapat dikurangi saat status periode sedang dibuka (sebelumnya $oldKuotaTotal slot, kuota hanya dapat ditambah atau tetap).");
                 }
 
                 // 3. Unit yang sudah aktif membuka kuota tidak boleh dinonaktifkan
                 if ($oldAktif === 1 && $oldKuotaTotal > 0 && (int)$aktif === 0) {
-                    throw new \Exception("Unit yang telah memiliki alokasi kuota aktif tidak dapat dinonaktifkan saat periode sedang dibuka.");
+                    throw new UserException("Unit yang telah memiliki alokasi kuota aktif tidak dapat dinonaktifkan saat periode sedang dibuka.");
                 }
 
                 // 4. Jika mode breakdown, kuota tiap prodi tidak boleh dikurangi dari alokasi sebelumnya
@@ -165,7 +166,7 @@ try {
                                 $stmtJn = $pdo->prepare("SELECT nama_jurusan FROM jurusan WHERE id = ?");
                                 $stmtJn->execute([$oldJid]);
                                 $jName = $stmtJn->fetchColumn() ?: "ID $oldJid";
-                                throw new \Exception("Alokasi kuota untuk program studi $jName tidak boleh dikurangi saat periode sedang dibuka (sebelumnya $oldJQuota slot).");
+                                throw new UserException("Alokasi kuota untuk program studi $jName tidak boleh dikurangi saat periode sedang dibuka (sebelumnya $oldJQuota slot).");
                             }
                         }
                     }
@@ -201,7 +202,7 @@ try {
             }
 
             if ($kuotaBaru < $totalUsed) {
-                throw new \Exception("Total kuota tidak boleh kurang dari $totalUsed karena saat ini sudah ada $totalUsed mahasiswa yang terdaftar/mereservasi.");
+                throw new UserException("Total kuota tidak boleh kurang dari $totalUsed karena saat ini sudah ada $totalUsed mahasiswa yang terdaftar/mereservasi.");
             }
 
             if ($tipeKuota === 'breakdown') {
@@ -212,7 +213,7 @@ try {
                         $stmtJn = $pdo->prepare("SELECT nama_jurusan FROM jurusan WHERE id = ?");
                         $stmtJn->execute([$jid]);
                         $jName = $stmtJn->fetchColumn() ?: "ID $jid";
-                        throw new \Exception("Kuota untuk $jName tidak boleh kurang dari $used karena sudah ada $used mahasiswa yang terdaftar/mereservasi.");
+                        throw new UserException("Kuota untuk $jName tidak boleh kurang dari $used karena sudah ada $used mahasiswa yang terdaftar/mereservasi.");
                     }
                 }
             }
@@ -318,13 +319,11 @@ try {
         'ok' => true,
         'message' => 'Kuota berhasil diperbarui.'
     ]);
+} catch (UserException $e) {
+    http_response_code(400);
+    echo json_encode(['error' => $e->getMessage()]);
 } catch (\Throwable $e) {
-    if (str_contains($e->getMessage(), "Total kuota tidak boleh kurang") || str_contains($e->getMessage(), "Kuota untuk")) {
-        http_response_code(400);
-        echo json_encode(['error' => $e->getMessage()]);
-    } else {
-        http_response_code(500);
-        echo json_encode(['error' => Auth::safeErrorMessage($e, 'Gagal memperbarui kuota unit.')]);
-    }
+    http_response_code(500);
+    echo json_encode(['error' => Auth::safeErrorMessage($e, 'Gagal memperbarui kuota unit.')]);
 }
 

@@ -7,6 +7,7 @@ use Dotenv\Dotenv;
 use App\Database;
 use App\Auth;
 use App\PenetapanHelper;
+use App\UserException;
 
 $root = dirname(__DIR__, 3);
 Dotenv::createImmutable($root)->safeLoad();
@@ -52,7 +53,7 @@ try {
             PenetapanHelper::tolakPeserta($pdo, $pendaftaranId, $catatanAdmin, $adminId, 'admin_blka');
         } elseif ($statusTarget === 'dipindahkan') {
             if (!$newUppId || $newUppId <= 0) {
-                throw new \RuntimeException("Unit pelaksana tujuan wajib dipilih untuk pemindahan paksa.");
+                throw new UserException("Unit pelaksana tujuan wajib dipilih untuk pemindahan paksa.");
             }
             PenetapanHelper::ajukanPemindahan($pdo, $pendaftaranId, $newUppId, $catatanAdmin, $adminId, 'admin_blka');
         } else {
@@ -76,7 +77,10 @@ try {
         'ok' => true,
         'message' => 'Status penetapan berhasil diperbarui.'
     ]);
-} catch (\Throwable $e) {
+} catch (UserException $e) {
     http_response_code(400);
     echo json_encode(['error' => $e->getMessage()]);
+} catch (\Throwable $e) {
+    http_response_code(400);
+    echo json_encode(['error' => Auth::safeErrorMessage($e, 'Terjadi kesalahan saat memperbarui penetapan.')]);
 }

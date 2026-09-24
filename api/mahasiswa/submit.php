@@ -6,6 +6,7 @@ require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
 use Dotenv\Dotenv;
 use App\Database;
 use App\Auth;
+use App\UserException;
 
 $root = dirname(__DIR__, 2);
 Dotenv::createImmutable($root)->safeLoad();
@@ -231,11 +232,11 @@ try {
         $stmtP->execute([':pid' => $periodeId]);
         $periodeData = $stmtP->fetch(PDO::FETCH_ASSOC);
         if (!$periodeData || $periodeData['status'] !== 'dibuka') {
-            throw new \Exception("Periode magang ini tidak sedang dibuka.");
+            throw new UserException("Periode magang ini tidak sedang dibuka.");
         }
         if (\App\PeriodeHelper::isPeriodeExpired($periodeData)) {
             \App\PeriodeHelper::closeExpiredPeriodes($pdo);
-            throw new \Exception("Periode pendaftaran magang telah ditutup.");
+            throw new UserException("Periode pendaftaran magang telah ditutup.");
         }
         if (!empty($periodeData['angkatan_eligible'])) {
             $mhsData = Auth::getMahasiswa();
@@ -243,7 +244,7 @@ try {
             $fullAngkatan = $mhsAngkatan < 100 ? (2000 + $mhsAngkatan) : $mhsAngkatan;
             $eligibleList = array_map('trim', explode(',', $periodeData['angkatan_eligible']));
             if (!in_array((string)$fullAngkatan, $eligibleList, true) && !in_array((string)$mhsAngkatan, $eligibleList, true)) {
-                throw new \Exception("Mohon maaf, pendaftaran periode {$periodeData['nama']} dikhususkan untuk Angkatan " . implode(', ', $eligibleList) . ".");
+                throw new UserException("Mohon maaf, pendaftaran periode {$periodeData['nama']} dikhususkan untuk Angkatan " . implode(', ', $eligibleList) . ".");
             }
         }
 
@@ -255,11 +256,11 @@ try {
         $isReRegistration = false;
         if ($existingPendaftaran) {
             if ($existingPendaftaran['status'] !== 'ditolak') {
-                throw new \Exception("Anda sudah terdaftar pada periode ini.");
+                throw new UserException("Anda sudah terdaftar pada periode ini.");
             }
             // Mahasiswa berstatus ditolak tidak boleh mendaftar kembali ke unit yang sama yang menolaknya
             if ((int)$existingPendaftaran['unit_pelaksana_periode_id'] === $uppId) {
-                throw new \Exception("Anda telah ditolak dari unit ini. Silakan pilih unit pelaksana lain yang tersedia.");
+                throw new UserException("Anda telah ditolak dari unit ini. Silakan pilih unit pelaksana lain yang tersedia.");
             }
             $isReRegistration = true;
         }
@@ -268,7 +269,7 @@ try {
         $stmtHistori = $pdo->prepare("SELECT 1 FROM pendaftaran_histori_penolakan WHERE mahasiswa_id = :mid AND periode_id = :pid AND unit_pelaksana_periode_id = :upp_id LIMIT 1");
         $stmtHistori->execute([':mid' => $mahasiswaId, ':pid' => $periodeId, ':upp_id' => $uppId]);
         if ($stmtHistori->fetch()) {
-            throw new \Exception("Anda telah ditolak dari unit ini. Silakan pilih unit pelaksana lain yang tersedia.");
+            throw new UserException("Anda telah ditolak dari unit ini. Silakan pilih unit pelaksana lain yang tersedia.");
         }
 
         // 2. Validasi reservasi
@@ -277,13 +278,13 @@ try {
         $res = $stmtRes->fetch(PDO::FETCH_ASSOC);
 
         if (!$res) {
-            throw new \Exception("Data reservasi tidak ditemukan.");
+            throw new UserException("Data reservasi tidak ditemukan.");
         }
         if ($res['status'] !== 'ditahan') {
-            throw new \Exception("Status reservasi tidak valid (sudah {$res['status']}).");
+            throw new UserException("Status reservasi tidak valid (sudah {$res['status']}).");
         }
         if (strtotime($res['expired_at']) < time()) {
-            throw new \Exception("Waktu reservasi Anda telah habis. Silakan pilih unit pelaksana kembali.");
+            throw new UserException("Waktu reservasi Anda telah habis. Silakan pilih unit pelaksana kembali.");
         }
 
         if ($isReRegistration) {
@@ -444,12 +445,12 @@ try {
 
     if (ob_get_length()) ob_clean();
     echo json_encode(['ok' => true, 'message' => 'Pendaftaran berhasil dikirim.']);
-} catch (\Exception $e) {
+} catch (UserException $e) {
     if (ob_get_length()) ob_clean();
     http_response_code(400);
     echo json_encode(['error' => $e->getMessage()]);
 } catch (\Throwable $e) {
     if (ob_get_length()) ob_clean();
     http_response_code(500);
-    echo json_encode(['error' => 'Terjadi kesalahan sistem.']);
+    echo json_encode(['error' => Auth::safeErrorMessage($e, 'Terjadi kesalahan sistem saat memproses pendaftaran.')]);
 }

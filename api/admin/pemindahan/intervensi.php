@@ -7,6 +7,7 @@ use Dotenv\Dotenv;
 use App\Database;
 use App\Auth;
 use App\PenetapanHelper;
+use App\UserException;
 
 $root = dirname(__DIR__, 3);
 Dotenv::createImmutable($root)->safeLoad();
@@ -49,7 +50,7 @@ try {
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$row) {
-        throw new \RuntimeException('Data pemindahan tidak ditemukan.');
+        throw new UserException('Data pemindahan tidak ditemukan.');
     }
 
     $targetEntitasId = (int)$row['entitas_id'];
@@ -66,7 +67,10 @@ try {
         'message' => $isApprove ? 'Pemindahan berhasil disetujui secara paksa oleh BLKA.' : 'Pemindahan berhasil dibatalkan oleh BLKA dan peserta dikembalikan ke unit asal.'
     ]);
 
-} catch (\Throwable $e) {
+} catch (UserException $e) {
     http_response_code(400);
     echo json_encode(['error' => $e->getMessage()]);
+} catch (\Throwable $e) {
+    http_response_code(400);
+    echo json_encode(['error' => Auth::safeErrorMessage($e, 'Terjadi kesalahan saat memproses intervensi pemindahan.')]);
 }

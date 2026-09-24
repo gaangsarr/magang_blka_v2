@@ -45,10 +45,7 @@ try {
         'already_done' => $result['already_done'] ?? false,
         'message'      => $result['message'] ?? 'Reservasi berhasil dibatalkan dan kuota dikembalikan.'
     ]);
-} catch (\Exception $e) {
-    http_response_code(400);
-    echo json_encode(['error' => $e->getMessage()]);
 } catch (\Throwable $e) {
     http_response_code(500);
-    echo json_encode(['error' => 'Terjadi kesalahan sistem.']);
+    echo json_encode(['error' => Auth::safeErrorMessage($e, 'Terjadi kesalahan sistem saat membatalkan reservasi.')]);
 }

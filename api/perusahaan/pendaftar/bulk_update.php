@@ -7,6 +7,7 @@ use Dotenv\Dotenv;
 use App\Database;
 use App\Auth;
 use App\PenetapanHelper;
+use App\UserException;
 
 $root = dirname(__DIR__, 3);
 Dotenv::createImmutable($root)->safeLoad();
@@ -54,7 +55,7 @@ try {
     $adminId = (int)($admin['id'] ?? 0);
 
     if (!$entitasId) {
-        throw new \RuntimeException('Entitas perusahaan tidak ditemukan.');
+        throw new UserException('Entitas perusahaan tidak ditemukan.');
     }
 
     $processed = 0;
@@ -80,7 +81,10 @@ try {
         'message'   => "Berhasil memproses {$processed} mahasiswa terpilih."
     ]);
 
-} catch (\Throwable $e) {
+} catch (UserException $e) {
     http_response_code(400);
     echo json_encode(['error' => $e->getMessage()]);
+} catch (\Throwable $e) {
+    http_response_code(400);
+    echo json_encode(['error' => Auth::safeErrorMessage($e, 'Terjadi kesalahan saat memproses data pendaftar.')]);
 }

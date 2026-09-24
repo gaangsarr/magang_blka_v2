@@ -88,5 +88,5 @@ try {
     ]);
 } catch (\Throwable $e) {
     http_response_code(400);
-    echo json_encode(['error' => $e->getMessage()]);
+    echo json_encode(['error' => Auth::safeErrorMessage($e, 'Terjadi kesalahan saat memproses penetapan.')]);
 }

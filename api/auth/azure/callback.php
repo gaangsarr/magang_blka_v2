@@ -64,7 +64,9 @@ try {
     // 5. Ambil profil pengguna dari Microsoft Graph API
     $profile = AzureAuth::getUserProfile($accessToken);
 } catch (\Throwable $e) {
-    header('Location: /login.html?error=' . urlencode($e->getMessage()));
+    $debug = ($_ENV['APP_DEBUG'] ?? 'false') === 'true';
+    $msg = $debug ? $e->getMessage() : 'Gagal memproses login Microsoft. Silakan coba lagi.';
+    header('Location: /login.html?error=' . urlencode($msg));
     exit;
 }
 
