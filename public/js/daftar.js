@@ -997,11 +997,14 @@ function updateUI(shouldScroll = true) {
         // Step 4 next is triggered by table button
         btnNext.classList.add('hidden');
         btnSubmit.classList.add('hidden');
+        startUnitPolling();
     } else if (currentStep === 5) {
+        stopUnitPolling();
         btnNext.classList.add('hidden');
         btnSubmit.classList.remove('hidden');
         populateResume();
     } else {
+        stopUnitPolling();
         btnNext.classList.remove('hidden');
         btnSubmit.classList.add('hidden');
         if (currentStep === 3) btnNext.innerText = 'Cari Unit Pelaksana';
@@ -1025,6 +1028,28 @@ let unitTotalItems = 0;
 let unitSearchTimeout = null;
 let unitSearchQuery = '';
 let currentUnitRequestId = 0;
+let unitPollingInterval = null;
+
+function startUnitPolling() {
+    stopUnitPolling();
+    // Live Auto-Sync Polling: refresh kuota setiap 10 detik saat mahasiswa berada di Step 4
+    unitPollingInterval = setInterval(() => {
+        if (currentStep === 4 && !document.hidden) {
+            const confirmModal = document.getElementById('confirm-modal');
+            const isModalOpen = confirmModal && !confirmModal.classList.contains('hidden');
+            if (!isModalOpen) {
+                loadUnits(unitCurrentPage, unitSearchQuery, true /* isSilent */);
+            }
+        }
+    }, 10000);
+}
+
+function stopUnitPolling() {
+    if (unitPollingInterval) {
+        clearInterval(unitPollingInterval);
+        unitPollingInterval = null;
+    }
+}
 
 function renderUnitsTable() {
     const tbody = document.getElementById('tbody-unit');
@@ -1070,6 +1095,7 @@ function renderUnitsTable() {
         const canSelect = (u.can_select === 1 || u.can_select === '1' || u.can_select === true) && !isRejectedPrevUnit;
         const sisaEfektif = (u.sisa_kuota_efektif !== undefined) ? parseInt(u.sisa_kuota_efektif, 10) : 0;
         const totalEfektif = (u.total_kuota_efektif !== undefined) ? parseInt(u.total_kuota_efektif, 10) : 0;
+        const statusKuota = u.status_kuota || (canSelect ? 'tersedia' : (sisaEfektif <= 0 && u.has_prodi !== false ? 'penuh' : 'prodi_tidak_sesuai'));
         
         if (!canSelect) {
             tr.classList.add('row-disabled');
@@ -1080,8 +1106,10 @@ function renderUnitsTable() {
             actionHtml = `<button type="button" class="btn btn-secondary" disabled style="padding: 0.35rem 0.9rem; font-size: 0.8rem; background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; cursor: not-allowed;" title="Anda telah ditolak dari unit ini pada periode ini. Silakan pilih unit lain.">Ditolak</button>`;
         } else if (canSelect) {
             actionHtml = `<button type="button" class="btn btn-primary" style="padding: 0.35rem 0.9rem; font-size: 0.85rem; font-weight: 600;" onclick="window.pilihUnit(${u.upp_id}, '${escapeHtml(u.nama_unit).replace(/'/g, "\\'")}')">Pilih</button>`;
+        } else if (statusKuota === 'penuh' || (sisaEfektif <= 0 && u.has_prodi !== false)) {
+            actionHtml = `<button type="button" class="btn btn-secondary" disabled style="padding: 0.35rem 0.9rem; font-size: 0.85rem; font-weight: 600; background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; cursor: not-allowed;" title="Kuota untuk unit / program studi ini sudah penuh">Penuh</button>`;
         } else {
-            actionHtml = `<button type="button" class="btn btn-primary" disabled style="padding: 0.35rem 0.9rem; font-size: 0.85rem; font-weight: 600;" title="Tidak dapat dipilih">Pilih</button>`;
+            actionHtml = `<button type="button" class="btn btn-secondary" disabled style="padding: 0.35rem 0.9rem; font-size: 0.75rem; font-weight: 600; background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; cursor: not-allowed;" title="Unit ini tidak membuka kuota untuk Program Studi Anda">Prodi Tidak Sesuai</button>`;
         }
 
         const noUrut = offset + idx + 1;
@@ -1095,12 +1123,22 @@ function renderUnitsTable() {
                     </span>
                 </div>
             `;
+        } else if (statusKuota === 'penuh' || (sisaEfektif <= 0 && u.has_prodi !== false)) {
+            kuotaCellHtml = `
+                <div style="text-align: right;">
+                    <span style="font-weight: 700; color: #dc2626; font-family: monospace; font-size: 0.95rem;">
+                        00 / ${String(totalEfektif).padStart(2, '0')}
+                    </span>
+                    <div style="font-size: 0.7rem; color: #dc2626; font-weight: 600; margin-top: 1px;">Kuota Penuh</div>
+                </div>
+            `;
         } else {
             kuotaCellHtml = `
                 <div style="text-align: right;">
                     <span style="font-weight: 700; color: #94a3b8; font-family: monospace; font-size: 0.95rem;">
-                        00 / 00
+                        00 / ${String(totalEfektif).padStart(2, '0')}
                     </span>
+                    <div style="font-size: 0.7rem; color: #94a3b8; font-weight: 500; margin-top: 1px;">Prodi Tidak Buka</div>
                 </div>
             `;
         }
@@ -1144,11 +1182,11 @@ function renderUnitsTable() {
 }
 
 // ----------------------------------------------------
-// Load Units (Step 4) - Server-Side Pagination & Search
+// Load Units (Step 4) - Server-Side Pagination & Search & Live Sync
 // ----------------------------------------------------
-async function loadUnits(page = 1, search = unitSearchQuery) {
+async function loadUnits(page = 1, search = unitSearchQuery, isSilent = false) {
     const tbody = document.getElementById('tbody-unit');
-    if (tbody) {
+    if (tbody && !isSilent) {
         tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 24px 20px; color: #64748b;">Memuat unit magang... <div class="spinner" style="display: inline-block; vertical-align: middle; margin-left: 8px;"></div></td></tr>';
     }
     
@@ -1176,7 +1214,9 @@ async function loadUnits(page = 1, search = unitSearchQuery) {
         }
 
         if (!res.ok) {
-            showError(data.error || 'Gagal memuat data unit magang.', null, 'Gagal Memuat Unit');
+            if (!isSilent) {
+                showError(data.error || 'Gagal memuat data unit magang.', null, 'Gagal Memuat Unit');
+            }
             return false;
         }
         
@@ -1195,7 +1235,9 @@ async function loadUnits(page = 1, search = unitSearchQuery) {
     } catch (err) {
         if (reqId !== currentUnitRequestId) return false;
         console.error(err);
-        showError('Gagal memuat unit magang. Periksa jaringan Anda.', null, 'Kesalahan Jaringan');
+        if (!isSilent) {
+            showError('Gagal memuat unit magang. Periksa jaringan Anda.', null, 'Kesalahan Jaringan');
+        }
         return false;
     }
 }

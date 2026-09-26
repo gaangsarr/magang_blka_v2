@@ -135,6 +135,7 @@ try {
             upp.kuota_tersisa,
             upp.kuota_total,
             
+            upj.jurusan_id    AS upj_jurusan_id,
             upj.kuota_tersisa AS kuota_prodi_tersisa,
             upj.kuota_total   AS kuota_prodi_total,
             
@@ -209,23 +210,28 @@ try {
         $u['kecocokan'] = $canSelect ? (int)($u['kecocokan'] ?? 0) : 0;
         
         $u['kuota_tersisa'] = (int)($u['kuota_tersisa'] ?? 0);
-        $u['kuota_total'] = (int)($u['kuota_total'] ?? 0);
-        $u['tipe_kuota'] = $u['tipe_kuota'] ?? 'keseluruhan';
+        $u['kuota_total']   = (int)($u['kuota_total'] ?? 0);
+        $u['tipe_kuota']    = $u['tipe_kuota'] ?? 'keseluruhan';
 
-        $prodiSisa = $u['kuota_prodi_tersisa'] !== null ? (int)$u['kuota_prodi_tersisa'] : null;
+        $prodiSisa  = $u['kuota_prodi_tersisa'] !== null ? (int)$u['kuota_prodi_tersisa'] : null;
         $prodiTotal = $u['kuota_prodi_total'] !== null ? (int)$u['kuota_prodi_total'] : null;
+        $hasProdi   = !empty($u['upj_jurusan_id']);
 
-        if ($canSelect) {
+        if ($hasProdi) {
             if ($u['tipe_kuota'] === 'breakdown') {
-                $u['sisa_kuota_efektif'] = $prodiSisa !== null ? min($prodiSisa, $u['kuota_tersisa']) : $u['kuota_tersisa'];
-                $u['total_kuota_efektif'] = $prodiTotal !== null ? $prodiTotal : $u['kuota_total'];
+                $totalEfektif = $prodiTotal !== null ? $prodiTotal : $u['kuota_total'];
+                $sisaEfektif  = max(0, $prodiSisa !== null ? min($prodiSisa, $u['kuota_tersisa']) : $u['kuota_tersisa']);
             } else {
-                $u['sisa_kuota_efektif'] = $u['kuota_tersisa'];
-                $u['total_kuota_efektif'] = $u['kuota_total'];
+                $totalEfektif = $u['kuota_total'];
+                $sisaEfektif  = max(0, $u['kuota_tersisa']);
             }
+            $u['sisa_kuota_efektif']  = $sisaEfektif;
+            $u['total_kuota_efektif'] = $totalEfektif;
+            $u['status_kuota']        = ($sisaEfektif > 0) ? 'tersedia' : 'penuh';
         } else {
-            $u['sisa_kuota_efektif'] = 0;
-            $u['total_kuota_efektif'] = 0;
+            $u['sisa_kuota_efektif']  = 0;
+            $u['total_kuota_efektif'] = $u['kuota_total'];
+            $u['status_kuota']        = 'prodi_tidak_sesuai';
         }
     }
     unset($u);
