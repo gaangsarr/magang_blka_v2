@@ -73,6 +73,7 @@ try {
 $azureUid    = $profile['id'];
 $displayName = trim($profile['displayName']);
 $email       = !empty($profile['mail']) ? strtolower(trim($profile['mail'])) : strtolower(trim($profile['userPrincipalName'] ?? ''));
+$email       = str_replace(['’', '‘', '`'], "'", $email);
 
 // 6. Validasi domain email @itpln.ac.id
 if (!str_ends_with($email, '@itpln.ac.id')) {

@@ -32,6 +32,7 @@ $adminsList = $stmtAdmins->fetchAll(PDO::FETCH_ASSOC);
 // 2. Handle POST submit
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = strtolower(trim((string)($_POST['email'] ?? '')));
+    $email = str_replace(['’', '‘', '`'], "'", $email);
     $nama  = trim((string)($_POST['nama'] ?? ''));
 
     if (empty($email) || !str_ends_with($email, '@itpln.ac.id')) {

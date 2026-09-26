@@ -602,25 +602,25 @@ class Auth
     /**
      * Parse NIM, angkatan, kode jurusan dari email ITPLN.
      *
-     * Format email: {nama}{AA}{BB}{CCC}@itpln.ac.id
-     *   AA  = 2 digit angkatan (mis. 23 → 2023)
-     *   BB  = 2 digit kode jurusan
+     * Format email: {nama}{AA}{BB}{CCC}@itpln.ac.id atau berakhiran 7 digit (AABBCCC) / 9 digit (20AABBCCC)
+     *   AA  = 2 digit angkatan (mis. 24 → 2024)
+     *   BB  = 2 digit kode jurusan (mis. 12 → Teknik Mesin, 31 → Teknik Informatika)
      *   CCC = 3 digit nomor urut
      *
-     * Contoh: gangsar231234@itpln.ac.id
-     *   nama         = gangsar
-     *   angkatan     = 2023
-     *   kode_jurusan = 12
-     *   no_urut      = 034
-     *   nim          = 231234
+     * Contoh:
+     *   gangsar2431170@itpln.ac.id   → NIM: 202431170, Angkatan: 2024
+     *   jauza'2412031@itpln.ac.id    → NIM: 202412031, Angkatan: 2024
+     *   2412031@itpln.ac.id          → NIM: 202412031, Angkatan: 2024
      *
-     * Return null jika format tidak cocok.
+     * Return null jika format tidak cocok (mis. akun dosen/staf seperti blka@itpln.ac.id atau nama@itpln.ac.id).
      *
      * @return array{nim:string, angkatan:int, kode_jurusan:string, no_urut_absen:int}|null
      */
     public static function parseNimFromEmail(string $email): ?array
     {
         $email = strtolower(trim($email));
+        // Normalisasi tanda petik kurva/backtick ke petik lurus standar
+        $email = str_replace(['’', '‘', '`'], "'", $email);
 
         // Cek domain
         if (!str_ends_with($email, '@itpln.ac.id')) {
@@ -629,16 +629,28 @@ class Auth
 
         $prefix = explode('@', $email)[0];
 
-        // Regex: huruf apa pun (nama) diikuti 7 digit (AA BB CCC)
-        if (!preg_match('/^[a-z]+(\d{2})(\d{2})(\d{3})$/', $prefix, $m)) {
+        // Ekstrak 7 digit (AABBCCC) atau 9 digit (20AABBCCC) di akhir prefix email.
+        // Karakter nama di awal bebas (huruf, tanda petik ', titik ., strip -, dll).
+        if (!preg_match('/(?:20)?(\d{2})(\d{2})(\d{3})$/', $prefix, $m)) {
             return null;
         }
 
-        [$full, $aa, $bb, $ccc] = $m;
-        $nim          = '20' . $aa . $bb . $ccc; // 9 digit: 20AABBCCC
+        // Pastikan tidak ada digit berlebih tepat di depan digit NIM yang tertangkap
+        // (contoh negatif: nama1234567890 bukan NIM mahasiswa valid)
+        $matchedDigits = $m[0];
+        $pos = strrpos($prefix, $matchedDigits);
+        if ($pos > 0 && ctype_digit($prefix[$pos - 1])) {
+            return null;
+        }
+
+        $aa  = $m[1];
+        $bb  = $m[2];
+        $ccc = $m[3];
+
+        $nim          = '20' . $aa . $bb . $ccc; // 9 digit standar: 20AABBCCC
         $angkatan     = (int)('20' . $aa);       // mis. 24 → 2024
-        $kode_jurusan = $bb;                     // 2 digit string
-        $no_urut_absen= (int)$ccc;             // 3 digit number
+        $kode_jurusan = $bb;                     // 2 digit string kode jurusan
+        $no_urut_absen= (int)$ccc;               // 3 digit nomor urut
 
         return [
             'nim'           => $nim,

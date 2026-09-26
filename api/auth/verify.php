@@ -138,6 +138,7 @@ $firebaseUid = $claims['sub']   ?? '';
 
 // Normalisasi
 $email       = strtolower(trim($email));
+$email       = str_replace(['’', '‘', '`'], "'", $email);
 $displayName = trim($displayName);
 
 // ── Validasi Domain ───────────────────────────────────────────────────────────
