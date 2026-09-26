@@ -135,7 +135,7 @@ try {
             };
             $unitAwal = $r['unit_asal_nama'] ? $r['unit_asal_nama'] : $r['unit_nama'];
             $unitFinal = $r['unit_nama'];
-            $isMoved = $r['is_dipindahkan'] == 1 ? 'YA (DIPINDAHKAN)' : 'TIDAK';
+            $isMoved = ($r['is_dipindahkan'] == 1 && $r['status'] !== 'ditolak') ? 'YA (DIPINDAHKAN)' : 'TIDAK';
             $statusText = strtoupper($r['status']);
 
             $sheet->setCellValue('A' . $rowNum, $idx + 1);
@@ -154,7 +154,7 @@ try {
             $sheet->setCellValue('N' . $rowNum, $r['submitted_at'] ?? '-');
 
             // Highlight relocated rows in light amber
-            if ($r['is_dipindahkan'] == 1) {
+            if ($r['is_dipindahkan'] == 1 && $r['status'] !== 'ditolak') {
                 $sheet->getStyle('A' . $rowNum . ':N' . $rowNum)->getFill()
                     ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
                     ->getStartColor()->setRGB('FEF3C7');
@@ -206,7 +206,7 @@ try {
             $unitAwal,
             $r['unit_nama'] ?? '-',
             strtoupper($r['status']),
-            $r['is_dipindahkan'] == 1 ? 'YA (DIPINDAHKAN)' : 'TIDAK',
+            ($r['is_dipindahkan'] == 1 && $r['status'] !== 'ditolak') ? 'YA (DIPINDAHKAN)' : 'TIDAK',
             $r['catatan_admin'] ?? '-',
             $r['alamat_domisili'] ?? '-',
             $r['submitted_at'] ?? '-'

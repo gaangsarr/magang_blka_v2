@@ -225,8 +225,9 @@ if ($body['program'] === '5_bulan') {
     }
 }
 
+$pendaftaranId = 0;
 try {
-    Database::transaction(function (PDO $pdo) use ($mahasiswaId, $periodeId, $reservasiId, $uppId, $body, $peminatanIds, $transkripPath, $cvPath, $portoPath) {
+    Database::transaction(function (PDO $pdo) use ($mahasiswaId, $periodeId, $reservasiId, $uppId, $body, $peminatanIds, $transkripPath, $cvPath, $portoPath, &$pendaftaranId) {
         // 1. Validasi periode dibuka dan angkatan eligible
         $stmtP = $pdo->prepare("SELECT angkatan_eligible, nama, status, tanggal_selesai, jam_selesai FROM periode WHERE id = :pid");
         $stmtP->execute([':pid' => $periodeId]);
@@ -442,6 +443,16 @@ try {
         $_SESSION['cv_temp_path'], $_SESSION['cv_periode_id'],
         $_SESSION['porto_temp_path'], $_SESSION['porto_periode_id']
     );
+
+    // Masukkan bukti pendaftaran ke antrean email (asynchronous queue)
+    if ($pendaftaranId > 0) {
+        try {
+            $pdo = Database::getInstance();
+            \App\EmailQueue::pushBuktiPendaftaran($pdo, $pendaftaranId);
+        } catch (\Throwable $e) {
+            error_log('[Submit Mahasiswa] Gagal antrekan email bukti: ' . $e->getMessage());
+        }
+    }
 
     if (ob_get_length()) ob_clean();
     echo json_encode(['ok' => true, 'message' => 'Pendaftaran berhasil dikirim.']);

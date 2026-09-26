@@ -29,8 +29,11 @@ if (!is_array($body) || empty($body)) {
 
 // Whitelist of allowed keys and their validation rules
 $allowedKeys = [
-    'min_ipk_5bulan' => ['type' => 'decimal', 'min' => 0, 'max' => 4.00],
-    'min_sks_5bulan' => ['type' => 'integer', 'min' => 0, 'max' => 200],
+    'min_ipk_5bulan'              => ['type' => 'decimal', 'min' => 0, 'max' => 4.00],
+    'min_sks_5bulan'              => ['type' => 'integer', 'min' => 0, 'max' => 200],
+    'email_notifikasi_penolakan'  => ['type' => 'boolean'],
+    'email_notifikasi_pengumuman' => ['type' => 'boolean'],
+    'email_notifikasi_submit'     => ['type' => 'boolean'],
 ];
 
 try {
@@ -61,6 +64,9 @@ try {
                 exit;
             }
             $nilai = (string) $val;
+        } elseif ($rule['type'] === 'boolean') {
+            $val = !empty($nilai) && in_array(strtolower((string)$nilai), ['1', 'true', 'on', 'yes'], true) ? '1' : '0';
+            $nilai = $val;
         }
 
         $stmt = $pdo->prepare("UPDATE pengaturan SET nilai = :nilai WHERE kunci = :kunci");

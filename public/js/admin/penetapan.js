@@ -612,15 +612,15 @@ function renderTable(dataArray) {
         let badgeClass = 'badge-draft';
         let statusLabel = 'Belum Ditetapkan';
 
-        if (p.status === 'diterima') {
-            badgeClass = 'badge-dibuka';
-            statusLabel = 'Diterima';
-        } else if (p.status === 'dipindahkan' || p.is_dipindahkan == 1) {
-            badgeClass = 'badge-diarsipkan';
-            statusLabel = 'Dipindahkan Paksa';
-        } else if (p.status === 'ditolak') {
+        if (p.status === 'ditolak') {
             badgeClass = 'badge-ditutup';
             statusLabel = 'Ditolak';
+        } else if (p.status === 'diterima') {
+            badgeClass = 'badge-dibuka';
+            statusLabel = 'Diterima';
+        } else if (p.status === 'dipindahkan' || (p.is_dipindahkan == 1 && p.status !== 'ditolak')) {
+            badgeClass = 'badge-diarsipkan';
+            statusLabel = 'Dipindahkan Paksa';
         } else if (p.status === 'diverifikasi') {
             badgeClass = 'badge-draft';
             statusLabel = 'Diverifikasi';
@@ -637,7 +637,7 @@ function renderTable(dataArray) {
 
         const unitAwal = p.unit_asal_nama ? p.unit_asal_nama : p.unit_nama;
         const unitHasil = p.unit_nama;
-        const isMoved = p.is_dipindahkan == 1;
+        const isMoved = (p.is_dipindahkan == 1 || p.status === 'dipindahkan') && p.status !== 'ditolak';
         const isChecked = selectedIds.has(p.pendaftaran_id);
 
         const tr = document.createElement('tr');
@@ -797,7 +797,7 @@ async function handleBulkReject() {
             body: JSON.stringify({
                 pendaftaran_ids: Array.from(selectedIds),
                 status: 'ditolak',
-                catatan_admin: 'Ditolak massal oleh administrator'
+                catatan_admin: 'Formasi Anda belum memenuhi kebutuhan kami'
             })
         });
         const data = await res.json();

@@ -83,14 +83,49 @@ try {
         $ipAddress
     ]);
 
-    $message = $pengumumanDibuka === 1
-        ? "Pengumuman hasil penetapan periode '{$periode['nama']}' berhasil dipublikasikan kepada seluruh mahasiswa."
-        : "Pengumuman hasil penetapan periode '{$periode['nama']}' telah dinonaktifkan (kembali ke status pending).";
+    $emailStats = ['new_count' => 0, 'update_count' => 0, 'skipped_count' => 0, 'total_queued' => 0];
+    $cancelledCount = 0;
+
+    if ($pengumumanDibuka === 1) {
+        try {
+            $emailStats = \App\EmailQueue::pushPengumumanPeriode($pdo, $periodeId);
+        } catch (\Throwable $e) {
+            error_log('[Toggle Pengumuman] Gagal antrekan email pengumuman: ' . $e->getMessage());
+        }
+
+        if ($emailStats['total_queued'] > 0) {
+            $details = [];
+            if ($emailStats['new_count'] > 0) {
+                $details[] = "{$emailStats['new_count']} email baru";
+            }
+            if ($emailStats['update_count'] > 0) {
+                $details[] = "{$emailStats['update_count']} email pembaruan";
+            }
+            if ($emailStats['skipped_count'] > 0) {
+                $details[] = "{$emailStats['skipped_count']} data tidak berubah (di-skip)";
+            }
+            $detailStr = implode(', ', $details);
+            $message = "Pengumuman periode '{$periode['nama']}' berhasil dipublikasikan. Antrean email: {$detailStr}.";
+        } else {
+            $message = "Pengumuman hasil penetapan periode '{$periode['nama']}' berhasil dipublikasikan. Mahasiswa dapat melihat hasil seleksi secara langsung di portal magang.";
+        }
+    } else {
+        try {
+            $cancelledCount = \App\EmailQueue::cancelPendingForPeriode($pdo, $periodeId);
+        } catch (\Throwable $e) {
+            error_log('[Toggle Pengumuman] Gagal membatalkan antrean email: ' . $e->getMessage());
+        }
+
+        $message = "Pengumuman hasil penetapan periode '{$periode['nama']}' telah dinonaktifkan."
+            . ($cancelledCount > 0 ? " {$cancelledCount} antrean email yang belum sempat terkirim telah dibatalkan." : "");
+    }
 
     echo json_encode([
         'ok'                => true,
         'periode_id'        => $periodeId,
         'pengumuman_dibuka' => (bool)$pengumumanDibuka,
+        'email_stats'       => $emailStats,
+        'emails_cancelled'  => $cancelledCount,
         'message'           => $message
     ]);
 

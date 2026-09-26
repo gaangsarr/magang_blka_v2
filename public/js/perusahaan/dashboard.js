@@ -1293,11 +1293,11 @@ function initPendaftarModule() {
             const res = await fetch('/api/perusahaan/pendaftar/bulk_update.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
-                body: JSON.stringify({ action: 'ditolak', pendaftaran_ids: Array.from(selectedPendaftarIds), alasan: 'Penolakan masal oleh pihak mitra unit.' })
+                body: JSON.stringify({ action: 'ditolak', pendaftaran_ids: Array.from(selectedPendaftarIds), alasan: 'Formasi Anda belum memenuhi kebutuhan kami' })
             });
             const data = await res.json();
             if (res.ok && data.ok) {
-                showAdminToast(data.message || 'Pendaftar berhasil ditolak masal.', 'success');
+                showAdminToast(data.message || 'Pendaftar berhasil ditolak.', 'success');
                 selectedPendaftarIds.clear();
                 updateBulkToolbar();
                 await loadPendaftarData();
@@ -1680,8 +1680,9 @@ function renderPendaftarTable(list) {
     }
 
     list.forEach((mhs, idx) => {
+        const isMovedActive = Boolean(mhs.is_dipindahkan && mhs.status !== 'ditolak');
         let statusBadge = `<span class="badge-status badge-${mhs.status}">${mhs.status.toUpperCase()}</span>`;
-        if (mhs.is_dipindahkan) {
+        if (isMovedActive) {
             statusBadge += `<div style="font-size: 0.675rem; color: #4338ca; font-weight: 700; margin-top: 3px; display: inline-flex; align-items: center; gap: 3px;">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M4 20L21 3"/><path d="M21 16v5h-5"/></svg>
                 <span>Dipindahkan</span>
@@ -1707,7 +1708,7 @@ function renderPendaftarTable(list) {
         const isChecked = selectedPendaftarIds.has(mhs.id);
 
         const tr = document.createElement('tr');
-        if (mhs.is_dipindahkan) {
+        if (isMovedActive) {
             tr.style.backgroundColor = 'rgba(99, 102, 241, 0.03)';
         }
         tr.style.cursor = 'pointer';
@@ -1887,7 +1888,7 @@ function showMhsDetailModal(mhs) {
     const body = document.getElementById('mhs-detail-body');
 
     let transferAlertHtml = '';
-    if (mhs.is_dipindahkan) {
+    if (mhs.is_dipindahkan && mhs.status !== 'ditolak') {
         transferAlertHtml = `
             <div style="background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 10px; padding: 14px 16px; margin-bottom: 20px; text-align: left;">
                 <div style="display: flex; align-items: center; gap: 8px; font-weight: 700; color: #3730a3; font-size: 0.875rem; margin-bottom: 6px;">

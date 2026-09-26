@@ -130,7 +130,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (statusData.is_ditolak_periode_aktif) {
             const reregNotice = document.getElementById('reregistration-notice-banner');
             const unitDitolakNama = escapeHtml(statusData.unit_ditolak_nama || 'unit pilihan sebelumnya');
-            const alasanDitolak = statusData.alasan_penolakan ? `<div style="margin-top: 6px; font-size: 0.825rem; color: #991b1b; background: #fee2e2; padding: 6px 12px; border-radius: 6px;"><strong>Alasan Penolakan:</strong> ${escapeHtml(statusData.alasan_penolakan)}</div>` : '';
+            const alasanDitolakText = statusData.alasan_penolakan || 'Formasi Anda belum memenuhi kebutuhan kami';
+            const alasanDitolak = `<div style="margin-top: 6px; font-size: 0.825rem; color: #991b1b; background: #fee2e2; padding: 6px 12px; border-radius: 6px;"><strong>Alasan Penolakan:</strong> ${escapeHtml(alasanDitolakText)}</div>`;
             const rawPeriodeName = (statusData.periode_ditolak_nama || (statusData.periode_aktif ? statusData.periode_aktif.nama : '') || '').trim();
             const pDisplay = rawPeriodeName ? (rawPeriodeName.toLowerCase().startsWith('periode') ? rawPeriodeName : `Periode ${rawPeriodeName}`) : '';
             const bannerTitle = pDisplay ? `Pendaftaran Ulang (${escapeHtml(pDisplay)})` : 'Pendaftaran Ulang Periode Aktif';

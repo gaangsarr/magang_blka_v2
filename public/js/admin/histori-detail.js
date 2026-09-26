@@ -116,15 +116,15 @@ function renderHistoriTablePage(page = 1) {
             '5_bulan': 'Magang 5 Bulan (KRS)'
         };
         const progText = progMap[r.program] || r.program || '-';
-        const isMoved = (r.is_dipindahkan == 1 || r.status === 'dipindahkan');
+        const isMoved = (r.is_dipindahkan == 1 || r.status === 'dipindahkan') && r.status !== 'ditolak';
 
         let statusBadge = '<span class="badge-status badge-draft">Diajukan</span>';
-        if (isMoved) {
+        if (r.status === 'ditolak') {
+            statusBadge = '<span class="badge-status badge-ditutup">Ditolak</span>';
+        } else if (isMoved) {
             statusBadge = '<span class="badge-status" style="background: #e0e7ff; color: #4338ca; border: 1px solid #c7d2fe; font-weight: 700;">Dipindahkan</span>';
         } else if (r.status === 'diverifikasi' || r.status === 'diterima') {
             statusBadge = '<span class="badge-status badge-dibuka">Diterima</span>';
-        } else if (r.status === 'ditolak') {
-            statusBadge = '<span class="badge-status badge-ditutup">Ditolak</span>';
         }
 
         const unitDisplay = (r.unit_asal_nama && r.unit_asal_nama !== r.unit_nama)

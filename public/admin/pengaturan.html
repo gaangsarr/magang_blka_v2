@@ -69,6 +69,63 @@
                     </form>
                 </div>
 
+                <!-- Pengaturan Notifikasi Email Otomatis -->
+                <div class="admin-card">
+                    <div class="admin-card-header">
+                        <div>
+                            <h3 class="admin-card-title">Pengaturan Pengiriman Email Notifikasi</h3>
+                            <span style="font-size: 0.825rem; color: #64748b;">Konfigurasi jenis notifikasi email otomatis yang dikirimkan oleh sistem ke akun mahasiswa.</span>
+                        </div>
+                    </div>
+                    
+                    <form id="form-notifikasi-email" style="padding: 0 24px 24px;">
+                        <div style="display: flex; flex-direction: column; gap: 16px; margin-top: 8px;">
+                            <!-- 1. Penolakan -->
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+                                <div style="padding-right: 16px;">
+                                    <div style="font-weight: 700; font-size: 0.9rem; color: #0f172a; margin-bottom: 4px;">Notifikasi Penolakan Berkas / Formasi</div>
+                                    <div style="font-size: 0.8rem; color: #64748b; line-height: 1.5;">Kirim email otomatis saat berkas ditolak atau kuota unit penuh, agar mahasiswa dapat segera memilih formasi lain sebelum periode ditutup. (Sangat disarankan aktif)</div>
+                                </div>
+                                <label class="switch" for="email_notifikasi_penolakan">
+                                    <input type="checkbox" id="email_notifikasi_penolakan">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <!-- 2. Pengumuman Kelulusan -->
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+                                <div style="padding-right: 16px;">
+                                    <div style="font-weight: 700; font-size: 0.9rem; color: #0f172a; margin-bottom: 4px;">Notifikasi Pengumuman Hasil Seleksi &amp; Penempatan</div>
+                                    <div style="font-size: 0.8rem; color: #64748b; line-height: 1.5;">Kirim email massal ketika pengumuman kelulusan dipublikasikan. Jika nonaktif, mahasiswa tetap dapat melihat status kelulusan, unit penempatan, dan narahubung PIC secara instan melalui portal magang.</div>
+                                </div>
+                                <label class="switch" for="email_notifikasi_pengumuman">
+                                    <input type="checkbox" id="email_notifikasi_pengumuman">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <!-- 3. Bukti Submit -->
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+                                <div style="padding-right: 16px;">
+                                    <div style="font-weight: 700; font-size: 0.9rem; color: #0f172a; margin-bottom: 4px;">Bukti Pendaftaran saat Mahasiswa Submit</div>
+                                    <div style="font-size: 0.8rem; color: #64748b; line-height: 1.5;">Kirim email tanda terima registrasi pendaftaran ke inbox mahasiswa. Dapat dinonaktifkan untuk menghemat antrean server pada masa pendaftaran massal.</div>
+                                </div>
+                                <label class="switch" for="email_notifikasi_submit">
+                                    <input type="checkbox" id="email_notifikasi_submit">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; justify-content: flex-end; margin-top: 24px; gap: 12px; align-items: center;">
+                            <span id="save-status-email" style="font-size: 0.85rem; color: #10b981; display: none;">Tersimpan</span>
+                            <button type="submit" class="btn-modal-login" style="width: auto; padding: 10px 28px;" id="btn-save-email">
+                                Simpan Pengaturan Email
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
                 <!-- Kelola Admin Card (Khusus Super Admin) -->
                 <div class="admin-card" id="card-kelola-admin">
                     <div class="admin-card-header" style="padding-bottom: 16px;">

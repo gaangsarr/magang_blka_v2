@@ -988,7 +988,8 @@
 
             if (st === 'ditolak' || item.raw_status === 'ditolak') {
                 const canReregister = (item.bisa_daftar_ulang === true || (item.is_periode_aktif && item.periode_status === 'dibuka'));
-                const alasanText = item.catatan_admin ? `<div style="margin-top: 10px; padding: 10px 14px; background: #fff5f5; border-left: 3px solid #ef4444; border-radius: 6px; font-size: 0.825rem; color: #7f1d1d;"><strong>Alasan Penolakan:</strong> ${escapeHtml(item.catatan_admin)}</div>` : '';
+                const alasanDitolak = item.catatan_admin || 'Formasi Anda belum memenuhi kebutuhan kami';
+                const alasanText = `<div style="margin-top: 10px; padding: 10px 14px; background: #fff5f5; border-left: 3px solid #ef4444; border-radius: 6px; font-size: 0.825rem; color: #7f1d1d;"><strong>Alasan Penolakan:</strong> ${escapeHtml(alasanDitolak)}</div>`;
                 const reregisterBtn = canReregister ? `
                     <div style="margin-top: 14px;">
                         <a href="/daftar.html" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px; text-decoration: none; padding: 10px 18px; font-weight: 700; border-radius: 8px; background: #0b3d6b; color: #ffffff;">
@@ -1199,7 +1200,8 @@
                             ? (rawPeriodName.toLowerCase().startsWith('periode') ? rawPeriodName : `Periode ${rawPeriodName}`) 
                             : '';
                         const cardTitle = periodeDisplay ? `Pendaftaran Ulang Tersedia (${escapeHtml(periodeDisplay)})` : 'Pendaftaran Ulang Tersedia';
-                        newPeriodBanner.innerHTML = `
+                                            const alasanBanner = rejectedActiveItem.catatan_admin || 'Formasi Anda belum memenuhi kebutuhan kami';
+                                            newPeriodBanner.innerHTML = `
                             <div class="card" style="margin-bottom: 24px; padding: 20px 24px; border: 1px solid #fed7aa; border-left: 4px solid #f97316; background: #fffaf0;">
                                 <div style="display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;">
                                     <div style="flex: 1; min-width: 260px; display: flex; align-items: flex-start; gap: 14px;">
@@ -1215,7 +1217,7 @@
                                                 ${cardTitle}
                                             </div>
                                             <p style="margin: 0; color: #7c2d12; font-size: 0.875rem; line-height: 1.5;">
-                                                Pengajuan Anda pada unit <strong>${escapeHtml(rejectedActiveItem.nama_unit)}</strong> belum berhasil diterima${rejectedActiveItem.catatan_admin ? ` (Alasan: <em>"${escapeHtml(rejectedActiveItem.catatan_admin)}"</em>)` : ''}. Karena periode masih dibuka, Anda berhak memilih unit magang lain yang masih memiliki kuota.
+                                                Pengajuan Anda pada unit <strong>${escapeHtml(rejectedActiveItem.nama_unit)}</strong> belum berhasil diterima (Alasan: <em>"${escapeHtml(alasanBanner)}"</em>). Karena periode masih dibuka, Anda berhak memilih unit magang lain yang masih memiliki kuota.
                                             </p>
                                         </div>
                                     </div>

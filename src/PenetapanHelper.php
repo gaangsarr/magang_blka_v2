@@ -119,14 +119,22 @@ class PenetapanHelper
         $stmtUpd = $pdo->prepare("
             UPDATE pendaftaran
             SET status = 'ditolak',
+                is_dipindahkan = 0,
                 catatan_admin = :catatan,
                 updated_at = NOW()
             WHERE id = :id
         ");
         $stmtUpd->execute([
-            ':catatan' => $catatan ?: 'Ditolak pada proses verifikasi unit.',
+            ':catatan' => $catatan ?: 'Formasi Anda belum memenuhi kebutuhan kami',
             ':id'      => $pendaftaranId
         ]);
+
+        // Antrekan email notifikasi penolakan ke antrean pengiriman
+        try {
+            EmailQueue::pushPenolakan($pdo, $pendaftaranId, $catatan ?: 'Formasi Anda belum memenuhi kebutuhan kami');
+        } catch (\Throwable $e) {
+            error_log('[tolakPeserta] Gagal antrekan email penolakan: ' . $e->getMessage());
+        }
     }
 
     /**

@@ -98,7 +98,7 @@ try {
 
     if ($filterStatus !== '') {
         if ($filterStatus === 'dipindahkan') {
-            $whereClauses[] = '(p.status = "dipindahkan" OR p.is_dipindahkan = 1)';
+            $whereClauses[] = '(p.status = "dipindahkan" OR (p.is_dipindahkan = 1 AND p.status != "ditolak"))';
         } else {
             $whereClauses[] = 'p.status = :status';
             $params[':status'] = $filterStatus;
