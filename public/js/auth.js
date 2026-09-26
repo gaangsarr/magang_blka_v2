@@ -24,6 +24,12 @@ async function checkExistingSession() {
         window.location.replace(targetUrl);
         return;
       }
+      const urlParams = new URLSearchParams(window.location.search);
+      const returnTo = urlParams.get('return_to');
+      if (returnTo && returnTo.startsWith('/') && !returnTo.startsWith('//')) {
+        window.location.replace(returnTo);
+        return;
+      }
       updateLandingPageForLoggedInUser(data);
     }
   } catch (_) {}
@@ -321,8 +327,13 @@ function clearError() {
 function handleMicrosoftLogin() {
   clearError();
   showAuthLoading('Menghubungkan Akun ITPLN...', 'Mengalihkan ke server autentikasi Microsoft SSO...');
+  const urlParams = new URLSearchParams(window.location.search);
+  const returnTo = urlParams.get('return_to');
+  const targetUrl = (returnTo && returnTo.startsWith('/') && !returnTo.startsWith('//'))
+    ? '/api/auth/azure/login.php?return_to=' + encodeURIComponent(returnTo)
+    : '/api/auth/azure/login.php';
   setTimeout(() => {
-    window.location.href = '/api/auth/azure/login.php';
+    window.location.href = targetUrl;
   }, 200);
 }
 

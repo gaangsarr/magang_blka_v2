@@ -1108,16 +1108,32 @@
                     fetch('/api/mahasiswa/status_pendaftaran.php').catch(() => null)
                 ]);
 
+                const returnUrl = window.location.pathname + window.location.search;
+
+                // 1. Validasi respons endpoint auth
                 if (!authRes || !authRes.ok) {
-                    window.location.href = '/login.html';
+                    window.location.replace('/login.html?return_to=' + encodeURIComponent(returnUrl));
                     return;
                 }
 
-                const authData = await authRes.json();
-                
+                const authData = await authRes.json().catch(() => null);
+
+                // 2. Wajib terautentikasi: Jika belum login, redirect langsung ke login.html
+                if (!authData || !authData.authenticated) {
+                    window.location.replace('/login.html?return_to=' + encodeURIComponent(returnUrl));
+                    return;
+                }
+
+                // 3. Jika akun adalah Admin, alihkan ke dashboard admin masing-masing
                 if (authData.role === 'admin') {
                     const targetUrl = authData.redirect_to || (authData.admin_role === 'admin_perusahaan' ? '/perusahaan/index.html' : '/admin/index.html');
                     window.location.replace(targetUrl);
+                    return;
+                }
+
+                // 4. Jika sesi mahasiswa habis / tidak sah (HTTP 401 pada data pendaftaran)
+                if (res && res.status === 401) {
+                    window.location.replace('/login.html?return_to=' + encodeURIComponent(returnUrl));
                     return;
                 }
 
@@ -1267,9 +1283,9 @@
                 renderHistoryTable(registrationsList);
                 
             } catch (err) {
-                console.error(err);
-                const tableBody = document.getElementById('table-history-body');
-                if (tableBody) tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #ef4444; padding: 24px;">Gagal memuat riwayat pendaftaran.</td></tr>';
+                console.error('Gagal memuat status dan profil:', err);
+                const returnUrl = window.location.pathname + window.location.search;
+                window.location.replace('/login.html?return_to=' + encodeURIComponent(returnUrl));
             }
         }
 

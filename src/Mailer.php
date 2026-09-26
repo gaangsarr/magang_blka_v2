@@ -153,24 +153,47 @@ class Mailer
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta name="supported-color-schemes" content="light">
     <title>{$subject}</title>
+    <!--[if mso]>
+    <style type="text/css">
+        body, table, td, p, a, span { font-family: Arial, sans-serif !important; }
+    </style>
+    <![endif]-->
+    <style type="text/css">
+        :root {
+            color-scheme: light;
+            supported-color-schemes: light;
+        }
+        body, table, td, p, a, span {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+        }
+        @media (prefers-color-scheme: dark) {
+            body, .email-canvas { background-color: #f1f5f9 !important; }
+            .email-card { background-color: #ffffff !important; border-color: #e2e8f0 !important; }
+            .email-header { background-color: #0b192c !important; }
+        }
+    </style>
 </head>
-<body style="margin: 0; padding: 24px 0; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b;">
+<body class="email-canvas" style="margin: 0; padding: 32px 0; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #0f172a;">
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
         <tr>
             <td align="center" style="padding: 0 16px;">
-                <table role="presentation" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0;" cellspacing="0" cellpadding="0" border="0">
+                <table role="presentation" width="100%" class="email-card" style="max-width: 580px; background-color: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0;" cellspacing="0" cellpadding="0" border="0">
                     
                     <!-- Header -->
                     <tr>
-                        <td style="background: linear-gradient(135deg, #005596 0%, #0284c7 100%); padding: 32px 28px; text-align: left; color: #ffffff;">
-                            <div style="font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #93c5fd; margin-bottom: 6px;">
+                        <td class="email-header" style="background-color: #0b192c; padding: 28px 28px 24px 28px; text-align: left; border-bottom: 3px solid #00a2b9;">
+                            <div style="font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: #94a3b8; margin-bottom: 6px;">
                                 Institut Teknologi PLN • BLKA
                             </div>
-                            <h1 style="margin: 0; font-size: 22px; font-weight: 800; line-height: 1.3;">
-                                Bukti Tanda Terima Pendaftaran Magang
+                            <h1 style="margin: 0; font-size: 20px; font-weight: 800; line-height: 1.3; color: #ffffff;">
+                                Bukti Tanda Terima Pendaftaran
                             </h1>
-                            <div style="margin-top: 10px; font-size: 14px; opacity: 0.9;">
+                            <div style="margin-top: 6px; font-size: 13px; font-weight: 600; color: #00a2b9;">
                                 {$namaPeriode}
                             </div>
                         </td>
@@ -178,19 +201,19 @@ class Mailer
 
                     <!-- Body Content -->
                     <tr>
-                        <td style="padding: 28px;">
-                            <p style="margin: 0 0 16px 0; font-size: 15px; line-height: 1.6;">
+                        <td style="padding: 28px; background-color: #ffffff;">
+                            <p style="margin: 0 0 14px 0; font-size: 15px; line-height: 1.6; color: #0f172a;">
                                 Halo <strong>{$nama}</strong>,
                             </p>
-                            <p style="margin: 0 0 24px 0; font-size: 14px; line-height: 1.6; color: #475569;">
-                                Pendaftaran magang Anda di portal <strong>REMATE (Rekrutmen & Magang Terpadu ITPLN)</strong> telah berhasil tersimpan di sistem dengan rincian sebagai berikut:
+                            <p style="margin: 0 0 20px 0; font-size: 14px; line-height: 1.6; color: #475569;">
+                                Pendaftaran magang Anda di portal <strong>REMATE ITPLN</strong> telah berhasil tersimpan di sistem dengan rincian data sebagai berikut:
                             </p>
 
                             <!-- Detail Card -->
-                            <table role="presentation" width="100%" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 24px;" cellspacing="0" cellpadding="12" border="0">
+                            <table role="presentation" width="100%" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 22px;" cellspacing="0" cellpadding="10" border="0">
                                 <tr>
                                     <td width="38%" style="font-size: 13px; color: #64748b; border-bottom: 1px solid #e2e8f0; font-weight: 600;">Nomor Registrasi</td>
-                                    <td style="font-size: 14px; color: #005596; border-bottom: 1px solid #e2e8f0; font-weight: 700; font-family: monospace;">{$regNumber}</td>
+                                    <td style="font-size: 13px; color: #005082; border-bottom: 1px solid #e2e8f0; font-weight: 700; font-family: monospace;">{$regNumber}</td>
                                 </tr>
                                 <tr>
                                     <td style="font-size: 13px; color: #64748b; border-bottom: 1px solid #e2e8f0; font-weight: 600;">NIM Mahasiswa</td>
@@ -198,7 +221,7 @@ class Mailer
                                 </tr>
                                 <tr>
                                     <td style="font-size: 13px; color: #64748b; border-bottom: 1px solid #e2e8f0; font-weight: 600;">Unit Magang Dipilih</td>
-                                    <td style="font-size: 14px; color: #0f172a; border-bottom: 1px solid #e2e8f0; font-weight: 700;">{$namaUnit}</td>
+                                    <td style="font-size: 13px; color: #0f172a; border-bottom: 1px solid #e2e8f0; font-weight: 700;">{$namaUnit}</td>
                                 </tr>
                                 <tr>
                                     <td style="font-size: 13px; color: #64748b; border-bottom: 1px solid #e2e8f0; font-weight: 600;">Program Magang</td>
@@ -211,25 +234,25 @@ class Mailer
                             </table>
 
                             <!-- Informasi Tahapan Selanjutnya -->
-                            <div style="background-color: #eff6ff; border-left: 4px solid #0284c7; padding: 14px 16px; border-radius: 4px; margin-bottom: 24px;">
-                                <div style="font-size: 13px; font-weight: 700; color: #0369a1; margin-bottom: 4px;">Informasi Seleksi & Penempatan:</div>
-                                <div style="font-size: 13px; color: #0c4a6e; line-height: 1.5;">
-                                    Berkas dan formasi pilihan Anda akan diverifikasi oleh Biro Layanan Karir dan Alumni (BLKA) ITPLN serta unit tujuan. Anda dapat memantau perkembangan status secara berkala melalui menu <strong>Status Pendaftaran</strong> di portal magang.
+                            <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #00a2b9; padding: 14px 16px; border-radius: 6px; margin-bottom: 22px;">
+                                <div style="font-size: 13px; font-weight: 700; color: #005082; margin-bottom: 4px;">Informasi Seleksi &amp; Penempatan:</div>
+                                <div style="font-size: 13px; color: #334155; line-height: 1.5;">
+                                    Berkas dan formasi pilihan Anda akan diverifikasi oleh Badan Layanan Karir Alumni (BLKA) ITPLN serta unit tujuan. Perkembangan status seleksi dapat Anda pantau secara berkala melalui halaman <strong>Riwayat &amp; Pengumuman</strong> di portal magang.
                                 </div>
                             </div>
 
-                            <p style="margin: 0; font-size: 13px; color: #64748b; line-height: 1.5;">
-                                Simpan email ini sebagai tanda bukti resmi pendaftaran Anda. Jika terdapat kendala, silakan hubungi narahubung BLKA ITPLN.
+                            <p style="margin: 0; font-size: 12px; color: #94a3b8; text-align: center; line-height: 1.5;">
+                                Simpan email ini sebagai tanda bukti resmi pendaftaran Anda.
                             </p>
                         </td>
                     </tr>
 
                     <!-- Footer -->
                     <tr>
-                        <td style="background-color: #f8fafc; padding: 20px 28px; text-align: center; border-top: 1px solid #e2e8f0; color: #94a3b8; font-size: 12px; line-height: 1.6;">
-                            <div><strong>Biro Layanan Karir dan Alumni (BLKA)</strong></div>
-                            <div>Institut Teknologi PLN • Menara PLN, Jl. Lingkar Luar Barat, Cengkareng, Jakarta Barat</div>
-                            <div style="margin-top: 8px; font-size: 11px;">Pesan ini dikirim secara otomatis oleh sistem REMATE ITPLN.</div>
+                        <td style="background-color: #f8fafc; padding: 20px 28px; text-align: center; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 12px; line-height: 1.6;">
+                            <div style="font-weight: 700; color: #334155;">Badan Layanan Karir Alumni (BLKA)</div>
+                            <div style="color: #64748b;">Institut Teknologi PLN • Menara PLN, Jl. Lingkar Luar Barat, Cengkareng, Jakarta Barat</div>
+                            <div style="margin-top: 6px; font-size: 11px; color: #94a3b8;">Pesan ini dikirim secara otomatis oleh sistem REMATE ITPLN.</div>
                         </td>
                     </tr>
 

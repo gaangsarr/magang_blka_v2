@@ -60,7 +60,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const statusData = await statusRes.json();
         if(statusData.csrf_token) csrfToken = statusData.csrf_token;
         if (!statusRes.ok || !statusData.authenticated) {
-            window.location.href = '/login.html';
+            const returnUrl = window.location.pathname + window.location.search;
+            window.location.replace('/login.html?return_to=' + encodeURIComponent(returnUrl));
             return;
         }
 
@@ -201,6 +202,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             fetch('/api/periode/aktif.php').catch(() => null),
             fetch('/api/peminatan/list.php').catch(() => null)
         ]);
+
+        if (profilRes && profilRes.status === 401) {
+            const returnUrl = window.location.pathname + window.location.search;
+            window.location.replace('/login.html?return_to=' + encodeURIComponent(returnUrl));
+            return;
+        }
 
         if (profilRes && profilRes.ok) {
             const profilData = await profilRes.json();

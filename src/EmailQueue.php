@@ -71,6 +71,19 @@ class EmailQueue
     }
 
     /**
+     * Mendapatkan URL basis aplikasi dari .env (in-memory lookup, 0% disk overhead)
+     */
+    public static function getAppUrl(): string
+    {
+        $url = $_ENV['APP_URL'] ?? getenv('APP_URL');
+        if (!$url && isset($_SERVER['HTTP_HOST'])) {
+            $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+            $url = $scheme . '://' . $_SERVER['HTTP_HOST'];
+        }
+        return rtrim((string)($url ?: 'https://magang.itpln.ac.id'), '/');
+    }
+
+    /**
      * Memasukkan Bukti Tanda Terima Pendaftaran ke antrean
      */
     public static function pushBuktiPendaftaran(PDO $pdo, int $pendaftaranId): bool
@@ -104,6 +117,8 @@ class EmailQueue
             $namaPeriode = htmlspecialchars((string)($row['nama_periode'] ?? 'Periode Aktif'));
             $submittedAt = htmlspecialchars((string)($row['submitted_at'] ?? date('d F Y, H:i') . ' WIB'));
             $periodeId   = (int)$row['periode_id'];
+            $appUrl      = self::getAppUrl();
+            $statusUrl   = htmlspecialchars($appUrl . '/status.html');
 
             $programMap = [
                 '1_bulan' => 'Magang 1 Bulan',
@@ -121,38 +136,91 @@ class EmailQueue
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta name="supported-color-schemes" content="light">
     <title>{$subject}</title>
+    <!--[if mso]>
+    <style type="text/css">
+        body, table, td, p, a, span { font-family: Arial, sans-serif !important; }
+    </style>
+    <![endif]-->
+    <style type="text/css">
+        :root {
+            color-scheme: light;
+            supported-color-schemes: light;
+        }
+        body, table, td, p, a, span {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+        }
+        @media (prefers-color-scheme: dark) {
+            body, .email-canvas {
+                background-color: #f1f5f9 !important;
+            }
+            .email-card {
+                background-color: #ffffff !important;
+                border-color: #e2e8f0 !important;
+            }
+            .email-header {
+                background-color: #0b192c !important;
+            }
+            .email-header-top {
+                color: #94a3b8 !important;
+            }
+            .email-header-title {
+                color: #ffffff !important;
+            }
+            .email-header-sub {
+                color: #00a2b9 !important;
+            }
+            .email-body-text {
+                color: #0f172a !important;
+            }
+            .email-muted-text {
+                color: #475569 !important;
+            }
+            .email-table-bg {
+                background-color: #f8fafc !important;
+                border-color: #e2e8f0 !important;
+            }
+            .email-btn {
+                background-color: #005082 !important;
+                color: #ffffff !important;
+            }
+        }
+    </style>
 </head>
-<body style="margin: 0; padding: 24px 0; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b;">
+<body class="email-canvas" style="margin: 0; padding: 32px 0; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #0f172a;">
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
         <tr>
             <td align="center" style="padding: 0 16px;">
-                <table role="presentation" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0;" cellspacing="0" cellpadding="0" border="0">
+                <table role="presentation" width="100%" class="email-card" style="max-width: 580px; background-color: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0;" cellspacing="0" cellpadding="0" border="0">
                     <tr>
-                        <td style="background: linear-gradient(135deg, #005596 0%, #0284c7 100%); padding: 32px 28px; text-align: left; color: #ffffff;">
-                            <div style="font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #93c5fd; margin-bottom: 6px;">
+                        <td class="email-header" style="background-color: #0b192c; padding: 28px 28px 24px 28px; text-align: left; border-bottom: 3px solid #00a2b9;">
+                            <div class="email-header-top" style="font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: #94a3b8; margin-bottom: 6px;">
                                 Institut Teknologi PLN • BLKA
                             </div>
-                            <h1 style="margin: 0; font-size: 22px; font-weight: 800; line-height: 1.3;">
-                                Bukti Tanda Terima Pendaftaran Magang
+                            <h1 class="email-header-title" style="margin: 0; font-size: 20px; font-weight: 800; line-height: 1.3; color: #ffffff;">
+                                Bukti Tanda Terima Pendaftaran
                             </h1>
-                            <div style="margin-top: 10px; font-size: 14px; opacity: 0.9;">
+                            <div class="email-header-sub" style="margin-top: 6px; font-size: 13px; font-weight: 600; color: #00a2b9;">
                                 {$namaPeriode}
                             </div>
                         </td>
                     </tr>
                     <tr>
-                        <td style="padding: 28px;">
-                            <p style="margin: 0 0 16px 0; font-size: 15px; line-height: 1.6;">
+                        <td style="padding: 28px; background-color: #ffffff;">
+                            <p class="email-body-text" style="margin: 0 0 14px 0; font-size: 15px; line-height: 1.6; color: #0f172a;">
                                 Halo <strong>{$nama}</strong>,
                             </p>
-                            <p style="margin: 0 0 24px 0; font-size: 14px; line-height: 1.6; color: #475569;">
-                                Pendaftaran magang Anda di portal <strong>REMATE ITPLN</strong> telah berhasil tersimpan di sistem dengan rincian sebagai berikut:
+                            <p class="email-muted-text" style="margin: 0 0 20px 0; font-size: 14px; line-height: 1.6; color: #475569;">
+                                Pendaftaran magang Anda di portal <strong>REMATE ITPLN</strong> telah berhasil tersimpan di sistem dengan rincian data sebagai berikut:
                             </p>
-                            <table role="presentation" width="100%" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 24px;" cellspacing="0" cellpadding="12" border="0">
+                            <table role="presentation" width="100%" class="email-table-bg" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 22px;" cellspacing="0" cellpadding="10" border="0">
                                 <tr>
                                     <td width="38%" style="font-size: 13px; color: #64748b; border-bottom: 1px solid #e2e8f0; font-weight: 600;">Nomor Registrasi</td>
-                                    <td style="font-size: 14px; color: #005596; border-bottom: 1px solid #e2e8f0; font-weight: 700; font-family: monospace;">{$regNumber}</td>
+                                    <td style="font-size: 13px; color: #005082; border-bottom: 1px solid #e2e8f0; font-weight: 700; font-family: monospace;">{$regNumber}</td>
                                 </tr>
                                 <tr>
                                     <td style="font-size: 13px; color: #64748b; border-bottom: 1px solid #e2e8f0; font-weight: 600;">NIM Mahasiswa</td>
@@ -160,7 +228,7 @@ class EmailQueue
                                 </tr>
                                 <tr>
                                     <td style="font-size: 13px; color: #64748b; border-bottom: 1px solid #e2e8f0; font-weight: 600;">Unit Magang Dipilih</td>
-                                    <td style="font-size: 14px; color: #0f172a; border-bottom: 1px solid #e2e8f0; font-weight: 700;">{$namaUnit}</td>
+                                    <td style="font-size: 13px; color: #0f172a; border-bottom: 1px solid #e2e8f0; font-weight: 700;">{$namaUnit}</td>
                                 </tr>
                                 <tr>
                                     <td style="font-size: 13px; color: #64748b; border-bottom: 1px solid #e2e8f0; font-weight: 600;">Program Magang</td>
@@ -171,22 +239,27 @@ class EmailQueue
                                     <td style="font-size: 13px; color: #0f172a;">{$submittedAt}</td>
                                 </tr>
                             </table>
-                            <div style="background-color: #eff6ff; border-left: 4px solid #0284c7; padding: 14px 16px; border-radius: 4px; margin-bottom: 24px;">
-                                <div style="font-size: 13px; font-weight: 700; color: #0369a1; margin-bottom: 4px;">Informasi Seleksi & Penempatan:</div>
-                                <div style="font-size: 13px; color: #0c4a6e; line-height: 1.5;">
-                                    Berkas dan formasi pilihan Anda akan diverifikasi oleh Biro Layanan Karir dan Alumni (BLKA) ITPLN serta unit tujuan. Perkembangan status dapat dipantau berkala melalui menu <strong>Status Pendaftaran</strong> di portal magang.
+                            <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #00a2b9; padding: 14px 16px; border-radius: 6px; margin-bottom: 22px;">
+                                <div style="font-size: 13px; font-weight: 700; color: #005082; margin-bottom: 4px;">Informasi Seleksi &amp; Penempatan:</div>
+                                <div style="font-size: 13px; color: #334155; line-height: 1.5;">
+                                    Berkas dan formasi pilihan Anda akan diverifikasi oleh Badan Layanan Karir Alumni (BLKA) ITPLN serta unit tujuan. Perkembangan status seleksi dapat Anda pantau secara berkala melalui halaman <strong>Riwayat &amp; Pengumuman</strong> di portal magang.
                                 </div>
                             </div>
-                            <p style="margin: 0; font-size: 13px; color: #64748b; line-height: 1.5;">
+                            <div style="text-align: center; margin: 24px 0 16px 0;">
+                                <a href="{$statusUrl}" class="email-btn" style="display: inline-block; background-color: #005082; color: #ffffff; text-decoration: none; padding: 11px 22px; font-size: 13px; font-weight: 700; border-radius: 6px;">
+                                    Pantau Status di Riwayat &amp; Pengumuman &rarr;
+                                </a>
+                            </div>
+                            <p style="margin: 0; font-size: 12px; color: #94a3b8; text-align: center; line-height: 1.5;">
                                 Simpan email ini sebagai tanda bukti resmi pendaftaran Anda.
                             </p>
                         </td>
                     </tr>
                     <tr>
-                        <td style="background-color: #f8fafc; padding: 20px 28px; text-align: center; border-top: 1px solid #e2e8f0; color: #94a3b8; font-size: 12px; line-height: 1.6;">
-                            <div><strong>Biro Layanan Karir dan Alumni (BLKA)</strong></div>
-                            <div>Institut Teknologi PLN • Menara PLN, Jl. Lingkar Luar Barat, Cengkareng, Jakarta Barat</div>
-                            <div style="margin-top: 8px; font-size: 11px;">Pesan ini dikirim secara otomatis oleh sistem REMATE ITPLN.</div>
+                        <td style="background-color: #f8fafc; padding: 20px 28px; text-align: center; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 12px; line-height: 1.6;">
+                            <div style="font-weight: 700; color: #334155;">Badan Layanan Karir Alumni (BLKA)</div>
+                            <div style="color: #64748b;">Institut Teknologi PLN • Menara PLN, Jl. Lingkar Luar Barat, Cengkareng, Jakarta Barat</div>
+                            <div style="margin-top: 6px; font-size: 11px; color: #94a3b8;">Pesan ini dikirim secara otomatis oleh sistem REMATE ITPLN.</div>
                         </td>
                     </tr>
                 </table>
@@ -231,31 +304,44 @@ HTML;
                 return false;
             }
 
-            $nama        = htmlspecialchars((string)($row['nama'] ?? 'Mahasiswa'));
-            $namaUnit    = htmlspecialchars((string)($row['nama_unit'] ?? '-'));
-            $namaPeriode = htmlspecialchars((string)($row['nama_periode'] ?? 'Periode Aktif'));
-            $periodeId   = (int)$row['periode_id'];
+            $nama          = htmlspecialchars((string)($row['nama'] ?? 'Mahasiswa'));
+            $namaUnit      = htmlspecialchars((string)($row['nama_unit'] ?? '-'));
+            $namaPeriode   = htmlspecialchars((string)($row['nama_periode'] ?? 'Periode Aktif'));
+            $periodeId     = (int)$row['periode_id'];
             $isPeriodeOpen = ($row['periode_status'] ?? '') === 'dibuka';
-            $catatanText = !empty($alasan) ? htmlspecialchars($alasan) : 'Formasi Anda belum memenuhi kebutuhan kami';
+            $catatanText   = !empty($alasan) ? htmlspecialchars($alasan) : 'Formasi Anda belum memenuhi kebutuhan kami';
+            $appUrl        = self::getAppUrl();
+            $daftarUrl     = htmlspecialchars($appUrl . '/daftar.html');
+            $statusUrl     = htmlspecialchars($appUrl . '/status.html');
 
             if ($isPeriodeOpen) {
-                $statusNoticeHtml = '
-                    <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
-                        <div style="font-size: 14px; font-weight: 700; color: #166534; margin-bottom: 6px;">Kesempatan Mendaftar Ulang:</div>
+                $statusNoticeHtml = <<<HTML
+                    <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-left: 4px solid #10b981; padding: 14px 16px; border-radius: 6px; margin-bottom: 22px;">
+                        <div style="font-size: 13px; font-weight: 700; color: #166534; margin-bottom: 4px;">Kesempatan Mendaftar Ulang:</div>
                         <div style="font-size: 13px; color: #14532d; line-height: 1.5;">
-                            Anda <strong>dapat memilih kembali unit pelaksana lain</strong> yang masih memiliki kuota tersedia selama periode pendaftaran masih dibuka. Silakan login ke portal magang dan lakukan pemilihan unit baru melalui menu pendaftaran.
+                            Anda <strong>dapat memilih kembali unit pelaksana lain</strong> yang masih memiliki kuota formasi selama masa pendaftaran masih dibuka. Silakan masuk ke portal magang untuk memilih unit baru.
                         </div>
                     </div>
-                ';
+                    <div style="text-align: center; margin: 24px 0 16px 0;">
+                        <a href="{$daftarUrl}" class="email-btn" style="display: inline-block; background-color: #0b3d6b; color: #ffffff; text-decoration: none; padding: 11px 22px; font-size: 13px; font-weight: 700; border-radius: 6px;">
+                            Pilih Unit Lain &amp; Daftar Ulang &rarr;
+                        </a>
+                    </div>
+HTML;
             } else {
-                $statusNoticeHtml = '
-                    <div style="background-color: #eff6ff; border: 1px solid #bfdbfe; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
-                        <div style="font-size: 14px; font-weight: 700; color: #1e40af; margin-bottom: 6px;">Informasi Pendaftaran:</div>
-                        <div style="font-size: 13px; color: #1e3a8a; line-height: 1.5;">
-                            Masa pendaftaran pada periode ini telah resmi ditutup dan sistem sedang memproses tahapan penetapan akhir. Perkembangan status seleksi dapat Anda pantau berkala melalui menu Status Pendaftaran di portal magang.
+                $statusNoticeHtml = <<<HTML
+                    <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #64748b; padding: 14px 16px; border-radius: 6px; margin-bottom: 22px;">
+                        <div style="font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 4px;">Informasi Pendaftaran:</div>
+                        <div style="font-size: 13px; color: #475569; line-height: 1.5;">
+                            Masa pendaftaran pada periode ini telah resmi ditutup. Terima kasih atas partisipasi dan dedikasi Anda. Perkembangan status dapat dipantau di halaman Riwayat &amp; Pengumuman.
                         </div>
                     </div>
-                ';
+                    <div style="text-align: center; margin: 24px 0 16px 0;">
+                        <a href="{$statusUrl}" class="email-btn" style="display: inline-block; background-color: #005082; color: #ffffff; text-decoration: none; padding: 11px 22px; font-size: 13px; font-weight: 700; border-radius: 6px;">
+                            Buka Riwayat &amp; Pengumuman &rarr;
+                        </a>
+                    </div>
+HTML;
             }
 
             $subject = "[REMATE ITPLN] Pembaruan Status Pendaftaran Magang - Formasi Belum Sesuai";
@@ -266,54 +352,109 @@ HTML;
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta name="supported-color-schemes" content="light">
     <title>{$subject}</title>
+    <!--[if mso]>
+    <style type="text/css">
+        body, table, td, p, a, span { font-family: Arial, sans-serif !important; }
+    </style>
+    <![endif]-->
+    <style type="text/css">
+        :root {
+            color-scheme: light;
+            supported-color-schemes: light;
+        }
+        body, table, td, p, a, span {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+        }
+        @media (prefers-color-scheme: dark) {
+            body, .email-canvas {
+                background-color: #f1f5f9 !important;
+            }
+            .email-card {
+                background-color: #ffffff !important;
+                border-color: #e2e8f0 !important;
+            }
+            .email-header {
+                background-color: #0b192c !important;
+            }
+            .email-header-top {
+                color: #94a3b8 !important;
+            }
+            .email-header-title {
+                color: #ffffff !important;
+            }
+            .email-header-sub {
+                color: #00a2b9 !important;
+            }
+            .email-body-text {
+                color: #0f172a !important;
+            }
+            .email-muted-text {
+                color: #475569 !important;
+            }
+            .email-table-bg {
+                background-color: #f8fafc !important;
+                border-color: #e2e8f0 !important;
+            }
+            .email-btn {
+                background-color: #005082 !important;
+                color: #ffffff !important;
+            }
+        }
+    </style>
 </head>
-<body style="margin: 0; padding: 24px 0; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b;">
+<body class="email-canvas" style="margin: 0; padding: 32px 0; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #0f172a;">
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
         <tr>
             <td align="center" style="padding: 0 16px;">
-                <table role="presentation" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0;" cellspacing="0" cellpadding="0" border="0">
+                <table role="presentation" width="100%" class="email-card" style="max-width: 580px; background-color: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0;" cellspacing="0" cellpadding="0" border="0">
                     <tr>
-                        <td style="background: linear-gradient(135deg, #b91c1c 0%, #dc2626 100%); padding: 32px 28px; text-align: left; color: #ffffff;">
-                            <div style="font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #fecaca; margin-bottom: 6px;">
+                        <td class="email-header" style="background-color: #0b192c; padding: 28px 28px 24px 28px; text-align: left; border-bottom: 3px solid #00a2b9;">
+                            <div class="email-header-top" style="font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: #94a3b8; margin-bottom: 6px;">
                                 Institut Teknologi PLN • BLKA
                             </div>
-                            <h1 style="margin: 0; font-size: 22px; font-weight: 800; line-height: 1.3;">
-                                Pemberitahuan Status Pendaftaran Magang
+                            <h1 class="email-header-title" style="margin: 0; font-size: 20px; font-weight: 800; line-height: 1.3; color: #ffffff;">
+                                Pemberitahuan Status Pendaftaran
                             </h1>
-                            <div style="margin-top: 10px; font-size: 14px; opacity: 0.9;">
+                            <div class="email-header-sub" style="margin-top: 6px; font-size: 13px; font-weight: 600; color: #00a2b9;">
                                 {$namaPeriode}
                             </div>
                         </td>
                     </tr>
                     <tr>
-                        <td style="padding: 28px;">
-                            <p style="margin: 0 0 16px 0; font-size: 15px; line-height: 1.6;">
+                        <td style="padding: 28px; background-color: #ffffff;">
+                            <p class="email-body-text" style="margin: 0 0 14px 0; font-size: 15px; line-height: 1.6; color: #0f172a;">
                                 Halo <strong>{$nama}</strong>,
                             </p>
-                            <p style="margin: 0 0 20px 0; font-size: 14px; line-height: 1.6; color: #475569;">
-                                Terima kasih atas partisipasi Anda dalam program magang {$namaPeriode}. Berdasarkan hasil seleksi berkas dan penyesuaian formasi kuota pada unit <strong>{$namaUnit}</strong>, kami informasikan bahwa pendaftaran Anda pada unit tersebut <strong>belum dapat disetujui</strong>.
+                            <p class="email-muted-text" style="margin: 0 0 20px 0; font-size: 14px; line-height: 1.6; color: #475569;">
+                                Terima kasih atas partisipasi Anda dalam program magang {$namaPeriode}. Berdasarkan hasil verifikasi berkas dan penyesuaian kuota formasi pada unit <strong>{$namaUnit}</strong>, kami informasikan bahwa pengajuan Anda pada unit tersebut <strong>belum dapat disetujui</strong>.
                             </p>
 
-                            <div style="background-color: #fff1f2; border-left: 4px solid #e11d48; padding: 16px; border-radius: 4px; margin-bottom: 24px;">
-                                <div style="font-size: 13px; font-weight: 700; color: #9f1239; margin-bottom: 4px;">Catatan Tim Verifikator / Admin:</div>
-                                <div style="font-size: 14px; color: #881337; line-height: 1.5; font-style: italic;">
+                            <div style="background-color: #fff5f5; border: 1px solid #fecaca; border-left: 4px solid #ef4444; padding: 14px 16px; border-radius: 6px; margin-bottom: 22px;">
+                                <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #991b1b; margin-bottom: 4px;">Catatan Verifikator:</div>
+                                <div style="font-size: 14px; font-weight: 600; color: #7f1d1d; line-height: 1.5;">
                                     "{$catatanText}"
                                 </div>
                             </div>
 
                             {$statusNoticeHtml}
 
-                            <p style="margin: 0; font-size: 13px; color: #64748b; line-height: 1.5;">
-                                Kunjungi portal magang: <a href="https://magang.itpln.ac.id" style="color: #005596; font-weight: 600;">magang.itpln.ac.id</a>
-                            </p>
+                            <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid #f1f5f9; text-align: center;">
+                                <p style="margin: 0; font-size: 12px; color: #94a3b8; line-height: 1.5;">
+                                    Portal Resmi: <a href="{$appUrl}" style="color: #005082; font-weight: 600; text-decoration: none;">{$appUrl}</a>
+                                </p>
+                            </div>
                         </td>
                     </tr>
                     <tr>
-                        <td style="background-color: #f8fafc; padding: 20px 28px; text-align: center; border-top: 1px solid #e2e8f0; color: #94a3b8; font-size: 12px; line-height: 1.6;">
-                            <div><strong>Biro Layanan Karir dan Alumni (BLKA)</strong></div>
-                            <div>Institut Teknologi PLN • Menara PLN, Jl. Lingkar Luar Barat, Cengkareng, Jakarta Barat</div>
-                            <div style="margin-top: 8px; font-size: 11px;">Pesan ini dikirim secara otomatis oleh sistem REMATE ITPLN.</div>
+                        <td style="background-color: #f8fafc; padding: 20px 28px; text-align: center; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 12px; line-height: 1.6;">
+                            <div style="font-weight: 700; color: #334155;">Badan Layanan Karir Alumni (BLKA)</div>
+                            <div style="color: #64748b;">Institut Teknologi PLN • Menara PLN, Jl. Lingkar Luar Barat, Cengkareng, Jakarta Barat</div>
+                            <div style="margin-top: 6px; font-size: 11px; color: #94a3b8;">Pesan ini dikirim secara otomatis oleh sistem REMATE ITPLN.</div>
                         </td>
                     </tr>
                 </table>
@@ -418,6 +559,9 @@ HTML;
 
                 $isUpdateEmail = $isChanged;
 
+                $appUrl   = self::getAppUrl();
+                $statusUrl = htmlspecialchars($appUrl . '/status.html');
+
                 // Cari narahubung PIC jika diterima/dipindahkan
                 $picInfo = '';
                 if ($status === 'diterima' || $isDipindah) {
@@ -425,15 +569,15 @@ HTML;
                     if ($picData) {
                         $picNama = htmlspecialchars((string)($picData['nama_pic'] ?? '-'));
                         $picArea = htmlspecialchars((string)($picData['area_hcbp'] ?? ''));
+                        $picAreaStr = $picArea ? " ({$picArea})" : "";
                         $picWa   = htmlspecialchars((string)($picData['no_wa'] ?? '-'));
-                        $picMail = !empty($picData['email']) ? "<br>Email: " . htmlspecialchars((string)$picData['email']) : "";
 
                         $picInfo = "
-                            <div style='background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 20px 0;'>
-                                <div style='font-size: 13px; font-weight: 700; color: #005596; margin-bottom: 6px;'>Kontak PIC Narahubung Unit:</div>
-                                <div style='font-size: 13px; color: #334155; line-height: 1.6;'>
-                                    <strong>{$picNama}</strong>" . ($picArea ? " ({$picArea})" : "") . "<br>
-                                    WhatsApp: {$picWa}{$picMail}
+                            <div style='background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 14px 16px; margin: 20px 0;'>
+                                <div style='font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #005082; margin-bottom: 4px;'>Kontak PIC Narahubung Unit:</div>
+                                <div style='font-size: 13px; color: #334155; line-height: 1.5;'>
+                                    <strong>{$picNama}</strong>{$picAreaStr}<br>
+                                    WhatsApp: {$picWa}
                                 </div>
                             </div>
                         ";
@@ -444,10 +588,10 @@ HTML;
                 $updateNotice = '';
                 if ($isUpdateEmail) {
                     $updateNotice = "
-                        <div style='background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 14px 16px; border-radius: 4px; margin-bottom: 20px;'>
+                        <div style='background-color: #fffbeb; border: 1px solid #fde68a; border-left: 4px solid #f59e0b; padding: 14px 16px; border-radius: 6px; margin-bottom: 20px;'>
                             <div style='font-size: 13px; font-weight: 700; color: #92400e; margin-bottom: 4px;'>Pemberitahuan Pembaruan Pengumuman:</div>
                             <div style='font-size: 13px; color: #78350f; line-height: 1.5;'>
-                                Email ini merupakan pembaruan resmi atas pengumuman sebelumnya setelah dilakukan evaluasi & penyesuaian formasi kuota oleh BLKA ITPLN. Rincian di bawah adalah penetapan final yang berlaku.
+                                Email ini merupakan pembaruan resmi atas hasil seleksi sebelumnya setelah evaluasi penyesuaian kuota oleh Badan Layanan Karir Alumni (BLKA) ITPLN. Rincian di bawah adalah penetapan final yang berlaku.
                             </div>
                         </div>
                     ";
@@ -458,13 +602,41 @@ HTML;
                     $subjectPrefix = $isUpdateEmail ? "[Pembaruan Resmi] " : "";
                     $subject = "{$subjectPrefix}[REMATE ITPLN] Pengumuman Hasil Seleksi Magang - Diterima";
                     $pembuka = $isDipindah
-                        ? "Selamat, pendaftaran magang Anda telah diproses. Berdasarkan koordinasi dan penyesuaian formasi, Anda ditempatkan pada <strong>{$namaUnit}</strong> (dialihkan dari formasi awal {$namaAsal})."
-                        : "Selamat! Berdasarkan hasil seleksi berkas dan kuota unit, Anda dinyatakan <strong>DITERIMA</strong> untuk melaksanakan magang di <strong>{$namaUnit}</strong>.";
+                        ? "Selamat, pendaftaran magang Anda telah diproses. Berdasarkan koordinasi dan penyesuaian formasi kuota, Anda ditetapkan pada unit <strong>{$namaUnit}</strong> (dialihkan dari formasi awal {$namaAsal})."
+                        : "Selamat! Berdasarkan hasil seleksi berkas dan ketersediaan kuota, Anda dinyatakan <strong>DITERIMA</strong> untuk melaksanakan magang di <strong>{$namaUnit}</strong>.";
+
+                    $actionSection = <<<HTML
+                        <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-left: 4px solid #10b981; padding: 14px 16px; border-radius: 6px; margin-bottom: 22px;">
+                            <div style="font-size: 13px; font-weight: 700; color: #166534; margin-bottom: 4px;">Instruksi Pengunduhan Berkas:</div>
+                            <div style="font-size: 13px; color: #14532d; line-height: 1.5;">
+                                Silakan login ke portal resmi REMATE ITPLN untuk mengunduh <strong>Surat Pengantar Magang</strong> resmi Anda pada halaman <strong>Riwayat &amp; Pengumuman</strong>.
+                            </div>
+                        </div>
+                        <div style="text-align: center; margin: 24px 0 16px 0;">
+                            <a href="{$statusUrl}" class="email-btn" style="display: inline-block; background-color: #005082; color: #ffffff; text-decoration: none; padding: 12px 24px; font-size: 13px; font-weight: 700; border-radius: 6px;">
+                                Login &amp; Unduh Surat Pengantar &rarr;
+                            </a>
+                        </div>
+HTML;
                 } else {
                     $headline = $isUpdateEmail ? "Pembaruan Hasil Seleksi Magang" : "Pengumuman Hasil Seleksi Magang";
                     $subjectPrefix = $isUpdateEmail ? "[Pembaruan Resmi] " : "";
                     $subject = "{$subjectPrefix}[REMATE ITPLN] Pengumuman Hasil Seleksi Magang";
                     $pembuka = "Terima kasih atas partisipasi Anda dalam program magang {$namaPeriode}. Berdasarkan hasil seleksi berkas dan kuota penempatan, formasi Anda belum memenuhi kebutuhan kami.";
+
+                    $actionSection = <<<HTML
+                        <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #64748b; padding: 14px 16px; border-radius: 6px; margin-bottom: 22px;">
+                            <div style="font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 4px;">Informasi Pendaftaran:</div>
+                            <div style="font-size: 13px; color: #475569; line-height: 1.5;">
+                                Terima kasih atas partisipasi dan dedikasi Anda. Seluruh riwayat pendaftaran dapat dipantau di halaman Riwayat &amp; Pengumuman.
+                            </div>
+                        </div>
+                        <div style="text-align: center; margin: 24px 0 16px 0;">
+                            <a href="{$statusUrl}" class="email-btn" style="display: inline-block; background-color: #005082; color: #ffffff; text-decoration: none; padding: 11px 22px; font-size: 13px; font-weight: 700; border-radius: 6px;">
+                                Buka Riwayat &amp; Pengumuman &rarr;
+                            </a>
+                        </div>
+HTML;
                 }
 
                 $bodyHtml = <<<HTML
@@ -473,49 +645,103 @@ HTML;
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta name="supported-color-schemes" content="light">
     <title>{$subject}</title>
+    <!--[if mso]>
+    <style type="text/css">
+        body, table, td, p, a, span { font-family: Arial, sans-serif !important; }
+    </style>
+    <![endif]-->
+    <style type="text/css">
+        :root {
+            color-scheme: light;
+            supported-color-schemes: light;
+        }
+        body, table, td, p, a, span {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+        }
+        @media (prefers-color-scheme: dark) {
+            body, .email-canvas {
+                background-color: #f1f5f9 !important;
+            }
+            .email-card {
+                background-color: #ffffff !important;
+                border-color: #e2e8f0 !important;
+            }
+            .email-header {
+                background-color: #0b192c !important;
+            }
+            .email-header-top {
+                color: #94a3b8 !important;
+            }
+            .email-header-title {
+                color: #ffffff !important;
+            }
+            .email-header-sub {
+                color: #00a2b9 !important;
+            }
+            .email-body-text {
+                color: #0f172a !important;
+            }
+            .email-muted-text {
+                color: #475569 !important;
+            }
+            .email-table-bg {
+                background-color: #f8fafc !important;
+                border-color: #e2e8f0 !important;
+            }
+            .email-btn {
+                background-color: #005082 !important;
+                color: #ffffff !important;
+            }
+        }
+    </style>
 </head>
-<body style="margin: 0; padding: 24px 0; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b;">
+<body class="email-canvas" style="margin: 0; padding: 32px 0; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #0f172a;">
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
         <tr>
             <td align="center" style="padding: 0 16px;">
-                <table role="presentation" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0;" cellspacing="0" cellpadding="0" border="0">
+                <table role="presentation" width="100%" class="email-card" style="max-width: 580px; background-color: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0;" cellspacing="0" cellpadding="0" border="0">
                     <tr>
-                        <td style="background: linear-gradient(135deg, #005596 0%, #0284c7 100%); padding: 32px 28px; text-align: left; color: #ffffff;">
-                            <div style="font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #93c5fd; margin-bottom: 6px;">
+                        <td class="email-header" style="background-color: #0b192c; padding: 28px 28px 24px 28px; text-align: left; border-bottom: 3px solid #00a2b9;">
+                            <div class="email-header-top" style="font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: #94a3b8; margin-bottom: 6px;">
                                 Institut Teknologi PLN • BLKA
                             </div>
-                            <h1 style="margin: 0; font-size: 22px; font-weight: 800; line-height: 1.3;">
+                            <h1 class="email-header-title" style="margin: 0; font-size: 20px; font-weight: 800; line-height: 1.3; color: #ffffff;">
                                 {$headline}
                             </h1>
-                            <div style="margin-top: 10px; font-size: 14px; opacity: 0.9;">
+                            <div class="email-header-sub" style="margin-top: 6px; font-size: 13px; font-weight: 600; color: #00a2b9;">
                                 {$namaPeriode}
                             </div>
                         </td>
                     </tr>
                     <tr>
-                        <td style="padding: 28px;">
+                        <td style="padding: 28px; background-color: #ffffff;">
                             {$updateNotice}
-                            <p style="margin: 0 0 16px 0; font-size: 15px; line-height: 1.6;">
+                            <p class="email-body-text" style="margin: 0 0 14px 0; font-size: 15px; line-height: 1.6; color: #0f172a;">
                                 Halo <strong>{$nama}</strong>,
                             </p>
-                            <p style="margin: 0 0 20px 0; font-size: 14px; line-height: 1.6; color: #475569;">
+                            <p class="email-muted-text" style="margin: 0 0 20px 0; font-size: 14px; line-height: 1.6; color: #475569;">
                                 {$pembuka}
                             </p>
                             {$picInfo}
-                            <div style="background-color: #eff6ff; border-left: 4px solid #0284c7; padding: 14px 16px; border-radius: 4px; margin-bottom: 24px;">
-                                <div style="font-size: 13px; font-weight: 700; color: #0369a1; margin-bottom: 4px;">Instruksi Lebih Lanjut:</div>
-                                <div style="font-size: 13px; color: #0c4a6e; line-height: 1.5;">
-                                    Silakan login ke portal resmi <a href="https://magang.itpln.ac.id" style="color: #0284c7; font-weight: 700;">magang.itpln.ac.id</a> untuk mengunduh Surat Pengantar Magang dan melihat detail jadwal pelaksanaan.
-                                </div>
+                            {$actionSection}
+
+                            <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid #f1f5f9; text-align: center;">
+                                <p style="margin: 0; font-size: 12px; color: #94a3b8; line-height: 1.5;">
+                                    Portal Resmi: <a href="{$appUrl}" style="color: #005082; font-weight: 600; text-decoration: none;">{$appUrl}</a>
+                                </p>
                             </div>
                         </td>
                     </tr>
                     <tr>
-                        <td style="background-color: #f8fafc; padding: 20px 28px; text-align: center; border-top: 1px solid #e2e8f0; color: #94a3b8; font-size: 12px; line-height: 1.6;">
-                            <div><strong>Biro Layanan Karir dan Alumni (BLKA)</strong></div>
-                            <div>Institut Teknologi PLN • Menara PLN, Jl. Lingkar Luar Barat, Cengkareng, Jakarta Barat</div>
-                            <div style="margin-top: 8px; font-size: 11px;">Pesan ini dikirim secara otomatis oleh sistem REMATE ITPLN.</div>
+                        <td style="background-color: #f8fafc; padding: 20px 28px; text-align: center; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 12px; line-height: 1.6;">
+                            <div style="font-weight: 700; color: #334155;">Badan Layanan Karir Alumni (BLKA)</div>
+                            <div style="color: #64748b;">Institut Teknologi PLN • Menara PLN, Jl. Lingkar Luar Barat, Cengkareng, Jakarta Barat</div>
+                            <div style="margin-top: 6px; font-size: 11px; color: #94a3b8;">Pesan ini dikirim secara otomatis oleh sistem REMATE ITPLN.</div>
                         </td>
                     </tr>
                 </table>
