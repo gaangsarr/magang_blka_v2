@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Rekapitulasi Penempatan Magang — ITPLN x PLN Group</title>
+    <title>Rekapitulasi Penempatan Magang : ITPLN x PLN Group</title>
     
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/assets/img/logo_itpln.png">
@@ -16,16 +16,16 @@
     
     <style>
         :root {
-            --primary: #0b3d6b;
-            --primary-dark: #072744;
-            --primary-light: #1e5a96;
-            --surface-bg: #f8fafc;
-            --card-bg: #ffffff;
-            --text-main: #0f172a;
-            --text-muted: #64748b;
-            --border-color: #e2e8f0;
+            --primary: #0B192C;
+            --primary-dark: #060e18;
+            --primary-light: #00A2B9;
+            --surface-bg: #F8FAFC;
+            --card-bg: #FFFFFF;
+            --text-main: #0F172A;
+            --text-muted: #64748B;
+            --border-color: #E2E8F0;
             --radius-md: 10px;
-            --radius-lg: 14px;
+            --radius-lg: 16px;
             --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
             --font-mono: 'IBM Plex Mono', monospace;
         }
@@ -41,6 +41,7 @@
             background-color: var(--surface-bg);
             color: var(--text-main);
             min-height: 100vh;
+            min-height: 100dvh;
             display: flex;
             flex-direction: column;
             line-height: 1.5;
@@ -49,13 +50,13 @@
 
         /* --- Clean Navbar --- */
         .public-navbar {
-            background: #ffffff;
-            border-bottom: 1px solid var(--border-color);
+            background: #0B192C;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
             padding: 14px 20px;
             position: sticky;
             top: 0;
             z-index: 50;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+            box-shadow: 0 4px 12px rgba(11, 25, 44, 0.15);
         }
 
         .navbar-inner {
@@ -73,26 +74,29 @@
             align-items: center;
             gap: 12px;
             text-decoration: none;
-            color: var(--text-main);
+            color: #FFFFFF;
         }
 
         .navbar-logo {
-            height: 36px;
+            height: 38px;
             width: auto;
             object-fit: contain;
+            background: #ffffff;
+            border-radius: 6px;
+            padding: 2px 4px;
         }
 
         .brand-text h1 {
             font-size: 1.05rem;
             font-weight: 800;
-            color: var(--primary);
+            color: #FFFFFF;
             margin: 0;
             letter-spacing: -0.2px;
         }
 
         .brand-text p {
             font-size: 0.75rem;
-            color: var(--text-muted);
+            color: #94A3B8;
             font-weight: 500;
             margin: 0;
         }
@@ -107,20 +111,20 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            background: #eff6ff;
-            color: #1d4ed8;
+            background: rgba(0, 162, 185, 0.15);
+            color: #38BDF8;
             font-weight: 700;
             font-size: 0.8rem;
             padding: 6px 12px;
             border-radius: 8px;
-            border: 1px solid #bfdbfe;
+            border: 1px solid rgba(0, 162, 185, 0.35);
         }
 
         /* --- Main Layout --- */
         .main-wrapper {
             max-width: 1280px;
             width: 100%;
-            margin: 20px auto 40px auto;
+            margin: 24px auto 40px auto;
             padding: 0 16px;
             flex: 1;
         }
@@ -130,7 +134,7 @@
             background: var(--card-bg);
             border-radius: var(--radius-lg);
             border: 1px solid var(--border-color);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            box-shadow: 0 4px 20px rgba(11, 25, 44, 0.04);
             overflow: hidden;
         }
 
@@ -138,7 +142,7 @@
         .filter-panel {
             padding: 18px 20px;
             border-bottom: 1px solid var(--border-color);
-            background: #fafbfc;
+            background: #FAFCFE;
         }
 
         .filter-header-row {
@@ -146,14 +150,14 @@
             justify-content: space-between;
             align-items: center;
             gap: 12px;
-            margin-bottom: 14px;
+            margin-bottom: 16px;
             flex-wrap: wrap;
         }
 
         .filter-title {
             font-size: 1.05rem;
             font-weight: 800;
-            color: #0f172a;
+            color: var(--primary);
             display: flex;
             align-items: center;
             gap: 8px;
@@ -162,18 +166,19 @@
         .btn-export {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
             background: #047857;
             color: #ffffff;
-            font-size: 0.825rem;
+            font-size: 0.85rem;
             font-weight: 700;
-            padding: 8px 14px;
-            border-radius: 8px;
+            padding: 10px 18px;
+            border-radius: 10px;
             text-decoration: none;
             box-shadow: 0 2px 4px rgba(4, 120, 87, 0.15);
             transition: all 0.2s;
             border: none;
             cursor: pointer;
+            min-height: 44px;
         }
 
         .btn-export:hover {
@@ -183,7 +188,7 @@
         .filter-controls-grid {
             display: grid;
             grid-template-columns: 2fr 1.2fr 1.2fr 1fr;
-            gap: 10px;
+            gap: 12px;
             align-items: center;
         }
 
@@ -193,7 +198,7 @@
 
         .search-icon {
             position: absolute;
-            left: 12px;
+            left: 14px;
             top: 50%;
             transform: translateY(-50%);
             color: var(--text-muted);
@@ -202,26 +207,27 @@
 
         .input-control, .select-control {
             width: 100%;
-            height: 38px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 0.85rem;
+            height: 44px;
+            min-height: 44px;
+            border: 1.5px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 0.875rem;
             font-family: inherit;
             color: var(--text-main);
             background-color: #ffffff;
-            padding: 0 12px;
+            padding: 0 14px;
             outline: none;
             transition: border-color 0.15s, box-shadow 0.15s;
         }
 
         .input-control:focus, .select-control:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(11, 61, 107, 0.1);
+            border-color: #00A2B9;
+            box-shadow: 0 0 0 3px rgba(0, 162, 185, 0.15);
         }
 
         .search-control {
-            padding-left: 36px;
-            padding-right: 32px;
+            padding-left: 38px;
+            padding-right: 34px;
         }
 
         .clear-search-btn {
@@ -231,12 +237,12 @@
             transform: translateY(-50%);
             background: none;
             border: none;
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             color: var(--text-muted);
             cursor: pointer;
             display: none;
             line-height: 1;
-            padding: 4px;
+            padding: 6px;
         }
 
         .clear-search-btn:hover {
@@ -258,14 +264,14 @@
         }
 
         .penempatan-table thead {
-            background-color: #f1f5f9;
-            border-bottom: 2px solid var(--border-color);
+            background-color: #F8FAFC;
+            border-bottom: 1.5px solid var(--border-color);
         }
 
         .penempatan-table th {
-            padding: 12px 14px;
+            padding: 13px 16px;
             font-weight: 700;
-            color: #334155;
+            color: #475569;
             font-size: 0.775rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -273,14 +279,14 @@
         }
 
         .penempatan-table td {
-            padding: 12px 14px;
-            border-bottom: 1px solid var(--border-color);
+            padding: 14px 16px;
+            border-bottom: 1px solid #F1F5F9;
             vertical-align: middle;
             color: var(--text-main);
         }
 
-        .penempatan-table tbody tr:hover {
-            background-color: #f8fafc;
+        .penempatan-table tbody tr:hover td {
+            background-color: #FAFCFE;
         }
 
         .penempatan-table tbody tr:last-child td {
@@ -289,31 +295,35 @@
 
         .badge-nim {
             font-family: var(--font-mono);
-            font-weight: 600;
-            background: #f1f5f9;
+            font-variant-numeric: tabular-nums;
+            font-weight: 700;
+            background: #F1F5F9;
             color: #334155;
-            padding: 2px 6px;
-            border-radius: 4px;
+            padding: 3px 8px;
+            border-radius: 6px;
             font-size: 0.8rem;
+            display: inline-block;
         }
 
         .badge-prog {
             display: inline-block;
             font-size: 0.75rem;
             font-weight: 700;
-            padding: 2px 8px;
-            border-radius: 6px;
+            padding: 3px 10px;
+            border-radius: 9999px;
             white-space: nowrap;
         }
 
         .badge-prog-1 {
-            background: #e0f2fe;
-            color: #0369a1;
+            background: #ECFDF5;
+            color: #047857;
+            border: 1px solid #A7F3D0;
         }
 
         .badge-prog-5 {
-            background: #dbeafe;
-            color: #1d4ed8;
+            background: #EFF6FF;
+            color: #1D4ED8;
+            border: 1px solid #BFDBFE;
         }
 
         .unit-name-text {
@@ -327,14 +337,14 @@
             justify-content: space-between;
             align-items: center;
             padding: 14px 20px;
-            background: #fafbfc;
+            background: #FAFCFE;
             border-top: 1px solid var(--border-color);
             flex-wrap: wrap;
             gap: 12px;
         }
 
         .page-info-text {
-            font-size: 0.825rem;
+            font-size: 0.85rem;
             color: var(--text-muted);
             font-weight: 500;
         }
@@ -346,18 +356,19 @@
         }
 
         .btn-page-nav {
-            padding: 6px 12px;
-            font-size: 0.8rem;
-            font-weight: 600;
+            padding: 8px 14px;
+            font-size: 0.825rem;
+            font-weight: 700;
             background: #ffffff;
             color: var(--text-main);
             border: 1px solid var(--border-color);
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
             transition: all 0.15s;
             display: inline-flex;
             align-items: center;
             gap: 4px;
+            min-height: 40px;
         }
 
         .btn-page-nav:hover:not(:disabled) {
@@ -371,27 +382,27 @@
         }
 
         .page-current-badge {
-            font-size: 0.8rem;
+            font-size: 0.825rem;
             font-weight: 700;
             color: var(--primary);
-            padding: 0 6px;
+            padding: 0 8px;
         }
 
         /* --- Error / No Token State --- */
         .error-state-card {
             background: #ffffff;
             border-radius: var(--radius-lg);
-            padding: 60px 24px;
+            padding: 56px 24px;
             text-align: center;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 20px rgba(11, 25, 44, 0.05);
             border: 1px solid var(--border-color);
             max-width: 540px;
             margin: 40px auto;
         }
 
         .error-icon-circle {
-            width: 60px;
-            height: 60px;
+            width: 56px;
+            height: 56px;
             border-radius: 50%;
             background: #fee2e2;
             color: #dc2626;
@@ -407,12 +418,12 @@
             border-top: 1px solid var(--border-color);
             padding: 16px 20px;
             text-align: center;
-            font-size: 0.775rem;
+            font-size: 0.8rem;
             color: var(--text-muted);
             margin-top: auto;
         }
 
-        /* --- Responsiveness --- */
+        /* --- Responsiveness & Mobile Table-to-Card --- */
         @media (max-width: 860px) {
             .filter-controls-grid {
                 grid-template-columns: 1fr 1fr;
@@ -422,7 +433,7 @@
             }
         }
 
-        @media (max-width: 600px) {
+        @media (max-width: 640px) {
             .filter-controls-grid {
                 grid-template-columns: 1fr;
             }
@@ -438,6 +449,58 @@
                 flex-direction: column;
                 text-align: center;
             }
+            .input-control, .select-control {
+                font-size: 16px !important; /* Prevents auto zoom in iOS Safari */
+            }
+
+            /* Card transformation for table */
+            .table-responsive {
+                overflow: visible;
+                background: transparent;
+                padding: 12px;
+            }
+            .penempatan-table, .penempatan-table thead, .penempatan-table tbody, .penempatan-table tr, .penempatan-table td {
+                display: block;
+                width: 100%;
+                box-sizing: border-box;
+            }
+            .penempatan-table thead {
+                display: none;
+            }
+            .penempatan-table tbody tr {
+                margin-bottom: 14px;
+                border: 1.5px solid #E2E8F0;
+                border-radius: 14px;
+                padding: 14px 16px;
+                background: #FFFFFF;
+                box-shadow: 0 2px 6px rgba(11, 25, 44, 0.04);
+            }
+            .penempatan-table td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border-bottom: 1px solid #F1F5F9;
+                padding: 10px 0;
+                text-align: right;
+                gap: 12px;
+            }
+            .penempatan-table td[data-label="No"] {
+                display: none;
+            }
+            .penempatan-table td:last-child {
+                border-bottom: none;
+            }
+            .penempatan-table td::before {
+                content: attr(data-label);
+                font-weight: 700;
+                color: #64748B;
+                text-align: left;
+                flex-shrink: 0;
+                max-width: 42%;
+                font-size: 0.775rem;
+                text-transform: uppercase;
+                letter-spacing: 0.03em;
+            }
         }
     </style>
 </head>
@@ -450,7 +513,7 @@
                 <img src="/assets/img/logo_itpln.png" alt="Logo ITPLN" class="navbar-logo" onerror="this.style.display='none'">
                 <div class="brand-text">
                     <h1>Rekapitulasi Penempatan Magang</h1>
-                    <p>Bagian Layanan Karir dan Alumni (BLKA) — Institut Teknologi PLN</p>
+                    <p>Bagian Layanan Karir dan Alumni (BLKA), Institut Teknologi PLN</p>
                 </div>
             </a>
 
@@ -560,7 +623,7 @@
 
     <!-- Footer -->
     <footer class="public-site-footer">
-        <div>&copy; 2026 Bagian Layanan Karir dan Alumni (BLKA) — Institut Teknologi PLN</div>
+        <div>&copy; 2026 Bagian Layanan Karir dan Alumni (BLKA), Institut Teknologi PLN</div>
     </footer>
 
     <!-- Client Script -->
@@ -667,7 +730,7 @@
                     if (navText) {
                         navText.innerText = `${data.periode.nama} (${data.periode.tahun_akademik || '2026/2027'})`;
                     }
-                    document.title = `Rekapitulasi Penempatan — ${data.periode.nama}`;
+                    document.title = `Rekapitulasi Penempatan : ${data.periode.nama}`;
                 }
 
                 // Populate Dropdown Filters on initial load
@@ -737,13 +800,13 @@
 
                 html += `
                     <tr>
-                        <td style="text-align: center; font-weight: 600; color: #64748b;">${noUrut}</td>
-                        <td><span class="badge-nim">${escapeHtml(row.nim || '-')}</span></td>
-                        <td><strong style="color: #0f172a;">${escapeHtml(row.nama || '-')}</strong></td>
-                        <td style="color: #475569;">${escapeHtml(row.prodi || '-')}</td>
-                        <td style="text-align: center;">${progBadge}</td>
-                        <td><span class="unit-name-text">${escapeHtml(row.unit_penempatan || '-')}</span></td>
-                        <td style="color: #475569; font-size: 0.825rem;">${escapeHtml(row.peminatan || '-')}</td>
+                        <td data-label="No" style="text-align: center; font-weight: 600; color: #64748b;">${noUrut}</td>
+                        <td data-label="NIM"><span class="badge-nim tabular-nums">${escapeHtml(row.nim || '-')}</span></td>
+                        <td data-label="Nama Mahasiswa"><strong style="color: #0F172A;">${escapeHtml(row.nama || '-')}</strong></td>
+                        <td data-label="Program Studi" style="color: #475569;">${escapeHtml(row.prodi || '-')}</td>
+                        <td data-label="Program" style="text-align: center;">${progBadge}</td>
+                        <td data-label="Unit Penempatan"><span class="unit-name-text">${escapeHtml(row.unit_penempatan || '-')}</span></td>
+                        <td data-label="Peminatan" style="color: #475569; font-size: 0.825rem;">${escapeHtml(row.peminatan || '-')}</td>
                     </tr>
                 `;
             });

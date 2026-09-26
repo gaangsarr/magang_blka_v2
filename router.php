@@ -77,6 +77,14 @@ if (is_file($publicPath)) {
 
     $mime = $mimes[$ext] ?? 'application/octet-stream';
     header('Content-Type: ' . $mime);
+
+    // Cloudflare Tunnel & Browser Edge Cache
+    if (in_array($ext, ['css', 'js', 'mjs', 'png', 'jpg', 'jpeg', 'gif', 'svg', 'ico', 'webp', 'woff', 'woff2', 'ttf', 'otf'])) {
+        header('Cache-Control: public, max-age=3600');
+    } else {
+        header('Cache-Control: no-cache, must-revalidate');
+    }
+
     readfile($publicPath);
     return true;
 }

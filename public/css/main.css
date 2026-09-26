@@ -8,14 +8,31 @@
 
 /* --- Custom Properties (Design Tokens) --- */
 :root {
-  /* Color Palette — from uiux-magang-itpln.md */
-  --clr-kertas: #F7F8FA;
-  --clr-tinta: #161C26;
+  /* Color Palette — from DESIGN.md (PLN Enterprise) */
+  --color-brand-navy: #0B192C;
+  --color-brand-cyan: #00A2B9;
+  --color-brand-cyan-hover: #008C9E;
+  --color-brand-blue: #005082;
+  --color-canvas-bg: #F8FAFC;
+  --color-surface-white: #FFFFFF;
+  --color-border-subtle: #E2E8F0;
+  --color-border-strong: #CBD5E1;
+  --color-text-main: #0F172A;
+  --color-text-muted: #64748B;
+  --color-text-light: #94A3B8;
+  --color-state-success: #10B981;
+  --color-state-warning: #F59E0B;
+  --color-state-danger: #EF4444;
+  --color-state-info: #0284C7;
+
+  /* Legacy aliases for backwards compatibility */
+  --clr-kertas: #F8FAFC;
+  --clr-tinta: #0F172A;
   --clr-biru-grid: #0B3D6B;
-  --clr-kuning-sinyal: #C97A0A;
-  --clr-hijau-tersedia: #1F6B4E;
-  --clr-abu-garis: #CBD1D9;
-  --clr-merah-error: #A32A1F;
+  --clr-kuning-sinyal: #F59E0B;
+  --clr-hijau-tersedia: #10B981;
+  --clr-abu-garis: #E2E8F0;
+  --clr-merah-error: #EF4444;
   --clr-putih: #FFFFFF;
 
   /* Typography */
@@ -25,8 +42,8 @@
   --font-mono: 'IBM Plex Mono', monospace;
 
   /* Sizing & Radius */
-  --radius-sm: 4px;
-  --radius-md: 8px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
   --radius-lg: 16px;
 
   /* Spacing */
@@ -676,21 +693,39 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Responsive adjustments */
 @media (max-width: 640px) {
-  .wizard-header {
-    flex-direction: column;
-    gap: var(--space-2);
+  .wizard-header:not(.hidden) {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    position: relative;
     border-bottom: none;
+    margin-bottom: 20px;
+    padding: 0 4px;
+  }
+  body.periode-closed .wizard-header,
+  body.periode-closed .mobile-wizard-progress,
+  body.periode-closed #wizard-form,
+  body.periode-closed #wizard-flow-wrapper {
+    display: none !important;
+  }
+  .step-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    position: relative;
+    z-index: 2;
+  }
+  .step-circle {
+    width: 32px;
+    height: 32px;
+    font-size: 0.8rem;
+    flex-shrink: 0;
   }
   .step-label {
-    border-bottom: 2px solid transparent;
-    text-align: left;
-    margin-bottom: 0;
-    padding-bottom: 0;
-  }
-  .step-label.active {
-    border-bottom: none;
-    border-left: 3px solid var(--clr-biru-grid);
-    padding-left: var(--space-2);
+    display: none !important;
   }
   .form-row {
     grid-template-columns: 1fr;
@@ -3003,5 +3038,125 @@ textarea.admin-input-field {
   flex-shrink: 0;
   color: #94a3b8;
 }
+
+/* --- FAQ Section Component --- */
+.faq-section {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 56px 20px 48px;
+}
+
+.faq-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.faq-title {
+  font-family: var(--font-heading, 'Plus Jakarta Sans', sans-serif);
+  font-size: clamp(1.4rem, 4vw, 1.75rem);
+  font-weight: 800;
+  color: #0b3d6b;
+  letter-spacing: -0.02em;
+  margin-bottom: 8px;
+}
+
+.faq-subtitle {
+  font-size: 0.925rem;
+  color: #64748B;
+  max-width: 540px;
+  margin: 0 auto;
+  line-height: 1.55;
+}
+
+.faq-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.faq-item {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.faq-item:hover {
+  border-color: #CBD5E1;
+}
+
+.faq-item.active {
+  border-color: var(--color-brand-cyan, #00A2B9);
+  box-shadow: 0 4px 16px rgba(0, 162, 185, 0.08);
+}
+
+.faq-question {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0F172A;
+  text-align: left;
+  cursor: pointer;
+  min-height: 48px;
+}
+
+.faq-icon {
+  flex-shrink: 0;
+  color: #64748B;
+  transition: transform 0.25s ease, color 0.2s ease;
+}
+
+.faq-item.active .faq-icon {
+  transform: rotate(180deg);
+  color: var(--color-brand-cyan, #00A2B9);
+}
+
+.faq-answer {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s cubic-bezier(0.16, 1, 0.3, 1), padding 0.3s ease;
+  padding: 0 20px;
+}
+
+.faq-item.active .faq-answer {
+  max-height: 250px;
+  padding: 0 20px 16px;
+}
+
+.faq-answer p {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: #475569;
+}
+
+/* --- Tabular Numerals Utility (DESIGN.md) --- */
+.tabular-nums, .text-mono, .badge-nim {
+  font-variant-numeric: tabular-nums;
+  -webkit-font-feature-settings: "tnum";
+  font-feature-settings: "tnum";
+}
+
+/* --- Mobile Safe Form Controls --- */
+@media (max-width: 640px) {
+  .form-input, .form-select, .form-textarea, .input-control, .select-control {
+    font-size: 16px !important; /* Prevents auto-zoom on iOS */
+    min-height: 44px;
+  }
+
+  .btn {
+    min-height: 44px;
+  }
+}
+
 
 

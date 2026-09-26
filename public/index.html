@@ -3,30 +3,38 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>REMATE — Rekrutmen Magang Talenta Energi | ITPLN × PLN</title>
+  <title>REMATE : Rekrutmen Magang Talenta Energi | ITPLN × PT PLN (Persero)</title>
+  <link rel="icon" type="image/png" href="/assets/img/logo_itpln.png" />
   <style>
-    body {
+    *, *::before, *::after {
+      box-sizing: border-box;
       margin: 0;
-      background: #0a0f1e;
+      padding: 0;
+    }
+    body {
+      background: #0B192C;
       display: flex;
       align-items: center;
       justify-content: center;
       min-height: 100vh;
-      font-family: system-ui, sans-serif;
+      min-height: 100dvh;
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      color: #F8FAFC;
     }
     .loader {
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 16px;
-      color: rgba(255,255,255,0.5);
+      color: #94A3B8;
       font-size: 0.875rem;
+      font-weight: 500;
     }
     .spinner {
-      width: 28px;
-      height: 28px;
-      border: 2px solid rgba(255,255,255,0.15);
-      border-top-color: #0a84ff;
+      width: 32px;
+      height: 32px;
+      border: 3px solid rgba(255, 255, 255, 0.12);
+      border-top-color: #00A2B9;
       border-radius: 50%;
       animation: spin 0.7s linear infinite;
     }
@@ -36,7 +44,7 @@
 <body>
   <div class="loader" role="status" aria-live="polite">
     <div class="spinner" aria-hidden="true"></div>
-    <span>Memuat…</span>
+    <span>Memeriksa sesi login...</span>
   </div>
 
   <script>

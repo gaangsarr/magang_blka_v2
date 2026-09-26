@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Formulir Pendaftaran — REMATE (Rekrutmen Magang Talenta Energi)</title>
+    <title>Formulir Pendaftaran : REMATE (Rekrutmen Magang Talenta Energi)</title>
     
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/assets/img/logo_itpln.png">
@@ -16,30 +16,41 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
 </head>
 <style>
-    /* Modern UI Refinements */
+    /* Modern UI Refinements & Mobile Optimization */
     body {
-        background-color: #F9FAFB;
-        background-image: radial-gradient(#E5E7EB 1px, transparent 1px);
+        background-color: #F8FAFC;
+        background-image: radial-gradient(#E2E8F0 1px, transparent 1px);
         background-size: 20px 20px;
     }
     
     .page-header {
         text-align: center;
-        padding: 40px 20px;
+        padding: 36px 20px 20px;
     }
     
     .page-header h1 {
-        font-family: var(--font-display);
+        font-family: var(--font-heading);
         font-weight: 800;
-        color: var(--clr-biru-grid);
-        letter-spacing: -0.5px;
-        margin-bottom: 8px;
+        color: #0B192C;
+        letter-spacing: -0.02em;
+        margin-bottom: 6px;
+        font-size: clamp(1.5rem, 4vw, 2rem);
     }
 
     .form-container {
         max-width: 920px;
         margin: 0 auto 60px;
-        padding: 0 20px;
+        padding: 0 16px;
+    }
+
+    .card {
+        background: #ffffff;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(11, 25, 44, 0.04), 0 1px 3px rgba(0,0,0,0.05);
+        border: 1px solid #E2E8F0;
+        padding: 36px;
+        position: relative;
+        overflow: hidden;
     }
 
     /* Program Table Styles */
@@ -53,10 +64,10 @@
         width: 100%;
         border-collapse: collapse;
         text-align: left;
-        min-width: 600px;
+        min-width: 580px;
     }
     .program-table th {
-        padding: 14px 16px;
+        padding: 12px 16px;
         background: #f8fafc;
         border-bottom: 1px solid #e2e8f0;
         font-size: 0.75rem;
@@ -86,35 +97,25 @@
     }
 
 
-    .card {
-        background: #ffffff;
-        border-radius: 20px;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0,0,0,0.05);
-        border: 1px solid rgba(0,0,0,0.04);
-        padding: 40px;
-        position: relative;
-        overflow: hidden;
-    }
-    
     /* Sleek Wizard Progress Bar */
     .wizard-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 40px;
+        margin-bottom: 36px;
         position: relative;
         padding-bottom: 20px;
-        border-bottom: 1px solid #F3F4F6;
+        border-bottom: 1px solid #E2E8F0;
     }
     
     .wizard-header::before {
         content: '';
         position: absolute;
-        top: 14px;
-        left: 20px;
-        right: 20px;
+        top: 18px;
+        left: 30px;
+        right: 30px;
         height: 2px;
-        background: #E5E7EB;
+        background: #E2E8F0;
         z-index: 1;
     }
 
@@ -129,54 +130,100 @@
     }
 
     .step-circle {
-        width: 32px;
-        height: 32px;
+        width: 36px;
+        height: 36px;
         border-radius: 50%;
-        background: #fff;
-        border: 2px solid #E5E7EB;
+        background: #FFFFFF;
+        border: 2px solid #CBD5E1;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-weight: 600;
-        font-size: 0.85rem;
-        color: #9CA3AF;
-        transition: all 0.3s ease;
+        font-weight: 700;
+        font-size: 0.875rem;
+        color: #64748B;
+        transition: all 0.25s ease;
     }
 
     .step-label {
-        font-size: 0.7rem;
-        font-weight: 600;
-        color: #9CA3AF;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #64748B;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
-        transition: color 0.3s ease;
+        letter-spacing: 0.04em;
+        transition: color 0.25s ease;
         text-align: center;
-        display: block !important;
-        border: none !important;
-        padding: 0 !important;
     }
 
     .step-indicator.active .step-circle {
-        border-color: var(--clr-biru-grid);
-        background: var(--clr-biru-grid);
-        color: #fff;
-        box-shadow: 0 0 0 4px rgba(11, 61, 107, 0.1);
+        border-color: #00A2B9;
+        background: #0B192C;
+        color: #FFFFFF;
+        box-shadow: 0 0 0 4px rgba(0, 162, 185, 0.18);
     }
     
     .step-indicator.active .step-label {
-        color: var(--clr-biru-grid);
+        color: #0B192C;
+        font-weight: 800;
     }
 
     .step-indicator.completed .step-circle {
-        border-color: var(--clr-biru-grid);
-        background: #fff;
-        color: var(--clr-biru-grid);
+        border-color: #00A2B9;
+        background: #F0FDFA;
+        color: #00A2B9;
+    }
+
+    .step-indicator.completed .step-label {
+        color: #00A2B9;
+    }
+
+    /* Mobile Progress Bar (Visible < 640px) */
+    .mobile-wizard-progress {
+        display: none;
+        margin-bottom: 20px;
+        background: #F8FAFC;
+        border: 1px solid #E2E8F0;
+        border-radius: 12px;
+        padding: 12px 14px;
+    }
+
+    .mobile-wizard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+
+    .mobile-wizard-title {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #0B192C;
+    }
+
+    .mobile-wizard-percent {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: #00A2B9;
+        font-family: var(--font-mono);
+    }
+
+    .mobile-wizard-bar {
+        height: 6px;
+        background: #E2E8F0;
+        border-radius: 999px;
+        overflow: hidden;
+    }
+
+    .mobile-wizard-fill {
+        height: 100%;
+        background: #00A2B9;
+        border-radius: 999px;
+        transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     /* Form Transitions & Styling */
     .step-content {
         display: none;
-        animation: fadeSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        animation: fadeSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
     
     .step-content.active {
@@ -184,57 +231,115 @@
     }
 
     @keyframes fadeSlideUp {
-        from { opacity: 0; transform: translateY(10px); }
+        from { opacity: 0; transform: translateY(8px); }
         to { opacity: 1; transform: translateY(0); }
     }
 
     .step-title {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: #111827;
+        font-size: 1.35rem;
+        font-weight: 800;
+        color: #0B192C;
         margin-bottom: 6px;
     }
 
     .form-input, .form-select, .form-textarea {
         border-radius: 10px;
-        border: 1px solid #D1D5DB;
-        padding: 12px 16px;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+        border: 1.5px solid #CBD5E1;
+        padding: 11px 14px;
+        font-size: 0.925rem;
+        color: #0F172A;
+        background: #FFFFFF;
+        width: 100%;
+        box-sizing: border-box;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
     
     .form-textarea {
-        resize: none;
+        resize: vertical;
+        min-height: 80px;
     }
     
     .form-input:focus, .form-select:focus, .form-textarea:focus {
-        border-color: var(--clr-biru-grid);
-        box-shadow: 0 0 0 3px rgba(11, 61, 107, 0.15);
+        border-color: #00A2B9;
+        box-shadow: 0 0 0 3px rgba(0, 162, 185, 0.15);
+        outline: none;
+    }
+
+    .form-label {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #0F172A;
+        margin-bottom: 6px;
+        display: block;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+
+    .form-group {
+        margin-bottom: 16px;
     }
     
     .btn {
         border-radius: 10px;
-        padding: 12px 24px;
-        font-weight: 600;
-        transition: transform 0.1s, box-shadow 0.2s;
+        padding: 11px 22px;
+        font-weight: 700;
+        font-size: 0.925rem;
+        min-height: 44px;
+        cursor: pointer;
+        transition: transform 0.1s, box-shadow 0.2s, background 0.2s;
+        border: none;
     }
     
     .btn:active:not(:disabled) {
         transform: scale(0.98);
     }
-    
-    .wizard-footer {
-        margin-top: 40px;
-        padding-top: 24px;
-        border-top: 1px solid #F3F4F6;
+
+    .btn-primary {
+        background: #0B192C;
+        color: #FFFFFF;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+        background: #07121F;
+    }
+
+    .btn-secondary {
+        background: #FFFFFF;
+        border: 1.5px solid #CBD5E1;
+        color: #334155;
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+        background: #F8FAFC;
+        border-color: #94A3B8;
     }
     
-    /* Custom Checkbox and Radio Styles */
+    .wizard-footer {
+        margin-top: 36px;
+        padding-top: 20px;
+        border-top: 1px solid #E2E8F0;
+    }
+
+    #map-domisili {
+        height: 340px;
+        width: 100%;
+        border-radius: 12px;
+        border: 1.5px solid #CBD5E1;
+        margin-bottom: 16px;
+    }
+    
+    /* Custom Checkbox and Radio */
     .custom-cb, .custom-radio {
         appearance: none;
         -webkit-appearance: none;
         width: 22px;
         height: 22px;
-        border: 2px solid #D1D5DB;
+        border: 2px solid #CBD5E1;
         background: #fff;
         margin-right: 12px;
         outline: none;
@@ -255,12 +360,12 @@
     }
     
     .custom-cb:checked, .custom-radio:checked {
-        border-color: var(--clr-biru-grid);
-        background-color: var(--clr-biru-grid);
+        border-color: #00A2B9;
+        background-color: #00A2B9;
     }
     
     .custom-cb:disabled {
-        background-color: #F3F4F6;
+        background-color: #F1F5F9;
         cursor: not-allowed;
     }
 
@@ -287,36 +392,167 @@
         border: solid white;
         border-width: 0 2px 2px 0;
     }
-    /* --- Responsive Styling --- */
+
+    /* --- Responsive Mobile Refinements --- */
     @media (max-width: 768px) {
-        .card { padding: 24px 20px; }
-        .page-header { padding: 24px 16px; }
-        .page-header h1 { font-size: 1.75rem; }
+        .card { padding: 24px 18px; }
+        .page-header { padding: 24px 16px 16px; }
+    }
+
+    /* Complete full-card notice when registration is closed */
+    #no-periode-box {
+        text-align: center;
+        padding: 56px 20px 48px;
+        margin: 0 auto;
+        width: 100%;
+    }
+    #no-periode-box.hidden {
+        display: none !important;
+    }
+
+    body.periode-closed #wizard-flow-wrapper,
+    body.periode-closed .wizard-header,
+    body.periode-closed .mobile-wizard-progress,
+    body.periode-closed #wizard-form,
+    #no-periode-box:not(.hidden) ~ #wizard-flow-wrapper,
+    #no-periode-box:not(.hidden) ~ .mobile-wizard-progress,
+    #no-periode-box:not(.hidden) ~ .wizard-header,
+    #no-periode-box:not(.hidden) ~ #wizard-form,
+    .wizard-header.hidden,
+    .mobile-wizard-progress.hidden,
+    #wizard-flow-wrapper.hidden {
+        display: none !important;
     }
 
     @media (max-width: 640px) {
-        .wizard-header { 
-            margin-bottom: 60px; 
-            flex-direction: row !important; 
+        body.periode-closed #wizard-flow-wrapper,
+        body.periode-closed .wizard-header,
+        body.periode-closed .mobile-wizard-progress,
+        body.periode-closed #wizard-form,
+        #no-periode-box:not(.hidden) ~ #wizard-flow-wrapper,
+        #no-periode-box:not(.hidden) ~ .mobile-wizard-progress,
+        #no-periode-box:not(.hidden) ~ .wizard-header,
+        #no-periode-box:not(.hidden) ~ #wizard-form {
+            display: none !important;
         }
-        .step-label { display: none !important; }
-        .step-indicator.active .step-label { 
-            display: block !important; 
-            position: absolute; 
-            top: 40px; 
-            font-size: 0.7rem; 
-            width: max-content; 
+
+        .mobile-wizard-progress:not(.hidden) {
+            display: block;
         }
-        .wizard-footer {
-            flex-direction: column;
-            gap: 12px;
-        }
-        .wizard-footer .btn {
+
+        .wizard-header:not(.hidden) { 
+            display: flex !important;
+            flex-direction: row !important;
+            justify-content: space-between !important;
+            align-items: center !important;
             width: 100% !important;
-            min-width: 0 !important;
+            margin-bottom: 24px;
+            padding-bottom: 12px;
+            position: relative;
         }
         
-        /* Mobile Card View for Table */
+        .wizard-header::before {
+            content: '' !important;
+            position: absolute !important;
+            top: 15px;
+            left: 24px;
+            right: 24px;
+            height: 2px;
+            background: #E2E8F0;
+            z-index: 1;
+        }
+
+        .step-indicator {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            flex: 1 !important;
+            position: relative !important;
+            z-index: 2 !important;
+        }
+
+        .step-circle {
+            width: 30px !important;
+            height: 30px !important;
+            font-size: 0.8rem !important;
+            background: #ffffff;
+            margin: 0 auto !important;
+        }
+
+        .step-label {
+            display: none !important;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            font-size: 16px !important;
+            min-height: 46px;
+            padding: 10px 12px;
+        }
+
+        .wizard-footer {
+            flex-direction: column-reverse;
+            gap: 10px;
+        }
+
+        .wizard-footer .btn {
+            width: 100% !important;
+            min-height: 48px;
+            font-size: 0.95rem;
+        }
+
+        #map-domisili {
+            height: 240px;
+        }
+
+        /* Mobile Card View for Program Table */
+        .program-table-container {
+            border: none;
+            background: transparent;
+            overflow: visible;
+        }
+        .program-table, .program-table tbody, .program-table tr, .program-table td {
+            display: block;
+            width: 100%;
+        }
+        .program-table thead {
+            display: none;
+        }
+        .program-table tbody tr {
+            margin-bottom: 14px;
+            border: 1.5px solid #E2E8F0;
+            border-radius: 14px;
+            padding: 14px 16px;
+            background: #FFFFFF;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            transition: all 0.2s ease;
+        }
+        .program-table tbody tr.selected {
+            border-color: #00A2B9;
+            background: #F0FDFA;
+            box-shadow: 0 0 0 1px #00A2B9, 0 4px 12px rgba(0, 162, 185, 0.08);
+        }
+        .program-table td {
+            padding: 5px 0;
+            border-bottom: none;
+            font-size: 0.875rem;
+        }
+        .program-table td:first-child {
+            padding-bottom: 8px;
+            border-bottom: 1px dashed #E2E8F0;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .program-table td:first-child::after {
+            content: 'Pilih Program';
+            font-size: 0.725rem;
+            font-weight: 700;
+            color: #64748B;
+            text-transform: uppercase;
+        }
+        
+        /* Mobile Card View for Unit Table */
         .data-table, .data-table tbody, .data-table tr, .data-table td {
             display: block;
             width: 100%;
@@ -326,17 +562,18 @@
         }
         .data-table tr {
             margin-bottom: 16px;
-            border: 1px solid #E5E7EB;
-            border-radius: 12px;
+            border: 1.5px solid #E2E8F0;
+            border-radius: 14px;
             padding: 16px;
             background: #fff;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
         }
         .data-table td {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid #F3F4F6;
-            padding: 10px 0;
+            border-bottom: 1px solid #F1F5F9;
+            padding: 9px 0;
             text-align: right;
             border-left: none;
             border-right: none;
@@ -344,17 +581,22 @@
         }
         .data-table td:last-child {
             border-bottom: none;
-            justify-content: center;
-            padding-top: 16px;
+            justify-content: stretch;
+            padding-top: 14px;
             padding-bottom: 0;
+        }
+        .data-table td:last-child .btn-pilih-unit {
+            width: 100% !important;
+            min-height: 44px;
+            justify-content: center;
         }
         .data-table td::before {
             content: attr(data-label);
-            font-weight: 600;
-            color: #6B7280;
+            font-weight: 700;
+            color: #64748B;
             text-align: left;
             flex: 1;
-            font-size: 0.85rem;
+            font-size: 0.825rem;
         }
         .data-table td > strong, .data-table td > span, .data-table td > div {
             text-align: right;
@@ -608,20 +850,50 @@
             <div id="error-box" class="alert alert-error hidden" role="alert"></div>
 
             <!-- No Active Period Empty State Box -->
-            <div id="no-periode-box" class="hidden" style="text-align: center; padding: 30px 10px;">
-                <div style="width: 72px; height: 72px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; color: #64748b;">
-                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="10" y1="14" x2="14" y2="18"/><line x1="14" y1="14" x2="10" y2="18"/></svg>
+            <div id="no-periode-box" class="hidden" style="text-align: center; padding: 44px 20px 36px;">
+                <div style="width: 76px; height: 76px; border-radius: 50%; background: #F0FDFA; border: 2px solid #CCFBF1; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; color: #00A2B9;">
+                    <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="10" y1="14" x2="14" y2="18"/><line x1="14" y1="14" x2="10" y2="18"/></svg>
                 </div>
-                <h3 style="color: #0b3d6b; font-size: 1.35rem; margin-bottom: 8px;">Pendaftaran Sedang Ditutup</h3>
-                <p style="color: #64748b; font-size: 0.95rem; max-width: 480px; margin: 0 auto 24px; line-height: 1.6;">
-                    Saat ini belum ada periode pendaftaran magang yang dibuka oleh administrator BLKA ITPLN. Silakan nantikan pengumuman jadwal pembukaan periode berikutnya.
+                <div style="display: inline-block; background: #F1F5F9; color: #475569; font-weight: 700; font-size: 0.775rem; padding: 3px 12px; border-radius: 999px; margin-bottom: 10px; letter-spacing: 0.04em;">PERIODE DITUTUP / PERSIAPAN</div>
+                <h2 style="color: #0B192C; font-size: 1.45rem; font-weight: 800; margin: 0 0 10px 0;">Pendaftaran Sedang Ditutup</h2>
+                <p style="color: #475569; font-size: 0.95rem; max-width: 520px; margin: 0 auto 20px; line-height: 1.6;">
+                    Saat ini belum ada periode pendaftaran magang yang dibuka untuk mahasiswa. Periode magang berikutnya yang sedang dalam tahap persiapan atau penataan kuota akan segera diumumkan secara resmi oleh administrator BLKA ITPLN.
                 </p>
+                <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 14px 18px; max-width: 500px; margin: 0 auto 24px; text-align: left; font-size: 0.875rem; color: #334155; line-height: 1.5;">
+                    <div style="display: flex; gap: 10px; align-items: flex-start; margin-bottom: 8px;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00A2B9" stroke-width="2" style="flex-shrink: 0; margin-top: 1px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                        <span>Jadwal pembukaan dan kriteria kuota akan diumumkan di portal utama beranda.</span>
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: flex-start;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00A2B9" stroke-width="2" style="flex-shrink: 0; margin-top: 1px;"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+                        <span>Bagi yang telah mendaftar di periode sebelumnya, Anda dapat memantau status seleksi di halaman Riwayat.</span>
+                    </div>
+                </div>
                 <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
-                    <a href="/login.html" class="btn btn-secondary" style="text-decoration: none; padding: 10px 20px; font-weight: 600;">&larr; Kembali ke Beranda</a>
-                    <a href="/status.html" class="btn btn-primary" style="text-decoration: none; padding: 10px 20px; font-weight: 600; background: #0b3d6b; color: #ffffff;">Lihat Status / Pengumuman</a>
+                    <a href="/login.html" class="btn btn-secondary" style="text-decoration: none; padding: 10px 22px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                        Kembali ke Beranda
+                    </a>
+                    <a href="/status.html" class="btn btn-primary" style="text-decoration: none; padding: 10px 22px; font-weight: 600; background: #0B192C; color: #ffffff; display: inline-flex; align-items: center; gap: 8px;">
+                        <span>Lihat Status / Pengumuman</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                    </a>
                 </div>
             </div>
-            
+
+            <!-- Wizard Flow Container (Holds Stepper and Steps) -->
+            <div id="wizard-flow-wrapper">
+                <!-- Mobile Step Tracker Bar (Visible < 640px) -->
+                <div class="mobile-wizard-progress" id="mobileWizardProgress" aria-live="polite">
+                <div class="mobile-wizard-header">
+                    <span class="mobile-wizard-title" id="mobileWizardStepTitle">Langkah 1 dari 5: Pilihan Program</span>
+                    <span class="mobile-wizard-percent" id="mobileWizardPercent">20%</span>
+                </div>
+                <div class="mobile-wizard-bar">
+                    <div class="mobile-wizard-fill" id="mobileWizardFill" style="width: 20%;"></div>
+                </div>
+            </div>
+
             <div class="wizard-header" id="wizard-header">
                 <div class="step-indicator active" data-step="1">
                     <div class="step-circle">1</div>
@@ -1192,6 +1464,7 @@
                     <button type="button" class="btn btn-primary hidden" id="btn-submit" style="min-width: 160px; background: #10B981; border-color: #10B981;">Kirim Pendaftaran</button>
                 </div>
             </form>
+            </div> <!-- /#wizard-flow-wrapper -->
         </div>
     </div>
 
@@ -1211,8 +1484,8 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     
     <!-- App Logic -->
-    <script src="/js/map.js?v=4" type="module"></script>
-    <script src="/js/daftar.js?v=4" type="module"></script>
+    <script src="/js/map.js?v=20260925_6" type="module"></script>
+    <script src="/js/daftar.js?v=20260925_6" type="module"></script>
 
     <!-- COMPONENT: FOOTER -->
     <footer class="footer-component" aria-label="Footer Website" style="margin-top: 60px;">
@@ -1359,6 +1632,30 @@
       if (btnMobileLogout) {
         btnMobileLogout.addEventListener('click', () => window.logout());
       }
+
+      // Sync Mobile Wizard Step Progress Bar
+      const stepTitlesMap = {
+        1: 'Pilihan Program',
+        2: 'Data Diri & Berkas',
+        3: 'Lokasi Domisili',
+        4: 'Pilihan Unit Magang',
+        5: 'Resume & Kirim'
+      };
+
+      window.syncMobileWizardProgress = function(step = 1) {
+        const titleEl = document.getElementById('mobileWizardStepTitle');
+        const pctEl = document.getElementById('mobileWizardPercent');
+        const fillEl = document.getElementById('mobileWizardFill');
+        if (!titleEl || !pctEl || !fillEl) return;
+
+        const current = parseInt(step, 10) || 1;
+        const name = stepTitlesMap[current] || 'Formulir';
+        const percent = Math.min(100, Math.max(0, Math.round((current / 5) * 100)));
+
+        titleEl.textContent = `Langkah ${current} dari 5: ${name}`;
+        pctEl.textContent = `${percent}%`;
+        fillEl.style.width = `${percent}%`;
+      };
     </script>
 </body>
 </html>

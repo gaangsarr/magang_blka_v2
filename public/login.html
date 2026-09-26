@@ -4,17 +4,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Platform Resmi Rekrutmen Magang Talenta Energi (REMATE) Institut Teknologi PLN × PT PLN (Persero)." />
-  <title>REMATE — Rekrutmen Magang Talenta Energi | ITPLN × PLN</title>
+  <title>REMATE : Rekrutmen Magang Talenta Energi | ITPLN × PT PLN (Persero)</title>
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="assets/img/logo_itpln.png" />
   <link rel="apple-touch-icon" href="assets/img/logo_itpln.png" />
 
   <!-- Meta Tags & Open Graph -->
-  <meta name="theme-color" content="#0b3d6b" />
-  <meta property="og:title" content="REMATE — Rekrutmen Magang Talenta Energi | ITPLN × PT PLN (Persero)" />
+  <meta name="theme-color" content="#0B192C" />
+  <meta property="og:title" content="REMATE : Rekrutmen Magang Talenta Energi | ITPLN × PT PLN (Persero)" />
   <meta property="og:description" content="Platform resmi pendaftaran dan seleksi program magang mahasiswa ITPLN di unit kerja PT PLN (Persero) seluruh Indonesia." />
-  <!-- QUALITY-05: URL absolut agar bot SEO bisa resolve. Ganti domain sebelum deploy -->
   <meta property="og:image" content="https://remate.itpln.ac.id/assets/img/logo_itpln.png" />
   <meta property="og:url" content="https://remate.itpln.ac.id/" />
   <meta property="og:type" content="website" />
@@ -27,78 +26,77 @@
 </head>
 <body class="dot-bg">
 
-  <!-- ============================================================
-       SECTION: HERO SCREEN VIEW (100vh Full Viewport First Screen)
-       ============================================================ -->
-  <div class="hero-screen-section">
-    <!-- Navbar Component -->
-    <nav class="navbar-component" aria-label="Navigasi Utama">
-      <div class="navbar-brand">
-        <img src="assets/img/logo_itpln.png" alt="Logo ITPLN" class="navbar-logo-img" />
-        <span class="navbar-brand-title">REMATE</span>
-      </div>
-      
-      <!-- Desktop Navigation Menu -->
-      <ul class="navbar-menu">
-        <li><a href="/login.html" class="active">Beranda</a></li>
-        <li><a href="/daftar.html" data-auth-required="true">Pendaftaran</a></li>
-        <li><a href="/status.html" data-auth-required="true">Riwayat & Pengumuman</a></li>
-      </ul>
+  <!-- Navbar Component (Sticky relative to body across entire page) -->
+  <nav class="navbar-component" aria-label="Navigasi Utama">
+    <div class="navbar-brand">
+      <img src="assets/img/logo_itpln.png" alt="Logo ITPLN" class="navbar-logo-img" />
+      <span class="navbar-brand-title">REMATE</span>
+    </div>
+    
+    <!-- Desktop Navigation Menu -->
+    <ul class="navbar-menu">
+      <li><a href="/login.html" class="active">Beranda</a></li>
+      <li><a href="/daftar.html" data-auth-required="true">Pendaftaran</a></li>
+      <li><a href="/status.html" data-auth-required="true">Riwayat & Pengumuman</a></li>
+    </ul>
 
-      <!-- Desktop Navbar Action Button -->
-      <div class="navbar-action">
-        <a href="#masuk" class="btn-nav-masuk" onclick="document.getElementById('btn-login-microsoft').click(); return false;">Masuk</a>
-      </div>
-
-      <!-- Mobile Hamburger Menu Button -->
-      <button type="button" class="navbar-toggle" id="navbar-toggle" aria-label="Buka Menu Navigasi" aria-expanded="false">
-        <svg class="hamburger-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="4" y1="6" x2="20" y2="6"/>
-          <line x1="4" y1="12" x2="20" y2="12"/>
-          <line x1="4" y1="18" x2="20" y2="18"/>
-        </svg>
-      </button>
-    </nav>
-
-    <!-- Mobile Navigation Drawer Dropdown -->
-    <div class="mobile-menu-drawer" id="mobile-menu-drawer">
-      <div class="mobile-drawer-profile" id="mobileDrawerProfile" style="display: none;">
-        <div class="mobile-drawer-avatar" id="mobileDrawerAvatar">M</div>
-        <div class="mobile-drawer-user-info">
-          <div class="mobile-drawer-user-name" id="mobileDrawerUserName">Memuat...</div>
-          <div class="mobile-drawer-user-meta" id="mobileDrawerUserMeta">-</div>
-        </div>
-      </div>
-      <ul class="mobile-menu-links">
-        <li><a href="/login.html" class="active">Beranda</a></li>
-        <li><a href="/daftar.html" data-auth-required="true">Pendaftaran</a></li>
-        <li><a href="/status.html" data-auth-required="true">Riwayat & Pengumuman</a></li>
-      </ul>
-
-      <div class="mobile-menu-action" style="margin-top: 10px;">
-        <button type="button" class="btn-mobile-masuk" onclick="document.getElementById('btn-login-microsoft').click(); return false;">
-          Masuk dengan Akun ITPLN
-        </button>
-      </div>
+    <!-- Desktop Navbar Action Button -->
+    <div class="navbar-action">
+      <a href="#masuk" class="btn-nav-masuk" onclick="document.getElementById('btn-login-microsoft').click(); return false;">Masuk</a>
     </div>
 
-    <!-- Hero Content Layout (Centered in 100vh) -->
+    <!-- Mobile Hamburger Menu Button -->
+    <button type="button" class="navbar-toggle" id="navbar-toggle" aria-label="Buka Menu Navigasi" aria-expanded="false">
+      <svg class="hamburger-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="4" y1="6" x2="20" y2="6"/>
+        <line x1="4" y1="12" x2="20" y2="12"/>
+        <line x1="4" y1="18" x2="20" y2="18"/>
+      </svg>
+    </button>
+  </nav>
+
+  <!-- Mobile Navigation Drawer Dropdown -->
+  <div class="mobile-menu-drawer" id="mobile-menu-drawer">
+    <div class="mobile-drawer-profile" id="mobileDrawerProfile" style="display: none;">
+      <div class="mobile-drawer-avatar" id="mobileDrawerAvatar">M</div>
+      <div class="mobile-drawer-user-info">
+        <div class="mobile-drawer-user-name" id="mobileDrawerUserName">Memuat...</div>
+        <div class="mobile-drawer-user-meta" id="mobileDrawerUserMeta">-</div>
+      </div>
+    </div>
+    <ul class="mobile-menu-links">
+      <li><a href="/login.html" class="active">Beranda</a></li>
+      <li><a href="/daftar.html" data-auth-required="true">Pendaftaran</a></li>
+      <li><a href="/status.html" data-auth-required="true">Riwayat & Pengumuman</a></li>
+    </ul>
+
+    <div class="mobile-menu-action" style="margin-top: 10px;">
+      <button type="button" class="btn-mobile-masuk" onclick="document.getElementById('btn-login-microsoft').click(); return false;">
+        Masuk dengan Akun ITPLN
+      </button>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       SECTION: HERO SCREEN VIEW
+       ============================================================ -->
+  <div class="hero-screen-section">
+    <!-- Hero Content Layout -->
     <main class="hero-component">
       <!-- Hero Left: Content & Auth -->
       <div class="hero-left">
 
         <h1 class="hero-title">
           Mulai Kariermu<br />
-          <span class="hero-title-highlight">Bersama PT. PLN (Persero)</span>
+          <span class="hero-title-highlight">Bersama PT PLN (Persero)</span>
         </h1>
 
-        <!-- Mobile-Only Hero Illustration (Positioned between Title and Description) -->
+        <!-- Mobile-Only Hero Illustration -->
         <div class="hero-illustration-wrapper hero-visual-mobile" id="heroVisualComponentMobile">
           <div class="hero-visual-glow"></div>
-          <!-- Main Hero Image (REMATEHero.png) -->
           <img 
             src="assets/img/REMATEHero.png" 
-            alt="Ilustrasi Magang ITPLN & PT. PLN (Persero)" 
+            alt="Ilustrasi Magang ITPLN dan PT PLN (Persero)" 
             class="hero-illustration-img"
             onerror="this.style.display='none'; document.getElementById('folderVisualComponentMobile').style.display='block';"
           />
@@ -114,15 +112,15 @@
             <div class="folder-layer folder-layer-kaca">
               <img src="assets/img/folder_kaca.png" alt="Folder Kaca" onerror="this.src='assets/img/folder_glass_front.png'" />
               <div class="folder-glass-info">
-                <h4 class="folder-glass-title">Magang ITPLN & PT. PLN (Persero)</h4>
-                <p class="folder-glass-sub">170 Files</p>
+                <h4 class="folder-glass-title">Magang ITPLN & PT PLN (Persero)</h4>
+                <p class="folder-glass-sub">Dokumen Resmi</p>
               </div>
             </div>
           </div>
         </div>
 
         <p class="hero-desc">
-          Program magang profesional untuk mahasiswa ITPLN — belajar langsung di unit pelaksana PLN yang tersebar di seluruh Indonesia.
+          Program magang profesional untuk mahasiswa ITPLN, belajar dan berkontribusi langsung di unit kerja PT PLN (Persero) seluruh Indonesia.
         </p>
 
         <!-- Error Box (Populated by js/auth.js if login fails) -->
@@ -424,9 +422,6 @@
   <section class="guidelines-section" id="panduan-magang" aria-labelledby="guidelinesTitle">
     <div class="guidelines-header">
       <h2 class="guidelines-title" id="guidelinesTitle">Pedoman & Ketentuan Magang</h2>
-      <p class="guidelines-desc">
-        Pelajari petunjuk teknis pelaksanaan serta format pencatatan kegiatan untuk kelancaran program magang Anda.
-      </p>
     </div>
 
     <div class="guidelines-grid">
@@ -509,6 +504,74 @@
           </a>
         </div>
       </article>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       SECTION: FAQ (Pertanyaan Umum Mahasiswa)
+       ============================================================ -->
+  <section class="faq-section" id="faq" aria-labelledby="faqTitle">
+    <div class="faq-header">
+      <h2 class="faq-title" id="faqTitle">Pertanyaan yang Sering Diajukan</h2>
+      <p class="faq-subtitle">Informasi penting seputar pendaftaran, berkas, dan ketentuan pelaksanaan magang.</p>
+    </div>
+
+    <div class="faq-container">
+      <div class="faq-item">
+        <button type="button" class="faq-question" aria-expanded="false">
+          <span>Siapa saja mahasiswa yang berhak mendaftar pada program ini?</span>
+          <svg class="faq-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+        <div class="faq-answer">
+          <p>
+            Mahasiswa aktif jenjang D3 dan S1 Institut Teknologi PLN yang tidak sedang menjalani sanksi akademik serta memenuhi persyaratan batas minimum SKS dan semester sesuai skema program magang yang dibuka.
+          </p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button type="button" class="faq-question" aria-expanded="false">
+          <span>Mengapa tombol masuk mewajibkan akun Microsoft @itpln.ac.id?</span>
+          <svg class="faq-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+        <div class="faq-answer">
+          <p>
+            Sistem REMATE terintegrasi langsung dengan Single Sign-On (SSO) Microsoft Azure Entra ID kampus untuk memvalidasi status keaktifan mahasiswa secara otomatis dan aman tanpa perlu registrasi manual.
+          </p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button type="button" class="faq-question" aria-expanded="false">
+          <span>Apa saja format dan batasan ukuran berkas yang diunggah?</span>
+          <svg class="faq-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+        <div class="faq-answer">
+          <p>
+            Semua berkas wajib berupa file format PDF: Transkrip Nilai Akademik resmi (maksimal 512 KB), Curriculum Vitae terbaru (maksimal 2 MB), dan Portofolio karya atau sertifikat pendukung (maksimal 5 MB).
+          </p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button type="button" class="faq-question" aria-expanded="false">
+          <span>Bagaimana cara mengetahui hasil pengumuman dan penetapan unit?</span>
+          <svg class="faq-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+        <div class="faq-answer">
+          <p>
+            Setelah proses seleksi dan verifikasi oleh tim BLKA ITPLN dan unit PLN selesai, pengumuman resmi dapat dilihat pada menu Riwayat & Pengumuman lengkap dengan rincian unit penetapan dan kontak narahubung PIC.
+          </p>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -731,6 +794,26 @@
         if (e.target === modalBackdrop) closeAuthModal();
       });
     }
+
+    // FAQ Accordion Toggle Handler
+    document.querySelectorAll('.faq-question').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const item = btn.closest('.faq-item');
+        const isOpen = item.classList.contains('active');
+        
+        // Close other items
+        document.querySelectorAll('.faq-item').forEach(other => {
+          if (other !== item) {
+            other.classList.remove('active');
+            const otherBtn = other.querySelector('.faq-question');
+            if (otherBtn) otherBtn.setAttribute('aria-expanded', 'false');
+          }
+        });
+
+        item.classList.toggle('active', !isOpen);
+        btn.setAttribute('aria-expanded', !isOpen ? 'true' : 'false');
+      });
+    });
   </script>
 
   <!-- ============================================================

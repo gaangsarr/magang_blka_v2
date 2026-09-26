@@ -87,6 +87,40 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         };
 
+        function showPeriodeDitutupState(customMsg) {
+            document.body.classList.add('periode-closed');
+            const noPeriodBox = document.getElementById('no-periode-box');
+            const wizardFlowWrapper = document.getElementById('wizard-flow-wrapper');
+            const wizardForm = document.getElementById('wizard-form');
+            const wizardHeaderEl = document.getElementById('wizard-header');
+            const mobileWizardProgress = document.getElementById('mobileWizardProgress');
+            const pageDesc = document.querySelector('.page-header p');
+
+            if (noPeriodBox) {
+                noPeriodBox.classList.remove('hidden');
+                noPeriodBox.style.setProperty('display', 'block', 'important');
+            }
+            if (pageDesc) {
+                pageDesc.textContent = 'Saat ini belum ada periode pendaftaran aktif yang dibuka oleh administrator BLKA ITPLN.';
+            }
+            if (wizardFlowWrapper) {
+                wizardFlowWrapper.classList.add('hidden');
+                wizardFlowWrapper.style.setProperty('display', 'none', 'important');
+            }
+            if (wizardForm) {
+                wizardForm.classList.add('hidden');
+                wizardForm.style.setProperty('display', 'none', 'important');
+            }
+            if (wizardHeaderEl) {
+                wizardHeaderEl.classList.add('hidden');
+                wizardHeaderEl.style.setProperty('display', 'none', 'important');
+            }
+            if (mobileWizardProgress) {
+                mobileWizardProgress.classList.add('hidden');
+                mobileWizardProgress.style.setProperty('display', 'none', 'important');
+            }
+        }
+
         if (statusData.sudah_mendaftar) {
             window.location.href = '/status.html';
             return;
@@ -159,47 +193,49 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (mobileMeta) mobileMeta.textContent = (user.nim || '-') + (user.jurusan ? ' • ' + user.jurusan : '');
         }
 
-        // Ambil Data Profil
-        const profilRes = await fetch('/api/mahasiswa/profil.php');
-        const profilData = await profilRes.json();
-        if (profilRes.ok && profilData.data) {
-            document.getElementById('nim').value = profilData.data.nim || '';
-            document.getElementById('jurusan').value = profilData.data.jurusan || '';
-            document.getElementById('angkatan').value = profilData.data.angkatan || '';
-            document.getElementById('email').value = profilData.data.email || '';
-            if (profilData.data.nama && !profilData.data.needs_nama) {
-                document.getElementById('nama').value = profilData.data.nama;
-                document.getElementById('nama').readOnly = true;
+        // Ambil Data Profil, Pengaturan Syarat, Periode Aktif, & Peminatan secara Paralel (Anti-Lag Cloudflare Tunnel)
+        const [profilRes, setRes, periodeRes, peminatanRes] = await Promise.all([
+            fetch('/api/mahasiswa/profil.php').catch(() => null),
+            fetch('/api/pengaturan/public.php').catch(() => null),
+            fetch('/api/periode/aktif.php').catch(() => null),
+            fetch('/api/peminatan/list.php').catch(() => null)
+        ]);
+
+        if (profilRes && profilRes.ok) {
+            const profilData = await profilRes.json();
+            if (profilData && profilData.data) {
+                document.getElementById('nim').value = profilData.data.nim || '';
+                document.getElementById('jurusan').value = profilData.data.jurusan || '';
+                document.getElementById('angkatan').value = profilData.data.angkatan || '';
+                document.getElementById('email').value = profilData.data.email || '';
+                if (profilData.data.nama && !profilData.data.needs_nama) {
+                    document.getElementById('nama').value = profilData.data.nama;
+                    document.getElementById('nama').readOnly = true;
+                }
             }
         }
 
-        // Ambil Pengaturan Syarat System (Min IPK & Min SKS)
-        try {
-            const setRes = await fetch('/api/pengaturan/public.php');
-            const setData = await setRes.json();
-            if (setRes.ok && setData.data) {
-                if (setData.data.min_ipk_5bulan) minIpk5Bulan = parseFloat(setData.data.min_ipk_5bulan);
-                if (setData.data.min_sks_5bulan) minSks5Bulan = parseInt(setData.data.min_sks_5bulan, 10);
+        if (setRes && setRes.ok) {
+            try {
+                const setData = await setRes.json();
+                if (setData && setData.data) {
+                    if (setData.data.min_ipk_5bulan) minIpk5Bulan = parseFloat(setData.data.min_ipk_5bulan);
+                    if (setData.data.min_sks_5bulan) minSks5Bulan = parseInt(setData.data.min_sks_5bulan, 10);
+                }
+            } catch (e) {
+                console.error('Gagal memuat pengaturan syarat:', e);
             }
-        } catch (e) {
-            console.error('Gagal memuat pengaturan syarat:', e);
         }
 
-        // Ambil Periode Aktif
-        const periodeRes = await fetch('/api/periode/aktif.php');
+        if (!periodeRes || !periodeRes.ok) {
+            const errData = periodeRes ? await periodeRes.json().catch(() => null) : null;
+            showPeriodeDitutupState(errData?.error || 'Saat ini tidak ada periode pendaftaran yang dibuka.');
+            return;
+        }
+
         const periodeData = await periodeRes.json();
-        if (!periodeRes.ok || periodeData.error) {
-            const noPeriodBox = document.getElementById('no-periode-box');
-            const wizardForm = document.getElementById('wizard-form');
-            const wizardHeaderEl = document.getElementById('wizard-header');
-            if (noPeriodBox && wizardForm && wizardHeaderEl) {
-                noPeriodBox.classList.remove('hidden');
-                wizardForm.classList.add('hidden');
-                wizardHeaderEl.classList.add('hidden');
-            } else {
-                showError(periodeData.error || 'Saat ini tidak ada periode pendaftaran yang dibuka.');
-                disableNav();
-            }
+        if (periodeData.error || !periodeData.periode) {
+            showPeriodeDitutupState(periodeData.error);
             return;
         }
 
@@ -215,11 +251,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         setupProgramOptions(periodeData.periode);
         setupDokumenSyarat(periodeData.periode);
 
-        // Ambil Peminatan
-        const peminatanRes = await fetch('/api/peminatan/list.php');
-        const peminatanData = await peminatanRes.json();
-        if (peminatanRes.ok && peminatanData.data) {
-            setupPeminatanOptions(peminatanData.data);
+        if (peminatanRes && peminatanRes.ok) {
+            const peminatanData = await peminatanRes.json();
+            if (peminatanData && peminatanData.data) {
+                setupPeminatanOptions(peminatanData.data);
+            }
         }
 
         // Live validation IPK
@@ -936,6 +972,10 @@ function scrollToFormTop() {
 }
 
 function updateUI(shouldScroll = true) {
+    if (typeof window.syncMobileWizardProgress === 'function') {
+        window.syncMobileWizardProgress(currentStep);
+    }
+
     // Labels
     document.querySelectorAll('.step-indicator').forEach(el => {
         const s = parseInt(el.dataset.step);

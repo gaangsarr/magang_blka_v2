@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Riwayat & Pengumuman — REMATE (Rekrutmen Magang Talenta Energi)</title>
+    <title>Riwayat & Pengumuman : REMATE (Rekrutmen Magang Talenta Energi)</title>
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/assets/img/logo_itpln.png">
     <link rel="apple-touch-icon" href="/assets/img/logo_itpln.png">
@@ -22,17 +22,29 @@
         display: flex;
         flex-direction: column;
         margin: 0;
+        background-color: #F8FAFC;
     }
 
     .page-header {
         flex-shrink: 0;
+        text-align: center;
+        padding: 32px 20px 20px;
+    }
+
+    .page-header h1 {
+        font-family: var(--font-heading);
+        font-size: clamp(1.45rem, 4vw, 2rem);
+        color: #0B192C;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        margin-bottom: 6px;
     }
 
     .status-container {
         max-width: 1140px;
         width: 100%;
         margin: 0 auto;
-        padding: 0 20px 48px;
+        padding: 0 16px 48px;
         flex: 1 0 auto;
         display: flex;
         flex-direction: column;
@@ -41,9 +53,9 @@
     .card {
         background: #ffffff;
         border-radius: 20px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
-        border: 1px solid rgba(226, 232, 240, 0.95);
-        padding: 32px;
+        box-shadow: 0 10px 30px rgba(11, 25, 44, 0.04);
+        border: 1px solid #E2E8F0;
+        padding: 28px;
         position: relative;
         overflow: hidden;
     }
@@ -68,7 +80,8 @@
     .btn {
         border-radius: 10px;
         padding: 10px 20px;
-        font-weight: 600;
+        font-weight: 700;
+        min-height: 44px;
         transition: transform 0.1s, box-shadow 0.2s;
     }
     
@@ -126,6 +139,10 @@
         background: #fafbfc;
     }
 
+    .history-cell-value {
+        display: contents;
+    }
+
     .badge-result {
         display: inline-flex;
         align-items: center;
@@ -166,40 +183,40 @@
         border: 1px solid #bae6fd;
     }
 
-
     .btn-view-detail {
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        padding: 7px 14px;
+        padding: 8px 16px;
         border-radius: 8px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        color: #0b3d6b;
-        background: rgba(11, 61, 107, 0.06);
-        border: 1px solid rgba(11, 61, 107, 0.12);
+        font-size: 0.825rem;
+        font-weight: 700;
+        color: #0B192C;
+        background: rgba(11, 25, 44, 0.06);
+        border: 1px solid rgba(11, 25, 44, 0.14);
         cursor: pointer;
         transition: all 0.15s ease;
         text-decoration: none;
         white-space: nowrap;
+        min-height: 38px;
     }
 
     .btn-view-detail:hover {
-        background: #0b3d6b;
+        background: #0B192C;
         color: #ffffff;
-        border-color: #0b3d6b;
-        transform: translateY(-1px);
+        border-color: #0B192C;
     }
 
-    /* Modal Styling */
+    /* Modal Styling & Centered Floating Dialog */
     .modal-detail-overlay {
         position: fixed;
         inset: 0;
-        width: 100vw;
-        height: 100vh;
-        background: rgba(15, 23, 42, 0.6);
-        backdrop-filter: blur(6px);
-        -webkit-backdrop-filter: blur(6px);
+        width: 100%;
+        height: 100%;
+        height: 100dvh;
+        background: rgba(11, 25, 44, 0.65);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
         z-index: 99999;
         display: flex;
         align-items: center;
@@ -207,7 +224,7 @@
         opacity: 0;
         pointer-events: none;
         transition: opacity 0.25s ease;
-        padding: 16px;
+        padding: 24px 20px;
         overflow-y: auto;
         box-sizing: border-box;
     }
@@ -221,16 +238,16 @@
         background: #ffffff;
         border-radius: 20px;
         width: 100%;
-        max-width: 600px;
+        max-width: 620px;
         max-height: calc(100vh - 32px);
         max-height: calc(100dvh - 32px);
         display: flex;
         flex-direction: column;
         overflow: hidden;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-        transform: scale(0.94);
-        transition: transform 0.25s ease;
-        border: 1px solid rgba(226, 232, 240, 0.8);
+        box-shadow: 0 25px 50px -12px rgba(11, 25, 44, 0.25);
+        transform: scale(0.96);
+        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        border: 1px solid #E2E8F0;
         text-align: left;
         margin: auto;
     }
@@ -239,9 +256,195 @@
         transform: scale(1);
     }
 
+    .modal-card-header {
+        padding: 20px 24px;
+        border-bottom: 1px solid #E2E8F0;
+        background: #FFFFFF;
+        flex-shrink: 0;
+    }
+
+    .modal-card-body {
+        padding: 20px 24px;
+        overflow-y: auto;
+        flex: 1 1 auto;
+    }
+
+    .modal-card-footer {
+        padding: 14px 24px;
+        border-top: 1px solid #E2E8F0;
+        background: #F8FAFC;
+        display: flex;
+        justify-content: flex-end;
+        flex-shrink: 0;
+    }
+
     @media (max-width: 768px) {
         .card { padding: 20px; }
         .table-history th, .table-history td { padding: 12px 14px; }
+    }
+
+    /* Mobile Table-to-Card & Bottom-Sheet Refinements */
+    @media (max-width: 640px) {
+        .page-header {
+            padding: 24px 16px 14px;
+        }
+
+        .status-container {
+            padding: 0 12px 36px;
+        }
+
+        #history-card {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            overflow: visible !important;
+        }
+
+        .history-card-header {
+            background: #ffffff !important;
+            border: 1px solid #E2E8F0 !important;
+            border-radius: 16px !important;
+            padding: 16px 18px !important;
+            margin-bottom: 14px !important;
+            box-shadow: 0 2px 6px rgba(11, 25, 44, 0.04) !important;
+        }
+
+        .table-history-wrapper {
+            overflow: visible;
+            background: transparent;
+        }
+
+        .table-history {
+            min-width: 0 !important;
+            width: 100% !important;
+        }
+
+        .table-history, .table-history thead, .table-history tbody, .table-history tr, .table-history td {
+            display: block;
+            width: 100% !important;
+            box-sizing: border-box;
+            min-width: 0 !important;
+        }
+
+        .table-history thead {
+            display: none;
+        }
+
+        .table-history tbody tr {
+            margin-bottom: 16px;
+            border: 1.5px solid #E2E8F0;
+            border-radius: 16px;
+            padding: 16px;
+            background: #FFFFFF;
+            box-shadow: 0 2px 6px rgba(11, 25, 44, 0.04);
+            position: relative;
+        }
+
+        .table-history td {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #F1F5F9;
+            padding: 10px 0;
+            text-align: right;
+            min-width: 0 !important;
+            max-width: 100% !important;
+            gap: 12px;
+        }
+
+        .table-history td:first-child {
+            padding-top: 0;
+            border-bottom: 1.5px solid #F1F5F9;
+            padding-bottom: 10px;
+            margin-bottom: 4px;
+        }
+
+        .table-history td:last-child {
+            border-bottom: none;
+            padding-top: 14px;
+            padding-bottom: 0;
+            width: 100% !important;
+            display: block !important;
+        }
+
+        .table-history td:last-child::before {
+            display: none !important;
+        }
+
+        .table-history td:last-child .btn-view-detail {
+            width: 100% !important;
+            justify-content: center;
+            min-height: 44px;
+            font-size: 0.925rem;
+            background: #0B192C;
+            color: #FFFFFF;
+            border-color: #0B192C;
+        }
+
+        .table-history td::before {
+            content: attr(data-label);
+            font-weight: 700;
+            color: #64748B;
+            text-align: left;
+            flex-shrink: 0;
+            font-size: 0.775rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            max-width: 42%;
+        }
+
+        .history-cell-value {
+            flex: 1;
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 3px;
+            word-break: break-word;
+            max-width: 58%;
+        }
+
+        /* Mobile Modal - Floating Centered Dialog with Generous Screen Gutters */
+        .modal-detail-overlay {
+            padding: 24px 20px !important;
+            align-items: center !important;
+            justify-content: center !important;
+            box-sizing: border-box !important;
+        }
+
+        .modal-detail-card {
+            border-radius: 20px !important;
+            width: calc(100% - 16px) !important;
+            max-width: 440px !important;
+            max-height: 86vh !important;
+            max-height: 86dvh !important;
+            margin: auto !important;
+            transform: scale(0.96) !important;
+            border: 1.5px solid #CBD5E1 !important;
+            box-shadow: 0 24px 50px -12px rgba(11, 25, 44, 0.4) !important;
+        }
+
+        .modal-detail-overlay.active .modal-detail-card {
+            transform: scale(1) !important;
+        }
+
+        .modal-card-header {
+            padding: 18px 20px;
+        }
+
+        .modal-card-body {
+            padding: 16px 20px;
+        }
+
+        .modal-card-footer {
+            padding: 14px 20px;
+        }
+
+        .modal-card-footer .btn {
+            width: 100%;
+            min-height: 44px;
+        }
     }
 </style>
 <body class="dot-bg">
@@ -347,9 +550,9 @@
     </div>
 
     <!-- Page Title Header -->
-    <div class="page-header" style="padding: 28px 20px 20px; text-align: center;">
-      <h1 style="font-size: 2rem; color: #0b3d6b; margin-bottom: 6px;">Riwayat Pendaftaran & Pengumuman</h1>
-      <p class="text-abu" style="color: #64748b; font-size: 0.95rem;">Daftar periode magang yang Anda ikuti dan status hasil penetapan resmi.</p>
+    <div class="page-header">
+      <h1>Riwayat Pendaftaran &amp; Pengumuman</h1>
+      <p class="text-abu" style="color: #64748b; font-size: 0.95rem; max-width: 600px; margin: 0 auto;">Daftar periode magang yang Anda ikuti dan status hasil penetapan resmi.</p>
     </div>
 
     <div class="status-container">
@@ -372,7 +575,7 @@
 
         <!-- Main History Card -->
         <div class="card" id="history-card" style="padding: 0; overflow: hidden;">
-            <div style="padding: 20px 24px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; background: #ffffff;">
+            <div class="history-card-header" style="padding: 20px 24px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; background: #ffffff;">
                 <div>
                     <h3 style="color: #0b3d6b; font-size: 1.15rem; font-weight: 700; margin: 0;">Daftar Pendaftaran Saya</h3>
                     <p style="color: #64748b; font-size: 0.85rem; margin: 4px 0 0 0;" id="history-subtitle">Memuat data pendaftaran...</p>
@@ -879,10 +1082,12 @@
             }
 
             modalDetail.classList.add('active');
+            document.body.style.overflow = 'hidden';
         }
 
         function closeModalDetail() {
             modalDetail.classList.remove('active');
+            document.body.style.overflow = '';
         }
 
         if (btnCloseModal) btnCloseModal.addEventListener('click', closeModalDetail);
@@ -896,17 +1101,26 @@
         // Load Status & Profile
         async function fetchStatusAndProfile() {
             try {
-                // Fetch Auth Status
-                const authRes = await fetch('/api/auth/status.php');
+                // Fetch Auth Status and Registration History in Parallel (Anti-Lag Cloudflare Tunnel)
+                const [authRes, res] = await Promise.all([
+                    fetch('/api/auth/status.php').catch(() => null),
+                    fetch('/api/mahasiswa/status_pendaftaran.php').catch(() => null)
+                ]);
+
+                if (!authRes || !authRes.ok) {
+                    window.location.href = '/login.html';
+                    return;
+                }
+
                 const authData = await authRes.json();
                 
-                if (authRes.ok && authData.role === 'admin') {
+                if (authData.role === 'admin') {
                     const targetUrl = authData.redirect_to || (authData.admin_role === 'admin_perusahaan' ? '/perusahaan/index.html' : '/admin/index.html');
                     window.location.replace(targetUrl);
                     return;
                 }
 
-                if (authRes.ok && authData.user) {
+                if (authData.user) {
                     const u = authData.user;
                     const shortName = u.nama ? u.nama.split(' ')[0] : 'Mahasiswa';
                     const initial = u.nama ? u.nama.charAt(0).toUpperCase() : 'M';
@@ -937,9 +1151,7 @@
                     if (mobileMeta) mobileMeta.textContent = (u.nim || '-') + (u.jurusan ? ' • ' + u.jurusan : '');
                 }
 
-                // Fetch Registration History
-                const res = await fetch('/api/mahasiswa/status_pendaftaran.php');
-                const json = await res.json();
+                const json = res && res.ok ? await res.json() : { ok: false };
                 
                 const newPeriodBanner = document.getElementById('new-period-banner');
                 const historyCard = document.getElementById('history-card');
@@ -1118,24 +1330,34 @@
 
                 return `
                     <tr>
-                        <td style="min-width: 170px;">
-                            <strong style="color: #0b3d6b; font-size: 0.925rem; display: block;">${escapeHtml(item.periode_nama)}</strong>
-                            ${periodeStatusHtml}
+                        <td data-label="Periode Magang" style="min-width: 170px;">
+                            <div class="history-cell-value">
+                                <strong style="color: #0B192C; font-size: 0.925rem; display: block;">${escapeHtml(item.periode_nama)}</strong>
+                                ${periodeStatusHtml}
+                            </div>
                         </td>
-                        <td style="min-width: 130px;">
-                            <span style="font-weight: 600; color: #1e293b;">${progName}</span>
+                        <td data-label="Program" style="min-width: 130px;">
+                            <div class="history-cell-value">
+                                <span style="font-weight: 600; color: #1e293b;">${progName}</span>
+                            </div>
                         </td>
-                        <td style="min-width: 140px;">
-                            <span style="font-family: monospace; font-size: 0.85rem; color: #475569;">${escapeHtml(item.submitted_at)}</span>
+                        <td data-label="Tanggal Daftar" style="min-width: 140px;">
+                            <div class="history-cell-value">
+                                <span class="tabular-nums" style="font-family: monospace; font-size: 0.85rem; color: #475569;">${escapeHtml(item.submitted_at)}</span>
+                            </div>
                         </td>
-                        <td style="min-width: 220px;">
-                            <span style="font-weight: 600; color: #0b3d6b;">${escapeHtml(item.nama_unit)}</span>
-                            ${item.is_dipindahkan && isPub ? `<div style="font-size: 0.75rem; color: #d97706; font-weight: 600; margin-top: 2px;">(Penetapan Baru)</div>` : ''}
+                        <td data-label="Unit Penempatan" style="min-width: 220px;">
+                            <div class="history-cell-value">
+                                <span style="font-weight: 600; color: #0B192C;">${escapeHtml(item.nama_unit)}</span>
+                                ${item.is_dipindahkan && isPub ? `<div style="font-size: 0.75rem; color: #d97706; font-weight: 600; margin-top: 2px;">(Penetapan Baru)</div>` : ''}
+                            </div>
                         </td>
-                        <td style="min-width: 170px;">
-                            ${badgeHtml}
+                        <td data-label="Status Seleksi" style="min-width: 170px;">
+                            <div class="history-cell-value">
+                                ${badgeHtml}
+                            </div>
                         </td>
-                        <td style="text-align: center; width: 110px;">
+                        <td data-label="Aksi" style="text-align: center; width: 110px;">
                             <button type="button" class="btn-view-detail" onclick="openModalDetail(${item.pendaftaran_id})">
                                 <span>Lihat Hasil</span>
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
