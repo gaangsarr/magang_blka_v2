@@ -1721,29 +1721,38 @@ function renderPendaftarTable(list) {
         });
 
         // Berkas Dokumen Upload (Transkrip, CV, Porto)
+        const extIcon = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>`;
+        const fileIcon = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
+
         let docsHtml = '';
         if (mhs.transkrip_path) {
+            const isLink = isDocUrl(mhs.transkrip_path);
+            const targetUrl = isLink ? mhs.transkrip_path : `/api/admin/transkrip/download.php?pendaftaran_id=${mhs.id}`;
             docsHtml += `
-                <button type="button" class="btn-doc-pill pill-transkrip btn-transkrip-mhs" data-id="${mhs.id}" data-nama="${escapeHtml(mhs.nama)}" data-nim="${escapeHtml(mhs.nim)}" title="Pratinjau Transkrip Nilai (PDF)">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                    <span>Transkrip</span>
-                </button>
+                <a href="${escapeHtml(targetUrl)}" target="_blank" rel="noopener noreferrer" class="btn-doc-pill pill-transkrip" title="${isLink ? 'Buka Tautan: ' + escapeHtml(mhs.transkrip_path) : 'Pratinjau Transkrip Nilai (PDF)'}" style="text-decoration: none;">
+                    ${isLink ? extIcon : fileIcon}
+                    <span>${isLink ? 'Link Transkrip' : 'Transkrip'}</span>
+                </a>
             `;
         }
         if (mhs.cv_path) {
+            const isLink = isDocUrl(mhs.cv_path);
+            const targetUrl = isLink ? mhs.cv_path : `/api/admin/cv/download.php?pendaftaran_id=${mhs.id}`;
             docsHtml += `
-                <button type="button" class="btn-doc-pill pill-cv btn-cv-mhs" data-id="${mhs.id}" data-nama="${escapeHtml(mhs.nama)}" data-nim="${escapeHtml(mhs.nim)}" title="Pratinjau Curriculum Vitae / CV (PDF)">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><circle cx="12" cy="12" r="2.5"/></svg>
-                    <span>CV</span>
-                </button>
+                <a href="${escapeHtml(targetUrl)}" target="_blank" rel="noopener noreferrer" class="btn-doc-pill pill-cv" title="${isLink ? 'Buka Tautan: ' + escapeHtml(mhs.cv_path) : 'Pratinjau Curriculum Vitae / CV (PDF)'}" style="text-decoration: none;">
+                    ${isLink ? extIcon : fileIcon}
+                    <span>${isLink ? 'Link CV' : 'CV'}</span>
+                </a>
             `;
         }
         if (mhs.porto_path) {
+            const isLink = isDocUrl(mhs.porto_path);
+            const targetUrl = isLink ? mhs.porto_path : `/api/admin/porto/download.php?pendaftaran_id=${mhs.id}`;
             docsHtml += `
-                <button type="button" class="btn-doc-pill pill-porto btn-porto-mhs" data-id="${mhs.id}" data-nama="${escapeHtml(mhs.nama)}" data-nim="${escapeHtml(mhs.nim)}" title="Pratinjau Portofolio Karya (PDF)">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-                    <span>Portofolio</span>
-                </button>
+                <a href="${escapeHtml(targetUrl)}" target="_blank" rel="noopener noreferrer" class="btn-doc-pill pill-porto" title="${isLink ? 'Buka Tautan: ' + escapeHtml(mhs.porto_path) : 'Pratinjau Portofolio Karya (PDF)'}" style="text-decoration: none;">
+                    ${isLink ? extIcon : fileIcon}
+                    <span>${isLink ? 'Link Porto' : 'Portofolio'}</span>
+                </a>
             `;
         }
         if (!docsHtml) {
@@ -1851,26 +1860,7 @@ function renderPendaftarTable(list) {
         });
     });
 
-    tbody.querySelectorAll('.btn-transkrip-mhs').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const mhsId = btn.getAttribute('data-id');
-            window.open(`/api/admin/transkrip/download.php?pendaftaran_id=${mhsId}`, '_blank');
-        });
-    });
 
-    tbody.querySelectorAll('.btn-cv-mhs').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const mhsId = btn.getAttribute('data-id');
-            window.open(`/api/admin/cv/download.php?pendaftaran_id=${mhsId}`, '_blank');
-        });
-    });
-
-    tbody.querySelectorAll('.btn-porto-mhs').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const mhsId = btn.getAttribute('data-id');
-            window.open(`/api/admin/porto/download.php?pendaftaran_id=${mhsId}`, '_blank');
-        });
-    });
 
     tbody.querySelectorAll('.btn-view-mhs').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -1953,52 +1943,73 @@ function showMhsDetailModal(mhs) {
         </div>
 
         <div class="mhs-detail-item" style="margin-top: 14px; display: flex; flex-direction: column; gap: 8px;">
-            <div class="mhs-detail-label" style="font-weight: 700; color: #475569;">Dokumen Terlampir</div>
+            <div class="mhs-detail-label" style="font-weight: 700; color: #475569;">Dokumen Pendaftaran (Tautan / Berkas)</div>
             
-            ${mhs.transkrip_path ? `
-            <div style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; padding: 10px 14px; border-radius: 8px; border: 1px solid #e2e8f0; flex-wrap: wrap; gap: 8px;">
-                <div>
-                    <div style="font-size: 0.725rem; color: #64748b; font-weight: 600;">Transkrip Nilai</div>
-                    <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                        <span style="font-weight: 700; font-size: 0.85rem; color: #1e293b; font-family: monospace;">${escapeHtml(mhs.transkrip_filename || (mhs.transkrip_path ? mhs.transkrip_path.split('/').pop() : `${mhs.nim}.pdf`))}</span>
+            ${mhs.transkrip_path ? (() => {
+                const isLink = isDocUrl(mhs.transkrip_path);
+                const targetUrl = isLink ? mhs.transkrip_path : `/api/admin/transkrip/download.php?pendaftaran_id=${mhs.id}`;
+                return `
+                <div style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; padding: 10px 14px; border-radius: 8px; border: 1px solid #e2e8f0; flex-wrap: wrap; gap: 8px;">
+                    <div style="max-width: 65%;">
+                        <div style="font-size: 0.725rem; color: #64748b; font-weight: 600;">Transkrip Nilai</div>
+                        <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
+                            ${isLink 
+                                ? `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`
+                                : `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>`}
+                            <span style="font-weight: 700; font-size: 0.85rem; color: #1e293b; font-family: monospace; word-break: break-all;">${escapeHtml(isLink ? mhs.transkrip_path : (mhs.transkrip_filename || (mhs.transkrip_path ? mhs.transkrip_path.split('/').pop() : `${mhs.nim}.pdf`)))}</span>
+                        </div>
                     </div>
-                </div>
-                <button type="button" id="btn-modal-transkrip-viewer" class="btn-portal-outline" style="padding: 6px 14px; font-size: 0.8rem; font-weight: 700; color: #0284c7; border-color: #bae6fd; background: #e0f2fe; display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                    <span>Pratinjau Transkrip Nilai</span>
-                </button>
-            </div>` : ''}
+                    <a href="${escapeHtml(targetUrl)}" target="_blank" rel="noopener noreferrer" class="btn-portal-outline" style="padding: 6px 14px; font-size: 0.8rem; font-weight: 700; color: #0284c7; border-color: #bae6fd; background: #e0f2fe; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; cursor: pointer;">
+                        ${isLink 
+                            ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg><span>Buka Link Transkrip</span>`
+                            : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg><span>Pratinjau Transkrip Nilai</span>`}
+                    </a>
+                </div>`;
+            })() : ''}
 
-            ${mhs.cv_path ? `
-            <div style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; padding: 10px 14px; border-radius: 8px; border: 1px solid #e2e8f0; flex-wrap: wrap; gap: 8px;">
-                <div>
-                    <div style="font-size: 0.725rem; color: #64748b; font-weight: 600;">Curriculum Vitae (CV)</div>
-                    <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><circle cx="12" cy="12" r="2.5"/><path d="M8 18c0-1.8 1.8-3 4-3s4 1.2 4 3"/></svg>
-                        <span style="font-weight: 700; font-size: 0.85rem; color: #1e293b; font-family: monospace;">${escapeHtml(mhs.cv_filename || (mhs.cv_path ? mhs.cv_path.split('/').pop() : `${mhs.nim}_CV.pdf`))}</span>
+            ${mhs.cv_path ? (() => {
+                const isLink = isDocUrl(mhs.cv_path);
+                const targetUrl = isLink ? mhs.cv_path : `/api/admin/cv/download.php?pendaftaran_id=${mhs.id}`;
+                return `
+                <div style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; padding: 10px 14px; border-radius: 8px; border: 1px solid #e2e8f0; flex-wrap: wrap; gap: 8px;">
+                    <div style="max-width: 65%;">
+                        <div style="font-size: 0.725rem; color: #64748b; font-weight: 600;">Curriculum Vitae (CV)</div>
+                        <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
+                            ${isLink 
+                                ? `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`
+                                : `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><circle cx="12" cy="12" r="2.5"/><path d="M8 18c0-1.8 1.8-3 4-3s4 1.2 4 3"/></svg>`}
+                            <span style="font-weight: 700; font-size: 0.85rem; color: #1e293b; font-family: monospace; word-break: break-all;">${escapeHtml(isLink ? mhs.cv_path : (mhs.cv_filename || (mhs.cv_path ? mhs.cv_path.split('/').pop() : `${mhs.nim}_CV.pdf`)))}</span>
+                        </div>
                     </div>
-                </div>
-                <button type="button" id="btn-modal-cv-viewer" class="btn-portal-outline" style="padding: 6px 14px; font-size: 0.8rem; font-weight: 700; color: #047857; border-color: #a7f3d0; background: #d1fae5; display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                    <span>Pratinjau CV</span>
-                </button>
-            </div>` : ''}
+                    <a href="${escapeHtml(targetUrl)}" target="_blank" rel="noopener noreferrer" class="btn-portal-outline" style="padding: 6px 14px; font-size: 0.8rem; font-weight: 700; color: #047857; border-color: #a7f3d0; background: #d1fae5; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; cursor: pointer;">
+                        ${isLink 
+                            ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg><span>Buka Link CV</span>`
+                            : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg><span>Pratinjau CV</span>`}
+                    </a>
+                </div>`;
+            })() : ''}
 
-            ${mhs.porto_path ? `
-            <div style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; padding: 10px 14px; border-radius: 8px; border: 1px solid #e2e8f0; flex-wrap: wrap; gap: 8px;">
-                <div>
-                    <div style="font-size: 0.725rem; color: #64748b; font-weight: 600;">Portofolio</div>
-                    <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-                        <span style="font-weight: 700; font-size: 0.85rem; color: #1e293b; font-family: monospace;">${escapeHtml(mhs.porto_filename || (mhs.porto_path ? mhs.porto_path.split('/').pop() : `${mhs.nim}_Porto.pdf`))}</span>
+            ${mhs.porto_path ? (() => {
+                const isLink = isDocUrl(mhs.porto_path);
+                const targetUrl = isLink ? mhs.porto_path : `/api/admin/porto/download.php?pendaftaran_id=${mhs.id}`;
+                return `
+                <div style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; padding: 10px 14px; border-radius: 8px; border: 1px solid #e2e8f0; flex-wrap: wrap; gap: 8px;">
+                    <div style="max-width: 65%;">
+                        <div style="font-size: 0.725rem; color: #64748b; font-weight: 600;">Portofolio</div>
+                        <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
+                            ${isLink 
+                                ? `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`
+                                : `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>`}
+                            <span style="font-weight: 700; font-size: 0.85rem; color: #1e293b; font-family: monospace; word-break: break-all;">${escapeHtml(isLink ? mhs.porto_path : (mhs.porto_filename || (mhs.porto_path ? mhs.porto_path.split('/').pop() : `${mhs.nim}_Porto.pdf`)))}</span>
+                        </div>
                     </div>
-                </div>
-                <button type="button" id="btn-modal-porto-viewer" class="btn-portal-outline" style="padding: 6px 14px; font-size: 0.8rem; font-weight: 700; color: #6d28d9; border-color: #ddd6fe; background: #ede9fe; display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                    <span>Pratinjau Portofolio</span>
-                </button>
-            </div>` : ''}
+                    <a href="${escapeHtml(targetUrl)}" target="_blank" rel="noopener noreferrer" class="btn-portal-outline" style="padding: 6px 14px; font-size: 0.8rem; font-weight: 700; color: #6d28d9; border-color: #ddd6fe; background: #ede9fe; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; cursor: pointer;">
+                        ${isLink 
+                            ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg><span>Buka Link Porto</span>`
+                            : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg><span>Pratinjau Portofolio</span>`}
+                    </a>
+                </div>`;
+            })() : ''}
         </div>
 
         <div class="mhs-detail-item" style="margin-top: 14px;">
@@ -2013,27 +2024,6 @@ function showMhsDetailModal(mhs) {
     `;
 
     modal.classList.remove('hidden');
-
-    const btnTranskrip = document.getElementById('btn-modal-transkrip-viewer');
-    if (btnTranskrip) {
-        btnTranskrip.addEventListener('click', () => {
-            window.open(`/api/admin/transkrip/download.php?pendaftaran_id=${mhs.id}`, '_blank');
-        });
-    }
-
-    const btnCv = document.getElementById('btn-modal-cv-viewer');
-    if (btnCv) {
-        btnCv.addEventListener('click', () => {
-            window.open(`/api/admin/cv/download.php?pendaftaran_id=${mhs.id}`, '_blank');
-        });
-    }
-
-    const btnPorto = document.getElementById('btn-modal-porto-viewer');
-    if (btnPorto) {
-        btnPorto.addEventListener('click', () => {
-            window.open(`/api/admin/porto/download.php?pendaftaran_id=${mhs.id}`, '_blank');
-        });
-    }
 }
 
 function renderPendaftarPagination(pag) {
@@ -2229,6 +2219,10 @@ function escapeHtml(text) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+}
+
+function isDocUrl(path) {
+    return !!(path && typeof path === 'string' && (path.startsWith('http://') || path.startsWith('https://')));
 }
 
 // ==========================================
@@ -2842,14 +2836,18 @@ function openCandidateDrawer(mhs) {
 
         if (mhs.transkrip_path) {
             hasAnyDoc = true;
+            const isLink = isDocUrl(mhs.transkrip_path);
+            const targetUrl = isLink ? mhs.transkrip_path : `/api/admin/transkrip/download.php?pendaftaran_id=${mhs.id}`;
             docsContainer.innerHTML += `
                 <div class="drawer-doc-card">
                     <div class="drawer-doc-info">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #0284c7;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                        <span>Transkrip Nilai Akademik Resmi</span>
+                        ${isLink 
+                            ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #0284c7;"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`
+                            : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #0284c7;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`}
+                        <span>${isLink ? 'Tautan Transkrip Nilai (Google Drive / Publik)' : 'Transkrip Nilai Akademik Resmi'}</span>
                     </div>
-                    <a href="/api/admin/transkrip/download.php?pendaftaran_id=${mhs.id}" target="_blank" class="drawer-doc-btn">
-                        <span>Lihat PDF</span>
+                    <a href="${escapeHtml(targetUrl)}" target="_blank" rel="noopener noreferrer" class="drawer-doc-btn">
+                        <span>${isLink ? 'Buka Link' : 'Lihat PDF'}</span>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                     </a>
                 </div>
@@ -2858,14 +2856,18 @@ function openCandidateDrawer(mhs) {
 
         if (mhs.cv_path) {
             hasAnyDoc = true;
+            const isLink = isDocUrl(mhs.cv_path);
+            const targetUrl = isLink ? mhs.cv_path : `/api/admin/cv/download.php?pendaftaran_id=${mhs.id}`;
             docsContainer.innerHTML += `
                 <div class="drawer-doc-card">
                     <div class="drawer-doc-info">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #10b981;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><circle cx="12" cy="12" r="2.5"/><path d="M8 18c0-1.8 1.8-3 4-3s4 1.2 4 3"/></svg>
-                        <span>Curriculum Vitae (CV) Kandidat</span>
+                        ${isLink 
+                            ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #10b981;"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`
+                            : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #10b981;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><circle cx="12" cy="12" r="2.5"/><path d="M8 18c0-1.8 1.8-3 4-3s4 1.2 4 3"/></svg>`}
+                        <span>${isLink ? 'Tautan Curriculum Vitae / CV (Publik)' : 'Curriculum Vitae (CV) Kandidat'}</span>
                     </div>
-                    <a href="/api/admin/cv/download.php?pendaftaran_id=${mhs.id}" target="_blank" class="drawer-doc-btn">
-                        <span>Lihat PDF</span>
+                    <a href="${escapeHtml(targetUrl)}" target="_blank" rel="noopener noreferrer" class="drawer-doc-btn">
+                        <span>${isLink ? 'Buka Link' : 'Lihat PDF'}</span>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                     </a>
                 </div>
@@ -2874,14 +2876,18 @@ function openCandidateDrawer(mhs) {
 
         if (mhs.porto_path) {
             hasAnyDoc = true;
+            const isLink = isDocUrl(mhs.porto_path);
+            const targetUrl = isLink ? mhs.porto_path : `/api/admin/porto/download.php?pendaftaran_id=${mhs.id}`;
             docsContainer.innerHTML += `
                 <div class="drawer-doc-card">
                     <div class="drawer-doc-info">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #7c3aed;"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-                        <span>Portofolio Hasil Karya</span>
+                        ${isLink 
+                            ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #7c3aed;"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`
+                            : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #7c3aed;"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>`}
+                        <span>${isLink ? 'Tautan Portofolio Hasil Karya (Publik)' : 'Portofolio Hasil Karya'}</span>
                     </div>
-                    <a href="/api/admin/porto/download.php?pendaftaran_id=${mhs.id}" target="_blank" class="drawer-doc-btn">
-                        <span>Lihat PDF</span>
+                    <a href="${escapeHtml(targetUrl)}" target="_blank" rel="noopener noreferrer" class="drawer-doc-btn">
+                        <span>${isLink ? 'Buka Link' : 'Lihat PDF'}</span>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                     </a>
                 </div>

@@ -41,6 +41,7 @@ try {
         'periode' => [
             'id' => (int) $periode['id'],
             'nama' => $periode['nama'],
+            'status' => 'dibuka',
             'program_1_bulan' => (bool) $periode['program_1_bulan'],
             'program_3_bulan' => (bool) ($periode['program_3_bulan'] ?? false),
             'program_4_bulan' => (bool) ($periode['program_4_bulan'] ?? false),

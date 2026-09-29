@@ -67,89 +67,60 @@ Auth::startSession(startPHP: true);
 $mhsAuth = Auth::getMahasiswa();
 $mhsNim = preg_replace('/[^a-zA-Z0-9_-]/', '', (string)($mhsAuth['nim'] ?? ''));
 
-// 1. Validasi File Transkrip Nilai (jika disyaratkan)
-$transkripPath = null;
-if (!empty($periodeDataEarly['syarat_transkrip'])) {
-    $transkripPath = trim((string)($body['transkrip_path'] ?? $_SESSION['transkrip_temp_path'] ?? ''));
-    if (empty($transkripPath)) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Berkas transkrip nilai wajib diunggah sebelum mengirim pendaftaran.']);
-        exit;
+// Helper validasi tautan web / path berkas
+$validateDokumen = function (?string $rawVal, string $docType, string $docLabel, string $mhsNim, bool $isMandatory) use ($root): ?string {
+    $val = trim((string)$rawVal);
+    if (empty($val)) {
+        if ($isMandatory) {
+            http_response_code(400);
+            echo json_encode(['error' => "Tautan berkas {$docLabel} wajib diisi sebelum mengirim pendaftaran."]);
+            exit;
+        }
+        return null;
     }
-    if (!str_starts_with($transkripPath, 'transkrip/') || str_contains($transkripPath, '..')) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Format path transkrip tidak valid.']);
-        exit;
-    }
-    if (!str_ends_with($transkripPath, '/' . $mhsNim . '.pdf') && !str_ends_with($transkripPath, $mhsNim . '.pdf')) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Dokumen transkrip tidak cocok dengan NIM Anda. Silakan unggah ulang.']);
-        exit;
-    }
-    $transkripFullPath = dirname(__DIR__, 2) . '/storage/' . $transkripPath;
-    if (!file_exists($transkripFullPath) || !is_readable($transkripFullPath)) {
-        http_response_code(400);
-        echo json_encode(['error' => 'File transkrip tidak ditemukan di server. Silakan unggah ulang transkrip Anda.']);
-        unset($_SESSION['transkrip_temp_path'], $_SESSION['transkrip_periode_id']);
-        exit;
-    }
-}
 
-// 2. Validasi File CV (jika disyaratkan)
-$cvPath = null;
-if (!empty($periodeDataEarly['syarat_cv'])) {
-    $cvPath = trim((string)($body['cv_path'] ?? $_SESSION['cv_temp_path'] ?? ''));
-    if (empty($cvPath)) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Berkas Curriculum Vitae (CV) wajib diunggah sebelum mengirim pendaftaran.']);
-        exit;
+    // A. Format URL Web (Google Drive, OneDrive, Dropbox, dll)
+    if (str_starts_with($val, 'http://') || str_starts_with($val, 'https://')) {
+        if (!filter_var($val, FILTER_VALIDATE_URL)) {
+            http_response_code(400);
+            echo json_encode(['error' => "Format tautan {$docLabel} tidak valid. Pastikan diawali dengan https://"]);
+            exit;
+        }
+        return $val;
     }
-    if (!str_starts_with($cvPath, 'cv/') || str_contains($cvPath, '..')) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Format path CV tidak valid.']);
-        exit;
-    }
-    if (!str_ends_with($cvPath, '/' . $mhsNim . '.pdf') && !str_ends_with($cvPath, $mhsNim . '.pdf')) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Dokumen CV tidak cocok dengan NIM Anda. Silakan unggah ulang.']);
-        exit;
-    }
-    $cvFullPath = dirname(__DIR__, 2) . '/storage/' . $cvPath;
-    if (!file_exists($cvFullPath) || !is_readable($cvFullPath)) {
-        http_response_code(400);
-        echo json_encode(['error' => 'File CV tidak ditemukan di server. Silakan unggah ulang CV Anda.']);
-        unset($_SESSION['cv_temp_path'], $_SESSION['cv_periode_id']);
-        exit;
-    }
-}
 
-// 3. Validasi File Portofolio (jika disyaratkan)
-$portoPath = null;
-if (!empty($periodeDataEarly['syarat_porto'])) {
-    $portoPath = trim((string)($body['porto_path'] ?? $_SESSION['porto_temp_path'] ?? ''));
-    if (empty($portoPath)) {
+    // B. Format Berkas Lokal Lama (Backward Compatibility)
+    if (!str_starts_with($val, $docType . '/') || str_contains($val, '..')) {
         http_response_code(400);
-        echo json_encode(['error' => 'Berkas Portofolio wajib diunggah sebelum mengirim pendaftaran.']);
+        echo json_encode(['error' => "Format path {$docLabel} tidak valid."]);
         exit;
     }
-    if (!str_starts_with($portoPath, 'porto/') || str_contains($portoPath, '..')) {
+    if (!str_ends_with($val, '/' . $mhsNim . '.pdf') && !str_ends_with($val, $mhsNim . '.pdf')) {
         http_response_code(400);
-        echo json_encode(['error' => 'Format path Portofolio tidak valid.']);
+        echo json_encode(['error' => "Dokumen {$docLabel} tidak cocok dengan NIM Anda. Silakan periksa kembali."]);
         exit;
     }
-    if (!str_ends_with($portoPath, '/' . $mhsNim . '.pdf') && !str_ends_with($portoPath, $mhsNim . '.pdf')) {
+    $fullPath = $root . '/storage/' . $val;
+    if (!file_exists($fullPath) || !is_readable($fullPath)) {
         http_response_code(400);
-        echo json_encode(['error' => 'Dokumen Portofolio tidak cocok dengan NIM Anda. Silakan unggah ulang.']);
+        echo json_encode(['error' => "Berkas {$docLabel} tidak ditemukan di server. Silakan masukkan tautan berkas Anda."]);
         exit;
     }
-    $portoFullPath = dirname(__DIR__, 2) . '/storage/' . $portoPath;
-    if (!file_exists($portoFullPath) || !is_readable($portoFullPath)) {
-        http_response_code(400);
-        echo json_encode(['error' => 'File Portofolio tidak ditemukan di server. Silakan unggah ulang Portofolio Anda.']);
-        unset($_SESSION['porto_temp_path'], $_SESSION['porto_periode_id']);
-        exit;
-    }
-}
+
+    return $val;
+};
+
+// 1. Validasi Transkrip Nilai
+$rawTranskrip = $body['transkrip_link'] ?? $body['transkrip_path'] ?? $_SESSION['transkrip_temp_path'] ?? '';
+$transkripPath = $validateDokumen($rawTranskrip, 'transkrip', 'Transkrip Nilai', $mhsNim, !empty($periodeDataEarly['syarat_transkrip']));
+
+// 2. Validasi CV
+$rawCv = $body['cv_link'] ?? $body['cv_path'] ?? $_SESSION['cv_temp_path'] ?? '';
+$cvPath = $validateDokumen($rawCv, 'cv', 'Curriculum Vitae (CV)', $mhsNim, !empty($periodeDataEarly['syarat_cv']));
+
+// 3. Validasi Portofolio
+$rawPorto = $body['porto_link'] ?? $body['porto_path'] ?? $_SESSION['porto_temp_path'] ?? '';
+$portoPath = $validateDokumen($rawPorto, 'porto', 'Portofolio', $mhsNim, !empty($periodeDataEarly['syarat_porto']));
 
 
 // Validasi & Sanitasi Ketat Nomor Handphone / WhatsApp (hanya angka, diawali 08/628, 10-14 digit)

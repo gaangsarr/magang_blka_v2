@@ -652,55 +652,6 @@
                         <div><span style="color: #64748b;">NIM:</span> <strong id="modal-mhs-nim" style="color: #0b3d6b; font-family: monospace; display: block;">-</strong></div>
                         <div><span style="color: #64748b;">Jurusan:</span> <span id="modal-mhs-jurusan" style="color: #0f172a; font-weight: 600; display: block;">-</span></div>
                         <div><span style="color: #64748b;">Waktu Pengajuan:</span> <span id="modal-submit-date" style="color: #475569; font-family: monospace; display: block;">-</span></div>
-                        
-                        <div style="grid-column: 1 / -1; margin-top: 6px; padding-top: 10px; border-top: 1px dashed #e2e8f0; display: flex; flex-direction: column; gap: 8px;">
-                            <span style="color: #64748b; font-size: 0.8rem; font-weight: 600; display: block;">Dokumen Terlampir:</span>
-                            
-                            <!-- Transkrip Row -->
-                            <div id="modal-wrapper-transkrip" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; background: #f8fafc; padding: 8px 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
-                                <div>
-                                    <div style="display: flex; align-items: center; gap: 6px;">
-                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                                        <span id="modal-transkrip-filename" style="font-size: 0.85rem; font-weight: 700; color: #1e293b; font-family: monospace;">-</span>
-                                    </div>
-                                    <span id="modal-transkrip-meta" style="font-size: 0.75rem; color: #64748b; display: block; margin-top: 2px;"></span>
-                                </div>
-                                <button type="button" id="modal-btn-download-transkrip" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; color: #0284c7; background: #e0f2fe; border: 1px solid #bae6fd; text-decoration: none; transition: background 0.2s ease; cursor: pointer;">
-                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
-                                    <span>Lihat Transkrip PDF</span>
-                                </button>
-                            </div>
-
-                            <!-- CV Row -->
-                            <div id="modal-wrapper-cv" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; background: #f8fafc; padding: 8px 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
-                                <div>
-                                    <div style="display: flex; align-items: center; gap: 6px;">
-                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                                        <span id="modal-cv-filename" style="font-size: 0.85rem; font-weight: 700; color: #1e293b; font-family: monospace;">-</span>
-                                    </div>
-                                    <span id="modal-cv-meta" style="font-size: 0.75rem; color: #64748b; display: block; margin-top: 2px;"></span>
-                                </div>
-                                <button type="button" id="modal-btn-download-cv" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; color: #047857; background: #d1fae5; border: 1px solid #a7f3d0; text-decoration: none; transition: background 0.2s ease; cursor: pointer;">
-                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
-                                    <span>Lihat CV PDF</span>
-                                </button>
-                            </div>
-
-                            <!-- Portofolio Row -->
-                            <div id="modal-wrapper-porto" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; background: #f8fafc; padding: 8px 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
-                                <div>
-                                    <div style="display: flex; align-items: center; gap: 6px;">
-                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                                        <span id="modal-porto-filename" style="font-size: 0.85rem; font-weight: 700; color: #1e293b; font-family: monospace;">-</span>
-                                    </div>
-                                    <span id="modal-porto-meta" style="font-size: 0.75rem; color: #64748b; display: block; margin-top: 2px;"></span>
-                                </div>
-                                <button type="button" id="modal-btn-download-porto" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; color: #6d28d9; background: #ede9fe; border: 1px solid #ddd6fe; text-decoration: none; transition: background 0.2s ease; cursor: pointer;">
-                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
-                                    <span>Lihat Portofolio PDF</span>
-                                </button>
-                            </div>
-                        </div>
                     </div>
                 </div>
 
@@ -737,7 +688,8 @@
             </div>
 
             <!-- Modal Footer Button -->
-            <div class="modal-card-footer">
+            <div class="modal-card-footer" style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
+                <div id="modal-footer-action-container"></div>
                 <button type="button" id="btn-close-modal-footer" class="btn" style="background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; font-size: 0.875rem; padding: 8px 20px;">Tutup</button>
             </div>
         </div>
@@ -878,98 +830,6 @@
             document.getElementById('modal-mhs-jurusan').innerText = item.jurusan || '-';
             document.getElementById('modal-submit-date').innerText = item.submitted_at;
 
-            const pId = item.pendaftaran_id || item.id;
-
-            // 1. Transkrip Nilai Viewer
-            const wrapTranskrip = document.getElementById('modal-wrapper-transkrip');
-            const btnTranskrip = document.getElementById('modal-btn-download-transkrip');
-            const transkripNameEl = document.getElementById('modal-transkrip-filename');
-            const transkripMetaEl = document.getElementById('modal-transkrip-meta');
-            const transkripFile = item.transkrip_filename || (item.transkrip_path ? item.transkrip_path.split('/').pop() : null);
-
-            if (transkripFile) {
-                if (wrapTranskrip) wrapTranskrip.style.display = 'flex';
-                if (transkripNameEl) transkripNameEl.innerText = transkripFile;
-                if (transkripMetaEl) {
-                    transkripMetaEl.innerText = item.transkrip_uploaded_at 
-                        ? `Diunggah: ${item.transkrip_uploaded_at} (PDF)` 
-                        : 'Berkas PDF Transkrip Nilai';
-                }
-                if (btnTranskrip) {
-                    btnTranskrip.style.display = 'inline-flex';
-                    btnTranskrip.onclick = (e) => {
-                        e.preventDefault();
-                        window.open(`/api/mahasiswa/transkrip/download.php?pendaftaran_id=${pId}`, '_blank');
-                    };
-                }
-            } else {
-                if (wrapTranskrip) wrapTranskrip.style.display = 'none';
-                if (btnTranskrip) {
-                    btnTranskrip.style.display = 'none';
-                    btnTranskrip.onclick = null;
-                }
-            }
-
-            // 2. Curriculum Vitae (CV) Viewer
-            const wrapCv = document.getElementById('modal-wrapper-cv');
-            const btnCv = document.getElementById('modal-btn-download-cv');
-            const cvNameEl = document.getElementById('modal-cv-filename');
-            const cvMetaEl = document.getElementById('modal-cv-meta');
-            const cvFile = item.cv_filename || (item.cv_path ? item.cv_path.split('/').pop() : null);
-
-            if (cvFile) {
-                if (wrapCv) wrapCv.style.display = 'flex';
-                if (cvNameEl) cvNameEl.innerText = cvFile;
-                if (cvMetaEl) {
-                    cvMetaEl.innerText = item.cv_uploaded_at 
-                        ? `Diunggah: ${item.cv_uploaded_at} (PDF)` 
-                        : 'Berkas PDF Curriculum Vitae';
-                }
-                if (btnCv) {
-                    btnCv.style.display = 'inline-flex';
-                    btnCv.onclick = (e) => {
-                        e.preventDefault();
-                        window.open(`/api/mahasiswa/cv/download.php?pendaftaran_id=${pId}`, '_blank');
-                    };
-                }
-            } else {
-                if (wrapCv) wrapCv.style.display = 'none';
-                if (btnCv) {
-                    btnCv.style.display = 'none';
-                    btnCv.onclick = null;
-                }
-            }
-
-            // 3. Portofolio Viewer
-            const wrapPorto = document.getElementById('modal-wrapper-porto');
-            const btnPorto = document.getElementById('modal-btn-download-porto');
-            const portoNameEl = document.getElementById('modal-porto-filename');
-            const portoMetaEl = document.getElementById('modal-porto-meta');
-            const portoFile = item.porto_filename || (item.porto_path ? item.porto_path.split('/').pop() : null);
-
-            if (portoFile) {
-                if (wrapPorto) wrapPorto.style.display = 'flex';
-                if (portoNameEl) portoNameEl.innerText = portoFile;
-                if (portoMetaEl) {
-                    portoMetaEl.innerText = item.porto_uploaded_at 
-                        ? `Diunggah: ${item.porto_uploaded_at} (PDF)` 
-                        : 'Berkas PDF Portofolio';
-                }
-                if (btnPorto) {
-                    btnPorto.style.display = 'inline-flex';
-                    btnPorto.onclick = (e) => {
-                        e.preventDefault();
-                        window.open(`/api/mahasiswa/porto/download.php?pendaftaran_id=${pId}`, '_blank');
-                    };
-                }
-            } else {
-                if (wrapPorto) wrapPorto.style.display = 'none';
-                if (btnPorto) {
-                    btnPorto.style.display = 'none';
-                    btnPorto.onclick = null;
-                }
-            }
-
             // Unit Asal
             const unitAsalRow = document.getElementById('modal-unit-asal-row');
             const unitAsalEl = document.getElementById('modal-unit-asal');
@@ -1025,6 +885,16 @@
                     </div>
                 `;
             } else if (st === 'dipindahkan' || isMoved) {
+                const downloadBtn = isPub ? `
+                    <div style="margin-top: 14px; padding-top: 12px; border-top: 1px dashed #fde68a; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                        <span style="font-size: 0.825rem; color: #78350f; font-weight: 500;">Bawa surat rekomendasi resmi ini saat melapor ke kantor penempatan:</span>
+                        <a href="/api/mahasiswa/surat_pengantar/download.php?pendaftaran_id=${item.pendaftaran_id}" target="_blank" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.825rem; font-weight: 700; padding: 7px 14px; background: #0B192C; border: 1px solid #0B192C; color: #ffffff; text-decoration: none; border-radius: 6px;">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            <span>Unduh Surat Rekomendasi (PDF)</span>
+                        </a>
+                    </div>
+                ` : '';
+
                 alertBox.innerHTML = `
                     <div style="padding: 16px 20px; background: #fffbebf5; border: 1px solid #fde68a; border-radius: 12px; color: #92400e;">
                         <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; display: flex; align-items: center; gap: 8px;">
@@ -1034,9 +904,20 @@
                         <p style="margin: 0; font-size: 0.85rem; line-height: 1.5; color: #78350f;">
                             Berdasarkan hasil verifikasi dan penataan kuota operasional, penempatan Anda dialokasikan ke <strong>${escapeHtml(item.nama_unit)}</strong>.
                         </p>
+                        ${downloadBtn}
                     </div>
                 `;
             } else if (st === 'diterima') {
+                const downloadBtn = isPub ? `
+                    <div style="margin-top: 14px; padding-top: 12px; border-top: 1px dashed #a7f3d0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                        <span style="font-size: 0.825rem; color: #065f46; font-weight: 500;">Bawa surat rekomendasi resmi ini saat melapor ke kantor penempatan:</span>
+                        <a href="/api/mahasiswa/surat_pengantar/download.php?pendaftaran_id=${item.pendaftaran_id}" target="_blank" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.825rem; font-weight: 700; padding: 7px 14px; background: #0B192C; border: 1px solid #0B192C; color: #ffffff; text-decoration: none; border-radius: 6px;">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            <span>Unduh Surat Rekomendasi (PDF)</span>
+                        </a>
+                    </div>
+                ` : '';
+
                 alertBox.innerHTML = `
                     <div style="padding: 16px 20px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; color: #065f46;">
                         <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; display: flex; align-items: center; gap: 8px;">
@@ -1046,6 +927,7 @@
                         <p style="margin: 0; font-size: 0.85rem; line-height: 1.5; color: #065f46;">
                             Anda telah resmi diterima dan ditetapkan pada <strong>${escapeHtml(item.nama_unit)}</strong> untuk periode ${escapeHtml(item.periode_nama)}.
                         </p>
+                        ${downloadBtn}
                     </div>
                 `;
             } else {
@@ -1060,6 +942,21 @@
                         </p>
                     </div>
                 `;
+            }
+
+            // Action Button di Footer Modal (Tampil jika diterima / dipindahkan dan pengumuman dibuka)
+            const footerAction = document.getElementById('modal-footer-action-container');
+            if (footerAction) {
+                if (isPub && (st === 'diterima' || st === 'dipindahkan' || isMoved)) {
+                    footerAction.innerHTML = `
+                        <a href="/api/mahasiswa/surat_pengantar/download.php?pendaftaran_id=${item.pendaftaran_id}" target="_blank" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.825rem; font-weight: 700; padding: 8px 16px; background: #0B192C; border: 1px solid #0B192C; color: #ffffff; text-decoration: none; border-radius: 6px;">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            <span>Unduh Surat Rekomendasi (PDF)</span>
+                        </a>
+                    `;
+                } else {
+                    footerAction.innerHTML = '';
+                }
             }
 
             // PIC Narahubung Card (Tampil jika diterima / dipindahkan dan pengumuman dibuka)
@@ -1375,11 +1272,17 @@
                                 ${badgeHtml}
                             </div>
                         </td>
-                        <td data-label="Aksi" style="text-align: center; width: 110px;">
+                        <td data-label="Aksi" style="text-align: center; width: 120px;">
                             <button type="button" class="btn-view-detail" onclick="openModalDetail(${item.pendaftaran_id})">
                                 <span>Lihat Hasil</span>
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
                             </button>
+                            ${isPub && (item.status === 'diterima' || item.status === 'dipindahkan' || item.is_dipindahkan) ? `
+                                <a href="/api/mahasiswa/surat_pengantar/download.php?pendaftaran_id=${item.pendaftaran_id}" target="_blank" style="display: inline-flex; align-items: center; justify-content: center; gap: 4px; font-size: 0.75rem; color: #0B192C; text-decoration: underline; font-weight: 700; margin-top: 6px;" title="Unduh Surat Rekomendasi Magang PDF">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                    <span>Unduh PDF</span>
+                                </a>
+                            ` : ''}
                         </td>
                     </tr>
                 `;

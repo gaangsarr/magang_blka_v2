@@ -258,26 +258,41 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         badgeContainer.innerHTML = statusBadge;
 
+        const isDocUrl = (path) => path && typeof path === 'string' && (path.startsWith('http://') || path.startsWith('https://'));
+        const extLinkIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
+        const pdfFileIcon = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>';
+
         // 1. Transkrip Nilai Preview Modal
         const wrapTranskrip = document.getElementById('detail-wrapper-transkrip');
         const btnTranskrip = document.getElementById('detail-btn-transkrip');
         const filenameEl = document.getElementById('detail-transkrip-filename');
-        const transkripFile = p.transkrip_filename || (p.transkrip_path ? p.transkrip_path.split('/').pop() : `${p.nim}.pdf`);
+        const isTranskripLink = isDocUrl(p.transkrip_path);
+        const transkripTargetUrl = isTranskripLink ? p.transkrip_path : `/api/admin/transkrip/download.php?pendaftaran_id=${p.id}`;
+        const transkripFile = isTranskripLink ? 'Tautan Transkrip Nilai (Google Drive / Publik)' : (p.transkrip_filename || (p.transkrip_path ? p.transkrip_path.split('/').pop() : `${p.nim}.pdf`));
 
         if (p.id && p.transkrip_path) {
             if (wrapTranskrip) wrapTranskrip.style.display = 'flex';
-            if (filenameEl) filenameEl.innerText = transkripFile;
+            if (filenameEl) {
+                if (isTranskripLink) {
+                    filenameEl.innerHTML = `<a href="${escapeHtml(transkripTargetUrl)}" target="_blank" rel="noopener noreferrer" style="color: #0284c7; text-decoration: underline; word-break: break-all;">${escapeHtml(p.transkrip_path)}</a>`;
+                } else {
+                    filenameEl.innerText = transkripFile;
+                }
+            }
             if (btnTranskrip) {
                 btnTranskrip.style.display = 'inline-flex';
-                btnTranskrip.onclick = (e) => {
-                    e.preventDefault();
-                    window.open(`/api/admin/transkrip/download.php?pendaftaran_id=${p.id}`, '_blank');
-                };
+                btnTranskrip.href = transkripTargetUrl;
+                btnTranskrip.innerHTML = isTranskripLink 
+                    ? `${extLinkIcon}<span>Buka Link Transkrip</span>` 
+                    : `${pdfFileIcon}<span>Lihat Transkrip PDF</span>`;
+                btnTranskrip.title = isTranskripLink ? 'Buka Tautan: ' + p.transkrip_path : 'Pratinjau Berkas PDF';
+                btnTranskrip.onclick = null;
             }
         } else {
             if (wrapTranskrip) wrapTranskrip.style.display = 'none';
             if (btnTranskrip) {
                 btnTranskrip.style.display = 'none';
+                btnTranskrip.removeAttribute('href');
                 btnTranskrip.onclick = null;
             }
         }
@@ -286,22 +301,33 @@ document.addEventListener('DOMContentLoaded', async () => {
         const wrapCv = document.getElementById('detail-wrapper-cv');
         const btnCv = document.getElementById('detail-btn-cv');
         const filenameCvEl = document.getElementById('detail-cv-filename');
-        const cvFile = p.cv_filename || (p.cv_path ? p.cv_path.split('/').pop() : `${p.nim}_CV.pdf`);
+        const isCvLink = isDocUrl(p.cv_path);
+        const cvTargetUrl = isCvLink ? p.cv_path : `/api/admin/cv/download.php?pendaftaran_id=${p.id}`;
+        const cvFile = isCvLink ? 'Tautan Curriculum Vitae (Google Drive / Publik)' : (p.cv_filename || (p.cv_path ? p.cv_path.split('/').pop() : `${p.nim}_CV.pdf`));
 
         if (p.id && p.cv_path) {
             if (wrapCv) wrapCv.style.display = 'flex';
-            if (filenameCvEl) filenameCvEl.innerText = cvFile;
+            if (filenameCvEl) {
+                if (isCvLink) {
+                    filenameCvEl.innerHTML = `<a href="${escapeHtml(cvTargetUrl)}" target="_blank" rel="noopener noreferrer" style="color: #047857; text-decoration: underline; word-break: break-all;">${escapeHtml(p.cv_path)}</a>`;
+                } else {
+                    filenameCvEl.innerText = cvFile;
+                }
+            }
             if (btnCv) {
                 btnCv.style.display = 'inline-flex';
-                btnCv.onclick = (e) => {
-                    e.preventDefault();
-                    window.open(`/api/admin/cv/download.php?pendaftaran_id=${p.id}`, '_blank');
-                };
+                btnCv.href = cvTargetUrl;
+                btnCv.innerHTML = isCvLink 
+                    ? `${extLinkIcon}<span>Buka Link CV</span>` 
+                    : `${pdfFileIcon}<span>Lihat CV PDF</span>`;
+                btnCv.title = isCvLink ? 'Buka Tautan: ' + p.cv_path : 'Pratinjau Berkas PDF';
+                btnCv.onclick = null;
             }
         } else {
             if (wrapCv) wrapCv.style.display = 'none';
             if (btnCv) {
                 btnCv.style.display = 'none';
+                btnCv.removeAttribute('href');
                 btnCv.onclick = null;
             }
         }
@@ -310,22 +336,33 @@ document.addEventListener('DOMContentLoaded', async () => {
         const wrapPorto = document.getElementById('detail-wrapper-porto');
         const btnPorto = document.getElementById('detail-btn-porto');
         const filenamePortoEl = document.getElementById('detail-porto-filename');
-        const portoFile = p.porto_filename || (p.porto_path ? p.porto_path.split('/').pop() : `${p.nim}_Porto.pdf`);
+        const isPortoLink = isDocUrl(p.porto_path);
+        const portoTargetUrl = isPortoLink ? p.porto_path : `/api/admin/porto/download.php?pendaftaran_id=${p.id}`;
+        const portoFile = isPortoLink ? 'Tautan Portofolio (Google Drive / Publik)' : (p.porto_filename || (p.porto_path ? p.porto_path.split('/').pop() : `${p.nim}_Porto.pdf`));
 
         if (p.id && p.porto_path) {
             if (wrapPorto) wrapPorto.style.display = 'flex';
-            if (filenamePortoEl) filenamePortoEl.innerText = portoFile;
+            if (filenamePortoEl) {
+                if (isPortoLink) {
+                    filenamePortoEl.innerHTML = `<a href="${escapeHtml(portoTargetUrl)}" target="_blank" rel="noopener noreferrer" style="color: #6d28d9; text-decoration: underline; word-break: break-all;">${escapeHtml(p.porto_path)}</a>`;
+                } else {
+                    filenamePortoEl.innerText = portoFile;
+                }
+            }
             if (btnPorto) {
                 btnPorto.style.display = 'inline-flex';
-                btnPorto.onclick = (e) => {
-                    e.preventDefault();
-                    window.open(`/api/admin/porto/download.php?pendaftaran_id=${p.id}`, '_blank');
-                };
+                btnPorto.href = portoTargetUrl;
+                btnPorto.innerHTML = isPortoLink 
+                    ? `${extLinkIcon}<span>Buka Link Portofolio</span>` 
+                    : `${pdfFileIcon}<span>Lihat Portofolio PDF</span>`;
+                btnPorto.title = isPortoLink ? 'Buka Tautan: ' + p.porto_path : 'Pratinjau Berkas PDF';
+                btnPorto.onclick = null;
             }
         } else {
             if (wrapPorto) wrapPorto.style.display = 'none';
             if (btnPorto) {
                 btnPorto.style.display = 'none';
+                btnPorto.removeAttribute('href');
                 btnPorto.onclick = null;
             }
         }

@@ -30,6 +30,9 @@ const formData = {
     ipk: '',
     jumlah_sks: '',
     no_hp: '',
+    transkrip_link: '',
+    cv_link: '',
+    porto_link: '',
     lat: '',
     lng: '',
     rt: '',
@@ -50,8 +53,56 @@ const btnNext = document.getElementById('btn-next');
 const btnSubmit = document.getElementById('btn-submit');
 const errorBox = document.getElementById('error-box');
 
-// Timer
+// Timer & Heartbeat
 let reservasiTimerInterval = null;
+let heartbeatInterval = null;
+
+function getDraftKey() {
+    const nim = (window.statusAuthData?.user?.nim || document.getElementById('nim')?.value || 'mhs').trim();
+    return `magang_draft_${nim}`;
+}
+
+function handleSessionExpired() {
+    if (heartbeatInterval) clearInterval(heartbeatInterval);
+    saveFormData();
+    const modal = document.getElementById('modalSessionExpired');
+    if (modal) {
+        modal.classList.remove('hidden');
+        const btnRelogin = document.getElementById('btn-relogin');
+        if (btnRelogin) {
+            btnRelogin.onclick = () => {
+                const returnUrl = window.location.pathname + window.location.search;
+                window.location.href = '/login.html?return_to=' + encodeURIComponent(returnUrl);
+            };
+        }
+    } else {
+        alert('Sesi Anda telah berakhir demi keamanan. Data formulir Anda tersimpan. Silakan login kembali.');
+        window.location.href = '/login.html?return_to=' + encodeURIComponent(window.location.pathname + window.location.search);
+    }
+}
+
+function startHeartbeat() {
+    if (heartbeatInterval) clearInterval(heartbeatInterval);
+    heartbeatInterval = setInterval(async () => {
+        try {
+            const res = await fetch('/api/auth/status.php');
+            if (res.status === 401) {
+                handleSessionExpired();
+                return;
+            }
+            const data = await res.json();
+            if (!data.authenticated) {
+                handleSessionExpired();
+                return;
+            }
+            if (data.csrf_token) {
+                csrfToken = data.csrf_token;
+            }
+        } catch (e) {
+            // Jaringan sesaat fluktuasi
+        }
+    }, 120000); // Heartbeat 2 menit
+}
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -361,7 +412,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         let draftParsed = null;
-        const savedDraft = sessionStorage.getItem('magang_draft_form');
+        const draftKey = getDraftKey();
+        const savedDraft = localStorage.getItem(draftKey) || sessionStorage.getItem('magang_draft_form');
         if (savedDraft) {
             try {
                 draftParsed = JSON.parse(savedDraft);
@@ -384,36 +436,58 @@ document.addEventListener('DOMContentLoaded', async () => {
         btnPrev.addEventListener('click', handlePrev);
         btnSubmit.addEventListener('click', handleSubmit);
 
+        // Auto-save realtime ke localStorage saat ada perubahan data di formulir
+        const wizardFormEl = document.getElementById('wizard-form');
+        if (wizardFormEl) {
+            wizardFormEl.addEventListener('input', () => saveFormData());
+            wizardFormEl.addEventListener('change', () => saveFormData());
+        }
+
+        // Restore seluruh data formulir dari draft lokal mahasiswa
+        if (draftParsed) {
+            try {
+                Object.assign(formData, draftParsed);
+                if (formData.program) {
+                    const radio = document.querySelector(`input[name="program"][value="${formData.program}"]`);
+                    if (radio) {
+                        radio.checked = true;
+                        radio.dispatchEvent(new Event('change'));
+                    }
+                }
+                if (formData.jenis_kelamin && document.getElementById('jenis_kelamin')) document.getElementById('jenis_kelamin').value = formData.jenis_kelamin;
+                if (formData.ipk && document.getElementById('ipk')) document.getElementById('ipk').value = formData.ipk;
+                if (formData.jumlah_sks && document.getElementById('jumlah_sks')) document.getElementById('jumlah_sks').value = formData.jumlah_sks;
+                if (formData.no_hp && document.getElementById('no_hp')) document.getElementById('no_hp').value = formData.no_hp;
+                if (formData.transkrip_link && document.getElementById('transkrip_link')) document.getElementById('transkrip_link').value = formData.transkrip_link;
+                if (formData.cv_link && document.getElementById('cv_link')) document.getElementById('cv_link').value = formData.cv_link;
+                if (formData.porto_link && document.getElementById('porto_link')) document.getElementById('porto_link').value = formData.porto_link;
+                if (formData.lat && document.getElementById('lat')) document.getElementById('lat').value = formData.lat;
+                if (formData.lng && document.getElementById('lng')) document.getElementById('lng').value = formData.lng;
+                if (formData.rt && document.getElementById('rt')) document.getElementById('rt').value = formData.rt;
+                if (formData.rw && document.getElementById('rw')) document.getElementById('rw').value = formData.rw;
+                if (formData.alamat_lengkap && document.getElementById('alamat_lengkap')) document.getElementById('alamat_lengkap').value = formData.alamat_lengkap;
+                if (formData.peminatan && Array.isArray(formData.peminatan)) {
+                    formData.peminatan.forEach(val => {
+                        const cb = document.querySelector(`input[name="peminatan"][value="${val}"]`);
+                        if (cb) {
+                            cb.checked = true;
+                            cb.dispatchEvent(new Event('change'));
+                        }
+                    });
+                }
+            } catch (e) {
+                console.warn('[daftar.js] Gagal restore isian draft:', e);
+            }
+        }
+
+        // Jalankan Heartbeat session keep-alive (setiap 2 menit)
+        startHeartbeat();
+
         // Cek jika ada reservasi aktif yang belum kadaluarsa (mis. saat refresh halaman)
         if (statusData.active_reservasi && statusData.active_reservasi.reservasi_id) {
             const activeRes = statusData.active_reservasi;
             const expireMs = activeRes.expired_at_ms || new Date(activeRes.expired_at_iso || activeRes.expired_at).getTime();
             if (expireMs > Date.now()) {
-                if (draftParsed) {
-                    try {
-                        Object.assign(formData, draftParsed);
-                        if (formData.program) {
-                            const radio = document.querySelector(`input[name="program"][value="${formData.program}"]`);
-                            if (radio) radio.checked = true;
-                        }
-                        if (formData.jenis_kelamin) document.getElementById('jenis_kelamin').value = formData.jenis_kelamin;
-                        if (formData.ipk) document.getElementById('ipk').value = formData.ipk;
-                        if (formData.jumlah_sks) document.getElementById('jumlah_sks').value = formData.jumlah_sks;
-                        if (formData.no_hp) document.getElementById('no_hp').value = formData.no_hp;
-                        if (formData.lat) document.getElementById('lat').value = formData.lat;
-                        if (formData.lng) document.getElementById('lng').value = formData.lng;
-                        if (formData.rt) document.getElementById('rt').value = formData.rt;
-                        if (formData.rw) document.getElementById('rw').value = formData.rw;
-                        if (formData.alamat_lengkap) document.getElementById('alamat_lengkap').value = formData.alamat_lengkap;
-                        if (formData.peminatan && Array.isArray(formData.peminatan)) {
-                            formData.peminatan.forEach(val => {
-                                const cb = document.querySelector(`input[name="peminatan"][value="${val}"]`);
-                                if (cb) cb.checked = true;
-                            });
-                        }
-                    } catch (e) {}
-                }
-
                 formData.upp_id = activeRes.upp_id;
                 formData.reservasi_id = activeRes.reservasi_id;
                 formData.nama_unit_dipilih = activeRes.nama_unit;
@@ -743,8 +817,28 @@ async function handleNext() {
     }
 
     if (currentStep === 3) {
-        // Dari Step 3 ke Step 4, simpan data dan load Unit
+        // Dari Step 3 ke Step 4, simpan data dan re-sync periode aktif lalu load Unit
         saveFormData();
+
+        // Auto re-sync status periode aktif terkini untuk mencegah periode-expired bug saat stay lama di peta domisili
+        try {
+            const pRes = await fetch('/api/periode/aktif.php');
+            if (pRes.status === 401) {
+                handleSessionExpired();
+                return;
+            }
+            const pData = await pRes.json();
+            if (!pRes.ok || pData.error || !pData.periode || (pData.periode.status && pData.periode.status !== 'dibuka')) {
+                showError(pData?.error || 'Periode magang telah ditutup atau tidak lagi aktif. Pendaftaran tidak dapat dilanjutkan.', null, 'Periode Ditutup');
+                return;
+            }
+            // Sinkronkan periode_id & nama terbaru
+            formData.periode_id = pData.periode.id;
+            formData.periode_nama = pData.periode.nama;
+        } catch (syncErr) {
+            console.warn('[daftar.js] Gagal re-sync periode aktif:', syncErr);
+        }
+
         const searchInput = document.getElementById('search-unit-input');
         if (searchInput) searchInput.value = '';
         unitSearchQuery = '';
@@ -880,21 +974,59 @@ function validateStep(step) {
             return false;
         }
 
-        // Validasi Dokumen Persyaratan Wajib Sesuai Periode Aktif
-        if (window.syaratTranskrip && !window.transkripUploadedPath) {
-            showError('Berkas transkrip nilai (PDF) wajib diunggah sebelum melanjutkan ke tahap domisili.', 'transkrip-drop-zone', 'Transkrip Belum Diunggah');
-            return false;
-        }
+        // Validasi Dokumen Persyaratan Berupa Tautan Web Publik
+        const isValidUrl = (url) => {
+            try {
+                const u = new URL(url);
+                return u.protocol === 'http:' || u.protocol === 'https:';
+            } catch (e) {
+                return false;
+            }
+        };
 
-        if (window.syaratCv && !window.cvUploadedPath) {
-            showError('Berkas Curriculum Vitae / CV (PDF) wajib diunggah sebelum melanjutkan ke tahap domisili.', 'cv-drop-zone', 'CV Belum Diunggah');
-            return false;
-        }
+        const transkripVal = (document.getElementById('transkrip_link')?.value || '').trim();
+        const cvVal = (document.getElementById('cv_link')?.value || '').trim();
+        const portoVal = (document.getElementById('porto_link')?.value || '').trim();
 
-        if (window.syaratPorto && !window.portoUploadedPath) {
-            showError('Berkas Portofolio (PDF) wajib diunggah sebelum melanjutkan ke tahap domisili.', 'porto-drop-zone', 'Portofolio Belum Diunggah');
-            return false;
+        formData.transkrip_link = transkripVal;
+        formData.cv_link = cvVal;
+        formData.porto_link = portoVal;
+
+        if (window.syaratTranskrip) {
+            if (!transkripVal) {
+                showError('Tautan Transkrip Nilai Akademik (Google Drive / OneDrive / Publik) wajib diisi.', 'transkrip_link', 'Transkrip Wajib Diisi');
+                return false;
+            }
+            if (!isValidUrl(transkripVal)) {
+                showError('Format tautan Transkrip Nilai tidak valid. Pastikan diawali dengan https:// atau http://', 'transkrip_link', 'Tautan Tidak Valid');
+                return false;
+            }
         }
+        window.transkripUploadedPath = transkripVal;
+
+        if (window.syaratCv) {
+            if (!cvVal) {
+                showError('Tautan Curriculum Vitae (CV) wajib diisi.', 'cv_link', 'CV Wajib Diisi');
+                return false;
+            }
+            if (!isValidUrl(cvVal)) {
+                showError('Format tautan CV tidak valid. Pastikan diawali dengan https:// atau http://', 'cv_link', 'Tautan Tidak Valid');
+                return false;
+            }
+        }
+        window.cvUploadedPath = cvVal;
+
+        if (window.syaratPorto) {
+            if (!portoVal) {
+                showError('Tautan Portofolio wajib diisi.', 'porto_link', 'Portofolio Wajib Diisi');
+                return false;
+            }
+            if (!isValidUrl(portoVal)) {
+                showError('Format tautan Portofolio tidak valid. Pastikan diawali dengan https:// atau http://', 'porto_link', 'Tautan Tidak Valid');
+                return false;
+            }
+        }
+        window.portoUploadedPath = portoVal;
     } else if (step === 3) {
         if (!document.getElementById('lat').value.trim() || !document.getElementById('lng').value.trim()) {
             showError('Silakan tentukan titik koordinat tempat tinggal Anda pada peta domisili.', 'map-domisili', 'Titik Lokasi Wajib Ditandai');
@@ -947,26 +1079,32 @@ function validateStep(step) {
 function saveFormData() {
     const progRadio = document.querySelector('input[name="program"]:checked');
     if (progRadio) formData.program = progRadio.value;
-    formData.nama = document.getElementById('nama').value;
-    formData.jenis_kelamin = document.getElementById('jenis_kelamin').value;
-    formData.ipk = document.getElementById('ipk').value;
-    formData.jumlah_sks = document.getElementById('jumlah_sks').value;
-    formData.no_hp = document.getElementById('no_hp').value;
+    if (document.getElementById('nama')) formData.nama = document.getElementById('nama').value;
+    if (document.getElementById('jenis_kelamin')) formData.jenis_kelamin = document.getElementById('jenis_kelamin').value;
+    if (document.getElementById('ipk')) formData.ipk = document.getElementById('ipk').value;
+    if (document.getElementById('jumlah_sks')) formData.jumlah_sks = document.getElementById('jumlah_sks').value;
+    if (document.getElementById('no_hp')) formData.no_hp = document.getElementById('no_hp').value;
+
+    formData.transkrip_link = (document.getElementById('transkrip_link')?.value || '').trim();
+    formData.cv_link = (document.getElementById('cv_link')?.value || '').trim();
+    formData.porto_link = (document.getElementById('porto_link')?.value || '').trim();
     
-    formData.lat = document.getElementById('lat').value;
-    formData.lng = document.getElementById('lng').value;
-    formData.rt = document.getElementById('rt').value;
-    formData.rw = document.getElementById('rw').value;
-    formData.kelurahan = document.getElementById('kelurahan').value;
-    formData.kecamatan = document.getElementById('kecamatan').value;
-    formData.kota_kabupaten = document.getElementById('kota_kabupaten').value;
-    formData.provinsi = document.getElementById('provinsi').value;
-    formData.alamat_lengkap = document.getElementById('alamat_lengkap').value;
+    if (document.getElementById('lat')) formData.lat = document.getElementById('lat').value;
+    if (document.getElementById('lng')) formData.lng = document.getElementById('lng').value;
+    if (document.getElementById('rt')) formData.rt = document.getElementById('rt').value;
+    if (document.getElementById('rw')) formData.rw = document.getElementById('rw').value;
+    if (document.getElementById('kelurahan')) formData.kelurahan = document.getElementById('kelurahan').value;
+    if (document.getElementById('kecamatan')) formData.kecamatan = document.getElementById('kecamatan').value;
+    if (document.getElementById('kota_kabupaten')) formData.kota_kabupaten = document.getElementById('kota_kabupaten').value;
+    if (document.getElementById('provinsi')) formData.provinsi = document.getElementById('provinsi').value;
+    if (document.getElementById('alamat_lengkap')) formData.alamat_lengkap = document.getElementById('alamat_lengkap').value;
     
     formData.peminatan = Array.from(document.querySelectorAll('input[name="peminatan"]:checked')).map(el => el.value);
     
     try {
-        sessionStorage.setItem('magang_draft_form', JSON.stringify(formData));
+        const jsonStr = JSON.stringify(formData);
+        localStorage.setItem(getDraftKey(), jsonStr);
+        sessionStorage.setItem('magang_draft_form', jsonStr);
     } catch (e) {}
 }
 
@@ -1216,6 +1354,11 @@ async function loadUnits(page = 1, search = unitSearchQuery, isSilent = false) {
             })
         });
         
+        if (res.status === 401) {
+            handleSessionExpired();
+            return false;
+        }
+
         const data = await res.json();
         if (reqId !== currentUnitRequestId) {
             return false;
@@ -1337,17 +1480,26 @@ function populateResume() {
     document.getElementById('resume-hp').innerText = formData.no_hp;
     document.getElementById('resume-alamat').innerText = formData.alamat_lengkap + `, RT ${formData.rt}/RW ${formData.rw}, ${formData.kelurahan}, ${formData.kecamatan}, ${formData.kota_kabupaten}, ${formData.provinsi}`;
     
+    const formatLinkResume = (url) => {
+        if (!url) return '-';
+        if (url.startsWith('http://') || url.startsWith('https://')) {
+            const displayUrl = url.length > 50 ? url.substring(0, 47) + '...' : url;
+            return `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" style="color: #0369a1; text-decoration: underline; word-break: break-all; font-weight: 600;">${escapeHtml(displayUrl)} &nearr;</a>`;
+        }
+        return escapeHtml(url);
+    };
+
     const resumeTranskripEl = document.getElementById('resume-transkrip-name');
     if (resumeTranskripEl) {
-        resumeTranskripEl.innerText = window.transkripUploadedFileName || 'Dokumen PDF Terverifikasi';
+        resumeTranskripEl.innerHTML = formatLinkResume(formData.transkrip_link || window.transkripUploadedPath);
     }
     const resumeCvEl = document.getElementById('resume-cv-name');
     if (resumeCvEl) {
-        resumeCvEl.innerText = window.cvUploadedFileName || 'Dokumen PDF Terverifikasi';
+        resumeCvEl.innerHTML = formatLinkResume(formData.cv_link || window.cvUploadedPath);
     }
     const resumePortoEl = document.getElementById('resume-porto-name');
     if (resumePortoEl) {
-        resumePortoEl.innerText = window.portoUploadedFileName || 'Dokumen PDF Terverifikasi';
+        resumePortoEl.innerHTML = formatLinkResume(formData.porto_link || window.portoUploadedPath);
     }
 }
 
@@ -1403,20 +1555,24 @@ async function handleExpiredReservation() {
 async function handleSubmit() {
     showError(null);
 
-    if (window.syaratTranskrip && !window.transkripUploadedPath) {
-        showError('Berkas transkrip nilai belum diunggah. Silakan kembali ke tahap Data Diri.', null, 'Transkrip Wajib Diunggah');
+    const transkripVal = formData.transkrip_link || window.transkripUploadedPath;
+    const cvVal = formData.cv_link || window.cvUploadedPath;
+    const portoVal = formData.porto_link || window.portoUploadedPath;
+
+    if (window.syaratTranskrip && !transkripVal) {
+        showError('Tautan berkas transkrip nilai belum diisi. Silakan kembali ke tahap Data Diri.', null, 'Transkrip Wajib Diisi');
         btnSubmit.disabled = false;
         return;
     }
 
-    if (window.syaratCv && !window.cvUploadedPath) {
-        showError('Berkas CV belum diunggah. Silakan kembali ke tahap Data Diri.', null, 'CV Wajib Diunggah');
+    if (window.syaratCv && !cvVal) {
+        showError('Tautan berkas CV belum diisi. Silakan kembali ke tahap Data Diri.', null, 'CV Wajib Diisi');
         btnSubmit.disabled = false;
         return;
     }
 
-    if (window.syaratPorto && !window.portoUploadedPath) {
-        showError('Berkas Portofolio belum diunggah. Silakan kembali ke tahap Data Diri.', null, 'Portofolio Wajib Diunggah');
+    if (window.syaratPorto && !portoVal) {
+        showError('Tautan berkas Portofolio belum diisi. Silakan kembali ke tahap Data Diri.', null, 'Portofolio Wajib Diisi');
         btnSubmit.disabled = false;
         return;
     }
@@ -1427,9 +1583,12 @@ async function handleSubmit() {
     try {
         const payload = {
             ...formData,
-            transkrip_path: window.transkripUploadedPath || null,
-            cv_path: window.cvUploadedPath || null,
-            porto_path: window.portoUploadedPath || null
+            transkrip_path: transkripVal || null,
+            transkrip_link: transkripVal || null,
+            cv_path: cvVal || null,
+            cv_link: cvVal || null,
+            porto_path: portoVal || null,
+            porto_link: portoVal || null
         };
 
         const res = await fetch('/api/mahasiswa/submit.php', {
@@ -1459,7 +1618,10 @@ async function handleSubmit() {
 
         // Sukses
         if (reservasiTimerInterval) clearInterval(reservasiTimerInterval);
-        try { sessionStorage.removeItem('magang_draft_form'); } catch(e){}
+        try {
+            localStorage.removeItem(getDraftKey());
+            sessionStorage.removeItem('magang_draft_form');
+        } catch(e) {}
         window.location.href = '/status.html';
         
     } catch (err) {
@@ -1473,6 +1635,18 @@ async function handleSubmit() {
 // ----------------------------------------------------
 // Setup Dokumen Persyaratan Berdasarkan Periode Aktif
 // ----------------------------------------------------
+function setupDokumenInputs() {
+    ['transkrip_link', 'cv_link', 'porto_link'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('input', () => {
+                formData[id] = el.value.trim();
+                saveFormData();
+            });
+        }
+    });
+}
+
 function setupDokumenSyarat(periode) {
     if (!periode) return;
     window.syaratTranskrip = (periode.syarat_transkrip !== false && periode.syarat_transkrip != 0);
@@ -1495,430 +1669,7 @@ function setupDokumenSyarat(periode) {
     if (resCv) resCv.classList.toggle('hidden', !window.syaratCv);
     if (resPorto) resPorto.classList.toggle('hidden', !window.syaratPorto);
 
-    if (window.syaratTranskrip) initTranskripUpload();
-    if (window.syaratCv) initCvUpload();
-    if (window.syaratPorto) initPortoUpload();
-}
-
-// ----------------------------------------------------
-// Transkrip Nilai Upload Handler (Step 2)
-// ----------------------------------------------------
-function initTranskripUpload() {
-    const fileInput = document.getElementById('transkrip-file-input');
-    const dropZone = document.getElementById('transkrip-drop-zone');
-    const stateIdle = document.getElementById('transkrip-state-idle');
-    const stateUploading = document.getElementById('transkrip-state-uploading');
-    const stateSuccess = document.getElementById('transkrip-state-success');
-    const stateError = document.getElementById('transkrip-state-error');
-    const successFilename = document.getElementById('transkrip-success-filename');
-    const successSize = document.getElementById('transkrip-success-size');
-    const errorText = document.getElementById('transkrip-error-text');
-    const btnGanti = document.getElementById('btn-ganti-transkrip');
-    const btnRetry = document.getElementById('btn-retry-transkrip');
-
-    if (!fileInput || !dropZone) return;
-
-    function setTranskripState(state) {
-        [stateIdle, stateUploading, stateSuccess, stateError].forEach(el => {
-            if (el) el.classList.add('hidden');
-        });
-        if (state === 'idle' && stateIdle) stateIdle.classList.remove('hidden');
-        else if (state === 'uploading' && stateUploading) stateUploading.classList.remove('hidden');
-        else if (state === 'success' && stateSuccess) stateSuccess.classList.remove('hidden');
-        else if (state === 'error' && stateError) stateError.classList.remove('hidden');
-    }
-
-    async function handleFileUpload(file) {
-        if (!file) return;
-
-        // Validasi cepat client-side
-        if (!file.name.toLowerCase().endsWith('.pdf') && file.type !== 'application/pdf') {
-            if (errorText) errorText.innerText = 'Format berkas harus PDF (.pdf).';
-            setTranskripState('error');
-            return;
-        }
-
-        const maxBytes = 512 * 1024;
-        if (file.size > maxBytes) {
-            if (errorText) errorText.innerText = `Ukuran berkas (${(file.size / 1024).toFixed(0)} KB) melebihi batas 512 KB.`;
-            setTranskripState('error');
-            return;
-        }
-
-        setTranskripState('uploading');
-
-        const uploadFormData = new FormData();
-        uploadFormData.append('transkrip', file);
-
-        try {
-            const res = await fetch('/api/mahasiswa/transkrip/upload.php', {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-Token': csrfToken
-                },
-                body: uploadFormData
-            });
-
-            const data = await res.json();
-
-            if (!res.ok || !data.ok) {
-                if (errorText) errorText.innerText = data.error || 'Gagal mengunggah transkrip nilai.';
-                setTranskripState('error');
-                window.transkripUploadedPath = null;
-                window.transkripUploadedFileName = null;
-                return;
-            }
-
-            window.transkripUploadedPath = data.path;
-            window.transkripUploadedFileName = file.name;
-
-            if (successFilename) successFilename.innerText = file.name;
-            if (successSize) successSize.innerText = `${(file.size / 1024).toFixed(0)} KB — Dokumen Valid`;
-            setTranskripState('success');
-
-        } catch (err) {
-            console.error('[transkrip-upload] Network error:', err);
-            if (errorText) errorText.innerText = 'Koneksi internet bermasalah saat mengunggah berkas.';
-            setTranskripState('error');
-            window.transkripUploadedPath = null;
-            window.transkripUploadedFileName = null;
-        }
-    }
-
-    // Native file input change
-    fileInput.addEventListener('change', () => {
-        if (fileInput.files && fileInput.files[0]) {
-            handleFileUpload(fileInput.files[0]);
-        }
-    });
-
-    // Drag & Drop
-    dropZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (stateIdle) {
-            stateIdle.style.borderColor = '#0284c7';
-            stateIdle.style.background = '#e0f2fe';
-        }
-    });
-
-    dropZone.addEventListener('dragleave', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (stateIdle) {
-            stateIdle.style.borderColor = '#cbd5e1';
-            stateIdle.style.background = '#f8fafc';
-        }
-    });
-
-    dropZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (stateIdle) {
-            stateIdle.style.borderColor = '#cbd5e1';
-            stateIdle.style.background = '#f8fafc';
-        }
-        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
-            handleFileUpload(e.dataTransfer.files[0]);
-        }
-    });
-
-    // Ganti File & Coba Lagi
-    if (btnGanti) {
-        btnGanti.addEventListener('click', () => {
-            fileInput.value = '';
-            window.transkripUploadedPath = null;
-            window.transkripUploadedFileName = null;
-            setTranskripState('idle');
-        });
-    }
-
-    if (btnRetry) {
-        btnRetry.addEventListener('click', () => {
-            fileInput.value = '';
-            setTranskripState('idle');
-        });
-    }
-
-    setTranskripState('idle');
-}
-
-// ----------------------------------------------------
-// CV Upload Handler (Step 2 - Maks 2 MB)
-// ----------------------------------------------------
-function initCvUpload() {
-    const fileInput = document.getElementById('cv-file-input');
-    const dropZone = document.getElementById('cv-drop-zone');
-    const stateIdle = document.getElementById('cv-state-idle');
-    const stateUploading = document.getElementById('cv-state-uploading');
-    const stateSuccess = document.getElementById('cv-state-success');
-    const stateError = document.getElementById('cv-state-error');
-    const successFilename = document.getElementById('cv-success-filename');
-    const successSize = document.getElementById('cv-success-size');
-    const errorText = document.getElementById('cv-error-text');
-    const btnGanti = document.getElementById('btn-ganti-cv');
-    const btnRetry = document.getElementById('btn-retry-cv');
-
-    if (!fileInput || !dropZone) return;
-
-    function setCvState(state) {
-        [stateIdle, stateUploading, stateSuccess, stateError].forEach(el => {
-            if (el) el.classList.add('hidden');
-        });
-        if (state === 'idle' && stateIdle) stateIdle.classList.remove('hidden');
-        else if (state === 'uploading' && stateUploading) stateUploading.classList.remove('hidden');
-        else if (state === 'success' && stateSuccess) stateSuccess.classList.remove('hidden');
-        else if (state === 'error' && stateError) stateError.classList.remove('hidden');
-    }
-
-    async function handleFileUpload(file) {
-        if (!file) return;
-
-        if (!file.name.toLowerCase().endsWith('.pdf') && file.type !== 'application/pdf') {
-            if (errorText) errorText.innerText = 'Format berkas harus PDF (.pdf).';
-            setCvState('error');
-            return;
-        }
-
-        const maxBytes = 2 * 1024 * 1024; // 2 MB
-        if (file.size > maxBytes) {
-            if (errorText) errorText.innerText = `Ukuran berkas (${(file.size / (1024 * 1024)).toFixed(1)} MB) melebihi batas 2 MB.`;
-            setCvState('error');
-            return;
-        }
-
-        setCvState('uploading');
-
-        const uploadFormData = new FormData();
-        uploadFormData.append('cv', file);
-
-        try {
-            const res = await fetch('/api/mahasiswa/cv/upload.php', {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-Token': csrfToken
-                },
-                body: uploadFormData
-            });
-
-            const data = await res.json();
-
-            if (!res.ok || !data.ok) {
-                if (errorText) errorText.innerText = data.error || 'Gagal mengunggah CV.';
-                setCvState('error');
-                window.cvUploadedPath = null;
-                window.cvUploadedFileName = null;
-                return;
-            }
-
-            window.cvUploadedPath = data.path;
-            window.cvUploadedFileName = file.name;
-
-            if (successFilename) successFilename.innerText = file.name;
-            if (successSize) successSize.innerText = `${(file.size / 1024).toFixed(0)} KB — Dokumen Valid`;
-            setCvState('success');
-
-        } catch (err) {
-            console.error('[cv-upload] Network error:', err);
-            if (errorText) errorText.innerText = 'Koneksi internet bermasalah saat mengunggah CV.';
-            setCvState('error');
-            window.cvUploadedPath = null;
-            window.cvUploadedFileName = null;
-        }
-    }
-
-    fileInput.addEventListener('change', () => {
-        if (fileInput.files && fileInput.files[0]) {
-            handleFileUpload(fileInput.files[0]);
-        }
-    });
-
-    dropZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (stateIdle) {
-            stateIdle.style.borderColor = '#16a34a';
-            stateIdle.style.background = '#dcfce7';
-        }
-    });
-
-    dropZone.addEventListener('dragleave', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (stateIdle) {
-            stateIdle.style.borderColor = '#cbd5e1';
-            stateIdle.style.background = '#f8fafc';
-        }
-    });
-
-    dropZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (stateIdle) {
-            stateIdle.style.borderColor = '#cbd5e1';
-            stateIdle.style.background = '#f8fafc';
-        }
-        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
-            handleFileUpload(e.dataTransfer.files[0]);
-        }
-    });
-
-    if (btnGanti) {
-        btnGanti.addEventListener('click', () => {
-            fileInput.value = '';
-            window.cvUploadedPath = null;
-            window.cvUploadedFileName = null;
-            setCvState('idle');
-        });
-    }
-
-    if (btnRetry) {
-        btnRetry.addEventListener('click', () => {
-            fileInput.value = '';
-            setCvState('idle');
-        });
-    }
-
-    setCvState('idle');
-}
-
-// ----------------------------------------------------
-// Portofolio Upload Handler (Step 2 - Maks 5 MB)
-// ----------------------------------------------------
-function initPortoUpload() {
-    const fileInput = document.getElementById('porto-file-input');
-    const dropZone = document.getElementById('porto-drop-zone');
-    const stateIdle = document.getElementById('porto-state-idle');
-    const stateUploading = document.getElementById('porto-state-uploading');
-    const stateSuccess = document.getElementById('porto-state-success');
-    const stateError = document.getElementById('porto-state-error');
-    const successFilename = document.getElementById('porto-success-filename');
-    const successSize = document.getElementById('porto-success-size');
-    const errorText = document.getElementById('porto-error-text');
-    const btnGanti = document.getElementById('btn-ganti-porto');
-    const btnRetry = document.getElementById('btn-retry-porto');
-
-    if (!fileInput || !dropZone) return;
-
-    function setPortoState(state) {
-        [stateIdle, stateUploading, stateSuccess, stateError].forEach(el => {
-            if (el) el.classList.add('hidden');
-        });
-        if (state === 'idle' && stateIdle) stateIdle.classList.remove('hidden');
-        else if (state === 'uploading' && stateUploading) stateUploading.classList.remove('hidden');
-        else if (state === 'success' && stateSuccess) stateSuccess.classList.remove('hidden');
-        else if (state === 'error' && stateError) stateError.classList.remove('hidden');
-    }
-
-    async function handleFileUpload(file) {
-        if (!file) return;
-
-        if (!file.name.toLowerCase().endsWith('.pdf') && file.type !== 'application/pdf') {
-            if (errorText) errorText.innerText = 'Format berkas harus PDF (.pdf).';
-            setPortoState('error');
-            return;
-        }
-
-        const maxBytes = 5 * 1024 * 1024; // 5 MB
-        if (file.size > maxBytes) {
-            if (errorText) errorText.innerText = `Ukuran berkas (${(file.size / (1024 * 1024)).toFixed(1)} MB) melebihi batas 5 MB.`;
-            setPortoState('error');
-            return;
-        }
-
-        setPortoState('uploading');
-
-        const uploadFormData = new FormData();
-        uploadFormData.append('porto', file);
-
-        try {
-            const res = await fetch('/api/mahasiswa/porto/upload.php', {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-Token': csrfToken
-                },
-                body: uploadFormData
-            });
-
-            const data = await res.json();
-
-            if (!res.ok || !data.ok) {
-                if (errorText) errorText.innerText = data.error || 'Gagal mengunggah Portofolio.';
-                setPortoState('error');
-                window.portoUploadedPath = null;
-                window.portoUploadedFileName = null;
-                return;
-            }
-
-            window.portoUploadedPath = data.path;
-            window.portoUploadedFileName = file.name;
-
-            if (successFilename) successFilename.innerText = file.name;
-            if (successSize) successSize.innerText = `${(file.size / 1024).toFixed(0)} KB — Dokumen Valid`;
-            setPortoState('success');
-
-        } catch (err) {
-            console.error('[porto-upload] Network error:', err);
-            if (errorText) errorText.innerText = 'Koneksi internet bermasalah saat mengunggah Portofolio.';
-            setPortoState('error');
-            window.portoUploadedPath = null;
-            window.portoUploadedFileName = null;
-        }
-    }
-
-    fileInput.addEventListener('change', () => {
-        if (fileInput.files && fileInput.files[0]) {
-            handleFileUpload(fileInput.files[0]);
-        }
-    });
-
-    dropZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (stateIdle) {
-            stateIdle.style.borderColor = '#ca8a04';
-            stateIdle.style.background = '#fef9c3';
-        }
-    });
-
-    dropZone.addEventListener('dragleave', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (stateIdle) {
-            stateIdle.style.borderColor = '#cbd5e1';
-            stateIdle.style.background = '#f8fafc';
-        }
-    });
-
-    dropZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (stateIdle) {
-            stateIdle.style.borderColor = '#cbd5e1';
-            stateIdle.style.background = '#f8fafc';
-        }
-        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
-            handleFileUpload(e.dataTransfer.files[0]);
-        }
-    });
-
-    if (btnGanti) {
-        btnGanti.addEventListener('click', () => {
-            fileInput.value = '';
-            window.portoUploadedPath = null;
-            window.portoUploadedFileName = null;
-            setPortoState('idle');
-        });
-    }
-
-    if (btnRetry) {
-        btnRetry.addEventListener('click', () => {
-            fileInput.value = '';
-            setPortoState('idle');
-        });
-    }
-
-    setPortoState('idle');
+    setupDokumenInputs();
 }
 
 

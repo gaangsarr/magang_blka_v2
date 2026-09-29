@@ -660,23 +660,41 @@ function renderTable(dataArray) {
             <td style="white-space: nowrap;">
                 <div class="action-cell-stack">
                     <div class="action-row-docs">
-                        <span class="action-row-label">Berkas:</span>
-                        ${p.transkrip_path ? `
-                        <a href="/api/admin/transkrip/download.php?pendaftaran_id=${p.pendaftaran_id}" target="_blank" rel="noopener noreferrer" class="btn-doc-pill pill-transkrip" title="Buka Dokumen Transkrip Nilai (PDF) di Tab Baru">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                            <span>Transkrip</span>
-                        </a>` : ''}
-                        ${p.cv_path ? `
-                        <a href="/api/admin/cv/download.php?pendaftaran_id=${p.pendaftaran_id}" target="_blank" rel="noopener noreferrer" class="btn-doc-pill pill-cv" title="Buka Dokumen Curriculum Vitae / CV (PDF) di Tab Baru">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><circle cx="12" cy="12" r="2.5"/><path d="M8 18c0-1.8 1.8-3 4-3s4 1.2 4 3"/></svg>
-                            <span>CV</span>
-                        </a>` : ''}
-                        ${p.porto_path ? `
-                        <a href="/api/admin/porto/download.php?pendaftaran_id=${p.pendaftaran_id}" target="_blank" rel="noopener noreferrer" class="btn-doc-pill pill-porto" title="Buka Dokumen Portofolio (PDF) di Tab Baru">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-                            <span>Porto</span>
-                        </a>` : ''}
-                        ${(!p.transkrip_path && !p.cv_path && !p.porto_path) ? '<span class="doc-empty-text">Tidak ada berkas</span>' : ''}
+                        <span class="action-row-label">Dokumen:</span>
+                        ${p.transkrip_path ? (() => {
+                            const isLink = typeof p.transkrip_path === 'string' && (p.transkrip_path.startsWith('http://') || p.transkrip_path.startsWith('https://'));
+                            const targetUrl = isLink ? p.transkrip_path : `/api/admin/transkrip/download.php?pendaftaran_id=${p.pendaftaran_id}`;
+                            return `
+                            <a href="${escapeHtml(targetUrl)}" target="_blank" rel="noopener noreferrer" class="btn-doc-pill pill-transkrip" title="${isLink ? 'Buka Tautan: ' + escapeHtml(p.transkrip_path) : 'Buka Dokumen Transkrip Nilai (PDF) di Tab Baru'}">
+                                ${isLink 
+                                    ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>`
+                                    : `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>`}
+                                <span>${isLink ? 'Link Transkrip' : 'Transkrip'}</span>
+                            </a>`;
+                        })() : ''}
+                        ${p.cv_path ? (() => {
+                            const isLink = typeof p.cv_path === 'string' && (p.cv_path.startsWith('http://') || p.cv_path.startsWith('https://'));
+                            const targetUrl = isLink ? p.cv_path : `/api/admin/cv/download.php?pendaftaran_id=${p.pendaftaran_id}`;
+                            return `
+                            <a href="${escapeHtml(targetUrl)}" target="_blank" rel="noopener noreferrer" class="btn-doc-pill pill-cv" title="${isLink ? 'Buka Tautan: ' + escapeHtml(p.cv_path) : 'Buka Dokumen Curriculum Vitae / CV (PDF) di Tab Baru'}">
+                                ${isLink 
+                                    ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>`
+                                    : `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><circle cx="12" cy="12" r="2.5"/><path d="M8 18c0-1.8 1.8-3 4-3s4 1.2 4 3"/></svg>`}
+                                <span>${isLink ? 'Link CV' : 'CV'}</span>
+                            </a>`;
+                        })() : ''}
+                        ${p.porto_path ? (() => {
+                            const isLink = typeof p.porto_path === 'string' && (p.porto_path.startsWith('http://') || p.porto_path.startsWith('https://'));
+                            const targetUrl = isLink ? p.porto_path : `/api/admin/porto/download.php?pendaftaran_id=${p.pendaftaran_id}`;
+                            return `
+                            <a href="${escapeHtml(targetUrl)}" target="_blank" rel="noopener noreferrer" class="btn-doc-pill pill-porto" title="${isLink ? 'Buka Tautan: ' + escapeHtml(p.porto_path) : 'Buka Dokumen Portofolio (PDF) di Tab Baru'}">
+                                ${isLink 
+                                    ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>`
+                                    : `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>`}
+                                <span>${isLink ? 'Link Porto' : 'Porto'}</span>
+                            </a>`;
+                        })() : ''}
+                        ${(!p.transkrip_path && !p.cv_path && !p.porto_path) ? '<span class="doc-empty-text">Tidak ada dokumen</span>' : ''}
                     </div>
                     <div class="action-row-decision">
                         <button type="button" class="btn-action-pill pill-approve" onclick="openApproveModal(${p.pendaftaran_id}, '${escapeHtml(p.nama).replace(/'/g, "\\'")}', '${escapeHtml(p.unit_nama).replace(/'/g, "\\'")}')" title="Setujui dan Tetapkan Unit">

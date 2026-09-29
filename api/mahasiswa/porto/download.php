@@ -59,7 +59,13 @@ try {
     if (empty($row['porto_path'])) {
         http_response_code(404);
         header('Content-Type: application/json; charset=utf-8');
-        echo json_encode(['error' => 'Berkas Portofolio belum diunggah untuk pendaftaran ini.']);
+        echo json_encode(['error' => 'Berkas Portofolio belum disertakan untuk pendaftaran ini.']);
+        exit;
+    }
+
+    // Jika berupa tautan web publik (Google Drive, OneDrive, dll), redirect langsung
+    if (str_starts_with($row['porto_path'], 'http://') || str_starts_with($row['porto_path'], 'https://')) {
+        header('Location: ' . $row['porto_path']);
         exit;
     }
 

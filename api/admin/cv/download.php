@@ -72,7 +72,13 @@ try {
     if (empty($row['cv_path'])) {
         http_response_code(404);
         header('Content-Type: application/json; charset=utf-8');
-        echo json_encode(['error' => 'Pendaftar belum mengunggah file CV.']);
+        echo json_encode(['error' => 'Pendaftar belum menyertakan tautan atau file CV.']);
+        exit;
+    }
+
+    // Jika berupa tautan web publik (Google Drive, OneDrive, dll), redirect langsung
+    if (str_starts_with($row['cv_path'], 'http://') || str_starts_with($row['cv_path'], 'https://')) {
+        header('Location: ' . $row['cv_path']);
         exit;
     }
 
