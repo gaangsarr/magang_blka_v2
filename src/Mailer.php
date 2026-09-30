@@ -65,6 +65,13 @@ class Mailer
         $fromName  = trim($_ENV['SMTP_FROM_NAME'] ?? 'REMATE ITPLN - Sistem Magang');
         $mail->setFrom($fromEmail, $fromName);
 
+        // Reply-To resmi BLKA / CDC ITPLN
+        $replyTo     = trim($_ENV['SMTP_REPLY_TO'] ?? 'cdc@itpln.ac.id');
+        $replyToName = trim($_ENV['SMTP_REPLY_TO_NAME'] ?? 'CDC ITPLN');
+        if (!empty($replyTo)) {
+            $mail->addReplyTo($replyTo, $replyToName);
+        }
+
         return $mail;
     }
 
