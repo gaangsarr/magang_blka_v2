@@ -204,6 +204,8 @@ class SuratMahasiswaGenerator
      */
     private static function buildHtml(array $v): string
     {
+        $e = fn($val) => htmlspecialchars((string)($val ?? ''), ENT_QUOTES, 'UTF-8');
+
         $logoItplnImg = !empty($v['logo_itpln']) 
             ? '<img src="' . $v['logo_itpln'] . '" style="height: 65px; max-width: 140px; object-fit: contain;">' 
             : '<div style="font-weight: bold; color: #005082; font-size: 14px;">ITPLN</div>';
@@ -212,17 +214,31 @@ class SuratMahasiswaGenerator
             ? '<img src="' . $v['logo_pln'] . '" style="height: 60px; max-width: 130px; object-fit: contain;">' 
             : '<div style="font-weight: bold; color: #00A2B9; font-size: 14px;">PLN</div>';
 
-        $unitDisplay = htmlspecialchars($v['nama_unit'], ENT_QUOTES, 'UTF-8');
+        $unitDisplay = $e($v['nama_unit']);
         if (!empty($v['singkatan_unit'])) {
-            $unitDisplay .= ' (' . htmlspecialchars($v['singkatan_unit'], ENT_QUOTES, 'UTF-8') . ')';
+            $unitDisplay .= ' (' . $e($v['singkatan_unit']) . ')';
         }
+
+        $nomorSurat          = $e($v['nomor_surat']);
+        $tanggalSurat        = $e($v['tanggal_surat']);
+        $tahunAkademik       = $e($v['tahun_akademik']);
+        $mhsNama             = $e($v['mhs_nama']);
+        $mhsNim              = $e($v['mhs_nim']);
+        $mhsJurusan          = $e($v['mhs_jurusan']);
+        $mhsHp               = $e($v['mhs_hp']);
+        $programNama         = $e($v['program_nama']);
+        $periodeNama         = $e($v['periode_nama']);
+        $alamatUnit          = $e($v['alamat_unit']);
+        $namaPenandatangan   = $e($v['nama_penandatangan']);
+        $jabatanPenandatangan = $e($v['jabatan_penandatangan']);
+        $verifyCode          = $e($v['verify_code']);
 
         return <<<HTML
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Surat Pengantar & Rekomendasi Magang - {$v['mhs_nim']}</title>
+    <title>Surat Pengantar & Rekomendasi Magang - {$mhsNim}</title>
     <style>
         @page {
             margin: 18mm 20mm 18mm 20mm;
@@ -456,8 +472,8 @@ class SuratMahasiswaGenerator
         <tr>
             <td style="width: 14%; font-weight: bold;">Nomor</td>
             <td style="width: 3%;">:</td>
-            <td style="width: 48%;">{$v['nomor_surat']}</td>
-            <td style="width: 35%; text-align: right;">{$v['tanggal_surat']}</td>
+            <td style="width: 48%;">{$nomorSurat}</td>
+            <td style="width: 35%; text-align: right;">{$tanggalSurat}</td>
         </tr>
         <tr>
             <td style="font-weight: bold;">Lampiran</td>
@@ -483,7 +499,7 @@ class SuratMahasiswaGenerator
     <!-- PEMBUKA -->
     <div class="content-p">
         Dengan hormat,<br>
-        Sehubungan dengan penyelenggaraan Program Praktik Kerja / Magang Mahasiswa Institut Teknologi PLN (ITPLN) Tahun Akademik <strong>{$v['tahun_akademik']}</strong>, bersama ini kami sampaikan bahwa mahasiswa di bawah ini telah dinyatakan <strong>LOLOS SELEKSI RESMI</strong> dan diberikan rekomendasi penempatan magang pada unit yang Bapak/Ibu pimpin:
+        Sehubungan dengan penyelenggaraan Program Praktik Kerja / Magang Mahasiswa Institut Teknologi PLN (ITPLN) Tahun Akademik <strong>{$tahunAkademik}</strong>, bersama ini kami sampaikan bahwa mahasiswa di bawah ini telah dinyatakan <strong>LOLOS SELEKSI RESMI</strong> dan diberikan rekomendasi penempatan magang pada unit yang Bapak/Ibu pimpin:
     </div>
 
     <!-- DATA MAHASISWA -->
@@ -491,32 +507,32 @@ class SuratMahasiswaGenerator
         <tr>
             <td class="label">Nama Lengkap</td>
             <td class="colon">:</td>
-            <td class="value"><strong>{$v['mhs_nama']}</strong></td>
+            <td class="value"><strong>{$mhsNama}</strong></td>
         </tr>
         <tr>
             <td class="label">Nomor Induk Mahasiswa (NIM)</td>
             <td class="colon">:</td>
-            <td class="value"><strong>{$v['mhs_nim']}</strong></td>
+            <td class="value"><strong>{$mhsNim}</strong></td>
         </tr>
         <tr>
             <td class="label">Program Studi</td>
             <td class="colon">:</td>
-            <td class="value">{$v['mhs_jurusan']}</td>
+            <td class="value">{$mhsJurusan}</td>
         </tr>
         <tr>
             <td class="label">Kontak / WhatsApp</td>
             <td class="colon">:</td>
-            <td class="value">{$v['mhs_hp']}</td>
+            <td class="value">{$mhsHp}</td>
         </tr>
         <tr>
             <td class="label">Program Magang</td>
             <td class="colon">:</td>
-            <td class="value"><strong>{$v['program_nama']}</strong></td>
+            <td class="value"><strong>{$programNama}</strong></td>
         </tr>
         <tr>
             <td class="label">Gelombang / Periode</td>
             <td class="colon">:</td>
-            <td class="value">{$v['periode_nama']}</td>
+            <td class="value">{$periodeNama}</td>
         </tr>
         <tr>
             <td class="label">Unit Penempatan PLN</td>
@@ -526,7 +542,7 @@ class SuratMahasiswaGenerator
         <tr>
             <td class="label">Alamat Unit Kerja</td>
             <td class="colon">:</td>
-            <td class="value">{$v['alamat_unit']}</td>
+            <td class="value">{$alamatUnit}</td>
         </tr>
     </table>
 
@@ -551,7 +567,7 @@ class SuratMahasiswaGenerator
             <td style="width: 50%; vertical-align: middle;">
                 <div class="auth-card">
                     <div class="auth-badge">Otentikasi Dokumen Digital</div>
-                    <div class="auth-code">{$v['verify_code']}</div>
+                    <div class="auth-code">{$verifyCode}</div>
                     <p class="auth-desc">
                         Dokumen ini diterbitkan secara sah oleh Sistem Rekrutmen & Magang Terpadu (REMATE) BLKA Institut Teknologi PLN. Dinyatakan berlaku dan sah tanpa memerlukan tanda tangan atau cap basah.
                     </p>
@@ -559,11 +575,11 @@ class SuratMahasiswaGenerator
             </td>
             <td style="width: 50%;">
                 <div class="signer-block">
-                    <div class="signer-date">Jakarta, {$v['tanggal_surat']}</div>
+                    <div class="signer-date">Jakarta, {$tanggalSurat}</div>
                     <div class="signer-inst">Institut Teknologi PLN</div>
-                    <div class="signer-role">{$v['jabatan_penandatangan']}</div>
+                    <div class="signer-role">{$jabatanPenandatangan}</div>
                     <div class="signer-space"></div>
-                    <div class="signer-name">{$v['nama_penandatangan']}</div>
+                    <div class="signer-name">{$namaPenandatangan}</div>
                 </div>
             </td>
         </tr>

@@ -529,6 +529,7 @@ HTML;
                 WHERE id = :id
             ");
 
+            $picCache = [];
             foreach ($list as $row) {
                 if (empty($row['email'])) {
                     continue;
@@ -562,10 +563,14 @@ HTML;
                 $appUrl   = self::getAppUrl();
                 $statusUrl = htmlspecialchars($appUrl . '/status.html');
 
-                // Cari narahubung PIC jika diterima/dipindahkan
+                // Cari narahubung PIC jika diterima/dipindahkan (dengan memoization cache)
                 $picInfo = '';
                 if ($status === 'diterima' || $isDipindah) {
-                    $picData = PicNarahubung::resolveForUnit((int)$row['entitas_id']);
+                    $entitasId = (int)$row['entitas_id'];
+                    if (!array_key_exists($entitasId, $picCache)) {
+                        $picCache[$entitasId] = PicNarahubung::resolveForUnit($entitasId);
+                    }
+                    $picData = $picCache[$entitasId];
                     if ($picData) {
                         $picNama = htmlspecialchars((string)($picData['nama_pic'] ?? '-'));
                         $picArea = htmlspecialchars((string)($picData['area_hcbp'] ?? ''));

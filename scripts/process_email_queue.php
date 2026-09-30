@@ -21,6 +21,13 @@ function processEmailQueue(int $batchLimit = 10): array
     try {
         $pdo = Database::getInstance();
 
+        // 1. Auto-Recovery: Kembalikan job yang tertahan di 'processing' lebih dari 5 menit (mis. jika worker terhenti mendadak)
+        $pdo->query("
+            UPDATE email_queue 
+            SET status = 'pending', updated_at = NOW() 
+            WHERE status = 'processing' AND updated_at < (NOW() - INTERVAL 5 MINUTE)
+        ");
+
         $stmt = $pdo->prepare("
             SELECT id, to_email, to_name, subject, body_html, body_text, attempts, max_attempts
             FROM email_queue
@@ -42,6 +49,8 @@ function processEmailQueue(int $batchLimit = 10): array
         $successCount = 0;
         $failCount = 0;
 
+        $stmtClaim = $pdo->prepare("UPDATE email_queue SET status = 'processing', updated_at = NOW() WHERE id = ? AND status = 'pending'");
+
         foreach ($jobs as $job) {
             $jobId = (int)$job['id'];
             $toEmail = trim($job['to_email']);
@@ -49,9 +58,12 @@ function processEmailQueue(int $batchLimit = 10): array
             $attempts = (int)$job['attempts'] + 1;
             $maxAttempts = (int)$job['max_attempts'];
 
-            // Tandai status sebagai 'processing'
-            $pdo->prepare("UPDATE email_queue SET status = 'processing', updated_at = NOW() WHERE id = ?")
-                ->execute([$jobId]);
+            // Atomic Claim: Pastikan job masih 'pending' dan belum diklaim oleh worker paralel lain
+            $stmtClaim->execute([$jobId]);
+            if ($stmtClaim->rowCount() === 0) {
+                // Job telah diambil / diproses oleh worker lain
+                continue;
+            }
 
             // Kirim via PHPMailer
             $result = Mailer::send($toEmail, $toName, $job['subject'], $job['body_html'], $job['body_text'] ?? '');
