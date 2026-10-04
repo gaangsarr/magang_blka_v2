@@ -1,5 +1,5 @@
-# REMATE Design System & Visual Specification (`DESIGN.md`)
-> **Single Source of Truth untuk Desain Antarmuka REMATE — Admin PLN & Portal Mitra Perusahaan**  
+# INTERN ITPLN Design System & Visual Specification (`DESIGN.md`)
+> **Single Source of Truth untuk Desain Antarmuka INTERN ITPLN — Admin PLN & Portal Mitra Perusahaan**  
 > Mengikuti standar kualitas **antislop** (Anti-AI Slop Enterprise Architecture).
 
 ---

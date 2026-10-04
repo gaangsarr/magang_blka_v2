@@ -68,7 +68,7 @@ function applyAdminProfile(adm) {
     const avatarEl = document.getElementById('admin-avatar');
 
     if (nameEl) nameEl.innerText = adm.nama || 'Admin';
-    if (roleEl) roleEl.innerText = adm.role_label || 'Admin REMATE';
+    if (roleEl) roleEl.innerText = adm.role_label || 'Admin BLKA';
     if (avatarEl) {
         const initial = adm.nama ? adm.nama.trim().charAt(0).toUpperCase() : 'A';
         avatarEl.innerText = initial;

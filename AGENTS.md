@@ -1,6 +1,6 @@
-# Workspace Agent Instructions (REMATE — Sistem Magang PLN)
+# Workspace Agent Instructions (INTERN ITPLN — Sistem Magang PLN)
 
-Aplikasi Web Administrasi Magang REMATE (Rekrutmen & Magang Terpadu) untuk Kampus ITPLN & Mitra Perusahaan / Unit PLN se-Indonesia.
+Aplikasi Web Administrasi Magang INTERN ITPLN (Sistem Magang Terpadu) untuk Kampus ITPLN & Mitra Perusahaan / Unit PLN se-Indonesia.
 
 <!-- antislop:start -->
 ## antislop

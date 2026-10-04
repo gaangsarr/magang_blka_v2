@@ -24,9 +24,9 @@ try {
     $isSuperAdmin = ($admin['role'] === 'super_admin' || $admin['role'] === 'superadmin');
     $isPerusahaan = ($admin['role'] === 'admin_perusahaan');
     
-    $roleLabel = 'Admin REMATE';
+    $roleLabel = 'Admin BLKA';
     if ($isSuperAdmin) {
-        $roleLabel = 'Super Admin REMATE';
+        $roleLabel = 'Super Admin BLKA';
     } elseif ($isPerusahaan) {
         $roleLabel = 'Admin Mitra Perusahaan';
     }

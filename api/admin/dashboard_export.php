@@ -132,7 +132,7 @@ try {
 
     // Stream CSV
     $safeName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $periodeNama);
-    $filename = 'Laporan_Eksekutif_REMATE_' . $safeName . '_' . date('Ymd_His') . '.csv';
+    $filename = 'Laporan_Eksekutif_INTERN_' . $safeName . '_' . date('Ymd_His') . '.csv';
 
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename="' . $filename . '"');
@@ -143,7 +143,7 @@ try {
     // UTF-8 BOM for Excel
     fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
 
-    fputcsv($output, ['REMATE — REKRUTMEN MAGANG TALENTA ENERGI']);
+    fputcsv($output, ['INTERN ITPLN — SISTEM MAGANG TERPADU']);
     fputcsv($output, ['LAPORAN RINGKASAN EKSEKUTIF & MONITORING SELEKSI']);
     fputcsv($output, ['Periode:', $periodeNama]);
     fputcsv($output, ['Tanggal Unduh:', date('d/m/Y H:i:s') . ' WIB']);

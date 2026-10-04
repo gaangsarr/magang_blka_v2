@@ -11,7 +11,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 $_SESSION['admin_id'] = 1;
-$_SESSION['admin_nama'] = 'Super Admin REMATE';
+$_SESSION['admin_nama'] = 'Super Admin BLKA';
 $_SESSION['admin_role'] = 'super_admin';
 $_SESSION['role'] = 'admin';
 
@@ -53,7 +53,7 @@ try {
         $admin['id']
     ]);
 
-    $cookieJar = tempnam(sys_get_temp_dir(), 'remate_rules_cookie');
+    $cookieJar = tempnam(sys_get_temp_dir(), 'intern_rules_cookie');
 
     // Login via API
     $ch = curl_init('http://127.0.0.1:8001/api/admin/auth.php');

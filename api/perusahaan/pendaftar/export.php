@@ -267,11 +267,11 @@ try {
         $reqPorto = true;
     }
 
-    $tempExcelPath = tempnam(sys_get_temp_dir(), 'remate_xlsx_');
+    $tempExcelPath = tempnam(sys_get_temp_dir(), 'intern_xlsx_');
     $writer = new Xlsx($spreadsheet);
     $writer->save($tempExcelPath);
 
-    $tempZipPath = tempnam(sys_get_temp_dir(), 'remate_zip_');
+    $tempZipPath = tempnam(sys_get_temp_dir(), 'intern_zip_');
     $zip = new \ZipArchive();
     $zipRes = $zip->open($tempZipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
     if ($zipRes !== true) {

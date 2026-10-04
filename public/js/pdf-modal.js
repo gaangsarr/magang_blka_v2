@@ -1,5 +1,5 @@
 /**
- * REMATE - PDF Viewer Helper
+ * INTERN ITPLN - PDF Viewer Helper
  * Membuka dokumen PDF langsung di tab baru browser (native browser PDF viewer).
  * Berfungsi untuk mahasiswa, admin, dan mitra perusahaan di semua perangkat.
  */

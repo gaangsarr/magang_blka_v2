@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# REMATE ITPLN — Automated Database Backup Script
+# INTERN ITPLN — Automated Database Backup Script
 # ==============================================================================
 # Deskripsi:
-#   Script bash untuk melakukan automated backup database MySQL/MariaDB REMATE ITPLN.
+#   Script bash untuk melakukan automated backup database MySQL/MariaDB INTERN ITPLN.
 #   Fitur:
 #   - Membaca kredensial secara aman dari file .env
 #   - Menggunakan mysqldump dengan mode non-locking (--single-transaction)
@@ -18,7 +18,7 @@
 #   2. Buka crontab:
 #      crontab -e
 #   3. Tambahkan baris:
-#      0 2 * * * /path/to/magang_blka/v2/scripts/backup_db.sh >> /var/log/remate_backup.log 2>&1
+#      0 2 * * * /path/to/magang_blka/v2/scripts/backup_db.sh >> /var/log/intern_backup.log 2>&1
 # ==============================================================================
 
 set -euo pipefail
@@ -107,20 +107,20 @@ find "$BACKUP_DIR" -type f -name "${DB_NAME}_backup_*.sql.gz" -mtime +"$RETENTIO
 # --- Pilihan A: Rclone (Google Drive / Cloudflare R2 / AWS S3 / Wasabi) ---
 # if command -v rclone &> /dev/null; then
 #     echo "[$(date '+%Y-%m-%d %H:%M:%S')] [INFO] Mengupload backup ke remote storage via Rclone..."
-#     rclone copy "$BACKUP_FILE" "my_remote_drive:remate_backups/${DATE_TAG}/" --retries 3
+#     rclone copy "$BACKUP_FILE" "my_remote_drive:intern_backups/${DATE_TAG}/" --retries 3
 #     echo "[$(date '+%Y-%m-%d %H:%M:%S')] [SUCCESS] Sinkronisasi Rclone selesai."
 # fi
 
 # --- Pilihan B: AWS CLI S3 ---
 # if command -v aws &> /dev/null; then
 #     echo "[$(date '+%Y-%m-%d %H:%M:%S')] [INFO] Mengupload backup ke AWS S3 Bucket..."
-#     aws s3 cp "$BACKUP_FILE" "s3://my-remate-backups-bucket/${DB_NAME}/${DB_NAME}_backup_${TIMESTAMP}.sql.gz"
+#     aws s3 cp "$BACKUP_FILE" "s3://my-intern-backups-bucket/${DB_NAME}/${DB_NAME}_backup_${TIMESTAMP}.sql.gz"
 #     echo "[$(date '+%Y-%m-%d %H:%M:%S')] [SUCCESS] Upload ke AWS S3 selesai."
 # fi
 
 # --- Pilihan C: SCP / Rsync ke Backup Server Terpisah ---
 # BACKUP_SERVER="backupuser@192.168.1.100"
-# BACKUP_SERVER_PATH="/mnt/storage/remate_backups/"
+# BACKUP_SERVER_PATH="/mnt/storage/intern_backups/"
 # scp -P 22 -i /root/.ssh/id_rsa "$BACKUP_FILE" "${BACKUP_SERVER}:${BACKUP_SERVER_PATH}"
 
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] [COMPLETED] Seluruh proses backup selesai dengan sukses."

@@ -62,7 +62,7 @@ class Mailer
         ];
 
         $fromEmail = trim($_ENV['SMTP_FROM_EMAIL'] ?? $mail->Username);
-        $fromName  = trim($_ENV['SMTP_FROM_NAME'] ?? 'REMATE ITPLN - Sistem Magang');
+        $fromName  = trim($_ENV['SMTP_FROM_NAME'] ?? 'INTERN ITPLN - Sistem Magang');
         $mail->setFrom($fromEmail, $fromName);
 
         // Reply-To resmi BLKA / CDC ITPLN
@@ -152,7 +152,7 @@ class Mailer
         ];
         $programLabel = $programMap[$data['program'] ?? ''] ?? htmlspecialchars((string)($data['program'] ?? '-'));
 
-        $subject = "[REMATE ITPLN] Bukti Pendaftaran Magang - {$regNumber}";
+        $subject = "[INTERN ITPLN] Bukti Pendaftaran Magang - {$regNumber}";
 
         $htmlBody = <<<HTML
 <!DOCTYPE html>
@@ -213,7 +213,7 @@ class Mailer
                                 Halo <strong>{$nama}</strong>,
                             </p>
                             <p style="margin: 0 0 20px 0; font-size: 14px; line-height: 1.6; color: #475569;">
-                                Pendaftaran magang Anda di portal <strong>REMATE ITPLN</strong> telah berhasil tersimpan di sistem dengan rincian data sebagai berikut:
+                                Pendaftaran magang Anda di portal <strong>INTERN ITPLN</strong> telah berhasil tersimpan di sistem dengan rincian data sebagai berikut:
                             </p>
 
                             <!-- Detail Card -->
@@ -259,7 +259,7 @@ class Mailer
                         <td style="background-color: #f8fafc; padding: 20px 28px; text-align: center; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 12px; line-height: 1.6;">
                             <div style="font-weight: 700; color: #334155;">Badan Layanan Karir Alumni (BLKA)</div>
                             <div style="color: #64748b;">Institut Teknologi PLN • Menara PLN, Jl. Lingkar Luar Barat, Cengkareng, Jakarta Barat</div>
-                            <div style="margin-top: 6px; font-size: 11px; color: #94a3b8;">Pesan ini dikirim secara otomatis oleh sistem REMATE ITPLN.</div>
+                            <div style="margin-top: 6px; font-size: 11px; color: #94a3b8;">Pesan ini dikirim secara otomatis oleh sistem INTERN ITPLN.</div>
                         </td>
                     </tr>
 

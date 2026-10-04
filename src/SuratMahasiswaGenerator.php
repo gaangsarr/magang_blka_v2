@@ -150,7 +150,7 @@ class SuratMahasiswaGenerator
         $logoPlnBase64 = self::getBase64Image($root . '/public/assets/img/logo_pln.png');
 
         // Security Hash
-        $verifyCode = 'REMATE-' . strtoupper(substr(hash('sha256', (string)$pendaftaranId . $data['nim'] . 'BLKA_REMATE_SECURE_SALT_2026'), 0, 10));
+        $verifyCode = 'INTERN-' . strtoupper(substr(hash('sha256', (string)$pendaftaranId . $data['nim'] . 'BLKA_INTERN_SECURE_SALT_2026'), 0, 10));
 
         // Format HTML Dokumen
         $html = self::buildHtml([
@@ -569,7 +569,7 @@ class SuratMahasiswaGenerator
                     <div class="auth-badge">Otentikasi Dokumen Digital</div>
                     <div class="auth-code">{$verifyCode}</div>
                     <p class="auth-desc">
-                        Dokumen ini diterbitkan secara sah oleh Sistem Rekrutmen & Magang Terpadu (REMATE) BLKA Institut Teknologi PLN. Dinyatakan berlaku dan sah tanpa memerlukan tanda tangan atau cap basah.
+                        Dokumen ini diterbitkan secara sah oleh Sistem INTERN ITPLN BLKA Institut Teknologi PLN. Dinyatakan berlaku dan sah tanpa memerlukan tanda tangan atau cap basah.
                     </p>
                 </div>
             </td>
@@ -586,7 +586,7 @@ class SuratMahasiswaGenerator
     </table>
 
     <div class="footer-note">
-        REMATE ITPLN &bull; Dicetak secara otomatis melalui portal resmi https://magang.itpln.ac.id &bull; Lembar 1 / 1
+        INTERN ITPLN &bull; Dicetak secara otomatis melalui portal resmi https://magang.itpln.ac.id &bull; Lembar 1 / 1
     </div>
 
 </body>

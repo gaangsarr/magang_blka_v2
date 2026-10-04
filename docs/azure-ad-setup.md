@@ -1,7 +1,7 @@
-# Panduan Setup Microsoft Azure Entra ID (SSO ITPLN) untuk Sistem REMATE
+# Panduan Setup Microsoft Azure Entra ID (SSO ITPLN) untuk Sistem INTERN ITPLN
 
 > **Dokumen ini ditujukan untuk Tim IT Kampus ITPLN dan Developer.**  
-> Sistem REMATE menggunakan autentikasi langsung Microsoft Entra ID (OAuth 2.0 Authorization Code Flow) tanpa perantara Firebase.
+> Sistem INTERN ITPLN menggunakan autentikasi langsung Microsoft Entra ID (OAuth 2.0 Authorization Code Flow) tanpa perantara Firebase.
 
 ---
 
@@ -11,7 +11,7 @@
 2. Cari dan pilih layanan **Microsoft Entra ID**.
 3. Di bilah menu kiri, pilih **App registrations** $\rightarrow$ klik **+ New registration**.
 4. Lengkapi formulir pendaftaran:
-   - **Name**: `REMATE ITPLN Magang`
+   - **Name**: `INTERN ITPLN Magang`
    - **Supported account types**: Pilih **"Accounts in this organizational directory only (Institut Teknologi PLN only - Single tenant)"**.
    - **Redirect URI**:
      - Platform: Pilih **Web** *(bukan Single Page Application/SPA)*.
@@ -33,7 +33,7 @@ Pada halaman **Overview** aplikasi:
 
 1. Di bilah menu kiri aplikasi, pilih **Certificates & secrets** $\rightarrow$ tab **Client secrets**.
 2. Klik **+ New client secret**.
-3. Isi deskripsi (mis. `REMATE App Secret`) dan pilih masa berlaku (disarankan **24 months**).
+3. Isi deskripsi (mis. `INTERN ITPLN App Secret`) dan pilih masa berlaku (disarankan **24 months**).
 4. Klik **Add**.
 5. **Salin nilai pada kolom Value** (BUKAN Secret ID).
    - Masukkan ke `.env` sebagai `AZURE_CLIENT_SECRET`.

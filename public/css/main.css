@@ -3128,7 +3128,7 @@ textarea.admin-input-field {
 }
 
 .faq-item.active .faq-answer {
-  max-height: 250px;
+  max-height: 350px;
   padding: 0 20px 16px;
 }
 

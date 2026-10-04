@@ -623,7 +623,7 @@
 
     <!-- Footer -->
     <footer class="public-site-footer">
-        <div>&copy; 2026 Bagian Layanan Karir dan Alumni (BLKA), Institut Teknologi PLN</div>
+        <div>&copy; <span id="current-year">2026</span> INTERN ITPLN. All Rights Reserved.</div>
     </footer>
 
     <!-- Client Script -->
@@ -634,6 +634,9 @@
         let searchTimeout = null;
 
         document.addEventListener('DOMContentLoaded', () => {
+            const yr = document.getElementById('current-year');
+            if (yr) yr.textContent = new Date().getFullYear();
+
             const urlParams = new URLSearchParams(window.location.search);
             currentToken = urlParams.get('token') || '';
 

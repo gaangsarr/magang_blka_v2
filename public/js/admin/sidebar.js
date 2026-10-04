@@ -1,6 +1,6 @@
 /**
  * public/js/admin/sidebar.js
- * Modular Dynamic Sidebar Component for REMATE Admin Portal
+ * Modular Dynamic Sidebar Component for INTERN ITPLN Admin Portal
  */
 
 export const SIDEBAR_MENU_SECTIONS = [
@@ -244,9 +244,9 @@ export function initSidebar() {
                     <img src="/assets/img/logo_itpln.png" alt="Logo ITPLN" class="sidebar-logo" onerror="this.style.display='none'" />
                     <div class="sidebar-brand-info">
                         <div class="sidebar-brand-title">
-                            <span>REMATE</span>
+                            <span>INTERN ITPLN</span>
                         </div>
-                        <span class="sidebar-subtitle">Rekrutmen Magang Talenta Energi</span>
+                        <span class="sidebar-subtitle">Portal Admin BLKA</span>
                     </div>
                 </a>
                 <button type="button" id="btn-toggle-sidebar" class="btn-sidebar-toggle" title="Ciutkan / Lebarkan Menu Sidebar" aria-label="Toggle Sidebar">
@@ -269,7 +269,7 @@ export function initSidebar() {
             <div class="sidebar-user-card">
                 <div class="sidebar-avatar" id="sidebar-admin-avatar">A</div>
                 <div class="sidebar-user-meta">
-                    <div class="sidebar-user-name" id="sidebar-admin-name">Admin REMATE</div>
+                    <div class="sidebar-user-name" id="sidebar-admin-name">Admin BLKA</div>
                     <div class="sidebar-user-role" id="sidebar-admin-role">Administrator</div>
                 </div>
                 <a href="/api/admin/logout.php" class="btn-sidebar-logout" title="Keluar dari Sistem">
@@ -291,7 +291,7 @@ export function initSidebar() {
                 if (aside.classList.contains('sidebar-collapsed')) {
                     // Jika sedang mode collapsed dan diklik, lebarkan kembali
                     aside.classList.remove('sidebar-collapsed');
-                    localStorage.setItem('remate_admin_sidebar_collapsed', 'false');
+                    localStorage.setItem('intern_admin_sidebar_collapsed', 'false');
                     window.dispatchEvent(new Event('resize'));
                 }
                 group.classList.toggle('collapsed');
@@ -300,8 +300,8 @@ export function initSidebar() {
     });
 
     // Sidebar Collapsed Management via localStorage
-    const COLLAPSED_KEY = 'remate_admin_sidebar_collapsed';
-    if (localStorage.getItem(COLLAPSED_KEY) === 'true') {
+    const COLLAPSED_KEY = 'intern_admin_sidebar_collapsed';
+    if (localStorage.getItem(COLLAPSED_KEY) === 'true' || localStorage.getItem('remate_admin_sidebar_collapsed') === 'true') {
         aside.classList.add('sidebar-collapsed');
     }
 
@@ -318,11 +318,11 @@ export function initSidebar() {
 
     // Handle Sidebar Scroll Position Retention & Active Item In-View
     const navEl = aside.querySelector('.sidebar-nav');
-    const SCROLL_KEY = 'remate_admin_sidebar_scroll';
+    const SCROLL_KEY = 'intern_admin_sidebar_scroll';
 
     if (navEl) {
         // Restore previous scroll position if available
-        const savedScroll = sessionStorage.getItem(SCROLL_KEY);
+        const savedScroll = sessionStorage.getItem(SCROLL_KEY) || sessionStorage.getItem('remate_admin_sidebar_scroll');
         if (savedScroll !== null) {
             navEl.scrollTop = parseInt(savedScroll, 10);
         }
@@ -355,6 +355,7 @@ export function initSidebar() {
     if (logoutBtn) {
         logoutBtn.addEventListener('click', () => {
             sessionStorage.removeItem('admin_profile');
+            sessionStorage.removeItem('intern_admin_sidebar_scroll');
             sessionStorage.removeItem('remate_admin_sidebar_scroll');
         });
     }
@@ -371,7 +372,7 @@ export function updateSidebarProfile(adminData) {
     const avatarEl = document.getElementById('sidebar-admin-avatar') || document.getElementById('admin-avatar');
 
     if (nameEl) nameEl.innerText = adminData.nama || 'Admin';
-    if (roleEl) roleEl.innerText = adminData.role_label || (adminData.role === 'super_admin' ? 'Super Admin REMATE' : 'Admin REMATE');
+    if (roleEl) roleEl.innerText = adminData.role_label || (adminData.role === 'super_admin' ? 'Super Admin BLKA' : 'Admin BLKA');
     if (avatarEl) {
         const initial = adminData.nama ? adminData.nama.trim().charAt(0).toUpperCase() : 'A';
         avatarEl.innerText = initial;

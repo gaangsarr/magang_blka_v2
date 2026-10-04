@@ -729,7 +729,7 @@ class SuratGenerator
             throw new \RuntimeException('File template docx tidak ditemukan di: ' . $templatePath);
         }
 
-        $tempDir = sys_get_temp_dir() . '/remate_surat_' . uniqid();
+        $tempDir = sys_get_temp_dir() . '/intern_surat_' . uniqid();
         if (!is_dir($tempDir)) {
             mkdir($tempDir, 0777, true);
         }
@@ -1058,7 +1058,7 @@ class SuratGenerator
             throw new \RuntimeException('Tidak ada unit dengan mahasiswa berstatus diterima pada periode ini.');
         }
 
-        $tempDir = sys_get_temp_dir() . '/remate_zip_' . uniqid();
+        $tempDir = sys_get_temp_dir() . '/intern_zip_' . uniqid();
         if (!is_dir($tempDir)) {
             mkdir($tempDir, 0777, true);
         }

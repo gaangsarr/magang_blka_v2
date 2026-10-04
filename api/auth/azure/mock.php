@@ -129,7 +129,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dev Mock Login — REMATE ITPLN</title>
+    <title>Dev Mock Login — INTERN ITPLN</title>
     <link rel="stylesheet" href="/css/main.css">
     <style>
         body { background: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; font-family: sans-serif; }

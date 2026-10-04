@@ -1,5 +1,5 @@
-# BUKU PANDUAN LENGKAP SISTEM REMATE
-### **Rekrutmen Magang Talenta Energi (REMATE) — Institut Teknologi PLN × PT PLN (Persero)**
+# BUKU PANDUAN LENGKAP SISTEM INTERN ITPLN
+### **Sistem Magang Terpadu (INTERN ITPLN) — Institut Teknologi PLN × PT PLN (Persero)**
 
 ---
 
@@ -12,7 +12,7 @@
    - [3.3. Dashboard Mahasiswa & Cek Status Pendaftaran](#33-dashboard-mahasiswa--cek-status-pendaftaran)
    - [3.4. Memahami Makna & Arti Hasil Seleksi Magang](#34-memahami-makna--arti-hasil-seleksi-magang)
    - [3.5. Panduan Logout & Keamanan Akun](#35-panduan-logout--keamanan-akun)
-4. [Panduan Lengkap Role Admin (Admin REMATE & Super Admin)](#4-panduan-lengkap-role-admin-admin-remate--super-admin)
+4. [Panduan Lengkap Role Admin (Admin BLKA & Super Admin)](#4-panduan-lengkap-role-admin-admin-blka--super-admin)
    - [4.1. Access Control & Autentikasi Admin](#41-access-control--autentikasi-admin)
    - [4.2. Dashboard Utama Admin (Overview & Analitik)](#42-dashboard-utama-admin-overview--analitik)
    - [4.3. Modul Pengelolaan Periode Magang](#43-modul-pengelolaan-periode-magang)
@@ -27,15 +27,15 @@
 
 ## 1. PENDAHULUAN & GAMBARAN UMUM SISTEM
 
-**REMATE (Rekrutmen Magang Talenta Energi)** adalah platform digital resmi yang dirancang untuk memfasilitasi seluruh alur pendaftaran, verifikasi berkas, hingga alokasi penetapan unit magang mahasiswa Institut Teknologi PLN pada berbagai unit kerja **PT PLN (Persero)**. Platform ini dikelola secara terpusat oleh Biro Layanan Karir dan Alumni (BLKA) ITPLN.
+**INTERN ITPLN** adalah platform digital resmi yang dirancang untuk memfasilitasi seluruh alur pendaftaran, verifikasi berkas, hingga alokasi penetapan unit magang mahasiswa Institut Teknologi PLN pada berbagai unit kerja **PT PLN (Persero)**. Platform ini dikelola secara terpusat oleh Biro Layanan Karir dan Alumni (BLKA) ITPLN.
 
 ### **Fitur Utama Sistem:**
 1. **Single Sign-On (SSO) Microsoft Account Kampus**: Login seamless menggunakan akun email resmi kampus `@itpln.ac.id` via Microsoft Authentication.
 2. **Pendaftaran Magang Bertahap (5-Step Wizard)**: Form intuitif yang memandu mahasiswa dari pemilihan program, data diri, lokasi domisili peta, pilihan unit PLN, hingga resume pendaftaran.
 3. **Penyaringan Syarat Otomatis (IPK & SKS Validation)**: Sistem memvalidasi secara real-time kelayakan IPK & SKS mahasiswa untuk program 5 Bulan (KRS).
 4. **Reservasi Kuota Real-Time**: Sistem menahan sementara kuota unit PLN pilihan selama 5 menit untuk memastikan kepastian alokasi tempat.
-5. **Penetapan & Relokasi Unit Magang (Smart Placement)**: Sistem memfasilitasi penetapan mahasiswa pada unit pilihan awal atau memindahkan (*relocate*) pendaftar ke unit alternatif berdasarkan keputusan pertimbangan operasional Tim REMATE ITPLN.
-6. **Multi-Admin & Role Management**: Dukungan pengelolaan akun Admin REMATE dan Super Admin secara fleksibel melalui pengangkatan berbasis Email Kampus.
+5. **Penetapan & Relokasi Unit Magang (Smart Placement)**: Sistem memfasilitasi penetapan mahasiswa pada unit pilihan awal atau memindahkan (*relocate*) pendaftar ke unit alternatif berdasarkan keputusan pertimbangan operasional Tim BLKA ITPLN.
+6. **Multi-Admin & Role Management**: Dukungan pengelolaan akun Admin BLKA dan Super Admin secara fleksibel melalui pengangkatan berbasis Email Kampus.
 7. **Laporan & Export Excel**: Generasi laporan histori pendaftaran per periode yang dapat di-export langsung ke format Excel `.xlsx`.
 
 ---

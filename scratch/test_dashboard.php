@@ -1,14 +1,14 @@
 <?php
 /**
  * test_dashboard.php
- * Script pengujian otomatis untuk Dashboard Eksekutif Admin REMATE
+ * Script pengujian otomatis untuk Dashboard Eksekutif Admin INTERN ITPLN
  */
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 $_SESSION['admin_id'] = 1;
-$_SESSION['admin_nama'] = 'Super Admin REMATE';
+$_SESSION['admin_nama'] = 'Super Admin BLKA';
 $_SESSION['admin_role'] = 'super_admin';
 $_SESSION['role'] = 'admin';
 
@@ -33,7 +33,7 @@ function assertTest(bool $condition, string $label): void {
     }
 }
 
-echo "=== UJI INTEGRASI EXECUTIVE DASHBOARD REMATE ===\n\n";
+echo "=== UJI INTEGRASI EXECUTIVE DASHBOARD INTERN ITPLN ===\n\n";
 
 echo "1. VERIFIKASI ASSET FRONTEND & BACKEND\n";
 assertTest(file_exists(__DIR__ . '/public/admin/index.html'), 'public/admin/index.html ada');
@@ -72,7 +72,7 @@ if ($admin) {
     ]);
 }
 
-$cookieJar = tempnam(sys_get_temp_dir(), 'remate_cookie');
+$cookieJar = tempnam(sys_get_temp_dir(), 'intern_cookie');
 
 // Login Admin
 $ch = curl_init('http://127.0.0.1:8001/api/admin/auth.php');
@@ -133,7 +133,7 @@ $exportCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 curl_close($ch);
 
 assertTest($exportCode === 200, 'HTTP status export code 200 OK');
-assertTest(strpos($exportResp, 'REMATE — REKRUTMEN MAGANG TALENTA ENERGI') !== false, 'Export CSV memuat header resmi REMATE');
+assertTest(strpos($exportResp, 'INTERN ITPLN — SISTEM MAGANG TERPADU') !== false, 'Export CSV memuat header resmi INTERN ITPLN');
 assertTest(strpos($exportResp, 'INDIKATOR UTAMA (KPI)') !== false, 'Export CSV memuat bagian KPI');
 
 @unlink($cookieJar);

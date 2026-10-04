@@ -406,6 +406,10 @@ try {
                 $stmtPem->execute([$pendaftaranId, $pid]);
             }
         }
+
+        // 6. Bersihkan draft di tabel mahasiswa
+        $pdo->prepare("UPDATE mahasiswa SET draft_data = NULL, updated_at = NOW() WHERE id = :mid")
+            ->execute([':mid' => $mahasiswaId]);
     });
 
     // Bersihkan session temporary transkrip, cv, dan porto setelah berhasil submit

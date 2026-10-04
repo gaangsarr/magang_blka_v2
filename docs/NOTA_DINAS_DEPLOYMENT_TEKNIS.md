@@ -17,7 +17,7 @@ Telp: (021) 5440342 | Email: karir@itpln.ac.id | Website: https://karirku.itpln.
 
 ### I. LATAR BELAKANG & URGENSI
 
-Sehubungan dengan dimulainya siklus penerimaan Program Magang Mahasiswa Institut Teknologi PLN yang bekerja sama secara strategis dengan PT PLN (Persero) beserta Subholding dan Anak Perusahaan, Bagian Layanan Karir dan Alumni (BLKA) telah menyelesaikan pengembangan **Sistem Informasi Pendaftaran dan Penempatan Magang ITPLN (REMATE - Rekrutmen Magang Terintegrasi)**.
+Sehubungan dengan dimulainya siklus penerimaan Program Magang Mahasiswa Institut Teknologi PLN yang bekerja sama secara strategis dengan PT PLN (Persero) beserta Subholding dan Anak Perusahaan, Bagian Layanan Karir dan Alumni (BLKA) telah menyelesaikan pengembangan **Sistem Informasi Pendaftaran dan Penempatan Magang ITPLN (INTERN ITPLN — Rekrutmen Magang Terintegrasi)**.
 
 Sistem ini dirancang untuk menangani:
 1. **Pendaftaran dan Seleksi Mandiri Mahasiswa ITPLN** menggunakan akun SSO Microsoft 365 resmi (`@itpln.ac.id`).

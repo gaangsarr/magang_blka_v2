@@ -696,8 +696,8 @@ function renderKampusTablePage(page = 1, currAdmin = null) {
         const rowNumber = startIdx + idx + 1;
         const isSuper = (a.role === 'super_admin' || a.role === 'superadmin');
         const roleBadge = isSuper
-            ? '<span class="badge-status" style="background: #f3e8ff; color: #7e22ce; border: 1px solid #d8b4fe; font-weight: 700;">Super Admin</span>'
-            : '<span class="badge-status badge-dibuka">Admin REMATE</span>';
+            ? '<span class="badge-status" style="background: #f3e8ff; color: #7e22ce; border: 1px solid #d8b4fe; font-weight: 700;">Super Admin BLKA</span>'
+            : '<span class="badge-status badge-dibuka">Admin BLKA</span>';
 
         const isSelf = currAdmin && (parseInt(currAdmin.id) === parseInt(a.admin_id));
         const statusActive = a.aktif == 1;

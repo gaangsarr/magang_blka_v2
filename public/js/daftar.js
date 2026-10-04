@@ -62,6 +62,31 @@ function getDraftKey() {
     return `magang_draft_${nim}`;
 }
 
+let syncDraftTimeout = null;
+
+async function syncDraftToServer(dataToSync) {
+    if (!csrfToken) return;
+    try {
+        await fetch('/api/mahasiswa/draft.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': csrfToken
+            },
+            body: JSON.stringify({ draft: dataToSync })
+        });
+    } catch (e) {
+        // Silent catch for network fluctuation
+    }
+}
+
+function debouncedSyncDraft() {
+    if (syncDraftTimeout) clearTimeout(syncDraftTimeout);
+    syncDraftTimeout = setTimeout(() => {
+        syncDraftToServer(formData);
+    }, 1200);
+}
+
 function handleSessionExpired() {
     if (heartbeatInterval) clearInterval(heartbeatInterval);
     saveFormData();
@@ -267,6 +292,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 document.getElementById('jurusan').value = profilData.data.jurusan || '';
                 document.getElementById('angkatan').value = profilData.data.angkatan || '';
                 document.getElementById('email').value = profilData.data.email || '';
+                if (profilData.data.nama) {
+                    formData.nama = profilData.data.nama;
+                }
                 if (profilData.data.nama && !profilData.data.needs_nama) {
                     document.getElementById('nama').value = profilData.data.nama;
                     document.getElementById('nama').readOnly = true;
@@ -419,6 +447,25 @@ document.addEventListener('DOMContentLoaded', async () => {
                 draftParsed = JSON.parse(savedDraft);
             } catch (e) {}
         }
+
+        // Sinkronisasi Cloud Draft lintas-perangkat (HP <-> Laptop)
+        if (statusData.draft_data && typeof statusData.draft_data === 'object') {
+            if (!draftParsed) {
+                draftParsed = statusData.draft_data;
+            } else if (statusData.active_reservasi && statusData.active_reservasi.reservasi_id) {
+                // Jika sedang ada reservasi aktif di server, utamakan data snapshot reservasi dari server
+                draftParsed = Object.assign({}, draftParsed, statusData.draft_data);
+            } else {
+                // Gabungkan, utamakan draft lokal namun lengkapi field kosong dari cloud draft
+                draftParsed = Object.assign({}, statusData.draft_data, draftParsed);
+            }
+            try {
+                const combinedJson = JSON.stringify(draftParsed);
+                localStorage.setItem(draftKey, combinedJson);
+                sessionStorage.setItem('magang_draft_form', combinedJson);
+            } catch (e) {}
+        }
+
         await initWilayahDropdowns(draftParsed);
 
         // Real-time numeric-only sanitizer untuk No HP, RT, dan RW
@@ -443,7 +490,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             wizardFormEl.addEventListener('change', () => saveFormData());
         }
 
-        // Restore seluruh data formulir dari draft lokal mahasiswa
+        // Restore seluruh data formulir dari draft lokal / cloud mahasiswa
         if (draftParsed) {
             try {
                 Object.assign(formData, draftParsed);
@@ -453,6 +500,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                         radio.checked = true;
                         radio.dispatchEvent(new Event('change'));
                     }
+                }
+                if (formData.nama && document.getElementById('nama') && !document.getElementById('nama').readOnly) {
+                    document.getElementById('nama').value = formData.nama;
+                } else if (!formData.nama && document.getElementById('nama')?.value) {
+                    formData.nama = document.getElementById('nama').value;
                 }
                 if (formData.jenis_kelamin && document.getElementById('jenis_kelamin')) document.getElementById('jenis_kelamin').value = formData.jenis_kelamin;
                 if (formData.ipk && document.getElementById('ipk')) document.getElementById('ipk').value = formData.ipk;
@@ -483,7 +535,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Jalankan Heartbeat session keep-alive (setiap 2 menit)
         startHeartbeat();
 
-        // Cek jika ada reservasi aktif yang belum kadaluarsa (mis. saat refresh halaman)
+        // Cek jika ada reservasi aktif yang belum kadaluarsa (mis. saat refresh halaman atau login di device lain)
         if (statusData.active_reservasi && statusData.active_reservasi.reservasi_id) {
             const activeRes = statusData.active_reservasi;
             const expireMs = activeRes.expired_at_ms || new Date(activeRes.expired_at_iso || activeRes.expired_at).getTime();
@@ -491,6 +543,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 formData.upp_id = activeRes.upp_id;
                 formData.reservasi_id = activeRes.reservasi_id;
                 formData.nama_unit_dipilih = activeRes.nama_unit;
+                if (!formData.nama) {
+                    formData.nama = document.getElementById('nama')?.value || statusData.user?.nama || '';
+                }
 
                 startTimer(expireMs);
                 currentStep = 5;
@@ -576,8 +631,17 @@ function setupProgramOptions(periode) {
 
     if (programs.length === 0) {
         tableBody.innerHTML = `
-            <tr>
-                <td colspan="5" style="padding: 24px; text-align: center; color: #94a3b8;">Tidak ada program magang yang tersedia pada periode ini.</td>
+            <tr class="table-state-row">
+                <td colspan="5" class="table-state-cell" style="padding: 24px; text-align: center; color: #94a3b8;">
+                    <div class="table-loading-container">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="12" y1="8" x2="12" y2="12"/>
+                            <line x1="12" y1="16" x2="12.01" y2="16"/>
+                        </svg>
+                        <span>Tidak ada program magang yang tersedia pada periode ini.</span>
+                    </div>
+                </td>
             </tr>
         `;
         return;
@@ -597,19 +661,19 @@ function setupProgramOptions(periode) {
         tr.style.cursor = window.isEligibleCohort ? 'pointer' : 'default';
 
         tr.innerHTML = `
-            <td style="text-align: center; vertical-align: middle;">
+            <td class="col-program-radio" style="text-align: center; vertical-align: middle;">
                 <input type="radio" name="program" value="${prog.id}" class="custom-radio program-radio-btn" ${!window.isEligibleCohort ? 'disabled' : ''} style="width: 18px; height: 18px; cursor: ${window.isEligibleCohort ? 'pointer' : 'not-allowed'}; accent-color: #0b3d6b;">
             </td>
-            <td>
+            <td class="col-program-periode">
                 <div style="font-weight: 700; color: #0f172a; font-size: 0.9rem;">${escapeHtml(periode.nama)}</div>
             </td>
-            <td>
+            <td class="col-program-title">
                 <div style="font-weight: 700; color: #0b3d6b; font-size: 0.925rem;">${prog.title}</div>
             </td>
-            <td>
+            <td class="col-program-angkatan">
                 ${angkatanBadge}
             </td>
-            <td style="text-align: center;">
+            <td class="col-program-status" style="text-align: center;">
                 ${statusBadge}
             </td>
         `;
@@ -853,6 +917,7 @@ async function handleNext() {
         return;
     }
 
+    saveFormData(true);
     currentStep++;
     updateUI();
 }
@@ -1076,7 +1141,7 @@ function validateStep(step) {
     return true;
 }
 
-function saveFormData() {
+function saveFormData(immediateSync = false) {
     const progRadio = document.querySelector('input[name="program"]:checked');
     if (progRadio) formData.program = progRadio.value;
     if (document.getElementById('nama')) formData.nama = document.getElementById('nama').value;
@@ -1106,6 +1171,13 @@ function saveFormData() {
         localStorage.setItem(getDraftKey(), jsonStr);
         sessionStorage.setItem('magang_draft_form', jsonStr);
     } catch (e) {}
+
+    if (immediateSync) {
+        if (syncDraftTimeout) clearTimeout(syncDraftTimeout);
+        syncDraftToServer(formData);
+    } else {
+        debouncedSyncDraft();
+    }
 }
 
 function scrollToFormTop() {
@@ -1211,9 +1283,9 @@ function renderUnitsTable() {
         const mhsJur = (window.statusAuthData && window.statusAuthData.user && window.statusAuthData.user.jurusan) ? window.statusAuthData.user.jurusan : '';
         const jurMsg = mhsJur ? ` untuk Program Studi <strong>${escapeHtml(mhsJur)}</strong>` : '';
         tbody.innerHTML = `
-            <tr>
-                <td colspan="6" style="text-align: center; padding: 36px 20px; color: #64748b;">
-                    <div style="max-width: 420px; margin: 0 auto;">
+            <tr class="table-state-row">
+                <td colspan="6" class="table-state-cell" style="text-align: center; padding: 36px 20px; color: #64748b;">
+                    <div style="max-width: 420px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
                         <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 8px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                         <div style="font-weight: 700; color: #1e293b; font-size: 0.95rem; margin-bottom: 4px;">Tidak Ada Unit yang Ditemukan</div>
                         <div style="font-size: 0.825rem; color: #64748b; line-height: 1.4;">Tidak ada unit magang yang sesuai dengan kata kunci pencarian atau alokasi kuota${jurMsg} pada periode ini.</div>
@@ -1333,7 +1405,19 @@ function renderUnitsTable() {
 async function loadUnits(page = 1, search = unitSearchQuery, isSilent = false) {
     const tbody = document.getElementById('tbody-unit');
     if (tbody && !isSilent) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 24px 20px; color: #64748b;">Memuat unit magang... <div class="spinner" style="display: inline-block; vertical-align: middle; margin-left: 8px;"></div></td></tr>';
+        tbody.innerHTML = `
+            <tr class="table-state-row">
+                <td colspan="6" class="table-state-cell" style="text-align: center; padding: 24px 20px; color: #64748b;">
+                    <div class="table-loading-container">
+                        <svg class="table-spinner" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00A2B9" stroke-width="2.5" stroke-linecap="round">
+                            <circle cx="12" cy="12" r="10" stroke-opacity="0.2" stroke="currentColor"/>
+                            <path d="M12 2a10 10 0 0 1 10 10"/>
+                        </svg>
+                        <span>Memuat unit magang...</span>
+                    </div>
+                </td>
+            </tr>
+        `;
     }
     
     unitCurrentPage = page;
@@ -1423,10 +1507,17 @@ window.pilihUnit = function(upp_id, nama_unit) {
     showModal('Konfirmasi Pilihan', `Anda akan memilih unit ${nama_unit}. Kuota akan ditahan sementara selama ${reservationMinutes} menit untuk melengkapi data resume dan konfirmasi. Lanjutkan?`, async () => {
         showError(null);
         try {
+            saveFormData(true);
+            formData.upp_id = upp_id;
+            formData.nama_unit_dipilih = nama_unit;
+
             const res = await fetch('/api/mahasiswa/reservasi.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
-                body: JSON.stringify({ upp_id: upp_id })
+                body: JSON.stringify({ 
+                    upp_id: upp_id,
+                    draft: formData
+                })
             });
             
             const data = await res.json();
@@ -1446,7 +1537,9 @@ window.pilihUnit = function(upp_id, nama_unit) {
             formData.nama_unit_dipilih = nama_unit;
             
             try {
-                sessionStorage.setItem('magang_draft_form', JSON.stringify(formData));
+                const jsonStr = JSON.stringify(formData);
+                localStorage.setItem(getDraftKey(), jsonStr);
+                sessionStorage.setItem('magang_draft_form', jsonStr);
             } catch (e) {}
 
             const expireMs = data.data.expired_at_ms || new Date(data.data.expired_at).getTime();
@@ -1474,11 +1567,26 @@ function populateResume() {
         '5_bulan': 'Magang 5 Bulan (KRS)'
     };
     const progText = progMap[formData.program] || formData.program || '-';
-    document.getElementById('resume-program').innerText = `${progText} (${formData.periode_nama})`;
-    document.getElementById('resume-nama').innerText = formData.nama;
-    document.getElementById('resume-nim').innerText = document.getElementById('nim').value;
-    document.getElementById('resume-hp').innerText = formData.no_hp;
-    document.getElementById('resume-alamat').innerText = formData.alamat_lengkap + `, RT ${formData.rt}/RW ${formData.rw}, ${formData.kelurahan}, ${formData.kecamatan}, ${formData.kota_kabupaten}, ${formData.provinsi}`;
+    const periodeDisplay = formData.periode_nama || window.statusAuthData?.periode_aktif?.nama || '';
+    document.getElementById('resume-program').innerText = periodeDisplay ? `${progText} (${periodeDisplay})` : progText;
+    
+    const namaDisplay = formData.nama || document.getElementById('nama')?.value || window.statusAuthData?.user?.nama || '-';
+    document.getElementById('resume-nama').innerText = namaDisplay;
+    document.getElementById('resume-nim').innerText = document.getElementById('nim')?.value || window.statusAuthData?.user?.nim || '-';
+    document.getElementById('resume-hp').innerText = formData.no_hp || '-';
+    
+    let alamatParts = [];
+    if (formData.alamat_lengkap) alamatParts.push(formData.alamat_lengkap);
+    let rtrw = [];
+    if (formData.rt) rtrw.push(`RT ${formData.rt}`);
+    if (formData.rw) rtrw.push(`RW ${formData.rw}`);
+    if (rtrw.length) alamatParts.push(rtrw.join('/'));
+    if (formData.kelurahan) alamatParts.push(formData.kelurahan);
+    if (formData.kecamatan) alamatParts.push(formData.kecamatan);
+    if (formData.kota_kabupaten) alamatParts.push(formData.kota_kabupaten);
+    if (formData.provinsi) alamatParts.push(formData.provinsi);
+    
+    document.getElementById('resume-alamat').innerText = alamatParts.length ? alamatParts.join(', ') : '-';
     
     const formatLinkResume = (url) => {
         if (!url) return '-';

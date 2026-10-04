@@ -1,4 +1,4 @@
-# ⚡ REMATE — Rekrutmen Magang Terintegrasi
+# ⚡ INTERN ITPLN — Rekrutmen Magang Terintegrasi
 ### Sistem Informasi Pendaftaran dan Penempatan Magang Mahasiswa
 **Institut Teknologi PLN (BLKA) × PT PLN (Persero)**
 
@@ -42,7 +42,7 @@
 
 ## 🎯 TENTANG SISTEM
 
-**REMATE (Rekrutmen Magang Terintegrasi)** adalah platform enterprise yang dikembangkan khusus untuk mengelola siklus pendaftaran, seleksi, penempatan, dan administrasi magang mahasiswa **Institut Teknologi PLN (ITPLN)** di lingkungan **PT PLN (Persero)** beserta seluruh Holding, Subholding, Unit Induk, Unit Pelaksana, dan Anak Perusahaan di seluruh Indonesia.
+**INTERN ITPLN** adalah platform enterprise yang dikembangkan khusus untuk mengelola siklus pendaftaran, seleksi, penempatan, dan administrasi magang mahasiswa **Institut Teknologi PLN (ITPLN)** di lingkungan **PT PLN (Persero)** beserta seluruh Holding, Subholding, Unit Induk, Unit Pelaksana, dan Anak Perusahaan di seluruh Indonesia.
 
 ### Permasalahan yang Diselesaikan:
 - **Menggantikan Proses Manual**: Menghilangkan penggunaan Google Form / spreadsheet terpisah yang rentan duplikasi data, kebocoran kuota, dan sulit diverifikasi.
@@ -224,7 +224,7 @@ Pengguna utama peserta program magang dari kalangan mahasiswa aktif ITPLN:
 
 ### Alur 1: Autentikasi SSO Microsoft Azure Entra ID
 ```
-Mahasiswa              Browser               REMATE Backend            Microsoft Azure
+Mahasiswa              Browser            INTERN Backend            Microsoft Azure
    │                      │                        │                          │
    │── Klik Login SSO ───►│                        │                          │
    │                      │── Redirect Auth URL ──►│                          │
@@ -630,7 +630,7 @@ Berikut adalah panduan lengkap setiap parameter dalam berkas `.env`:
 
 ## 🛡 PANDUAN DEPLOYMENT PRODUKSI & SECURITY HARDENING
 
-### 1. Rekomendasi Virtual Host Nginx (`/etc/nginx/sites-available/remate.conf`):
+### 1. Rekomendasi Virtual Host Nginx (`/etc/nginx/sites-available/intern.conf`):
 
 ```nginx
 server {

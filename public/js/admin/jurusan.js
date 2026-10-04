@@ -1,6 +1,6 @@
 /**
  * public/js/admin/jurusan.js
- * Modul Master Program Studi (Jurusan) Admin REMATE ITPLN
+ * Modul Master Program Studi (Jurusan) Admin INTERN ITPLN
  */
 
 import { showAdminAlert, showAdminConfirm } from './common.js';

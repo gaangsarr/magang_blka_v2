@@ -77,7 +77,7 @@ $email       = str_replace(['’', '‘', '`'], "'", $email);
 
 // 6. Validasi domain email @itpln.ac.id
 if (!str_ends_with($email, '@itpln.ac.id')) {
-    header('Location: /login.html?error=' . urlencode('Hanya akun dengan email resmi @itpln.ac.id yang diizinkan masuk ke sistem REMATE.'));
+    header('Location: /login.html?error=' . urlencode('Hanya akun dengan email resmi @itpln.ac.id yang diizinkan masuk ke sistem INTERN ITPLN.'));
     exit;
 }
 

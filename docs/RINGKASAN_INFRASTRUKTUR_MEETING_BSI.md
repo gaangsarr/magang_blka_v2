@@ -1,5 +1,5 @@
 # LEMBAR PANDUAN TEKNIS & INFRASTRUKTUR (MEETING BSI KAMPUS)
-## Sistem Informasi Pendaftaran Magang Mahasiswa (REMATE)
+## Sistem Informasi Pendaftaran Magang Mahasiswa (INTERN ITPLN)
 ### Institut Teknologi PLN (Kolaborasi BLKA x PT PLN Persero)
 **Panduan Lengkap untuk Bahan Diskusi dengan Bagian Sistem Informasi (BSI / PTIK ITPLN)**
 
@@ -7,7 +7,7 @@
 
 ### 1. RINGKASAN STACK TEKNOLOGI & ARSITEKTUR
 
-Aplikasi **REMATE** dibangun dengan arsitektur web modern yang mandiri, performa tinggi, dan *resource-efficient* tanpa memerlukan runtime Node.js di server produksi.
+Aplikasi **INTERN ITPLN** dibangun dengan arsitektur web modern yang mandiri, performa tinggi, dan *resource-efficient* tanpa memerlukan runtime Node.js di server produksi.
 
 | Layer / Komponen | Teknologi & Versi | Catatan Teknis untuk BSI |
 | :--- | :--- | :--- |

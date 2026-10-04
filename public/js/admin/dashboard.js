@@ -1,6 +1,6 @@
 /**
  * public/js/admin/dashboard.js
- * Executive Dashboard Analytics & Monitoring Component for REMATE
+ * Executive Dashboard Analytics & Monitoring Component for INTERN ITPLN
  */
 
 let chartHierarkiInstance = null;

@@ -1,5 +1,5 @@
-# DOKUMENTASI SISTEM ANALIS & BLUEPRINT PITCH DECK SOSIALISASI
-# PORTAL MITRA PERUSAHAAN REMATE (REKRUTMEN & MAGANG TERPADU)
+﻿# DOKUMENTASI SISTEM ANALIS & BLUEPRINT PITCH DECK SOSIALISASI
+# PORTAL MITRA PERUSAHAAN INTERN ITPLN (SISTEM MAGANG TERPADU)
 ## Kolaborasi Strategis Kampus ITPLN & Seluruh Unit PT PLN (Persero) se-Indonesia
 
 ---
@@ -29,16 +29,16 @@
 # BAGIAN I: EXECUTIVE SUMMARY & ARSITEKTUR BISNIS
 
 ### 1.1 Latar Belakang & Transformasi Digital
-Sebelum adanya platform REMATE (Rekrutmen & Magang Terpadu) v2, proses administrasi magang mahasiswa Institut Teknologi PLN (ITPLN) di lingkungan PT PLN (Persero) menghadapi kendala klasik:
+Sebelum adanya platform INTERN ITPLN (SISTEM MAGANG TERPADU) v2, proses administrasi magang mahasiswa Institut Teknologi PLN (ITPLN) di lingkungan PT PLN (Persero) menghadapi kendala klasik:
 * **Fragmentasi Data:** Pendaftaran mahasiswa dilakukan secara parsial melalui email, proposal fisik, atau memo internal yang tidak tersinkronisasi.
 * **Kesenjangan Informasi Kuota:** Unit PLN sering kali tidak mengetahui jurusan apa saja yang tersedia, sementara mahasiswa tidak mengetahui unit mana yang kuotanya masih kosong.
 * **Risiko Deadlock Talenta:** Mahasiswa unggulan yang mendaftar di satu unit populer tertolak dan kehilangan kesempatan, padahal unit pelaksana lain di wilayah terdekat sedang kekurangan kandidat.
 * **Beban Administrasi Manual:** PIC Unit harus mengumpulkan berkas transkrip, CV, dan surat pengantar satu per satu dalam format terpisah.
 
-REMATE v2 hadir sebagai platform terpadu satu pintu (*single window platform*) yang menghubungkan Biro Layanan Karir dan Alumni (BLKA) ITPLN dengan seluruh kantor PLN se-Indonesia mulai dari Kantor Pusat, Unit Induk, Unit Pelaksana, hingga Unit Layanan.
+INTERN ITPLN hadir sebagai platform terpadu satu pintu (*single window platform*) yang menghubungkan Biro Layanan Karir dan Alumni (BLKA) ITPLN dengan seluruh kantor PLN se-Indonesia mulai dari Kantor Pusat, Unit Induk, Unit Pelaksana, hingga Unit Layanan.
 
 ### 1.2 Hierarki Entitas Unit PLN dalam Sistem
-Sistem REMATE merefleksikan struktur organisasi riil PT PLN (Persero) menggunakan pemetaan relasi induk-anak (*parent-child relationship*):
+sistem INTERN ITPLN merefleksikan struktur organisasi riil PT PLN (Persero) menggunakan pemetaan relasi induk-anak (*parent-child relationship*):
 1. **Holding / Kantor Pusat:** Level tertinggi entitas perusahaan (PT PLN Persero Kantor Pusat).
 2. **Unit Induk:** Meliputi Unit Induk Distribusi (UID), Unit Induk Penyaluran & Pusat Pengatur Beban (UIP3B), Unit Induk Transmisi (UIT), Unit Induk Pembangunan (UIP), dan Unit Induk Wilayah (UIW).
 3. **Unit Pelaksana:** Meliputi Unit Pelaksana Pelayanan Pelanggan (UP3), Unit Pelaksana Proyek (UPP), Unit Pelaksana Pengatur Distribusi (UP2D), Unit Pelaksana Transmisi (UPT), dan Pusat Pemeliharaan Ketenagalistrikan (Pusharlis).
@@ -53,7 +53,7 @@ Alur operasional di dalam portal admin perusahaan terbagi menjadi 3 fase terstru
 * **Fase 3: Penetapan & Roster Mahasiswa Sah (Periode Selesai):** BLKA ITPLN menerbitkan penetapan kelulusan resmi. Tab Roster aktif, menampilkan kartu identitas seluruh mahasiswa yang sah diterima. PIC unit dapat langsung menghubungi mahasiswa via WhatsApp/Email dan mengunduh paket arsip ZIP berisi rekap Excel dan folder berkas PDF per mahasiswa.
 
 ### 1.4 Alur Registrasi Akun & Pendaftaran Unit Baru
-Bagi kantor atau unit kerja di lingkungan PT PLN (Persero) yang belum memiliki akses portal atau belum terdata pada hierarki sistem REMATE v2, proses permohonan pembukaan akun baru dilakukan secara terpusat melalui Biro Layanan Karir dan Alumni (BLKA) ITPLN:
+Bagi kantor atau unit kerja di lingkungan PT PLN (Persero) yang belum memiliki akses portal atau belum terdata pada hierarki sistem INTERN ITPLN, proses permohonan pembukaan akun baru dilakukan secara terpusat melalui Biro Layanan Karir dan Alumni (BLKA) ITPLN:
 
 ```mermaid
 graph TD
@@ -61,7 +61,7 @@ graph TD
     B -->|"2. PIC Mengirim Data Entitas Unit & Kontak Resmi"| C["Verifikasi Keabsahan Entitas & Wilayah Kerja"]
     C -->|"3. Registrasi Master Data Entitas ke Sistem"| D["Super Admin BLKA ITPLN"]
     D -->|"4. Menerbitkan Username & Password Sementara"| E["Surat Kredensial Resmi Diterima PIC Unit"]
-    E -->|"5. Login Pertama di https://remate.itpln.ac.id/admin/login.html"| F["Modal Aktivasi: Ganti Password & Lengkapi Data PIC"]
+    E -->|"5. Login Pertama di https://magang.itpln.ac.id/admin/login.html"| F["Modal Aktivasi: Ganti Password & Lengkapi Data PIC"]
     F -->|"6. Akun Unit Aktif & Terverifikasi"| G["Konfigurasi Kuota & Jurusan Magang (Fase 1/2)"]
 ```
 
@@ -79,27 +79,27 @@ Berikut adalah rancangan slide demi slide yang siap dipindahkan ke format presen
 ---
 
 ### SLIDE 1: JUDUL & PEMBUKA
-* **Header:** Sosialisasi Aplikasi REMATE ITPLN
+* **Header:** Sosialisasi Aplikasi INTERN ITPLN
 * **Sub-Header:** Panduan Operasional Portal Mitra Unit PT PLN (Persero) untuk Rekrutmen & Administrasi Magang Terpadu
-* **Visual / Layout:** Logo resmi PLN berdampingan dengan logo ITPLN. Di latar belakang terdapat ilustrasi grafis jaringan kelistrikan modern dan antarmuka dashboard REMATE.
+* **Visual / Layout:** Logo resmi PLN berdampingan dengan logo ITPLN. Di latar belakang terdapat ilustrasi grafis jaringan kelistrikan modern dan antarmuka Dashboard INTERN ITPLN.
 * **Key Takeaways:**
   - Selamat datang di ekosistem baru pengelolaan magang terpusat.
   - Sinergi digital antara kampus korporat ITPLN dan unit PLN se-Indonesia.
 * **Speaker Notes (Naskah Presenter):**
-  > "Bapak dan Ibu PIC Unit PLN yang kami hormati dari Sabang sampai Merauke, selamat datang di sesi sosialisasi aplikasi REMATE v2. Hari ini kita akan membedah secara tuntas bagaimana portal ini mempermudah Bapak dan Ibu dalam merencanakan kebutuhan formasi magang, memverifikasi calon peserta dalam hitungan menit, hingga mengunduh dokumen resmi tanpa hambatan birokrasi manual."
+  > "Bapak dan Ibu PIC Unit PLN yang kami hormati dari Sabang sampai Merauke, selamat datang di sesi sosialisasi aplikasi INTERN ITPLN. Hari ini kita akan membedah secara tuntas bagaimana portal ini mempermudah Bapak dan Ibu dalam merencanakan kebutuhan formasi magang, memverifikasi calon peserta dalam hitungan menit, hingga mengunduh dokumen resmi tanpa hambatan birokrasi manual."
 
 ---
 
 ### SLIDE 2: LATAR BELAKANG & TUJUAN STRATEGIS
-* **Header:** Mengapa REMATE v2 Hadir?
+* **Header:** Mengapa INTERN ITPLN Hadir?
 * **Sub-Header:** Menjawab Tantangan Pengelolaan Talenta Magang Masa Depan
-* **Visual / Layout:** Kolom komparasi 2 sisi: *Sebelumnya (Proses Manual)* vs *Sekarang (Platform Terpadu REMATE)*.
+* **Visual / Layout:** Kolom komparasi 2 sisi: *Sebelumnya (Proses Manual)* vs *Sekarang (Platform Terpadu INTERN ITPLN)*.
 * **Key Takeaways:**
   - Mengakhiri tumpang tindih pendaftaran proposal mahasiswa ke unit.
   - Memberikan kepastian kuota dan kualifikasi program studi yang tepat sasaran.
   - Menyediakan transparansi data *real-time* antara unit kerja dan institusi pendidikan.
 * **Speaker Notes:**
-  > "Sebelumnya, unit sering menerima pengajuan mahasiswa yang tidak sesuai kebutuhan formasi atau jurusan. Di sisi lain, ada unit yang membutuhkan banyak mahasiswa teknik tenaga listrik namun tidak mendapatkan pendaftar. Melalui REMATE, seluruh data disinkronkan secara terpusat sehingga unit mendapatkan kandidat terbaik sesuai spesifikasi teknis pekerjaan di lapangan."
+  > "Sebelumnya, unit sering menerima pengajuan mahasiswa yang tidak sesuai kebutuhan formasi atau jurusan. Di sisi lain, ada unit yang membutuhkan banyak mahasiswa teknik tenaga listrik namun tidak mendapatkan pendaftar. Melalui INTERN ITPLN, seluruh data disinkronkan secara terpusat sehingga unit mendapatkan kandidat terbaik sesuai spesifikasi teknis pekerjaan di lapangan."
 
 ---
 
@@ -112,7 +112,7 @@ Berikut adalah rancangan slide demi slide yang siap dipindahkan ke format presen
   - Akun terikat spesifik ke entitas unit kantor masing-masing.
   - Koordinasi lintas unit difasilitasi oleh fitur pemindahan otomatis.
 * **Speaker Notes:**
-  > "Sistem REMATE dibangun mengikuti struktur organisasi PLN yang sesungguhnya. Akun yang Bapak/Ibu pegang saat ini secara presisi terikat pada Unit Pelaksana atau Unit Layanan masing-masing. Anda memiliki hak penuh untuk menerima, menolak, atau memindahkan mahasiswa sesuai dinamika lapangan tanpa intervensi pihak luar yang merugikan unit."
+  > "sistem INTERN ITPLN dibangun mengikuti struktur organisasi PLN yang sesungguhnya. Akun yang Bapak/Ibu pegang saat ini secara presisi terikat pada Unit Pelaksana atau Unit Layanan masing-masing. Anda memiliki hak penuh untuk menerima, menolak, atau memindahkan mahasiswa sesuai dinamika lapangan tanpa intervensi pihak luar yang merugikan unit."
 
 ---
 
@@ -125,7 +125,7 @@ Berikut adalah rancangan slide demi slide yang siap dipindahkan ke format presen
   - **Fase 2:** Pantau dan seleksi pendaftar yang masuk secara harian.
   - **Fase 3:** Unduh arsip lengkap dan hubungi mahasiswa resmi untuk *onboarding*.
 * **Speaker Notes:**
-  > "Bapak/Ibu tidak perlu bingung mengenai apa yang harus dilakukan saat login. Dashboard REMATE memiliki stepper status otomatis. Ketika periode berada pada Fase 1, fokus kita adalah menentukan kuota. Saat masuk Fase 2, fokus kita beralih ke seleksi berkas. Dan saat Fase 3 tiba, pekerjaan kita adalah menerima daftar nama mahasiswa sah beserta dokumen arsipnya."
+  > "Bapak/Ibu tidak perlu bingung mengenai apa yang harus dilakukan saat login. Dashboard INTERN ITPLN memiliki stepper status otomatis. Ketika periode berada pada Fase 1, fokus kita adalah menentukan kuota. Saat masuk Fase 2, fokus kita beralih ke seleksi berkas. Dan saat Fase 3 tiba, pekerjaan kita adalah menerima daftar nama mahasiswa sah beserta dokumen arsipnya."
 
 ---
 
@@ -141,7 +141,7 @@ Berikut adalah rancangan slide demi slide yang siap dipindahkan ke format presen
   - **Wajib Ganti Password:** Password default/sementara dari BLKA wajib diganti pada saat pertama kali login demi privasi dan keamanan data unit.
   - **Integritas Kontak PIC:** Nomor WhatsApp dan Email resmi pejabat penanggung jawab wajib diisi agar sistem dapat mengalirkan pengingat otomatis dan menghubungkan mahasiswa terpilih secara langsung.
 * **Speaker Notes:**
-  > "Bapak dan Ibu yang kami hormati, sebelum melangkah lebih jauh ke dalam sistem, hal pertama yang perlu diperhatikan adalah kepemilikan akun. Bagi unit yang telah menerima surat edaran dinas dan memegang kredensial awal, silakan langsung login di `remate.itpln.ac.id/admin/login.html` dan selesaikan modal aktivasi dengan mengganti kata sandi rahasia serta melengkapi nomor WhatsApp aktif PIC.
+  > "Bapak dan Ibu yang kami hormati, sebelum melangkah lebih jauh ke dalam sistem, hal pertama yang perlu diperhatikan adalah kepemilikan akun. Bagi unit yang telah menerima surat edaran dinas dan memegang kredensial awal, silakan langsung login di `magang.itpln.ac.id/admin/login.html` dan selesaikan modal aktivasi dengan mengganti kata sandi rahasia serta melengkapi nomor WhatsApp aktif PIC.
   >
   > Namun, jika ada Unit Pelaksana (UP3/UPP) atau Unit Layanan (ULP) di lingkungan wilayah Bapak/Ibu yang saat ini belum terdaftar di sistem dan ingin membuka pintu magang bagi talenta mahasiswa ITPLN, jalurnya sangat mudah dan responsif: silakan langsung menghubungi Kepala BLKA ITPLN, Ibu Dr. Dewi Arianti Wulandari di nomor WhatsApp +62 811-8302-006. Sampaikan nama unit dan identitas PIC, tim BLKA akan segera memverifikasi dan menerbitkan kredensial resmi maksimal dalam 1x24 jam kerja."
 
@@ -194,7 +194,7 @@ Berikut adalah rancangan slide demi slide yang siap dipindahkan ke format presen
   - Formulir kuota tetap terbuka penuh (Metode, Kuota Total, Jurusan, dan Peminatan bebas dipilih).
   - Seketika tombol Simpan ditekan, unit langsung terbit di aplikasi mahasiswa.
 * **Speaker Notes:**
-  > "Salah satu pertanyaan yang sering diajukan: 'Bagaimana jika periode magang sudah dibuka oleh BLKA, tapi unit kami baru menerima surat instruksi dan baru sempat membuka portal hari ini?' Jawabannya: Sistem REMATE sangat fleksibel. Bapak/Ibu tetap bisa login, mengatur kuota dari nol, dan menyimpan pengaturan. Begitu tombol simpan ditekan, unit Bapak/Ibu langsung tayang secara live di layar pencarian mahasiswa."
+  > "Salah satu pertanyaan yang sering diajukan: 'Bagaimana jika periode magang sudah dibuka oleh BLKA, tapi unit kami baru menerima surat instruksi dan baru sempat membuka portal hari ini?' Jawabannya: sistem INTERN ITPLN sangat fleksibel. Bapak/Ibu tetap bisa login, mengatur kuota dari nol, dan menyimpan pengaturan. Begitu tombol simpan ditekan, unit Bapak/Ibu langsung tayang secara live di layar pencarian mahasiswa."
 
 ---
 
@@ -273,7 +273,7 @@ Berikut adalah rancangan slide demi slide yang siap dipindahkan ke format presen
   - Sistem memberikan jaminan pengembalian kuota: **Kuota unit otomatis kembali bertambah +1**.
   - Slot kuota yang dikembalikan langsung dapat diperebutkan oleh pendaftar lain yang lebih relevan.
 * **Speaker Notes:**
-  > "Bagaimana jika berkas mahasiswa tidak memenuhi standar unit? Jangan ragu untuk menekan tombol 'Tolak'. Begitu ditolak, sistem REMATE secara otomatis mengembalikan kuota unit Anda sebesar 1 slot secara real-time. Slot kosong tersebut seketika terbuka kembali untuk dilamar oleh mahasiswa lain yang jurusannya lebih sesuai."
+  > "Bagaimana jika berkas mahasiswa tidak memenuhi standar unit? Jangan ragu untuk menekan tombol 'Tolak'. Begitu ditolak, sistem INTERN ITPLN secara otomatis mengembalikan kuota unit Anda sebesar 1 slot secara real-time. Slot kosong tersebut seketika terbuka kembali untuk dilamar oleh mahasiswa lain yang jurusannya lebih sesuai."
 
 ---
 
@@ -288,7 +288,7 @@ Berikut adalah rancangan slide demi slide yang siap dipindahkan ke format presen
   - **Solusi Ketidakseimbangan Pool:** Pada Kuota Gabungan, jika satu jurusan mendominasi pendaftar, unit dapat menyalurkan kelebihannya ke unit PLN rekanan tanpa merugikan mahasiswa.
   - **Penyaluran Terintegrasi:** Mahasiswa tidak gugur dan tidak perlu mengulang proses pendaftaran; berkasnya langsung dialihkan ke unit penerima secara aman dan transparan.
 * **Speaker Notes:**
-  > "Bapak dan Ibu sekalian, sistem REMATE dirancang sangat presisi: jika kuota unit Bapak/Ibu sudah habis, mahasiswa dari awal memang tidak bisa memilih unit Anda karena sistem otomatis menguncinya (kartu unit abu-abu dan tombol dinonaktifkan). Namun, bagaimana jika kuota masih ada, mahasiswa sudah terdaftar, tetapi setelah dicek berkasnya, kompetensinya ternyata tidak sesuai dengan pekerjaan divisi di unit Bapak/Ibu? Misalnya, mahasiswa Informatika berprestasi mendaftar di pos kerja lapangan ULP yang murni membutuhkan teknisi listrik distribusi tiang.
+  > "Bapak dan Ibu sekalian, sistem INTERN ITPLN dirancang sangat presisi: jika kuota unit Bapak/Ibu sudah habis, mahasiswa dari awal memang tidak bisa memilih unit Anda karena sistem otomatis menguncinya (kartu unit abu-abu dan tombol dinonaktifkan). Namun, bagaimana jika kuota masih ada, mahasiswa sudah terdaftar, tetapi setelah dicek berkasnya, kompetensinya ternyata tidak sesuai dengan pekerjaan divisi di unit Bapak/Ibu? Misalnya, mahasiswa Informatika berprestasi mendaftar di pos kerja lapangan ULP yang murni membutuhkan teknisi listrik distribusi tiang.
   >
   > Jika langsung ditolak, mahasiswa hebat ini langsung berstatus gugur dan kuota unit Anda kembali kosong. Di sinilah fitur Pemindahan berperan: Bapak/Ibu tidak perlu menolaknya! Cukup klik tombol 'Pindahkan', sistem cerdas akan mencarikan unit PLN terdekat yang memang membutuhkan keahlian mahasiswa tersebut (seperti UP2D atau Kantor Distribusi). Talenta terbaik tetap terserap di keluarga besar PLN, dan unit Bapak/Ibu tetap dapat mencari kandidat yang lebih tepat."
 
@@ -414,7 +414,7 @@ Berikut adalah rancangan slide demi slide yang siap dipindahkan ke format presen
 
 ### SLIDE 25: CHEAT SHEET: 5 LANGKAH OPERASIONAL WAJIB PIC UNIT
 * **Header:** Ringkasan Alur Tugas PIC Unit PLN
-* **Sub-Header:** 5 Langkah Mudah Menjalankan Peran PIC di Portal REMATE
+* **Sub-Header:** 5 Langkah Mudah Menjalankan Peran PIC di portal INTERN ITPLN
 * **Visual / Layout:** Checklist visual 5 kotak horizontal bernomor 1 sampai 5 dengan ikon yang representatif.
 * **Key Takeaways:**
   1. **Login & Aktivasi:** Ganti password dan lengkapi kontak PIC resmi.
@@ -423,7 +423,7 @@ Berikut adalah rancangan slide demi slide yang siap dipindahkan ke format presen
   4. **Optimalkan Pemindahan:** Alihkan talenta unggulan jika kuota unit penuh.
   5. **Onboarding & Arsip (Fase 3):** Unduh paket ZIP dan hubungi mahasiswa via WA.
 * **Speaker Notes:**
-  > "Sebagai rangkuman, tugas Bapak/Ibu di portal REMATE sangat sederhana dan hanya terdiri dari 5 langkah: Pertama, aktivasi akun. Kedua, pasang kuota unit. Ketiga, verifikasi pendaftar yang masuk. Keempat, manfaatkan pemindahan jika kuota penuh. Dan kelima, unduh paket arsip ZIP serta sambut mahasiswa magang di unit Anda."
+  > "Sebagai rangkuman, tugas Bapak/Ibu di portal INTERN ITPLN sangat sederhana dan hanya terdiri dari 5 langkah: Pertama, aktivasi akun. Kedua, pasang kuota unit. Ketiga, verifikasi pendaftar yang masuk. Keempat, manfaatkan pemindahan jika kuota penuh. Dan kelima, unduh paket arsip ZIP serta sambut mahasiswa magang di unit Anda."
 
 ---
 
@@ -450,7 +450,7 @@ Panduan ini ditujukan sebagai pegangan teknis meja kerja (*desktop operating pro
 ---
 
 ### MODUL 0: PROSEDUR PEMBUKAAN AKUN & PENDAFTARAN UNIT BARU
-Bagi unit kerja di lingkungan PT PLN (Persero) (Unit Induk, Unit Pelaksana UP3/UPP, atau Unit Layanan ULP/ULTG) yang belum terdaftar di master data portal REMATE v2 atau belum menerima akun akses:
+Bagi unit kerja di lingkungan PT PLN (Persero) (Unit Induk, Unit Pelaksana UP3/UPP, atau Unit Layanan ULP/ULTG) yang belum terdaftar di master data portal INTERN ITPLN atau belum menerima akun akses:
 
 #### 1. Narahubung Resmi Pimpinan BLKA ITPLN
 * **Nama Pejabat:** Ibu Dr. Dewi Arianti Wulandari, S.Kom., MMSI.
@@ -465,10 +465,10 @@ Kirimkan pesan WhatsApp kepada Ibu Dr. Dewi Arianti Wulandari menggunakan format
 Yth. Ibu Dr. Dewi Arianti Wulandari, S.Kom., MMSI.
 Kepala Biro Layanan Karir dan Alumni (BLKA) ITPLN
 
-Perihal: Permohonan Pembukaan Akun & Unit Baru Portal REMATE Magang ITPLN
+Perihal: Permohonan Pembukaan Akun & Unit Baru portal INTERN ITPLN Magang ITPLN
 
 Dengan hormat,
-Kami dari unit PT PLN (Persero) bermaksud untuk berpartisipasi dalam program magang mahasiswa ITPLN melalui portal REMATE v2. Berikut data identitas unit dan penanggung jawab kami:
+Kami dari unit PT PLN (Persero) bermaksud untuk berpartisipasi dalam program magang mahasiswa ITPLN melalui portal INTERN ITPLN. Berikut data identitas unit dan penanggung jawab kami:
 
 1. Nama Resmi Unit: [Contoh: PT PLN (Persero) UP3 Cengkareng]
 2. Induk / Pembina Unit: [Contoh: UID Jakarta Raya]
@@ -488,15 +488,15 @@ Hormat kami,
 
 #### 3. Alur Verifikasi & Penerbitan Kredensial
 1. **Verifikasi Hierarki:** BLKA ITPLN memvalidasi keabsahan struktur unit dan memastikan unit belum terdaftar ganda.
-2. **Input Master Data:** Super Admin BLKA menginput entitas unit ke database nasional REMATE, lengkap dengan koordinat kota/kabupaten untuk fitur rekomendasi cerdas.
+2. **Input Master Data:** Super Admin BLKA menginput entitas unit ke database nasional INTERN ITPLN, lengkap dengan koordinat kota/kabupaten untuk fitur rekomendasi cerdas.
 3. **Penerbitan Kredensial:** Super Admin mengenerate pasangan `Username` resmi (biasanya menggunakan format penamaan standar unit seperti `up3cengkareng` atau `ulpmenteng`) beserta `Password Sementara`.
 4. **Distribusi Kredensial:** Kredensial dikirimkan langsung oleh Ibu Dr. Dewi Arianti Wulandari atau staf BLKA kepada PIC unit melalui WhatsApp dinas dan email resmi.
-5. **Transisi ke Modul 1:** PIC unit segera melakukan login perdana di `https://remate.itpln.ac.id/admin/login.html` dan wajib mengganti kata sandi rahasia sesuai petunjuk Modul 1.
+5. **Transisi ke Modul 1:** PIC unit segera melakukan login perdana di `https://magang.itpln.ac.id/admin/login.html` dan wajib mengganti kata sandi rahasia sesuai petunjuk Modul 1.
 
 ---
 
 ### MODUL 1: AKTIVASI AKUN PERDANA
-1. Akses alamat resmi portal REMATE di peramban web: `https://[domain-portal-magang]/login.html`.
+1. Akses alamat resmi portal INTERN ITPLN di peramban web: `https://[domain-portal-magang]/login.html`.
 2. Masukkan **Username** dan **Password Sementara** yang diberikan secara resmi oleh BLKA ITPLN melalui surat edaran dinas.
 3. Klik tombol **Masuk**.
 4. Sistem secara otomatis mendeteksi status login perdana dan menampilkan jendela modal **Aktivasi Akun & Ubah Kredensial**.
@@ -674,7 +674,7 @@ Bagian ini merupakan **Katalog Analisis Kasus Kritis (The "What-If?" Bible)** ya
 ### KASUS 6: Pendaftar Berkualitas Tinggi namun Keahlian/Divisi Kurang Relevan dengan Unit (Solusi Pemindahan)
 * **Kondisi / Pemicu:** Mahasiswa telah terdaftar di unit Anda (mendaftar saat kuota masih ada), memiliki profil akademik cemerlang (IPK tinggi & berprestasi), namun keahlian atau jurusannya kurang cocok dengan fokus pekerjaan harian unit (misal mahasiswa Informatika di ULP operasional lapangan, atau terjadi kelebihan pendaftar prodi tertentu pada Kuota Gabungan).
 * **Perilaku Sistem:**
-  - Di portal REMATE, mahasiswa dari awal tidak dapat memilih unit jika kuota sudah habis (kartu unit terkunci abu-abu). Fitur pemindahan ditujukan bagi pendaftar yang *sudah masuk* ke dalam kuota unit Anda.
+  - Di portal INTERN ITPLN, mahasiswa dari awal tidak dapat memilih unit jika kuota sudah habis (kartu unit terkunci abu-abu). Fitur pemindahan ditujukan bagi pendaftar yang *sudah masuk* ke dalam kuota unit Anda.
   - Jika PIC langsung mengklik *Tolak*, mahasiswa berstatus gugur dan harus mengulang pencarian unit dari awal jika masa periode masih aktif.
   - Dengan fitur *Pindahkan*, berkas mahasiswa dialihkan langsung ke unit PLN tujuan yang memiliki divisi dan sisa kuota relevan tanpa membatalkan proses seleksinya.
 * **Solusi / Tindakan PIC:**
@@ -745,7 +745,7 @@ Bagian ini merupakan **Katalog Analisis Kasus Kritis (The "What-If?" Bible)** ya
 ### KASUS 12: Integritas & Verifikasi Legalitas Berkas Pendaftar
 * **Kondisi / Pemicu:** PIC unit mencurigai adanya ketidaksesuaian nilai pada transkrip atau format CV yang tidak wajar.
 * **Perilaku Sistem:**
-  - Setiap transkrip nilai resmi yang diunggah mahasiswa melalui REMATE divalidasi dengan pencocokan NIM otomatis (`[NIM].pdf`).
+  - Setiap transkrip nilai resmi yang diunggah mahasiswa melalui INTERN ITPLN divalidasi dengan pencocokan NIM otomatis (`[NIM].pdf`).
   - Berkas transkrip resmi memuat tanda tangan digital Biro Akademik ITPLN.
 * **Solusi / Tindakan PIC:**
   - Periksa kecocokan antara nama pendaftar di portal dengan nama di dokumen PDF transkrip.
@@ -801,7 +801,7 @@ Bagian ini merupakan **Katalog Analisis Kasus Kritis (The "What-If?" Bible)** ya
 ---
 
 ### KASUS 17: Unit Baru Belum Terdaftar di Sistem atau Membutuhkan Penambahan Sub-Unit Layanan (ULP/ULTG)
-* **Kondisi / Pemicu:** Terdapat Unit Layanan Pelanggan (ULP) atau pos kerja baru yang ingin menerima mahasiswa magang secara mandiri, namun namanya belum muncul di daftar entitas REMATE.
+* **Kondisi / Pemicu:** Terdapat Unit Layanan Pelanggan (ULP) atau pos kerja baru yang ingin menerima mahasiswa magang secara mandiri, namun namanya belum muncul di daftar entitas INTERN ITPLN.
 * **Perilaku Sistem:**
   - Mahasiswa hanya dapat memilih unit yang telah terdaftar secara sah di master entitas perusahaan BLKA ITPLN.
   - Pembuatan entitas unit baru berada di bawah wewenang Super Admin BLKA untuk menjaga integritas hierarki organisasi PLN.
@@ -832,7 +832,7 @@ Cetak atau simpan ringkasan satu halaman ini di meja kerja Anda sebagai panduan 
 
 # BAGIAN VI: ESKALASI & KONTAK PUSAT BANTUAN BLKA ITPLN
 
-Jika Bapak/Ibu membutuhkan pembukaan akun unit baru, penambahan formasi khusus, kendala teknis, atau pendampingan operasional portal REMATE v2, silakan hubungi tim pengelola resmi:
+Jika Bapak/Ibu membutuhkan pembukaan akun unit baru, penambahan formasi khusus, kendala teknis, atau pendampingan operasional portal INTERN ITPLN, silakan hubungi tim pengelola resmi:
 
 * **Institusi Pengelola:** Biro Layanan Karir dan Alumni (BLKA) — Institut Teknologi PLN
 * **Alamat Kantor:** Kampus Menara PLN, Jl. Lingkar Luar Barat, Duri Kosambi, Cengkareng, Jakarta Barat 11750
@@ -841,7 +841,8 @@ Jika Bapak/Ibu membutuhkan pembukaan akun unit baru, penambahan formasi khusus, 
   * **WhatsApp / Telepon Langsung:** `+62 811-8302-006`
 * **Email Resmi:** `karir@itpln.ac.id` / `magang.blka@itpln.ac.id`
 * **Grup Koordinasi:** Tautan undangan grup koordinasi resmi PIC PLN se-Indonesia *(dapat diminta melalui WhatsApp di atas)*
-* **Portal Utama Sistem:** `https://remate.itpln.ac.id`
+* **Portal Utama Sistem:** `https://magang.itpln.ac.id`
 
 ---
-*Dokumen ini disusun oleh Tim Sistem Analis & Pengembang REMATE v2 Kampus ITPLN sebagai standar operasional resmi sosialisasi unit PT PLN (Persero).*
+*Dokumen ini disusun oleh Tim Sistem Analis & Pengembang INTERN ITPLN Kampus ITPLN sebagai standar operasional resmi sosialisasi unit PT PLN (Persero).*
+

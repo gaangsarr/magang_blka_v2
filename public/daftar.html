@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Formulir Pendaftaran : REMATE (Rekrutmen Magang Talenta Energi)</title>
+    <title>INTERN ITPLN — Formulir Pendaftaran</title>
     
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/assets/img/logo_itpln.png">
@@ -94,6 +94,29 @@
     }
     .program-table tbody tr:last-child td {
         border-bottom: none;
+    }
+
+    /* Table Loading & Empty State Component */
+    .table-loading-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 24px 16px;
+        color: #64748B;
+        font-weight: 500;
+        font-size: 0.9rem;
+        width: 100%;
+        text-align: center;
+        margin: 0 auto;
+    }
+    .table-spinner {
+        animation: spin-loader 0.8s linear infinite;
+    }
+    @keyframes spin-loader {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
     }
 
 
@@ -395,36 +418,14 @@
 
     /* --- Responsive Mobile Refinements --- */
     @media (max-width: 768px) {
-        .card { padding: 24px 18px; }
-        .page-header { padding: 24px 16px 16px; }
-    }
+        .card { 
+            padding: 24px 18px; 
+            border-radius: 16px;
+        }
+        .page-header { 
+            padding: 24px 16px 16px; 
+        }
 
-    /* Complete full-card notice when registration is closed */
-    #no-periode-box {
-        text-align: center;
-        padding: 56px 20px 48px;
-        margin: 0 auto;
-        width: 100%;
-    }
-    #no-periode-box.hidden {
-        display: none !important;
-    }
-
-    body.periode-closed #wizard-flow-wrapper,
-    body.periode-closed .wizard-header,
-    body.periode-closed .mobile-wizard-progress,
-    body.periode-closed #wizard-form,
-    #no-periode-box:not(.hidden) ~ #wizard-flow-wrapper,
-    #no-periode-box:not(.hidden) ~ .mobile-wizard-progress,
-    #no-periode-box:not(.hidden) ~ .wizard-header,
-    #no-periode-box:not(.hidden) ~ #wizard-form,
-    .wizard-header.hidden,
-    .mobile-wizard-progress.hidden,
-    #wizard-flow-wrapper.hidden {
-        display: none !important;
-    }
-
-    @media (max-width: 640px) {
         body.periode-closed #wizard-flow-wrapper,
         body.periode-closed .wizard-header,
         body.periode-closed .mobile-wizard-progress,
@@ -504,20 +505,39 @@
             height: 240px;
         }
 
-        /* Mobile Card View for Program Table */
+        /* Mobile Card View for Program Table (Fit 100% mobile screen width) */
         .program-table-container {
             border: none;
             background: transparent;
             overflow: visible;
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box;
+            padding: 0;
+            margin: 0;
         }
-        .program-table, .program-table tbody, .program-table tr, .program-table td {
-            display: block;
-            width: 100%;
+        .program-table {
+            display: block !important;
+            width: 100% !important;
+            min-width: 0 !important;
+            max-width: 100% !important;
+            box-sizing: border-box;
+            border-collapse: separate;
         }
         .program-table thead {
-            display: none;
+            display: none !important;
+        }
+        .program-table tbody {
+            display: block !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box;
         }
         .program-table tbody tr {
+            display: block !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
             margin-bottom: 14px;
             border: 1.5px solid #E2E8F0;
             border-radius: 14px;
@@ -532,35 +552,108 @@
             box-shadow: 0 0 0 1px #00A2B9, 0 4px 12px rgba(0, 162, 185, 0.08);
         }
         .program-table td {
-            padding: 5px 0;
+            display: block !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            padding: 3px 0;
             border-bottom: none;
             font-size: 0.875rem;
         }
-        .program-table td:first-child {
+        .program-table tbody tr.selectable td:first-child,
+        .program-table td.col-program-radio {
             padding-bottom: 8px;
             border-bottom: 1px dashed #E2E8F0;
             margin-bottom: 8px;
-            display: flex;
+            display: flex !important;
             align-items: center;
             justify-content: space-between;
         }
-        .program-table td:first-child::after {
+        .program-table tbody tr.selectable td:first-child::after,
+        .program-table td.col-program-radio::after {
             content: 'Pilih Program';
             font-size: 0.725rem;
             font-weight: 700;
             color: #64748B;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .program-table tbody tr.selected td:first-child::after,
+        .program-table tbody tr.selected td.col-program-radio::after {
+            color: #00A2B9;
+        }
+        .program-table tbody tr.selectable td:last-child,
+        .program-table td.col-program-status {
+            display: flex !important;
+            justify-content: flex-end !important;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed #F1F5F9;
+            text-align: right !important;
+        }
+
+        /* Mobile Centered Loading & Empty State Cards */
+        .program-table tbody tr.table-state-row,
+        .program-table tbody tr:has(td[colspan]) {
+            border: 1.5px dashed #CBD5E1 !important;
+            background: #F8FAFC !important;
+            box-shadow: none !important;
+            padding: 24px 16px !important;
+            text-align: center !important;
+        }
+        .program-table tbody tr.table-state-row td,
+        .program-table tbody tr:has(td[colspan]) td {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            text-align: center !important;
+            border: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            width: 100% !important;
+        }
+        .program-table tbody tr.table-state-row td::before,
+        .program-table tbody tr.table-state-row td::after,
+        .program-table tbody tr:has(td[colspan]) td::before,
+        .program-table tbody tr:has(td[colspan]) td::after {
+            display: none !important;
+            content: none !important;
         }
         
         /* Mobile Card View for Unit Table */
-        .data-table, .data-table tbody, .data-table tr, .data-table td {
+        .table-container {
+            padding: 0;
+            margin: 0;
+            overflow: visible;
+            border: none;
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box;
+        }
+        .data-table {
             display: block;
-            width: 100%;
+            width: 100% !important;
+            min-width: 0 !important;
+            max-width: 100% !important;
+            box-sizing: border-box;
         }
         .data-table thead {
             display: none;
         }
+        .data-table tbody {
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
+        }
         .data-table tr {
+            display: block;
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
             margin-bottom: 16px;
             border: 1.5px solid #E2E8F0;
             border-radius: 14px;
@@ -578,6 +671,8 @@
             border-left: none;
             border-right: none;
             border-top: none;
+            box-sizing: border-box !important;
+            max-width: 100% !important;
         }
         .data-table td:last-child {
             border-bottom: none;
@@ -601,11 +696,47 @@
         .data-table td > strong, .data-table td > span, .data-table td > div {
             text-align: right;
         }
-        .table-container {
-            padding: 0;
-            margin: 0;
-            overflow: visible;
-            border: none;
+        .data-table tbody tr.table-state-row,
+        .data-table tbody tr:has(td[colspan]) {
+            border: 1.5px dashed #CBD5E1 !important;
+            background: #F8FAFC !important;
+            box-shadow: none !important;
+            padding: 24px 16px !important;
+            text-align: center !important;
+        }
+        .data-table tbody tr.table-state-row td,
+        .data-table tbody tr:has(td[colspan]) td {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            text-align: center !important;
+            border: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            width: 100% !important;
+        }
+        .data-table tbody tr.table-state-row td::before,
+        .data-table tbody tr.table-state-row td::after,
+        .data-table tbody tr:has(td[colspan]) td::before,
+        .data-table tbody tr:has(td[colspan]) td::after {
+            display: none !important;
+            content: none !important;
+        }
+    }
+
+    /* Extra compact refinements for small phone viewports (<= 480px) */
+    @media (max-width: 480px) {
+        .form-container {
+            padding: 0 10px;
+            margin-bottom: 40px;
+        }
+        .card {
+            padding: 18px 14px;
+            border-radius: 14px;
+        }
+        .program-table tbody tr {
+            padding: 12px 14px;
         }
     }
     
@@ -736,7 +867,7 @@
     <nav class="navbar-component" aria-label="Navigasi Utama">
       <div class="navbar-brand">
         <img src="assets/img/logo_itpln.png" alt="Logo ITPLN" class="navbar-logo-img" />
-        <span class="navbar-brand-title">REMATE</span>
+        <span class="navbar-brand-title">INTERN ITPLN</span>
       </div>
       
       <!-- Desktop Navigation Menu -->
@@ -948,8 +1079,16 @@
                                 </thead>
                                 <tbody id="program-options-table-body">
                                     <!-- Injected by daftar.js -->
-                                    <tr>
-                                        <td colspan="5" style="padding: 24px; text-align: center; color: #94a3b8;">Memuat data program...</td>
+                                    <tr class="table-state-row">
+                                        <td colspan="5" class="table-state-cell" style="padding: 24px; text-align: center; color: #94a3b8;">
+                                            <div class="table-loading-container">
+                                                <svg class="table-spinner" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00A2B9" stroke-width="2.5" stroke-linecap="round">
+                                                    <circle cx="12" cy="12" r="10" stroke-opacity="0.2" stroke="currentColor"/>
+                                                    <path d="M12 2a10 10 0 0 1 10 10"/>
+                                                </svg>
+                                                <span>Memuat data program...</span>
+                                            </div>
+                                        </td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -1321,7 +1460,7 @@
               <img src="assets/img/logo_pln.png" alt="Logo PLN" class="footer-logo-img" />
               <img src="assets/img/logo_itpln.png" alt="Logo ITPLN" class="footer-logo-img" />
             </div>
-            <h4 class="footer-brand-title">REMATE | Rekrutmen Magang Talenta Energi</h4>
+            <h4 class="footer-brand-title">INTERN ITPLN</h4>
             <p class="footer-brand-desc">
               Platform resmi pendaftaran dan seleksi program magang mahasiswa Institut Teknologi PLN di unit-unit kerja PT PLN (Persero) seluruh Indonesia yang dikelola oleh Badan Layanan Karir & Alumni (BLKA) ITPLN.
             </p>
@@ -1344,7 +1483,7 @@
             <ul class="footer-contact">
               <li>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-                <a href="mailto:blka@itpln.ac.id">blka@itpln.ac.id</a>
+                <a href="mailto:cdc@itpln.ac.id">cdc@itpln.ac.id</a>
               </li>
               <li>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
@@ -1361,7 +1500,7 @@
         <!-- Footer Bottom Bar -->
         <div class="footer-bottom">
           <p class="footer-copyright">
-            © <span id="current-year"></span> REMATE ITPLN × PT PLN (Persero). All Rights Reserved.
+            © <span id="current-year">2026</span> INTERN ITPLN. All Rights Reserved.
           </p>
         </div>
       </div>

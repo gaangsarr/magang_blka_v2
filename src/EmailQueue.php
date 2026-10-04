@@ -128,7 +128,7 @@ class EmailQueue
             ];
             $programLabel = $programMap[$row['program'] ?? ''] ?? htmlspecialchars((string)($row['program'] ?? '-'));
 
-            $subject = "[REMATE ITPLN] Bukti Pendaftaran Magang - {$regNumber}";
+            $subject = "[INTERN ITPLN] Bukti Pendaftaran Magang - {$regNumber}";
 
             $bodyHtml = <<<HTML
 <!DOCTYPE html>
@@ -215,7 +215,7 @@ class EmailQueue
                                 Halo <strong>{$nama}</strong>,
                             </p>
                             <p class="email-muted-text" style="margin: 0 0 20px 0; font-size: 14px; line-height: 1.6; color: #475569;">
-                                Pendaftaran magang Anda di portal <strong>REMATE ITPLN</strong> telah berhasil tersimpan di sistem dengan rincian data sebagai berikut:
+                                Pendaftaran magang Anda di portal <strong>INTERN ITPLN</strong> telah berhasil tersimpan di sistem dengan rincian data sebagai berikut:
                             </p>
                             <table role="presentation" width="100%" class="email-table-bg" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 22px;" cellspacing="0" cellpadding="10" border="0">
                                 <tr>
@@ -259,7 +259,7 @@ class EmailQueue
                         <td style="background-color: #f8fafc; padding: 20px 28px; text-align: center; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 12px; line-height: 1.6;">
                             <div style="font-weight: 700; color: #334155;">Badan Layanan Karir Alumni (BLKA)</div>
                             <div style="color: #64748b;">Institut Teknologi PLN • Menara PLN, Jl. Lingkar Luar Barat, Cengkareng, Jakarta Barat</div>
-                            <div style="margin-top: 6px; font-size: 11px; color: #94a3b8;">Pesan ini dikirim secara otomatis oleh sistem REMATE ITPLN.</div>
+                            <div style="margin-top: 6px; font-size: 11px; color: #94a3b8;">Pesan ini dikirim secara otomatis oleh sistem INTERN ITPLN.</div>
                         </td>
                     </tr>
                 </table>
@@ -344,7 +344,7 @@ HTML;
 HTML;
             }
 
-            $subject = "[REMATE ITPLN] Pembaruan Status Pendaftaran Magang - Formasi Belum Sesuai";
+            $subject = "[INTERN ITPLN] Pembaruan Status Pendaftaran Magang - Formasi Belum Sesuai";
 
             $bodyHtml = <<<HTML
 <!DOCTYPE html>
@@ -454,7 +454,7 @@ HTML;
                         <td style="background-color: #f8fafc; padding: 20px 28px; text-align: center; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 12px; line-height: 1.6;">
                             <div style="font-weight: 700; color: #334155;">Badan Layanan Karir Alumni (BLKA)</div>
                             <div style="color: #64748b;">Institut Teknologi PLN • Menara PLN, Jl. Lingkar Luar Barat, Cengkareng, Jakarta Barat</div>
-                            <div style="margin-top: 6px; font-size: 11px; color: #94a3b8;">Pesan ini dikirim secara otomatis oleh sistem REMATE ITPLN.</div>
+                            <div style="margin-top: 6px; font-size: 11px; color: #94a3b8;">Pesan ini dikirim secara otomatis oleh sistem INTERN ITPLN.</div>
                         </td>
                     </tr>
                 </table>
@@ -605,7 +605,7 @@ HTML;
                 if ($status === 'diterima' || $isDipindah) {
                     $headline = $isUpdateEmail ? "Pembaruan Hasil Penempatan Magang" : ($isDipindah ? "Penetapan Penempatan Unit Magang" : "Selamat! Anda Diterima Magang");
                     $subjectPrefix = $isUpdateEmail ? "[Pembaruan Resmi] " : "";
-                    $subject = "{$subjectPrefix}[REMATE ITPLN] Pengumuman Hasil Seleksi Magang - Diterima";
+                    $subject = "{$subjectPrefix}[INTERN ITPLN] Pengumuman Hasil Seleksi Magang - Diterima";
                     $pembuka = $isDipindah
                         ? "Selamat, pendaftaran magang Anda telah diproses. Berdasarkan koordinasi dan penyesuaian formasi kuota, Anda ditetapkan pada unit <strong>{$namaUnit}</strong> (dialihkan dari formasi awal {$namaAsal})."
                         : "Selamat! Berdasarkan hasil seleksi berkas dan ketersediaan kuota, Anda dinyatakan <strong>DITERIMA</strong> untuk melaksanakan magang di <strong>{$namaUnit}</strong>.";
@@ -614,7 +614,7 @@ HTML;
                         <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-left: 4px solid #10b981; padding: 14px 16px; border-radius: 6px; margin-bottom: 22px;">
                             <div style="font-size: 13px; font-weight: 700; color: #166534; margin-bottom: 4px;">Instruksi Pengunduhan Berkas:</div>
                             <div style="font-size: 13px; color: #14532d; line-height: 1.5;">
-                                Silakan login ke portal resmi REMATE ITPLN untuk mengunduh <strong>Surat Pengantar Magang</strong> resmi Anda pada halaman <strong>Riwayat &amp; Pengumuman</strong>.
+                                Silakan login ke portal resmi INTERN ITPLN untuk mengunduh <strong>Surat Pengantar Magang</strong> resmi Anda pada halaman <strong>Riwayat &amp; Pengumuman</strong>.
                             </div>
                         </div>
                         <div style="text-align: center; margin: 24px 0 16px 0;">
@@ -626,7 +626,7 @@ HTML;
                 } else {
                     $headline = $isUpdateEmail ? "Pembaruan Hasil Seleksi Magang" : "Pengumuman Hasil Seleksi Magang";
                     $subjectPrefix = $isUpdateEmail ? "[Pembaruan Resmi] " : "";
-                    $subject = "{$subjectPrefix}[REMATE ITPLN] Pengumuman Hasil Seleksi Magang";
+                    $subject = "{$subjectPrefix}[INTERN ITPLN] Pengumuman Hasil Seleksi Magang";
                     $pembuka = "Terima kasih atas partisipasi Anda dalam program magang {$namaPeriode}. Berdasarkan hasil seleksi berkas dan kuota penempatan, formasi Anda belum memenuhi kebutuhan kami.";
 
                     $actionSection = <<<HTML
@@ -746,7 +746,7 @@ HTML;
                         <td style="background-color: #f8fafc; padding: 20px 28px; text-align: center; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 12px; line-height: 1.6;">
                             <div style="font-weight: 700; color: #334155;">Badan Layanan Karir Alumni (BLKA)</div>
                             <div style="color: #64748b;">Institut Teknologi PLN • Menara PLN, Jl. Lingkar Luar Barat, Cengkareng, Jakarta Barat</div>
-                            <div style="margin-top: 6px; font-size: 11px; color: #94a3b8;">Pesan ini dikirim secara otomatis oleh sistem REMATE ITPLN.</div>
+                            <div style="margin-top: 6px; font-size: 11px; color: #94a3b8;">Pesan ini dikirim secara otomatis oleh sistem INTERN ITPLN.</div>
                         </td>
                     </tr>
                 </table>

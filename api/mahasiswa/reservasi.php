@@ -31,8 +31,13 @@ if (!isset($body['upp_id'])) {
 $uppId = (int)$body['upp_id'];
 $mahasiswaId = Auth::getMahasiswaId();
 
+$draftJson = null;
+if (isset($body['draft']) && (is_array($body['draft']) || is_object($body['draft']))) {
+    $draftJson = json_encode($body['draft'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+}
+
 try {
-    $result = Database::transaction(function (PDO $pdo) use ($mahasiswaId, $uppId) {
+    $result = Database::transaction(function (PDO $pdo) use ($mahasiswaId, $uppId, $draftJson) {
         // 0. Auto-cleanup reservasi kadaluarsa di sistem agar kuota yang tertahan lama otomatis kembali
         \App\ReservasiHelper::cleanupExpired($pdo);
 
@@ -165,16 +170,25 @@ try {
         $expiredAt = date('Y-m-d H:i:s', $expiredTimestamp);
 
         $stmtInsert = $pdo->prepare("
-            INSERT INTO reservasi (mahasiswa_id, unit_pelaksana_periode_id, jurusan_id, status, expired_at, created_at) 
-            VALUES (:mid, :upp_id, :jid, 'ditahan', :expired_at, NOW())
+            INSERT INTO reservasi (mahasiswa_id, unit_pelaksana_periode_id, jurusan_id, status, expired_at, draft_data, created_at) 
+            VALUES (:mid, :upp_id, :jid, 'ditahan', :expired_at, :draft_data, NOW())
         ");
         $stmtInsert->execute([
             ':mid'        => $mahasiswaId,
             ':upp_id'     => $uppId,
             ':jid'        => $mhsJurusanId,
-            ':expired_at' => $expiredAt
+            ':expired_at' => $expiredAt,
+            ':draft_data' => $draftJson
         ]);
         $reservasiId = (int)$pdo->lastInsertId();
+
+        if ($draftJson !== null) {
+            $stmtMhsDraft = $pdo->prepare("UPDATE mahasiswa SET draft_data = :draft_data, updated_at = NOW() WHERE id = :mid");
+            $stmtMhsDraft->execute([
+                ':draft_data' => $draftJson,
+                ':mid'        => $mahasiswaId
+            ]);
+        }
 
         return [
             'reservasi_id'        => $reservasiId,

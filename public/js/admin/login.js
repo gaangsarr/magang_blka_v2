@@ -72,6 +72,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             sessionStorage.removeItem('admin_profile');
+            sessionStorage.removeItem('intern_admin_sidebar_scroll');
             sessionStorage.removeItem('remate_admin_sidebar_scroll');
             window.location.href = data.redirect || '/admin/index.html';
             

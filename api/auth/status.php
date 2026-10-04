@@ -127,7 +127,7 @@ if (Auth::isLoggedInMahasiswa()) {
 
     // 3. Cek reservasi aktif yang masih ditahan
     $stmtActiveRes = $pdo->prepare(
-        "SELECT r.id AS reservasi_id, r.unit_pelaksana_periode_id AS upp_id, r.expired_at, e.nama AS nama_unit
+        "SELECT r.id AS reservasi_id, r.unit_pelaksana_periode_id AS upp_id, r.expired_at, r.draft_data, e.nama AS nama_unit
          FROM reservasi r
          JOIN unit_pelaksana_periode upp ON r.unit_pelaksana_periode_id = upp.id
          JOIN entitas_perusahaan e ON upp.entitas_id = e.id
@@ -136,6 +136,18 @@ if (Auth::isLoggedInMahasiswa()) {
     );
     $stmtActiveRes->execute([':mid' => $mid]);
     $activeReservasi = $stmtActiveRes->fetch(PDO::FETCH_ASSOC) ?: null;
+
+    $draftData = null;
+    if ($activeReservasi && !empty($activeReservasi['draft_data'])) {
+        $draftData = json_decode($activeReservasi['draft_data'], true);
+    }
+    if (!$draftData && !empty($mahasiswa['draft_data'])) {
+        $draftData = json_decode($mahasiswa['draft_data'], true);
+    }
+
+    if ($activeReservasi) {
+        unset($activeReservasi['draft_data']);
+    }
 
     if ($activeReservasi && !empty($activeReservasi['expired_at'])) {
         $expTs = strtotime($activeReservasi['expired_at']);
@@ -165,6 +177,7 @@ if (Auth::isLoggedInMahasiswa()) {
         'mhs_angkatan'           => $fullAngkatan,
 
         'active_reservasi'       => $activeReservasi,
+        'draft_data'             => $draftData,
         'reservation_minutes'    => \App\ReservasiHelper::getReservationMinutes(),
         'csrf_token'             => $csrfToken,
         'user'                   => [

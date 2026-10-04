@@ -1,8 +1,8 @@
-# Panduan Konfigurasi Nginx Server — REMATE ITPLN
+# Panduan Konfigurasi Nginx Server — INTERN ITPLN
 
-Dokumen ini berisi konfigurasi Nginx standar untuk mengamankan dan mendeploy aplikasi REMATE di server Linux (VPS / Cloud).
+Dokumen ini berisi konfigurasi Nginx standar untuk mengamankan dan mendeploy aplikasi INTERN ITPLN di server Linux (VPS / Cloud).
 
-## Konfigurasi Virtual Host (`/etc/nginx/sites-available/remate.conf`)
+## Konfigurasi Virtual Host (`/etc/nginx/sites-available/intern.conf`)
 
 ```nginx
 server {

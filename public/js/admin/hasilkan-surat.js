@@ -1,6 +1,6 @@
 /**
  * public/js/admin/hasilkan-surat.js
- * Controller untuk Halaman Hasilkan Surat Penempatan Unit REMATE
+ * Controller untuk Halaman Hasilkan Surat Penempatan Unit INTERN ITPLN
  */
 
 import { showAdminToast, showAdminAlert, showAdminConfirm } from '/js/admin/common.js';
