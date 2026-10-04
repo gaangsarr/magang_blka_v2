@@ -105,10 +105,8 @@ PANDUAN DEPLOYMENT SISTEM MAGANG TERPADU (INTERN ITPLN v2) - BPTI KAMPUS
 1. SPESIFIKASI & EKSTENSI PHP SERVER
    - PHP: 8.1 / 8.2 / 8.3
    - Ekstensi PHP Wajib:
-     pdo_mysql, mbstring, openssl, curl, gd, zip, fileinfo
-   - Pengaturan php.ini yang WAJIB disesuaikan (untuk upload berkas PDF mahasiswa):
-     upload_max_filesize = 10M
-     post_max_size = 25M
+     pdo_mysql, mbstring, openssl, curl, gd, zip
+   - Memory & Timezone:
      memory_limit = 256M
      date.timezone = Asia/Jakarta
 
@@ -145,7 +143,7 @@ PANDUAN DEPLOYMENT SISTEM MAGANG TERPADU (INTERN ITPLN v2) - BPTI KAMPUS
      DB_USER=[db_user]
      DB_PASS=[db_password]
      APP_ENV=production
-     APP_URL=https://[domain-resmi-kampus] (Gunakan protokol HTTPS)
+     APP_URL=https://[domain-resmi-kampus] (Wajib HTTPS untuk SSO)
      APP_DEBUG=false
      AZURE_TENANT_ID=[Tenant ID Entra ID Kampus ITPLN]
      AZURE_CLIENT_ID=[Client ID Azure App Registration]
@@ -158,10 +156,10 @@ PANDUAN DEPLOYMENT SISTEM MAGANG TERPADU (INTERN ITPLN v2) - BPTI KAMPUS
    telah didaftarkan URL persis:
      https://[domain-resmi-kampus]/api/auth/azure/callback.php
 
-5. PERMISSION FOLDER STORAGE & LOGS
-   Pastikan user web server (misal www-data) memiliki hak write:
-     chmod -R 775 storage logs
-     chown -R www-data:www-data storage logs
+5. PERMISSION FOLDER LOGS
+   Pastikan user web server (misal www-data) memiliki hak write untuk pencatatan log sistem:
+     chmod -R 775 logs
+     chown -R www-data:www-data logs
 
 6. CRON JOB BACKGROUND WORKER (WAJIB)
    Sistem ini memerlukan 1 cron job yang berjalan setiap menit untuk:
