@@ -24,6 +24,8 @@ Thumbs.db
 /tmp/
 /backups/
 *.sql.gz
+*.zip
+magang_clean_production.sql
 
 # Test files & Scratch (BLOCKER-07 + QUALITY-06)
 test_*.php
