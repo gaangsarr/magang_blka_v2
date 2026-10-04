@@ -102,13 +102,26 @@ $deployInstructions = <<<TXT
 PANDUAN DEPLOYMENT SISTEM MAGANG TERPADU (INTERN ITPLN v2) - BPTI KAMPUS
 ================================================================================
 
-1. SPESIFIKASI MINIMAL SERVER
-   - PHP: 8.1 / 8.2 / 8.3 dengan ekstensi: pdo_mysql, mbstring, openssl, curl, gd, zip
-   - Web Server: Apache (mod_rewrite enabled) atau Nginx
-   - Database: MySQL 8.0+ atau MariaDB 10.5+
-   - Memory Server: Min. 2 GB RAM
+1. SPESIFIKASI & EKSTENSI PHP SERVER
+   - PHP: 8.1 / 8.2 / 8.3
+   - Ekstensi PHP Wajib:
+     pdo_mysql, mbstring, openssl, curl, gd, zip, fileinfo
+   - Pengaturan php.ini yang WAJIB disesuaikan (untuk upload berkas PDF mahasiswa):
+     upload_max_filesize = 10M
+     post_max_size = 25M
+     memory_limit = 256M
+     date.timezone = Asia/Jakarta
 
-2. IMPORT DATABASE BERSIH (CLEAN DUMP)
+2. KONFIGURASI WEB SERVER
+   - Arahkan Document Root ke root folder aplikasi ini.
+   - Jika menggunakan Apache:
+     * Pastikan modul rewrite & headers aktif:
+       sudo a2enmod rewrite headers
+     * Pastikan AllowOverride All aktif pada virtualhost agar file .htaccess berfungsi.
+   - Jika menggunakan Nginx:
+     * Rujukan konfigurasi lengkap virtualhost Nginx tersedia di folder docs/DEPLOY_NGINX.md.
+
+3. IMPORT DATABASE BERSIH (CLEAN DUMP)
    File database bersih sudah disertakan di root paket ini:
      `magang_clean_production.sql`
    
@@ -121,7 +134,7 @@ PANDUAN DEPLOYMENT SISTEM MAGANG TERPADU (INTERN ITPLN v2) - BPTI KAMPUS
      38 Peminatan, pengaturan default, serta akun Super Admin BLKA resmi kampus.
    - Akun admin perusahaan dapat di-generate kapan saja via Dashboard Admin Super Admin.
 
-3. KONFIGURASI ENVIRONMENT (.env)
+4. KONFIGURASI ENVIRONMENT (.env)
    Salin template .env.example menjadi .env:
      cp .env.example .env
 
@@ -132,7 +145,7 @@ PANDUAN DEPLOYMENT SISTEM MAGANG TERPADU (INTERN ITPLN v2) - BPTI KAMPUS
      DB_USER=[db_user]
      DB_PASS=[db_password]
      APP_ENV=production
-     APP_URL=https://[domain-resmi-kampus]
+     APP_URL=https://[domain-resmi-kampus] (Gunakan protokol HTTPS)
      APP_DEBUG=false
      AZURE_TENANT_ID=[Tenant ID Entra ID Kampus ITPLN]
      AZURE_CLIENT_ID=[Client ID Azure App Registration]
@@ -140,18 +153,35 @@ PANDUAN DEPLOYMENT SISTEM MAGANG TERPADU (INTERN ITPLN v2) - BPTI KAMPUS
      SESSION_KEY=[Generate acak 64 karakter hex: php -r "echo bin2hex(random_bytes(32));"]
      SMTP_HOST, SMTP_USER, SMTP_PASS=[Kredensial email kampus untuk notifikasi otomatis]
 
-4. PERMISSION FOLDER STORAGE & LOGS
+   PENTING TERKAIT SSO ITPLN (AZURE ENTRA ID):
+   Pastikan di Azure Portal (App Registrations -> Authentication -> Redirect URIs)
+   telah didaftarkan URL persis:
+     https://[domain-resmi-kampus]/api/auth/azure/callback.php
+
+5. PERMISSION FOLDER STORAGE & LOGS
    Pastikan user web server (misal www-data) memiliki hak write:
      chmod -R 775 storage logs
      chown -R www-data:www-data storage logs
 
-5. VENDOR (DEPENDENSI PHP)
+6. CRON JOB BACKGROUND WORKER (WAJIB)
+   Sistem ini memerlukan 1 cron job yang berjalan setiap menit untuk:
+   - Pengembalian kuota reservasi 5 menit yang kadaluarsa secara otomatis
+   - Pengecekan otomatis penutupan periode magang sesuai batas jam
+   - Pemrosesan antrean email notifikasi pelamar secara bertahap & aman rate-limit
+
+   Tambahkan via crontab server (crontab -e):
+     * * * * * php /var/www/magang_blka/v2/scripts/worker.php >> /var/www/magang_blka/v2/logs/worker.log 2>&1
+   (Sesuaikan path direktori dengan path instalasi di server)
+
+7. VENDOR (DEPENDENSI PHP)
    Folder `vendor/` sudah disertakan lengkap di dalam paket ZIP ini.
    Server tidak wajib menginstall Composer secara manual.
 
-6. PULL UPDATE BERKALA VIA GITHUB
+8. PULL UPDATE BERKALA VIA GITHUB
    Untuk update kode berikutnya, BPTI cukup menjalankan git pull pada branch `main`:
      git pull origin main
+   Jika di kemudian hari ada pembaruan struktur tabel database baru:
+     vendor/bin/phinx migrate
 
 ================================================================================
 TXT;
