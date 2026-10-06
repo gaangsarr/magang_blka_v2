@@ -10,7 +10,7 @@ Dokumen ini berisi spesifikasi kebutuhan lingkungan server (*runtime environment
 | :--- | :--- | :--- |
 | **Sistem Operasi** | Linux Ubuntu 22.04 / 24.04 LTS atau Debian 11/12 | Standard server environment |
 | **Web Server** | **Nginx** (disarankan) atau **Apache 2.4** | Jika Apache: wajib aktifkan `mod_rewrite` & `mod_headers` |
-| **PHP** | **PHP 8.1, 8.2, atau 8.3** | Disarankan PHP 8.2-FPM |
+| **PHP** | **PHP 8.1** (didukung penuh, kompatibel juga dengan 8.2 & 8.3) | Standar server BPTI ITPLN |
 | **Database** | **MySQL 8.0+** atau **MariaDB 10.5+** | Collation: `utf8mb4_unicode_ci` |
 | **Package Manager**| **Composer 2.x** | Untuk instalasi dependensi vendor |
 | **Node.js / NPM** | *Tidak Diperlukan* | Frontend murni Vanilla JS, HTML5, CSS (tanpa build tools) |
@@ -33,12 +33,11 @@ Pastikan ekstensi PHP berikut terpasang dan aktif di server:
 | `php-zip` | Pembacaan & pembuatan arsip file kompresi Office (.xlsx, .docx) |
 | `php-json` | Handler REST API JSON |
 
-### Perintah Instalasi Sekali Jalan (Ubuntu / Debian):
+### Perintah Instalasi Sekali Jalan untuk PHP 8.1 (Ubuntu / Debian):
 ```bash
 sudo apt update
-sudo apt install -y php8.2 php8.2-fpm php8.2-mysql php8.2-mbstring php8.2-xml php8.2-curl php8.2-gd php8.2-zip php8.2-cli composer
+sudo apt install -y php8.1 php8.1-fpm php8.1-mysql php8.1-mbstring php8.1-xml php8.1-curl php8.1-gd php8.1-zip php8.1-cli composer
 ```
-*(Sesuaikan versi `8.2` jika menggunakan `8.1` atau `8.3`)*.
 
 ---
 

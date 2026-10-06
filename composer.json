@@ -24,6 +24,11 @@
             "Tests\\": "tests/"
         }
     },
+    "config": {
+        "platform": {
+            "php": "8.1.0"
+        }
+    },
     "scripts": {
         "migrate": "vendor/bin/phinx migrate",
         "rollback": "vendor/bin/phinx rollback",
