@@ -178,7 +178,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 noPeriodBox.style.setProperty('display', 'block', 'important');
             }
             if (pageDesc) {
-                pageDesc.textContent = 'Saat ini belum ada periode pendaftaran aktif yang dibuka oleh administrator BLKA ITPLN.';
+                pageDesc.textContent = 'Saat ini belum ada periode pendaftaran aktif yang dibuka.';
             }
             if (wizardFlowWrapper) {
                 wizardFlowWrapper.classList.add('hidden');
