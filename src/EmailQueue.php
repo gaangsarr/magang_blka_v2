@@ -279,6 +279,39 @@ HTML;
     }
 
     /**
+     * Format batas akhir pendaftaran (tanggal & jam selesai periode) dalam format Indonesia
+     */
+    public static function formatTanggalDeadline(?string $tanggalSelesai, ?string $jamSelesai = null): string
+    {
+        if (empty($tanggalSelesai)) {
+            return 'Sesuai jadwal periode aktif';
+        }
+
+        $months = [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+        ];
+
+        $ts = strtotime($tanggalSelesai);
+        if ($ts === false) {
+            return htmlspecialchars($tanggalSelesai);
+        }
+
+        $day = date('j', $ts);
+        $month = (int)date('n', $ts);
+        $year = date('Y', $ts);
+        $dateFormatted = $day . ' ' . ($months[$month] ?? date('F', $ts)) . ' ' . $year;
+
+        if (!empty($jamSelesai)) {
+            $jamClean = substr(trim($jamSelesai), 0, 5);
+            return "{$dateFormatted} pukul {$jamClean} WIB";
+        }
+
+        return $dateFormatted;
+    }
+
+    /**
      * Memasukkan notifikasi Penolakan Berkas / Formasi ke antrean
      */
     public static function pushPenolakan(PDO $pdo, int $pendaftaranId, string $alasan = ''): bool
@@ -289,7 +322,8 @@ HTML;
             }
 
             $stmt = $pdo->prepare("
-                SELECT p.id, p.periode_id, p.nama_snapshot AS nama, m.nim, m.email, e.nama AS nama_unit, pr.nama AS nama_periode, pr.status AS periode_status
+                SELECT p.id, p.periode_id, p.nama_snapshot AS nama, m.nim, m.email, e.nama AS nama_unit, 
+                       pr.nama AS nama_periode, pr.status AS periode_status, pr.tanggal_selesai, pr.jam_selesai
                 FROM pendaftaran p
                 JOIN mahasiswa m ON p.mahasiswa_id = m.id
                 JOIN periode pr ON p.periode_id = pr.id
@@ -308,7 +342,12 @@ HTML;
             $namaUnit      = htmlspecialchars((string)($row['nama_unit'] ?? '-'));
             $namaPeriode   = htmlspecialchars((string)($row['nama_periode'] ?? 'Periode Aktif'));
             $periodeId     = (int)$row['periode_id'];
-            $isPeriodeOpen = ($row['periode_status'] ?? '') === 'dibuka';
+            $deadlineInfo  = self::formatTanggalDeadline($row['tanggal_selesai'] ?? null, $row['jam_selesai'] ?? null);
+            $isExpired     = PeriodeHelper::isPeriodeExpired([
+                'tanggal_selesai' => $row['tanggal_selesai'] ?? null,
+                'jam_selesai'     => $row['jam_selesai'] ?? null
+            ]);
+            $isPeriodeOpen = (($row['periode_status'] ?? '') === 'dibuka') && !$isExpired;
             $catatanText   = !empty($alasan) ? htmlspecialchars($alasan) : 'Formasi Anda belum memenuhi kebutuhan kami';
             $appUrl        = self::getAppUrl();
             $daftarUrl     = htmlspecialchars($appUrl . '/daftar.html');
@@ -319,7 +358,7 @@ HTML;
                     <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-left: 4px solid #10b981; padding: 14px 16px; border-radius: 6px; margin-bottom: 22px;">
                         <div style="font-size: 13px; font-weight: 700; color: #166534; margin-bottom: 4px;">Kesempatan Mendaftar Ulang:</div>
                         <div style="font-size: 13px; color: #14532d; line-height: 1.5;">
-                            Anda <strong>dapat memilih kembali unit pelaksana lain</strong> yang masih memiliki kuota formasi selama masa pendaftaran masih dibuka. Silakan masuk ke portal magang untuk memilih unit baru.
+                            Anda <strong>dapat memilih kembali unit pelaksana lain</strong> yang masih memiliki kuota formasi sebelum batas akhir pendaftaran periode ini berakhir pada <strong>{$deadlineInfo}</strong>. Silakan segera masuk ke portal magang untuk memilih unit baru.
                         </div>
                     </div>
                     <div style="text-align: center; margin: 24px 0 16px 0;">
@@ -333,7 +372,7 @@ HTML;
                     <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #64748b; padding: 14px 16px; border-radius: 6px; margin-bottom: 22px;">
                         <div style="font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 4px;">Informasi Pendaftaran:</div>
                         <div style="font-size: 13px; color: #475569; line-height: 1.5;">
-                            Masa pendaftaran pada periode ini telah resmi ditutup. Terima kasih atas partisipasi dan dedikasi Anda. Perkembangan status dapat dipantau di halaman Riwayat &amp; Pengumuman.
+                            Masa pendaftaran pada periode ini telah resmi ditutup pada <strong>{$deadlineInfo}</strong>. Terima kasih atas partisipasi dan dedikasi Anda. Perkembangan status dapat dipantau di halaman Riwayat &amp; Pengumuman.
                         </div>
                     </div>
                     <div style="text-align: center; margin: 24px 0 16px 0;">
@@ -430,9 +469,26 @@ HTML;
                             <p class="email-body-text" style="margin: 0 0 14px 0; font-size: 15px; line-height: 1.6; color: #0f172a;">
                                 Halo <strong>{$nama}</strong>,
                             </p>
-                            <p class="email-muted-text" style="margin: 0 0 20px 0; font-size: 14px; line-height: 1.6; color: #475569;">
+                            <p class="email-muted-text" style="margin: 0 0 18px 0; font-size: 14px; line-height: 1.6; color: #475569;">
                                 Terima kasih atas partisipasi Anda dalam program magang {$namaPeriode}. Berdasarkan hasil verifikasi berkas dan penyesuaian kuota formasi pada unit <strong>{$namaUnit}</strong>, kami informasikan bahwa pengajuan Anda pada unit tersebut <strong>belum dapat disetujui</strong>.
                             </p>
+
+                            <table role="presentation" width="100%" class="email-table-bg" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 20px;" cellspacing="0" cellpadding="10" border="0">
+                                <tr>
+                                    <td width="42%" style="font-size: 13px; color: #64748b; border-bottom: 1px solid #e2e8f0; font-weight: 600;">Periode Program</td>
+                                    <td style="font-size: 13px; color: #0f172a; border-bottom: 1px solid #e2e8f0; font-weight: 700;">{$namaPeriode}</td>
+                                </tr>
+                                <tr>
+                                    <td style="font-size: 13px; color: #64748b; border-bottom: 1px solid #e2e8f0; font-weight: 600;">Unit Pilihan Sebelumnya</td>
+                                    <td style="font-size: 13px; color: #0f172a; border-bottom: 1px solid #e2e8f0; font-weight: 700;">{$namaUnit}</td>
+                                </tr>
+                                <tr>
+                                    <td style="font-size: 13px; color: #64748b; font-weight: 600;">Batas Akhir Pendaftaran Periode</td>
+                                    <td style="font-size: 13px; color: #005082; font-weight: 700; font-variant-numeric: tabular-nums;">
+                                        <span style="background-color: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 4px; display: inline-block;">{$deadlineInfo}</span>
+                                    </td>
+                                </tr>
+                            </table>
 
                             <div style="background-color: #fff5f5; border: 1px solid #fecaca; border-left: 4px solid #ef4444; padding: 14px 16px; border-radius: 6px; margin-bottom: 22px;">
                                 <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #991b1b; margin-bottom: 4px;">Catatan Verifikator:</div>
@@ -504,7 +560,7 @@ HTML;
                        m.nim, m.email,
                        e.nama AS nama_unit, e.id AS entitas_id,
                        e_asal.nama AS nama_unit_asal,
-                       pr.nama AS nama_periode
+                       pr.nama AS nama_periode, pr.tanggal_selesai, pr.jam_selesai
                 FROM pendaftaran p
                 JOIN mahasiswa m ON p.mahasiswa_id = m.id
                 JOIN periode pr ON p.periode_id = pr.id
@@ -628,12 +684,17 @@ HTML;
                     $subjectPrefix = $isUpdateEmail ? "[Pembaruan Resmi] " : "";
                     $subject = "{$subjectPrefix}[INTERN ITPLN] Pengumuman Hasil Seleksi Magang";
                     $pembuka = "Terima kasih atas partisipasi Anda dalam program magang {$namaPeriode}. Berdasarkan hasil seleksi berkas dan kuota penempatan, formasi Anda belum memenuhi kebutuhan kami.";
+                    $deadlineNoticeStr = '';
+                    if (!empty($row['tanggal_selesai'])) {
+                        $deadlineFormattedAnnounce = self::formatTanggalDeadline($row['tanggal_selesai'], $row['jam_selesai'] ?? null);
+                        $deadlineNoticeStr = " Masa pendaftaran pada periode ini telah resmi ditutup pada <strong>{$deadlineFormattedAnnounce}</strong>.";
+                    }
 
                     $actionSection = <<<HTML
                         <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #64748b; padding: 14px 16px; border-radius: 6px; margin-bottom: 22px;">
                             <div style="font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 4px;">Informasi Pendaftaran:</div>
                             <div style="font-size: 13px; color: #475569; line-height: 1.5;">
-                                Terima kasih atas partisipasi dan dedikasi Anda. Seluruh riwayat pendaftaran dapat dipantau di halaman Riwayat &amp; Pengumuman.
+                                Terima kasih atas partisipasi dan dedikasi Anda.{$deadlineNoticeStr} Seluruh riwayat pendaftaran dapat dipantau di halaman Riwayat &amp; Pengumuman.
                             </div>
                         </div>
                         <div style="text-align: center; margin: 24px 0 16px 0;">
