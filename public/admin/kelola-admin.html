@@ -118,6 +118,16 @@
         .btn-action-warning:hover {
             background: #fde68a;
         }
+        .btn-action-danger {
+            background: #fef2f2;
+            border-color: #fecaca;
+            color: #dc2626;
+        }
+        .btn-action-danger:hover {
+            background: #fee2e2;
+            border-color: #fca5a5;
+            color: #991b1b;
+        }
     </style>
 </head>
 <body class="admin-body">
@@ -205,11 +215,11 @@
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
                                     <span>Generate Akun Otomatis</span>
                                 </button>
-                                <a href="/api/admin/kelola/perusahaan_export.php?format=print" target="_blank" class="btn-action-sm btn-action-outline" title="Cetak atau simpan ke PDF dokumen kredensial resmi">
+                                <a href="/api/admin/kelola/perusahaan_export.php?format=print" target="_blank" id="btn-export-pdf-perusahaan" class="btn-action-sm btn-action-outline" title="Cetak atau simpan ke PDF dokumen kredensial resmi">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
                                     <span>Cetak PDF Kredensial</span>
                                 </a>
-                                <a href="/api/admin/kelola/perusahaan_export.php?format=excel" class="btn-action-sm btn-action-outline" title="Ekspor daftar ke Excel">
+                                <a href="/api/admin/kelola/perusahaan_export.php?format=excel" id="btn-export-excel-perusahaan" class="btn-action-sm btn-action-outline" title="Ekspor daftar ke Excel">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
                                     <span>Ekspor Excel</span>
                                 </a>
@@ -334,6 +344,68 @@
             <div id="modal-cred-body"></div>
             <div style="margin-top: 20px; text-align: right;">
                 <button id="btn-ok-modal-cred" class="btn-action-sm btn-action-primary" style="padding: 8px 20px;">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Merah Peringatan Reset PIC (Khusus Super Admin) -->
+    <div id="modal-reset-pic" class="modal-overlay hidden" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 20px;">
+        <div style="background: #ffffff; border-radius: 20px; width: 100%; max-width: 520px; box-shadow: 0 25px 50px -12px rgba(185, 28, 28, 0.25), 0 0 0 1px rgba(239, 68, 68, 0.2); overflow: hidden;">
+            <!-- Header Merah Bahaya -->
+            <div style="background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border-bottom: 1px solid #fecaca; padding: 20px 24px; display: flex; align-items: flex-start; gap: 14px;">
+                <div style="width: 44px; height: 44px; border-radius: 12px; background: #fee2e2; border: 1px solid #fca5a5; color: #dc2626; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                        <line x1="12" y1="9" x2="12" y2="13"/>
+                        <line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                </div>
+                <div style="flex: 1;">
+                    <h3 style="margin: 0; font-size: 1.15rem; color: #991b1b; font-weight: 800; letter-spacing: -0.01em;">Peringatan Reset Data PIC</h3>
+                    <p style="margin: 4px 0 0; font-size: 0.825rem; color: #7f1d1d; line-height: 1.45;">
+                        Tindakan ini akan <strong>menghapus kontak PIC</strong> entitas ini dan mengembalikan akun ke status wajib lengkapi profil.
+                    </p>
+                </div>
+                <button type="button" id="btn-close-modal-reset-pic" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #991b1b; padding: 0; line-height: 1; border-radius: 6px;" aria-label="Tutup Modal">&times;</button>
+            </div>
+
+            <!-- Body: Detail Entitas & PIC Terhapus -->
+            <div style="padding: 24px;">
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; margin-bottom: 16px;">
+                    <div style="font-size: 0.725rem; text-transform: uppercase; font-weight: 700; color: #64748b; letter-spacing: 0.05em; margin-bottom: 4px;">Entitas / Unit Kantor:</div>
+                    <div id="reset-pic-entity-name" style="font-size: 0.975rem; font-weight: 800; color: #0b3d6b; line-height: 1.4;">-</div>
+                    <div id="reset-pic-entity-type" style="font-size: 0.775rem; color: #64748b; margin-top: 2px;">-</div>
+                </div>
+
+                <div style="border: 1px dashed #fca5a5; background: #fff5f5; border-radius: 12px; padding: 14px 16px; margin-bottom: 18px;">
+                    <div style="font-size: 0.75rem; font-weight: 700; color: #991b1b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        <span>Data PIC yang Akan Dihapus:</span>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 110px 1fr; gap: 6px 12px; font-size: 0.85rem;">
+                        <span style="color: #64748b; font-weight: 500;">Nama PIC:</span>
+                        <strong id="reset-pic-val-nama" style="color: #1e293b;">-</strong>
+                        <span style="color: #64748b; font-weight: 500;">Jabatan:</span>
+                        <span id="reset-pic-val-jabatan" style="color: #334155;">-</span>
+                        <span style="color: #64748b; font-weight: 500;">Kontak/WA:</span>
+                        <span id="reset-pic-val-kontak" style="color: #166534; font-family: monospace; font-weight: 700;">-</span>
+                        <span style="color: #64748b; font-weight: 500;">Email PIC:</span>
+                        <span id="reset-pic-val-email" style="color: #334155;">-</span>
+                    </div>
+                </div>
+
+                <div style="background: #fef2f2; border-left: 3px solid #dc2626; padding: 10px 14px; border-radius: 6px; font-size: 0.8rem; color: #991b1b; line-height: 1.45;">
+                    <em>Catatan:</em> Kata sandi akun admin unit tidak berubah. Status akun akan dialihkan menjadi <strong>Wajib First-Login</strong> sehingga PIC baru wajib diinput sebelum dapat mengakses menu dashboard.
+                </div>
+            </div>
+
+            <!-- Footer Aksi -->
+            <div style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 16px 24px; display: flex; justify-content: flex-end; gap: 10px; align-items: center;">
+                <button type="button" id="btn-cancel-reset-pic" class="btn-action-sm btn-action-outline" style="padding: 9px 18px; font-size: 0.85rem;">Batal</button>
+                <button type="button" id="btn-confirm-reset-pic" class="btn-action-sm" style="background: #dc2626; color: #ffffff; border: 1px solid #b91c1c; padding: 9px 20px; font-size: 0.85rem; font-weight: 700; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25); cursor: pointer;">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                    <span id="btn-confirm-reset-pic-text">Hapus & Reset PIC</span>
+                </button>
             </div>
         </div>
     </div>

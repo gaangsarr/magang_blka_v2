@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initPerusahaanModule();
     initKampusModule();
     initModalCred();
+    initModalResetPic();
 
     loadPerusahaanData();
     loadKampusData();
@@ -55,16 +56,44 @@ function initPerusahaanModule() {
     const statusSelect = document.getElementById('filter-status-perusahaan');
 
     if (searchInput) {
-        searchInput.addEventListener('input', () => filterAndRenderPerusahaan());
+        searchInput.addEventListener('input', () => {
+            filterAndRenderPerusahaan();
+            updateExportLinks();
+        });
     }
     if (statusSelect) {
-        statusSelect.addEventListener('change', () => filterAndRenderPerusahaan());
+        statusSelect.addEventListener('change', () => {
+            filterAndRenderPerusahaan();
+            updateExportLinks();
+        });
     }
+
+    updateExportLinks();
 
     // Generate All Button with Real-Time Progress Modal
     const btnGenAll = document.getElementById('btn-generate-all-perusahaan');
     if (btnGenAll) {
         btnGenAll.addEventListener('click', () => handleGenerateAllWithProgress());
+    }
+}
+
+function updateExportLinks() {
+    const search = encodeURIComponent((document.getElementById('filter-search-perusahaan')?.value || '').trim());
+    const status = encodeURIComponent(document.getElementById('filter-status-perusahaan')?.value || '');
+
+    let queryParams = [];
+    if (search) queryParams.push(`search=${search}`);
+    if (status) queryParams.push(`status=${status}`);
+    const queryStr = queryParams.length > 0 ? '&' + queryParams.join('&') : '';
+
+    const pdfBtn = document.getElementById('btn-export-pdf-perusahaan');
+    const excelBtn = document.getElementById('btn-export-excel-perusahaan');
+
+    if (pdfBtn) {
+        pdfBtn.href = `/api/admin/kelola/perusahaan_export.php?format=print${queryStr}`;
+    }
+    if (excelBtn) {
+        excelBtn.href = `/api/admin/kelola/perusahaan_export.php?format=excel${queryStr}`;
     }
 }
 
@@ -316,6 +345,8 @@ function renderPerusahaanTablePage(page = 1) {
             picDisplay = '<span style="color: #94a3b8; font-style: italic; font-size: 0.8rem;">Belum dilengkapi (Menunggu First-Login)</span>';
         }
 
+        const isSuperAdmin = Boolean(currentAdmin && (currentAdmin.role === 'super_admin' || currentAdmin.role === 'superadmin' || currentAdmin.is_super));
+
         let actionHtml = '';
         if (item.has_account) {
             actionHtml = `
@@ -329,6 +360,16 @@ function renderPerusahaanTablePage(page = 1) {
                 <button class="btn-action-sm btn-action-primary btn-create-single" data-id="${item.entitas_id}" data-nama="${escapeHtml(item.entitas_nama)}" title="Buat akun untuk unit ini">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                     <span>Buat Akun</span>
+                </button>
+            `;
+        }
+
+        let resetPicHtml = '';
+        if (isSuperAdmin && item.pic_nama && item.pic_nama.trim() !== '') {
+            resetPicHtml = `
+                <button class="btn-action-sm btn-action-danger btn-reset-pic" data-id="${item.entitas_id}" title="Reset data kontak PIC untuk unit ini">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                    <span>Reset PIC</span>
                 </button>
             `;
         }
@@ -348,7 +389,12 @@ function renderPerusahaanTablePage(page = 1) {
             </td>
             <td style="text-align: center;">${statusBadge}</td>
             <td>${picDisplay}</td>
-            <td style="text-align: center;">${actionHtml}</td>
+            <td style="text-align: center;">
+                <div style="display: flex; gap: 6px; justify-content: center; align-items: center; flex-wrap: wrap;">
+                    ${actionHtml}
+                    ${resetPicHtml}
+                </div>
+            </td>
         `;
         tbody.appendChild(tr);
     });
@@ -370,6 +416,13 @@ function renderPerusahaanTablePage(page = 1) {
             const entitasId = btn.getAttribute('data-id');
             const nama = btn.getAttribute('data-nama');
             createSinglePerusahaanAccount(entitasId, nama);
+        });
+    });
+
+    document.querySelectorAll('.btn-reset-pic').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const entitasId = parseInt(btn.getAttribute('data-id'), 10);
+            openResetPicModal(entitasId);
         });
     });
 }
@@ -792,6 +845,92 @@ function showCredentialModal(title, bodyHtml) {
 
     if (titleEl) titleEl.innerText = title;
     if (bodyEl) bodyEl.innerHTML = bodyHtml;
+    if (modal) modal.classList.remove('hidden');
+}
+
+// ==========================================
+// MODAL MERAH RESET DATA PIC (SUPER ADMIN)
+// ==========================================
+let pendingResetEntitasId = null;
+
+function initModalResetPic() {
+    const modal = document.getElementById('modal-reset-pic');
+    const btnClose = document.getElementById('btn-close-modal-reset-pic');
+    const btnCancel = document.getElementById('btn-cancel-reset-pic');
+    const btnConfirm = document.getElementById('btn-confirm-reset-pic');
+
+    const closeModal = () => {
+        if (modal) modal.classList.add('hidden');
+        pendingResetEntitasId = null;
+    };
+
+    if (btnClose) btnClose.addEventListener('click', closeModal);
+    if (btnCancel) btnCancel.addEventListener('click', closeModal);
+
+    if (btnConfirm) {
+        btnConfirm.addEventListener('click', async () => {
+            if (!pendingResetEntitasId) return;
+
+            const btnText = document.getElementById('btn-confirm-reset-pic-text');
+            const originalText = btnText ? btnText.innerText : 'Hapus & Reset PIC';
+
+            btnConfirm.disabled = true;
+            if (btnText) btnText.innerText = 'Mereset Data...';
+
+            try {
+                const res = await fetch('/api/admin/kelola/perusahaan_accounts.php?action=reset_pic', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': csrfToken
+                    },
+                    body: JSON.stringify({ entitas_id: pendingResetEntitasId })
+                });
+                const data = await res.json();
+
+                if (data.ok) {
+                    closeModal();
+                    await showAdminAlert(
+                        data.message || 'Data PIC entitas berhasil direset.',
+                        'success',
+                        'Data PIC Berhasil Direset'
+                    );
+                    loadPerusahaanData();
+                } else {
+                    await showAdminAlert(data.error || 'Gagal mereset data PIC entitas.', 'error', 'Reset PIC Gagal');
+                }
+            } catch (err) {
+                console.error(err);
+                await showAdminAlert('Terjadi kesalahan jaringan saat mereset data PIC.', 'error');
+            } finally {
+                btnConfirm.disabled = false;
+                if (btnText) btnText.innerText = originalText;
+            }
+        });
+    }
+}
+
+function openResetPicModal(entitasId) {
+    const item = rawPerusahaanData.find(e => e.entitas_id === entitasId);
+    if (!item) return;
+
+    pendingResetEntitasId = entitasId;
+
+    const elName = document.getElementById('reset-pic-entity-name');
+    const elType = document.getElementById('reset-pic-entity-type');
+    const elNama = document.getElementById('reset-pic-val-nama');
+    const elJabatan = document.getElementById('reset-pic-val-jabatan');
+    const elKontak = document.getElementById('reset-pic-val-kontak');
+    const elEmail = document.getElementById('reset-pic-val-email');
+
+    if (elName) elName.innerText = item.entitas_nama + (item.singkatan ? ` (${item.singkatan})` : '');
+    if (elType) elType.innerText = `Tingkat: ${(item.tipe || '-').toUpperCase().replace('_', ' ')} • Induk: ${item.parent_nama || 'Holding / Pusat'}`;
+    if (elNama) elNama.innerText = item.pic_nama || '-';
+    if (elJabatan) elJabatan.innerText = item.pic_jabatan || '-';
+    if (elKontak) elKontak.innerText = item.pic_kontak || '-';
+    if (elEmail) elEmail.innerText = item.pic_email || '-';
+
+    const modal = document.getElementById('modal-reset-pic');
     if (modal) modal.classList.remove('hidden');
 }
 

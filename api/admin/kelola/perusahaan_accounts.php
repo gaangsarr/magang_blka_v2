@@ -416,6 +416,60 @@ try {
         exit;
     }
 
+    if ($action === 'reset_pic') {
+        $entitasId = (int)($input['entitas_id'] ?? 0);
+        if ($entitasId <= 0) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Parameter entitas_id wajib diisi.']);
+            exit;
+        }
+
+        $stmtE = $pdo->prepare("SELECT id, nama, singkatan, pic_nama FROM entitas_perusahaan WHERE id = ? LIMIT 1");
+        $stmtE->execute([$entitasId]);
+        $entitas = $stmtE->fetch(PDO::FETCH_ASSOC);
+
+        if (!$entitas) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Entitas perusahaan tidak ditemukan.']);
+            exit;
+        }
+
+        $pdo->beginTransaction();
+
+        // 1. Kosongkan data kontak PIC di entitas_perusahaan
+        $stmtResetPic = $pdo->prepare("
+            UPDATE entitas_perusahaan
+            SET pic_nama = NULL,
+                pic_jabatan = NULL,
+                pic_kontak = NULL,
+                pic_email = NULL,
+                updated_at = NOW()
+            WHERE id = ?
+        ");
+        $stmtResetPic->execute([$entitasId]);
+
+        // 2. Aktifkan kembali force_password_change = 1 agar admin unit dipaksa input PIC saat login
+        $stmtForce = $pdo->prepare("
+            UPDATE admin
+            SET force_password_change = 1,
+                updated_at = NOW()
+            WHERE entitas_id = ? AND role = 'admin_perusahaan'
+        ");
+        $stmtForce->execute([$entitasId]);
+        $adminCount = $stmtForce->rowCount();
+
+        $pdo->commit();
+
+        echo json_encode([
+            'ok'             => true,
+            'message'        => 'Data PIC ' . $entitas['nama'] . ' berhasil direset. Admin unit akan diwajibkan melengkapi kontak PIC baru saat login.',
+            'entitas_id'     => $entitasId,
+            'entitas_nama'   => $entitas['nama'],
+            'affected_admin' => $adminCount > 0
+        ]);
+        exit;
+    }
+
     if ($action === 'toggle_status') {
         $adminId = (int)($input['admin_id'] ?? 0);
         $aktif   = !empty($input['aktif']) ? 1 : 0;

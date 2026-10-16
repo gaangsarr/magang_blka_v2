@@ -20,8 +20,47 @@ Auth::requireSuperAdminApi();
 $pdo = Database::getInstance();
 $format = strtolower((string)($_GET['format'] ?? 'excel'));
 
+$excludeDummy = true;
+if (isset($_GET['exclude_dummy'])) {
+    $excludeDummy = ($_GET['exclude_dummy'] === '1' || $_GET['exclude_dummy'] === 'true');
+} elseif (isset($_GET['include_dummy'])) {
+    $excludeDummy = ($_GET['include_dummy'] !== '1');
+}
+
+$search = trim((string)($_GET['search'] ?? ''));
+$status = trim((string)($_GET['status'] ?? ''));
+
 try {
-    $stmt = $pdo->query("
+    $where = [
+        "ep.tipe IN ('unit_pelaksana', 'unit_layanan', 'anak_perusahaan', 'unit_induk', 'subholding', 'holding')",
+        "ep.aktif = 1"
+    ];
+    $params = [];
+
+    // Filter data dummy: abaikan PT DUMMY GANGSAR / keyword DUMMY jika excludeDummy aktif
+    if ($excludeDummy) {
+        $where[] = "(ep.nama NOT LIKE '%DUMMY%' AND (ep.singkatan IS NULL OR ep.singkatan NOT LIKE '%DUMMY%') AND ep.id != 1295)";
+    }
+
+    if ($search !== '') {
+        $where[] = "(ep.nama LIKE :s1 OR ep.singkatan LIKE :s2 OR a.username LIKE :s3 OR ep.pic_nama LIKE :s4)";
+        $params[':s1'] = '%' . $search . '%';
+        $params[':s2'] = '%' . $search . '%';
+        $params[':s3'] = '%' . $search . '%';
+        $params[':s4'] = '%' . $search . '%';
+    }
+
+    if ($status === 'has_account') {
+        $where[] = "a.id IS NOT NULL";
+    } elseif ($status === 'no_account') {
+        $where[] = "a.id IS NULL";
+    } elseif ($status === 'first_login') {
+        $where[] = "(a.id IS NOT NULL AND a.force_password_change = 1)";
+    }
+
+    $whereSql = implode(' AND ', $where);
+
+    $sql = "
         SELECT 
             ep.id AS entitas_id,
             ep.nama AS entitas_nama,
@@ -40,9 +79,11 @@ try {
         FROM entitas_perusahaan ep
         LEFT JOIN entitas_perusahaan parent ON ep.parent_id = parent.id
         LEFT JOIN admin a ON a.entitas_id = ep.id AND a.role = 'admin_perusahaan'
-        WHERE ep.tipe IN ('unit_pelaksana', 'unit_layanan', 'anak_perusahaan', 'unit_induk', 'subholding', 'holding') AND ep.aktif = 1
+        WHERE $whereSql
         ORDER BY ep.parent_id ASC, ep.tipe ASC, ep.nama ASC
-    ");
+    ";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
     $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     if ($format === 'print') {
