@@ -69,8 +69,250 @@
                     </form>
                 </div>
 
+                <!-- Dokumen Publik Beranda Mahasiswa Card -->
+                <div class="admin-card" id="card-dokumen-beranda">
+                    <div class="admin-card-header">
+                        <div>
+                            <h3 class="admin-card-title">Dokumen &amp; Panduan Magang (Beranda Mahasiswa)</h3>
+                            <span style="font-size: 0.825rem; color: #64748b;">Kelola berkas unduhan dan tautan Buku Pedoman &amp; Format Log Book yang tampil di beranda mahasiswa. Perubahan langsung aktif tanpa perlu mengubah kodingan.</span>
+                        </div>
+                    </div>
+                    
+                    <div style="padding: 0 24px 24px;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 24px; margin-top: 8px;">
+                            <!-- Panel 1: Buku Pedoman Magang -->
+                            <div class="doc-manage-box" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 16px;">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; border-bottom: 1px solid #f1f5f9; padding-bottom: 14px;">
+                                    <div style="display: flex; gap: 12px; align-items: center;">
+                                        <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(0, 162, 185, 0.1); color: #00A2B9; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                                                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <div style="font-size: 0.75rem; font-weight: 700; color: #00A2B9; text-transform: uppercase; letter-spacing: 0.04em;">DOKUMEN 1</div>
+                                            <h4 style="margin: 0; font-size: 1rem; font-weight: 700; color: #0f172a;">Buku Pedoman Magang</h4>
+                                        </div>
+                                    </div>
+                                    <span id="badge-status-pedoman" style="font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 9999px; background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd;">
+                                        PDF Server
+                                    </span>
+                                </div>
+
+                                <!-- Current File & Preview -->
+                                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; gap: 12px;">
+                                    <div style="min-width: 0;">
+                                        <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 2px;">Tautan / Berkas Aktif Saat Ini:</div>
+                                        <div id="info-file-pedoman" style="font-size: 0.825rem; font-weight: 600; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="/assets/docs/pedoman-magang.pdf">
+                                            /assets/docs/pedoman-magang.pdf
+                                        </div>
+                                    </div>
+                                    <a id="btn-preview-pedoman-admin" href="/assets/docs/pedoman-magang.pdf" target="_blank" rel="noopener noreferrer" class="btn-secondary" style="flex-shrink: 0; padding: 6px 12px; font-size: 0.8rem; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; border: 1px solid #cbd5e1; border-radius: 6px; background: #ffffff; color: #334155; font-weight: 600;">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                                        <span>Buka</span>
+                                    </a>
+                                </div>
+
+                                <!-- Tipe Sumber Radio -->
+                                <div>
+                                    <label class="admin-input-label" style="margin-bottom: 8px; display: block;">Metode Penyediaan Berkas:</label>
+                                    <div style="display: flex; gap: 16px;">
+                                        <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600; color: #334155; cursor: pointer;">
+                                            <input type="radio" name="tipe_pedoman" value="file" checked id="radio-pedoman-file">
+                                            <span>Unggah File PDF Baru</span>
+                                        </label>
+                                        <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600; color: #334155; cursor: pointer;">
+                                            <input type="radio" name="tipe_pedoman" value="url" id="radio-pedoman-url">
+                                            <span>Tautan Eksternal Cloud (URL)</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- File Upload Box for Pedoman -->
+                                <div id="box-upload-pedoman" style="background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 8px; padding: 16px; text-align: center;">
+                                    <input type="file" id="input-file-pedoman" accept=".pdf" style="display: none;">
+                                    <div style="font-size: 0.85rem; color: #475569; margin-bottom: 8px;">
+                                        Pilih berkas PDF baru (Maks. 10 MB)
+                                    </div>
+                                    <div style="display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                        <button type="button" class="btn-secondary" id="btn-browse-pedoman" style="padding: 7px 16px; font-size: 0.825rem; border: 1px solid #cbd5e1; border-radius: 6px; background: #ffffff; color: #334155; font-weight: 600; cursor: pointer;">
+                                            Pilih Berkas PDF...
+                                        </button>
+                                        <span id="selected-file-pedoman" style="font-size: 0.8rem; color: #64748b;">Belum ada file dipilih</span>
+                                        <button type="button" class="btn-modal-login" id="btn-upload-pedoman" style="width: auto; padding: 7px 18px; font-size: 0.825rem; display: none;" disabled>
+                                            Unggah Sekarang
+                                        </button>
+                                    </div>
+                                    <div id="upload-status-pedoman" style="font-size: 0.8rem; margin-top: 8px; display: none;"></div>
+                                </div>
+
+                                <!-- External URL Box for Pedoman -->
+                                <div id="box-url-pedoman" class="admin-input-group" style="display: none; margin: 0;">
+                                    <label class="admin-input-label" for="url_pedoman">URL Dokumen Eksternal</label>
+                                    <input type="url" id="url_pedoman" class="admin-input-field" placeholder="https://drive.google.com/file/d/..." style="padding-left: 14px;">
+                                    <span style="font-size: 0.775rem; color: #64748b; margin-top: 4px; display: block;">Pastikan hak akses link diatur agar dapat diunduh/dibaca publik.</span>
+                                </div>
+
+                                <!-- Metadata Tampilan -->
+                                <details style="border-top: 1px solid #f1f5f9; padding-top: 12px; margin-top: 4px;">
+                                    <summary style="font-size: 0.825rem; font-weight: 700; color: #00A2B9; cursor: pointer; user-select: none;">
+                                        Kustomisasi Teks &amp; Tampilan Kartu di Beranda
+                                    </summary>
+                                    <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 12px;">
+                                        <div class="admin-input-group" style="margin: 0;">
+                                            <label class="admin-input-label" for="judul_pedoman">Judul Kartu</label>
+                                            <input type="text" id="judul_pedoman" class="admin-input-field" placeholder="Buku Pedoman Magang" style="padding-left: 14px;">
+                                        </div>
+                                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                                            <div class="admin-input-group" style="margin: 0;">
+                                                <label class="admin-input-label" for="meta_pedoman">Label Subjudul</label>
+                                                <input type="text" id="meta_pedoman" class="admin-input-field" placeholder="Panduan Resmi" style="padding-left: 14px;">
+                                            </div>
+                                            <div class="admin-input-group" style="margin: 0;">
+                                                <label class="admin-input-label" for="badge_pedoman">Badge Format</label>
+                                                <input type="text" id="badge_pedoman" class="admin-input-field" placeholder="PDF" style="padding-left: 14px;">
+                                            </div>
+                                        </div>
+                                        <div class="admin-input-group" style="margin: 0;">
+                                            <label class="admin-input-label" for="btn_text_pedoman">Teks Tombol Aksi</label>
+                                            <input type="text" id="btn_text_pedoman" class="admin-input-field" placeholder="Buka Dokumen PDF" style="padding-left: 14px;">
+                                        </div>
+                                        <div class="admin-input-group" style="margin: 0;">
+                                            <label class="admin-input-label" for="deskripsi_pedoman">Deskripsi Dokumen</label>
+                                            <textarea id="deskripsi_pedoman" class="admin-input-field" rows="3" style="padding: 10px 14px; font-family: inherit; font-size: 0.85rem; resize: vertical;" placeholder="Deskripsi dokumen..."></textarea>
+                                        </div>
+                                    </div>
+                                </details>
+
+                                <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-top: auto; padding-top: 12px; border-top: 1px solid #f1f5f9;">
+                                    <span id="save-status-doc-pedoman" style="font-size: 0.8rem; color: #10b981; display: none;">Tersimpan</span>
+                                    <button type="button" class="btn-modal-login" id="btn-save-doc-pedoman" style="width: auto; padding: 8px 20px; font-size: 0.85rem;">
+                                        Simpan Pengaturan Pedoman
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Panel 2: Format Catatan / Log Book -->
+                            <div class="doc-manage-box" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 16px;">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; border-bottom: 1px solid #f1f5f9; padding-bottom: 14px;">
+                                    <div style="display: flex; gap: 12px; align-items: center;">
+                                        <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(0, 80, 130, 0.1); color: #005082; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                                                <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                                                <path d="M9 12h6"></path>
+                                                <path d="M9 16h6"></path>
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <div style="font-size: 0.75rem; font-weight: 700; color: #005082; text-transform: uppercase; letter-spacing: 0.04em;">DOKUMEN 2</div>
+                                            <h4 style="margin: 0; font-size: 1rem; font-weight: 700; color: #0f172a;">Buku Catatan / Log Book</h4>
+                                        </div>
+                                    </div>
+                                    <span id="badge-status-logbook" style="font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 9999px; background: #e0e7ff; color: #3730a3; border: 1px solid #c7d2fe;">
+                                        DOCX Server
+                                    </span>
+                                </div>
+
+                                <!-- Current File & Preview -->
+                                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; gap: 12px;">
+                                    <div style="min-width: 0;">
+                                        <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 2px;">Tautan / Berkas Aktif Saat Ini:</div>
+                                        <div id="info-file-logbook" style="font-size: 0.825rem; font-weight: 600; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="/assets/docs/logbook.docx">
+                                            /assets/docs/logbook.docx
+                                        </div>
+                                    </div>
+                                    <a id="btn-preview-logbook-admin" href="/assets/docs/logbook.docx" target="_blank" rel="noopener noreferrer" class="btn-secondary" style="flex-shrink: 0; padding: 6px 12px; font-size: 0.8rem; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; border: 1px solid #cbd5e1; border-radius: 6px; background: #ffffff; color: #334155; font-weight: 600;">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                                        <span>Buka</span>
+                                    </a>
+                                </div>
+
+                                <!-- Tipe Sumber Radio -->
+                                <div>
+                                    <label class="admin-input-label" style="margin-bottom: 8px; display: block;">Metode Penyediaan Berkas:</label>
+                                    <div style="display: flex; gap: 16px;">
+                                        <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600; color: #334155; cursor: pointer;">
+                                            <input type="radio" name="tipe_logbook" value="file" checked id="radio-logbook-file">
+                                            <span>Unggah File DOCX Baru</span>
+                                        </label>
+                                        <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600; color: #334155; cursor: pointer;">
+                                            <input type="radio" name="tipe_logbook" value="url" id="radio-logbook-url">
+                                            <span>Tautan Eksternal Cloud (URL)</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- File Upload Box for Logbook -->
+                                <div id="box-upload-logbook" style="background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 8px; padding: 16px; text-align: center;">
+                                    <input type="file" id="input-file-logbook" accept=".docx" style="display: none;">
+                                    <div style="font-size: 0.85rem; color: #475569; margin-bottom: 8px;">
+                                        Pilih berkas DOCX baru (Maks. 10 MB)
+                                    </div>
+                                    <div style="display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                        <button type="button" class="btn-secondary" id="btn-browse-logbook" style="padding: 7px 16px; font-size: 0.825rem; border: 1px solid #cbd5e1; border-radius: 6px; background: #ffffff; color: #334155; font-weight: 600; cursor: pointer;">
+                                            Pilih Berkas DOCX...
+                                        </button>
+                                        <span id="selected-file-logbook" style="font-size: 0.8rem; color: #64748b;">Belum ada file dipilih</span>
+                                        <button type="button" class="btn-modal-login" id="btn-upload-logbook" style="width: auto; padding: 7px 18px; font-size: 0.825rem; display: none;" disabled>
+                                            Unggah Sekarang
+                                        </button>
+                                    </div>
+                                    <div id="upload-status-logbook" style="font-size: 0.8rem; margin-top: 8px; display: none;"></div>
+                                </div>
+
+                                <!-- External URL Box for Logbook -->
+                                <div id="box-url-logbook" class="admin-input-group" style="display: none; margin: 0;">
+                                    <label class="admin-input-label" for="url_logbook">URL Dokumen Eksternal</label>
+                                    <input type="url" id="url_logbook" class="admin-input-field" placeholder="https://drive.google.com/file/d/..." style="padding-left: 14px;">
+                                    <span style="font-size: 0.775rem; color: #64748b; margin-top: 4px; display: block;">Pastikan hak akses link diatur agar dapat diunduh/dibaca publik.</span>
+                                </div>
+
+                                <!-- Metadata Tampilan -->
+                                <details style="border-top: 1px solid #f1f5f9; padding-top: 12px; margin-top: 4px;">
+                                    <summary style="font-size: 0.825rem; font-weight: 700; color: #005082; cursor: pointer; user-select: none;">
+                                        Kustomisasi Teks &amp; Tampilan Kartu di Beranda
+                                    </summary>
+                                    <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 12px;">
+                                        <div class="admin-input-group" style="margin: 0;">
+                                            <label class="admin-input-label" for="judul_logbook">Judul Kartu</label>
+                                            <input type="text" id="judul_logbook" class="admin-input-field" placeholder="Buku Catatan / Log Book" style="padding-left: 14px;">
+                                        </div>
+                                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                                            <div class="admin-input-group" style="margin: 0;">
+                                                <label class="admin-input-label" for="meta_logbook">Label Subjudul</label>
+                                                <input type="text" id="meta_logbook" class="admin-input-field" placeholder="Format Laporan" style="padding-left: 14px;">
+                                            </div>
+                                            <div class="admin-input-group" style="margin: 0;">
+                                                <label class="admin-input-label" for="badge_logbook">Badge Format</label>
+                                                <input type="text" id="badge_logbook" class="admin-input-field" placeholder="Word" style="padding-left: 14px;">
+                                            </div>
+                                        </div>
+                                        <div class="admin-input-group" style="margin: 0;">
+                                            <label class="admin-input-label" for="btn_text_logbook">Teks Tombol Aksi</label>
+                                            <input type="text" id="btn_text_logbook" class="admin-input-field" placeholder="Buka Dokumen" style="padding-left: 14px;">
+                                        </div>
+                                        <div class="admin-input-group" style="margin: 0;">
+                                            <label class="admin-input-label" for="deskripsi_logbook">Deskripsi Dokumen</label>
+                                            <textarea id="deskripsi_logbook" class="admin-input-field" rows="3" style="padding: 10px 14px; font-family: inherit; font-size: 0.85rem; resize: vertical;" placeholder="Deskripsi dokumen..."></textarea>
+                                        </div>
+                                    </div>
+                                </details>
+
+                                <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-top: auto; padding-top: 12px; border-top: 1px solid #f1f5f9;">
+                                    <span id="save-status-doc-logbook" style="font-size: 0.8rem; color: #10b981; display: none;">Tersimpan</span>
+                                    <button type="button" class="btn-modal-login" id="btn-save-doc-logbook" style="width: auto; padding: 8px 20px; font-size: 0.85rem;">
+                                        Simpan Pengaturan Log Book
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Pengaturan Notifikasi Email Otomatis -->
-                <div class="admin-card">
+                <div class="admin-card" id="card-notifikasi-email">
                     <div class="admin-card-header">
                         <div>
                             <h3 class="admin-card-title">Pengaturan Pengiriman Email Notifikasi</h3>

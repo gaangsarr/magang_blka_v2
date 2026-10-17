@@ -402,12 +402,12 @@
               </svg>
             </div>
             <div class="doc-guide-header-text">
-              <div class="doc-guide-meta-title">Panduan Resmi</div>
-              <h3 class="doc-guide-card-title">Buku Pedoman Magang</h3>
+              <div class="doc-guide-meta-title" id="pedoman-meta">Panduan Resmi</div>
+              <h3 class="doc-guide-card-title" id="pedoman-title">Buku Pedoman Magang</h3>
             </div>
-            <span class="req-badge">PDF</span>
+            <span class="req-badge" id="pedoman-badge">PDF</span>
           </div>
-          <p class="doc-guide-card-desc">
+          <p class="doc-guide-card-desc" id="pedoman-desc">
             Panduan lengkap alur pendaftaran, persyaratan berkas, hak dan kewajiban mahasiswa, tata tertib, serta kriteria evaluasi program magang bersama PT PLN (Persero).
           </p>
         </div>
@@ -425,7 +425,7 @@
               <polyline points="15 3 21 3 21 9"></polyline>
               <line x1="10" y1="14" x2="21" y2="3"></line>
             </svg>
-            <span>Buka Dokumen PDF</span>
+            <span id="pedoman-btn-text">Buka Dokumen PDF</span>
           </a>
         </div>
       </article>
@@ -443,12 +443,12 @@
               </svg>
             </div>
             <div class="doc-guide-header-text">
-              <div class="doc-guide-meta-title">Format Laporan</div>
-              <h3 class="doc-guide-card-title">Buku Catatan / Log Book</h3>
+              <div class="doc-guide-meta-title" id="logbook-meta">Format Laporan</div>
+              <h3 class="doc-guide-card-title" id="logbook-title">Buku Catatan / Log Book</h3>
             </div>
-            <span class="req-badge">Word</span>
+            <span class="req-badge" id="logbook-badge">Word</span>
           </div>
-          <p class="doc-guide-card-desc">
+          <p class="doc-guide-card-desc" id="logbook-desc">
             Format resmi pencatatan aktivitas harian, rencana kerja mingguan, lembar bimbingan mentor lapangan, dan rekapitulasi kehadiran selama masa penempatan.
           </p>
         </div>
@@ -466,7 +466,7 @@
               <polyline points="15 3 21 3 21 9"></polyline>
               <line x1="10" y1="14" x2="21" y2="3"></line>
             </svg>
-            <span>Buka Dokumen</span>
+            <span id="logbook-btn-text">Buka Dokumen</span>
           </a>
         </div>
       </article>
@@ -794,6 +794,62 @@
         btn.setAttribute('aria-expanded', !isOpen ? 'true' : 'false');
       });
     });
+
+    // Dynamic Landing Page Documents Loader
+    (async function loadLandingDocuments() {
+      try {
+        const res = await fetch('/api/public/dokumen.php');
+        if (!res.ok) return;
+        const json = await res.json();
+        if (!json.ok || !json.data) return;
+
+        const d = json.data;
+
+        // Pedoman Magang
+        if (d.pedoman) {
+          const p = d.pedoman;
+          const metaEl = document.getElementById('pedoman-meta');
+          const titleEl = document.getElementById('pedoman-title');
+          const badgeEl = document.getElementById('pedoman-badge');
+          const descEl = document.getElementById('pedoman-desc');
+          const linkEl = document.getElementById('btn-preview-pedoman');
+          const btnTextEl = document.getElementById('pedoman-btn-text');
+
+          if (metaEl && p.meta) metaEl.innerText = p.meta;
+          if (titleEl && p.judul) titleEl.innerText = p.judul;
+          if (badgeEl && p.badge) badgeEl.innerText = p.badge;
+          if (descEl && p.deskripsi) descEl.innerText = p.deskripsi;
+          if (linkEl && p.download_url) {
+            linkEl.href = p.download_url;
+            linkEl.setAttribute('aria-label', `Lihat ${p.judul || 'Buku Pedoman Magang'}`);
+          }
+          if (btnTextEl && p.btn_text) btnTextEl.innerText = p.btn_text;
+        }
+
+        // Log Book Magang
+        if (d.logbook) {
+          const l = d.logbook;
+          const metaEl = document.getElementById('logbook-meta');
+          const titleEl = document.getElementById('logbook-title');
+          const badgeEl = document.getElementById('logbook-badge');
+          const descEl = document.getElementById('logbook-desc');
+          const linkEl = document.getElementById('btn-preview-logbook');
+          const btnTextEl = document.getElementById('logbook-btn-text');
+
+          if (metaEl && l.meta) metaEl.innerText = l.meta;
+          if (titleEl && l.judul) titleEl.innerText = l.judul;
+          if (badgeEl && l.badge) badgeEl.innerText = l.badge;
+          if (descEl && l.deskripsi) descEl.innerText = l.deskripsi;
+          if (linkEl && l.download_url) {
+            linkEl.href = l.download_url;
+            linkEl.setAttribute('aria-label', `Lihat ${l.judul || 'Log Book Magang'}`);
+          }
+          if (btnTextEl && l.btn_text) btnTextEl.innerText = l.btn_text;
+        }
+      } catch (err) {
+        console.warn('Gagal memuat dokumen dinamis beranda:', err);
+      }
+    })();
   </script>
 
   <!-- ============================================================
