@@ -170,13 +170,19 @@ try {
             }
             $statsPendaftar['total'] = $totalMhs;
 
-            // Hitung mahasiswa belum dicek (status bukan diterima, ditolak, dipindahkan, dibatalkan)
+            // Hitung mahasiswa belum dicek (status bukan diterima, ditolak, dibatalkan dan bukan transfer yang masih menunggu approval)
             $stmtBelumDicek = $pdo->prepare("
                 SELECT COUNT(*) 
-                FROM pendaftaran 
-                WHERE unit_pelaksana_periode_id = :upp_id 
-                  AND periode_id = :pid 
-                  AND status NOT IN ('diterima', 'ditolak', 'dipindahkan', 'dibatalkan')
+                FROM pendaftaran p
+                WHERE p.unit_pelaksana_periode_id = :upp_id 
+                  AND p.periode_id = :pid 
+                  AND p.status NOT IN ('diterima', 'ditolak', 'dibatalkan')
+                  AND p.id NOT IN (
+                      SELECT pem.pendaftaran_id 
+                      FROM pemindahan_peserta pem 
+                      WHERE pem.unit_tujuan_id = p.unit_pelaksana_periode_id 
+                        AND pem.status_approval = 'menunggu_approval'
+                  )
             ");
             $stmtBelumDicek->execute([':upp_id' => $uppId, ':pid' => $periodeId]);
             $pendingCheckCount = (int)$stmtBelumDicek->fetchColumn();

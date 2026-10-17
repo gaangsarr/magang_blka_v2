@@ -402,10 +402,11 @@ class PenetapanHelper
                 $stmtFreeAsalJ->execute([':upp_id' => $unitAsalId, ':jid' => $jurusanId]);
             }
 
-            // Update catatan pendaftaran
+            // Update status pendaftaran menjadi 'diajukan' agar masuk ke antrean verifikasi unit penerima
             $stmtUpdP = $pdo->prepare("
                 UPDATE pendaftaran
-                SET catatan_admin = :catatan,
+                SET status = 'diajukan',
+                    catatan_admin = :catatan,
                     updated_at = NOW()
                 WHERE id = :id
             ");

@@ -164,20 +164,21 @@ try {
     $sheet->setTitle($sheetTitle);
 
     // Title Block
-    $sheet->mergeCells('A1:N1');
+    $sheet->mergeCells('A1:Q1');
     $sheet->setCellValue('A1', $mainHeading);
     $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FF004687'));
     $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
-    $sheet->mergeCells('A2:N2');
+    $sheet->mergeCells('A2:Q2');
     $sheet->setCellValue('A2', 'Periode: ' . $periodeNama . ' | Total Mahasiswa: ' . count($rows) . ' Mahasiswa | Diekspor: ' . date('d-m-Y H:i:s'));
     $sheet->getStyle('A2')->getFont()->setSize(10)->setItalic(true);
     $sheet->getStyle('A2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
-    // Table Headers (Kolom M: LinkedIn, Kolom N: Alamat Mahasiswa)
+    // Table Headers (Kolom M: Link Transkrip, N: Link CV, O: Link Portofolio, P: LinkedIn, Q: Alamat Mahasiswa)
     $headers = [
         'No', 'NIM', 'Nama Mahasiswa', 'L/P', 'Program Studi', 'Angkatan', 
-        'IPK', 'SKS', 'Program', 'Peminatan', 'No. WhatsApp / HP', 'Email Kampus', 'Profil LinkedIn', 'Alamat Lengkap Mahasiswa'
+        'IPK', 'SKS', 'Program Magang', 'Peminatan', 'No. WhatsApp / HP', 'Email Kampus', 
+        'Link Transkrip Nilai', 'Link Curriculum Vitae (CV)', 'Link Portofolio', 'Profil LinkedIn', 'Alamat Lengkap Mahasiswa'
     ];
     $colLetter = 'A';
     foreach ($headers as $h) {
@@ -185,12 +186,24 @@ try {
         $colLetter++;
     }
 
-    $sheet->getStyle('A4:N4')->applyFromArray([
+    $sheet->getStyle('A4:Q4')->applyFromArray([
         'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
         'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '004687']],
         'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
     ]);
     $sheet->getRowDimension(4)->setRowHeight(26);
+
+    // Helper pembangun URL berkas publik/download
+    $buildFullDocUrl = function(?string $path, int $pendaftaranId, string $type): ?string {
+        if (empty($path)) return null;
+        $path = trim($path);
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+        $scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https' : 'http';
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost:8000';
+        return "{$scheme}://{$host}/api/admin/{$type}/download.php?pendaftaran_id={$pendaftaranId}";
+    };
 
     $rowNum = 5;
     $no = 1;
@@ -210,14 +223,48 @@ try {
         $sheet->setCellValue('J' . $rowNum, $peminatanStr);
         $sheet->setCellValue('K' . $rowNum, $r['no_hp'] ?? '-');
         $sheet->setCellValue('L' . $rowNum, $r['email']);
-        if (!empty($r['linkedin_link'])) {
-            $sheet->setCellValue('M' . $rowNum, $r['linkedin_link']);
-            $sheet->getCell('M' . $rowNum)->getHyperlink()->setUrl($r['linkedin_link']);
+
+        // Link Transkrip (Kolom M)
+        $transkripUrl = $buildFullDocUrl($r['transkrip_path'] ?? null, $pId, 'transkrip');
+        if ($transkripUrl) {
+            $sheet->setCellValue('M' . $rowNum, $transkripUrl);
+            $sheet->getCell('M' . $rowNum)->getHyperlink()->setUrl($transkripUrl);
             $sheet->getStyle('M' . $rowNum)->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FF0066CC'))->setUnderline(true);
         } else {
             $sheet->setCellValue('M' . $rowNum, '-');
         }
-        $sheet->setCellValue('N' . $rowNum, $formatAlamat($r));
+
+        // Link CV (Kolom N)
+        $cvUrl = $buildFullDocUrl($r['cv_path'] ?? null, $pId, 'cv');
+        if ($cvUrl) {
+            $sheet->setCellValue('N' . $rowNum, $cvUrl);
+            $sheet->getCell('N' . $rowNum)->getHyperlink()->setUrl($cvUrl);
+            $sheet->getStyle('N' . $rowNum)->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FF0066CC'))->setUnderline(true);
+        } else {
+            $sheet->setCellValue('N' . $rowNum, '-');
+        }
+
+        // Link Portofolio (Kolom O)
+        $portoUrl = $buildFullDocUrl($r['porto_path'] ?? null, $pId, 'porto');
+        if ($portoUrl) {
+            $sheet->setCellValue('O' . $rowNum, $portoUrl);
+            $sheet->getCell('O' . $rowNum)->getHyperlink()->setUrl($portoUrl);
+            $sheet->getStyle('O' . $rowNum)->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FF0066CC'))->setUnderline(true);
+        } else {
+            $sheet->setCellValue('O' . $rowNum, '-');
+        }
+
+        // Profil LinkedIn (Kolom P)
+        if (!empty($r['linkedin_link'])) {
+            $sheet->setCellValue('P' . $rowNum, $r['linkedin_link']);
+            $sheet->getCell('P' . $rowNum)->getHyperlink()->setUrl($r['linkedin_link']);
+            $sheet->getStyle('P' . $rowNum)->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FF0066CC'))->setUnderline(true);
+        } else {
+            $sheet->setCellValue('P' . $rowNum, '-');
+        }
+
+        // Alamat Lengkap Mahasiswa (Kolom Q)
+        $sheet->setCellValue('Q' . $rowNum, $formatAlamat($r));
 
         $sheet->getStyle('A' . $rowNum)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         $sheet->getStyle('B' . $rowNum)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
@@ -232,19 +279,19 @@ try {
 
     $lastRow = $rowNum - 1;
     if ($lastRow >= 4) {
-        $sheet->getStyle('A4:N' . $lastRow)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FFCBD5E1'));
+        $sheet->getStyle('A4:Q' . $lastRow)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FFCBD5E1'));
     }
 
-    foreach (range('A', 'N') as $col) {
+    foreach (range('A', 'Q') as $col) {
         $sheet->getColumnDimension($col)->setAutoSize(true);
     }
 
     $cleanUnitName = preg_replace('/[^a-zA-Z0-9]/', '_', $unitNama);
     $requestedFormat = strtolower(trim((string)($_GET['format'] ?? '')));
 
-    // 5. Cek apakah pengguna hanya meminta format Excel saja
-    if ($requestedFormat === 'excel' || $requestedFormat === 'xlsx') {
-        $prefix = $isRoster ? 'Roster_Resmi_' : 'Pendaftar_';
+    // 5. Default Format: Langsung unduh file Excel (.xlsx) dengan tautan berkas interaktif
+    if ($requestedFormat !== 'zip') {
+        $prefix = $isRoster ? 'Roster_Resmi_' : 'Rekap_Pendaftar_';
         $fileName = $prefix . $cleanUnitName . '_' . date('Ymd_His') . '.xlsx';
 
         while (ob_get_level() > 0) {

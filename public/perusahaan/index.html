@@ -12,6 +12,14 @@
     <link rel="stylesheet" href="/css/admin.css">
     <!-- Perusahaan Enterprise CSS -->
     <link rel="stylesheet" href="/css/perusahaan.css?v=20260925v15">
+    <style>
+        @media (max-width: 860px) {
+            #p-relocate-split-body {
+                grid-template-columns: 1fr !important;
+                gap: 16px !important;
+            }
+        }
+    </style>
 </head>
 <body class="perusahaan-body">
 
@@ -672,9 +680,9 @@
                     <p style="font-size: 0.85rem; color: var(--brand-muted); margin: 0;">Mahasiswa yang telah sah dinyatakan diterima dan siap melaksanakan program magang di unit Anda.</p>
                 </div>
                 <div style="display: flex; gap: 10px;">
-                    <button type="button" id="btn-export-roster" class="btn-portal-primary" style="background: #047857; border-color: #047857;">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
-                        <span>Unduh Berkas Roster (ZIP & Excel)</span>
+                    <button type="button" id="btn-export-roster" class="btn-portal-primary" style="background: #047857; border-color: #047857; font-weight: 700; display: inline-flex; align-items: center; gap: 8px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                        <span>Unduh Rekap Roster (.xlsx)</span>
                     </button>
                 </div>
             </div>
@@ -1024,59 +1032,170 @@
     </div>
 
     <!-- ========================================== -->
-    <!-- MODAL PERUSAHAAN: PINDAHKAN PESERTA -->
+    <!-- MODAL PERUSAHAAN: PINDAHKAN PESERTA (SPLIT 2-KOLOM ENTERPRISE) -->
     <!-- ========================================== -->
-    <div id="modal-perusahaan-relocate" class="modal-overlay hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 16px;">
-        <div style="background: #fff; border-radius: 16px; width: 100%; max-width: 720px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); max-height: 90vh; overflow: hidden; box-sizing: border-box; display: flex; flex-direction: column;">
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 24px 16px; border-bottom: 1px solid #e2e8f0; flex-shrink: 0; background: #fff;">
-                <h3 style="margin: 0; font-size: 1.15rem; color: #d97706; font-weight: 700; display: flex; align-items: center; gap: 8px;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/></svg>
-                    <span>Ajukan Pemindahan Peserta</span>
-                </h3>
-                <button type="button" class="btn-close-modal" data-target="modal-perusahaan-relocate" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b; line-height: 1;">&times;</button>
+    <div id="modal-perusahaan-relocate" class="modal-overlay hidden" style="position: fixed; inset: 0; background: rgba(11, 25, 44, 0.6); backdrop-filter: blur(2px); display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 16px;">
+        <div style="background: #ffffff; border-radius: 16px; width: 100%; max-width: 1040px; box-shadow: 0 25px 50px -12px rgba(11, 25, 44, 0.35); max-height: 92vh; overflow: hidden; box-sizing: border-box; display: flex; flex-direction: column; border: 1px solid #cbd5e1;">
+            
+            <!-- Modal Header -->
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; border-bottom: 1px solid #e2e8f0; flex-shrink: 0; background: #ffffff;">
+                <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                    <div style="width: 36px; height: 36px; border-radius: 10px; background: #fef3c7; color: #d97706; display: flex; align-items: center; justify-content: center;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/></svg>
+                    </div>
+                    <div>
+                        <h3 style="margin: 0; font-size: 1.125rem; color: #0f172a; font-weight: 700; line-height: 1.3;">Ajukan Pemindahan Peserta</h3>
+                        <div style="font-size: 0.775rem; color: #64748b; margin-top: 1px;">Rekomendasi unit terdekat berdasarkan titik pin GPS, jurusan, dan peminatan</div>
+                    </div>
+                    <span id="p-relocate-queue-badge" class="badge-card badge-distance hidden" style="margin-left: 8px; font-size: 0.725rem; padding: 4px 10px;">
+                        Antrean: <strong id="p-relocate-queue-step">1</strong> dari <strong id="p-relocate-queue-total">1</strong>
+                    </span>
+                </div>
+                <button type="button" class="btn-close-modal" data-target="modal-perusahaan-relocate" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b; line-height: 1; padding: 4px 8px; border-radius: 6px;" title="Tutup Modal">&times;</button>
             </div>
 
+            <!-- Modal Form -->
             <form id="form-perusahaan-relocate" style="display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; margin: 0; overflow: hidden;">
-                <!-- Scrollable Form Body -->
-                <div style="padding: 20px 24px; overflow-y: auto; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 16px;">
-                    <input type="hidden" id="perusahaan-relocate-id">
-                    <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 14px;">
-                        <div style="font-size: 0.85rem; color: #92400e;"><strong>Mahasiswa:</strong> <span id="perusahaan-relocate-mhs">-</span></div>
-                        <div style="font-size: 0.825rem; color: #b45309; margin-top: 4px;">Unit penerima akan menerima notifikasi dan wajib menyetujui pemindahan ini.</div>
-                    </div>
+                <!-- Split Body Container -->
+                <div id="p-relocate-split-body" style="padding: 20px 24px; overflow-y: auto; flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: 320px 1fr; gap: 24px; box-sizing: border-box;">
+                    
+                    <!-- KOLOM KIRI: Profil Mahasiswa & Kriteria Asal -->
+                    <div style="display: flex; flex-direction: column; gap: 14px; box-sizing: border-box;">
+                        
+                        <!-- Kartu Profil Ringkas -->
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 16px;">
+                            <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;">
+                                <div style="flex: 1; min-width: 0;">
+                                    <div id="p-relocate-mhs-nama" style="font-weight: 700; font-size: 0.95rem; color: #0f172a; line-height: 1.3; word-break: break-word;">-</div>
+                                    <div style="font-size: 0.775rem; color: #64748b; margin-top: 3px; font-family: monospace;">
+                                        NIM: <span id="p-relocate-mhs-nim" style="font-weight: 600; color: #0f172a;">-</span>
+                                    </div>
+                                </div>
+                                <span id="p-relocate-mhs-program-badge" class="badge-card badge-distance" style="font-size: 0.675rem;">-</span>
+                            </div>
 
-                    <div class="admin-input-group" style="margin-bottom: 0;">
-                        <label class="admin-input-label">Pilih Unit Pelaksana Tujuan <span style="color: red;">*</span></label>
-                        <input type="hidden" id="perusahaan-relocate-unit" required>
-                        <div class="unit-picker-box" id="p-relocate-unit-picker-box">
-                            <div class="unit-picker-search-wrap">
-                                <svg class="unit-picker-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                                <input type="text" id="p-relocate-search-input" class="unit-picker-search-input" placeholder="Cari nama unit, kota, atau program studi...">
-                                <button type="button" id="p-relocate-search-clear" class="unit-picker-search-clear">&times;</button>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; padding: 8px 10px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px;">
+                                <div>
+                                    <div style="font-size: 0.675rem; color: #64748b; font-weight: 600;">IPK Akademik</div>
+                                    <div id="p-relocate-mhs-ipk" style="font-size: 0.9rem; font-weight: 800; color: #0b192c; font-variant-numeric: tabular-nums;">-</div>
+                                </div>
+                                <div>
+                                    <div style="font-size: 0.675rem; color: #64748b; font-weight: 600;">Jumlah SKS</div>
+                                    <div id="p-relocate-mhs-sks" style="font-size: 0.9rem; font-weight: 800; color: #0b192c; font-variant-numeric: tabular-nums;">- SKS</div>
+                                </div>
                             </div>
-                            <div class="unit-picker-stats-bar">
-                                <span id="p-relocate-stats-count">Memuat unit...</span>
-                                <span style="font-size: 0.725rem; color: #0284c7; font-weight: 600;">Rekomendasi Terbaik di Atas</span>
+
+                            <!-- Program Studi -->
+                            <div style="margin-top: 12px;">
+                                <div style="font-size: 0.685rem; font-weight: 700; text-transform: uppercase; color: #64748b; letter-spacing: 0.04em;">Program Studi</div>
+                                <div id="p-relocate-mhs-prodi" style="font-size: 0.825rem; font-weight: 700; color: #0b3d6b; margin-top: 2px;">-</div>
                             </div>
-                            <div id="p-relocate-cards-container" class="unit-cards-scroll custom-scrollbar">
-                                <div class="unit-picker-empty">Memuat daftar unit...</div>
+
+                            <!-- Peminatan Pilihan (1, 2, 3) -->
+                            <div style="margin-top: 12px;">
+                                <div style="font-size: 0.685rem; font-weight: 700; text-transform: uppercase; color: #64748b; letter-spacing: 0.04em; margin-bottom: 4px;">Peminatan Pilihan Mahasiswa</div>
+                                <div id="p-relocate-mhs-peminatan-stack" style="display: flex; flex-direction: column; gap: 6px;">
+                                    <span style="font-size: 0.75rem; color: #94a3b8; font-style: italic;">Memuat peminatan...</span>
+                                </div>
                             </div>
                         </div>
+
+                        <!-- Kartu Lokasi & Pin GPS -->
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                <div style="display: flex; align-items: center; gap: 6px; font-size: 0.725rem; font-weight: 700; text-transform: uppercase; color: #64748b; letter-spacing: 0.04em;">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/><circle cx="12" cy="10" r="3"/></svg>
+                                    <span>Titik Pin Mahasiswa</span>
+                                </div>
+                                <span id="p-relocate-mhs-pin-badge" class="badge-card badge-recom-match" style="font-size: 0.65rem; padding: 2px 7px;">GPS Aktif</span>
+                            </div>
+                            
+                            <div id="p-relocate-mhs-alamat" style="font-size: 0.775rem; color: #334155; line-height: 1.45;">-</div>
+                            <div id="p-relocate-mhs-coords" style="font-size: 0.7rem; color: #64748b; font-family: monospace; margin-top: 6px; background: #ffffff; padding: 4px 8px; border-radius: 6px; border: 1px solid #e2e8f0; display: inline-block;">
+                                Lat: -, Lng: -
+                            </div>
+                        </div>
+
+                        <!-- Unit Terdaftar Saat Ini -->
+                        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.03);">
+                            <div style="display: flex; align-items: center; gap: 6px; font-size: 0.7rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em;">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M8 10h.01"/><path d="M16 10h.01"/><path d="M8 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M16 18h.01"/></svg>
+                                <span>Unit Terdaftar Saat Ini</span>
+                            </div>
+                            <div id="p-relocate-mhs-unit-asal" style="margin-top: 4px;">-</div>
+                        </div>
+
                     </div>
 
-                    <div style="margin-bottom: 4px;">
-                        <label class="admin-input-label" for="perusahaan-relocate-alasan">Alasan Pemindahan <span style="color: red;">*</span></label>
-                        <textarea id="perusahaan-relocate-alasan" class="admin-input-field" rows="3" placeholder="Contoh: Kuota spesifik penuh, diarahkan ke unit yang relevan." required style="width: 100%; max-width: 100%; box-sizing: border-box; resize: vertical; font-family: inherit; line-height: 1.5; min-height: 80px;"></textarea>
+                    <!-- KOLOM KANAN: Rekomendasi Unit & Pemilihan -->
+                    <div style="display: flex; flex-direction: column; gap: 14px; min-width: 0; box-sizing: border-box;">
+                        
+                        <input type="hidden" id="perusahaan-relocate-id">
+                        <input type="hidden" id="perusahaan-relocate-unit" required>
+
+                        <!-- Banner Algoritma Rekomendasi -->
+                        <div class="unit-algo-banner" style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 10px 14px; font-size: 0.785rem; color: #166534; display: flex; align-items: flex-start; gap: 10px; line-height: 1.45;">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 2px; color: #16a34a;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><circle cx="12" cy="8" r="1.2" fill="currentColor" stroke="none"/></svg>
+                            <div>
+                                <strong>Algoritma Rekomendasi Unit:</strong> Diurutkan secara otomatis dari unit dengan <strong>Prodi & Peminatan Cocok</strong>, kuota mencukupi, dan <strong>jarak garis lurus terdekat</strong> dari titik pin mahasiswa.
+                            </div>
+                        </div>
+
+                        <!-- Unit Search & Cards Scroll -->
+                        <div class="admin-input-group" style="margin-bottom: 0;">
+                            <label class="admin-input-label" style="font-size: 0.825rem; font-weight: 700; margin-bottom: 6px;">Pilih Unit Pelaksana Tujuan <span style="color: red;">*</span></label>
+                            
+                            <div class="unit-picker-box" id="p-relocate-unit-picker-box">
+                                <div class="unit-picker-search-wrap">
+                                    <svg class="unit-picker-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                                    <input type="text" id="p-relocate-search-input" class="unit-picker-search-input" placeholder="Cari unit PLN, kota/kabupaten, program studi, atau peminatan...">
+                                    <button type="button" id="p-relocate-search-clear" class="unit-picker-search-clear">&times;</button>
+                                </div>
+                                
+                                <div class="unit-picker-stats-bar">
+                                    <span id="p-relocate-stats-count">Memuat unit...</span>
+                                    <span class="unit-picker-sort-hint" style="font-size: 0.725rem; color: #1d4ed8; font-weight: 600;">Terdekat dari Pin Mahasiswa</span>
+                                </div>
+                                
+                                <div id="p-relocate-cards-container" class="unit-cards-scroll custom-scrollbar" style="height: 310px; max-height: 310px;">
+                                    <div class="unit-picker-empty">Memuat daftar unit rekomendasi...</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Selected Unit Indicator Box -->
+                        <div id="p-relocate-selected-box" class="hidden" style="background: #f0f9ff; border: 1.5px solid #00A2B9; border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                            <div style="flex: 1; min-width: 0;">
+                                <div style="font-size: 0.685rem; color: #0284c7; font-weight: 700; text-transform: uppercase;">Unit Tujuan Terpilih:</div>
+                                <div id="p-relocate-selected-name" style="font-size: 0.875rem; font-weight: 700; color: #0b192c; margin-top: 1px;">-</div>
+                            </div>
+                            <span id="p-relocate-selected-dist-badge" class="badge-card badge-distance" style="font-size: 0.725rem;">- km</span>
+                        </div>
+
+                        <!-- Alasan Pemindahan -->
+                        <div>
+                            <label class="admin-input-label" for="perusahaan-relocate-alasan" style="font-size: 0.8rem; font-weight: 700; margin-bottom: 4px;">Alasan Pemindahan <span style="color: red;">*</span></label>
+                            <textarea id="perusahaan-relocate-alasan" class="admin-input-field" rows="2" placeholder="Tuliskan alasan pemindahan ke unit tujuan (misal: Kuota unit awal penuh, diarahkan ke unit terdekat yang relevan)." required style="width: 100%; box-sizing: border-box; resize: vertical; min-height: 65px; font-family: inherit; font-size: 0.825rem; line-height: 1.45;"></textarea>
+                        </div>
+
                     </div>
+
                 </div>
 
                 <!-- Sticky Footer -->
-                <div style="display: flex; justify-content: flex-end; gap: 12px; padding: 16px 24px; border-top: 1px solid #e2e8f0; background: #f8fafc; flex-shrink: 0; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px;">
-                    <button type="button" class="btn-portal-outline btn-close-modal" data-target="modal-perusahaan-relocate" style="padding: 10px 20px;">Batal</button>
-                    <button type="submit" id="btn-submit-p-relocate" class="btn-portal-primary" style="background: #d97706; border-color: #d97706; font-weight: 700; padding: 10px 22px;">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/></svg>
-                        <span>Ajukan Pemindahan</span>
-                    </button>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 24px; border-top: 1px solid #e2e8f0; background: #f8fafc; flex-shrink: 0;">
+                    <div>
+                        <button type="button" id="btn-skip-p-relocate" class="btn-portal-outline hidden" style="border-color: #cbd5e1; color: #475569; padding: 8px 16px; font-size: 0.825rem; font-weight: 600;">
+                            <span>Lewati Mahasiswa Ini</span>
+                        </button>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <button type="button" class="btn-portal-outline btn-close-modal" data-target="modal-perusahaan-relocate" style="padding: 9px 20px; font-size: 0.825rem;">Batal</button>
+                        <button type="submit" id="btn-submit-p-relocate" class="btn-portal-primary" style="background: #00A2B9; border-color: #00A2B9; font-weight: 700; padding: 9px 22px; font-size: 0.825rem; display: inline-flex; align-items: center; gap: 6px;">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/></svg>
+                            <span id="btn-submit-p-relocate-text">Ajukan Pemindahan</span>
+                        </button>
+                    </div>
                 </div>
             </form>
         </div>

@@ -19,6 +19,9 @@ let selectedPendaftarIds = new Set();
 let currentTransferSubtab = 'masuk';
 let currentTransferList = [];
 let availableUnitOptions = [];
+let bulkRelocateQueue = [];
+let bulkRelocateIndex = 0;
+let isBulkRelocateActive = false;
 
 document.addEventListener('DOMContentLoaded', async () => {
     // 1. Cek Status Auth
@@ -1503,112 +1506,41 @@ function initPendaftarModule() {
         }
     });
 
-    // Bulk Relocate Trigger
+    // Bulk Relocate Trigger (Sequential Queue 1-per-1)
     document.getElementById('btn-bulk-relocate')?.addEventListener('click', async () => {
-        if (selectedPendaftarIds.size === 0) return;
-        const modal = document.getElementById('modal-perusahaan-bulk-relocate');
-        document.getElementById('bulk-relocate-modal-count').innerText = selectedPendaftarIds.size;
-        document.getElementById('bulk-relocate-alasan').value = '';
-        modal.classList.remove('hidden');
-
-        const selectedMhs = currentMhsList.filter(m => selectedPendaftarIds.has(m.id));
-        const distinctProdis = Array.from(new Set(selectedMhs.map(m => m.jurusan_nama).filter(Boolean)));
-        const summaryEl = document.getElementById('p-bulk-prodi-summary');
-        if (summaryEl) {
-            summaryEl.innerText = distinctProdis.length > 0 ? distinctProdis.join(', ') : 'Semua Jurusan';
-        }
-
-        const units = await fetchAvailableUnitOptions();
-        setupUnitPicker({
-            searchInputId: 'p-bulk-relocate-search-input',
-            clearBtnId: 'p-bulk-relocate-search-clear',
-            statsCountId: 'p-bulk-relocate-stats-count',
-            cardsContainerId: 'p-bulk-relocate-cards-container',
-            hiddenInputId: 'bulk-relocate-unit',
-            units: units,
-            context: {
-                isBulk: true,
-                selectedMhs: selectedMhs,
-                requiredCount: selectedMhs.length
-            }
-        });
-    });
-
-    // Form Bulk Relocate Submit
-    document.getElementById('form-perusahaan-bulk-relocate')?.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const targetUppIdVal = document.getElementById('bulk-relocate-unit').value;
-        if (!targetUppIdVal) {
-            showAdminAlert('Silakan pilih salah satu unit pelaksana tujuan terlebih dahulu.', 'warning');
+        if (selectedPendaftarIds.size === 0) {
+            showAdminAlert('Pilih minimal satu mahasiswa dari tabel untuk dipindahkan.', 'warning');
             return;
         }
 
-        const newUppId = parseInt(targetUppIdVal, 10);
-        const targetUnit = availableUnitOptions.find(u => parseInt(u.upp_id, 10) === newUppId);
-        const selectedCount = selectedPendaftarIds.size;
+        const selectedMhs = currentMhsList.filter(m => selectedPendaftarIds.has(m.id));
+        if (selectedMhs.length === 0) return;
 
-        // Validasi kuota unit tujuan untuk rombongan
-        if (targetUnit && targetUnit.kuota_tersisa !== null && targetUnit.kuota_tersisa < selectedCount) {
-            const proceedQuota = await showAdminConfirm(
-                `Sisa kuota unit tujuan (${targetUnit.nama_unit || targetUnit.nama}) hanya ${targetUnit.kuota_tersisa} slot, sedangkan rombongan berjumlah ${selectedCount} mahasiswa.\n\nApakah Anda yakin ingin tetap mengajukan pemindahan melebihi sisa kapasitas kuota resmi?`,
-                'Peringatan Kapasitas Kuota',
-                'warning',
-                'Ya, Tetap Lanjutkan',
-                'Batal'
-            );
-            if (!proceedQuota) return;
-        }
+        // Inisialisasi antrean berurutan
+        bulkRelocateQueue = selectedMhs;
+        bulkRelocateIndex = 0;
+        isBulkRelocateActive = true;
 
-        // Validasi kesesuaian prodi rombongan
-        if (targetUnit && Array.isArray(targetUnit.prodi_ids) && targetUnit.prodi_ids.length > 0) {
-            const selectedMhs = currentMhsList.filter(m => selectedPendaftarIds.has(m.id));
-            const mismatchedMhs = selectedMhs.filter(m => !targetUnit.prodi_ids.includes(parseInt(m.jurusan_id, 10)));
-            if (mismatchedMhs.length > 0) {
-                const proceedProdi = await showAdminConfirm(
-                    `Terdapat ${mismatchedMhs.length} dari ${selectedCount} mahasiswa yang jurusannya tidak dibuka di unit tujuan (${targetUnit.nama_unit || targetUnit.nama}).\n\nApakah Anda yakin tetap ingin mengajukan pemindahan rombongan?`,
-                    'Peringatan Kesesuaian Prodi Rombongan',
-                    'warning',
-                    'Ya, Tetap Lanjutkan',
-                    'Batal'
-                );
-                if (!proceedProdi) return;
-            }
-        }
+        await openBulkRelocateStep();
+    });
 
-        const alasan = document.getElementById('bulk-relocate-alasan').value.trim();
-        const btn = document.getElementById('btn-submit-p-bulk-relocate');
-        btn.disabled = true;
-        btn.innerText = 'Memproses...';
-        try {
-            const res = await fetch('/api/perusahaan/pendaftar/bulk_update.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
-                body: JSON.stringify({
-                    action: 'dipindahkan',
-                    pendaftaran_ids: Array.from(selectedPendaftarIds),
-                    new_unit_pelaksana_periode_id: newUppId,
-                    alasan: alasan
-                })
-            });
-            const data = await res.json();
-            if (res.ok && data.ok) {
-                showAdminToast(data.message || 'Pemindahan masal berhasil diajukan.', 'success');
-                document.getElementById('modal-perusahaan-bulk-relocate')?.classList.add('hidden');
-                e.target.reset();
-                selectedPendaftarIds.clear();
-                updateBulkToolbar();
-                await loadPendaftarData();
-                await loadDashboardSummary();
-                if (currentTransferSubtab) loadTransferData(currentTransferSubtab);
-            } else {
-                showAdminAlert(data.error || 'Gagal memproses pemindahan masal.', 'error');
-            }
-        } catch (err) {
-            showAdminAlert('Terjadi kesalahan jaringan.', 'error');
-        } finally {
-            btn.disabled = false;
-            btn.innerText = 'Proses Pemindahan Masal';
-        }
+    // Skip Button Handler (Khusus Mode Antrean Massal)
+    document.getElementById('btn-skip-p-relocate')?.addEventListener('click', async () => {
+        if (!isBulkRelocateActive || bulkRelocateIndex >= bulkRelocateQueue.length) return;
+        const currentMhs = bulkRelocateQueue[bulkRelocateIndex];
+        const proceedSkip = await showAdminConfirm(
+            `Apakah Anda yakin ingin melewati mahasiswa ${currentMhs.nama}? Mahasiswa ini tidak akan dipindahkan ke unit lain.`,
+            'Lewati Mahasiswa',
+            'warning',
+            'Ya, Lewati',
+            'Batal'
+        );
+        if (!proceedSkip) return;
+
+        selectedPendaftarIds.delete(currentMhs.id);
+        updateBulkToolbar();
+        bulkRelocateIndex++;
+        await openBulkRelocateStep();
     });
 
     // Form Single Approve Submit
@@ -1675,7 +1607,7 @@ function initPendaftarModule() {
         }
     });
 
-    // Form Single Relocate Submit
+    // Form Relocate Submit (Mendukung Tunggal & Antrean Massal)
     document.getElementById('form-perusahaan-relocate')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const pId = parseInt(document.getElementById('perusahaan-relocate-id').value, 10);
@@ -1718,8 +1650,10 @@ function initPendaftarModule() {
 
         const alasan = document.getElementById('perusahaan-relocate-alasan').value.trim();
         const btn = document.getElementById('btn-submit-p-relocate');
+        const originalBtnText = btn.innerHTML;
         btn.disabled = true;
         btn.innerText = 'Mengajukan...';
+
         try {
             const res = await fetch('/api/perusahaan/pendaftar/update_status.php', {
                 method: 'POST',
@@ -1737,11 +1671,19 @@ function initPendaftarModule() {
             const data = await res.json();
             if (res.ok && data.ok) {
                 showAdminToast(data.message || 'Pemindahan peserta berhasil diajukan ke unit tujuan.', 'success');
-                document.getElementById('modal-perusahaan-relocate')?.classList.add('hidden');
                 e.target.reset();
-                await loadPendaftarData();
-                await loadDashboardSummary();
-                if (currentTransferSubtab) loadTransferData(currentTransferSubtab);
+
+                if (isBulkRelocateActive) {
+                    selectedPendaftarIds.delete(pId);
+                    updateBulkToolbar();
+                    bulkRelocateIndex++;
+                    await openBulkRelocateStep();
+                } else {
+                    document.getElementById('modal-perusahaan-relocate')?.classList.add('hidden');
+                    await loadPendaftarData();
+                    await loadDashboardSummary();
+                    if (currentTransferSubtab) loadTransferData(currentTransferSubtab);
+                }
             } else {
                 showAdminAlert(data.error || 'Gagal mengajukan pemindahan.', 'error');
             }
@@ -1749,8 +1691,33 @@ function initPendaftarModule() {
             showAdminAlert('Terjadi kesalahan jaringan.', 'error');
         } finally {
             btn.disabled = false;
-            btn.innerText = 'Ajukan Pemindahan';
+            btn.innerHTML = originalBtnText;
         }
+    });
+}
+
+async function openBulkRelocateStep() {
+    if (!isBulkRelocateActive || bulkRelocateIndex >= bulkRelocateQueue.length) {
+        document.getElementById('modal-perusahaan-relocate')?.classList.add('hidden');
+        if (isBulkRelocateActive) {
+            showAdminToast(`Seluruh antrean pemindahan (${bulkRelocateQueue.length} mahasiswa) telah selesai diproses.`, 'success');
+        }
+        isBulkRelocateActive = false;
+        bulkRelocateQueue = [];
+        bulkRelocateIndex = 0;
+        selectedPendaftarIds.clear();
+        updateBulkToolbar();
+        await loadPendaftarData();
+        await loadDashboardSummary();
+        if (currentTransferSubtab) loadTransferData(currentTransferSubtab);
+        return;
+    }
+
+    const currentMhs = bulkRelocateQueue[bulkRelocateIndex];
+    await openRelocateModal(currentMhs, {
+        current: bulkRelocateIndex + 1,
+        total: bulkRelocateQueue.length,
+        isLast: (bulkRelocateIndex + 1) === bulkRelocateQueue.length
     });
 }
 
@@ -1808,14 +1775,127 @@ function openRejectModal(mhs) {
     modal.classList.remove('hidden');
 }
 
-async function openRelocateModal(mhs) {
+async function openRelocateModal(mhs, queueInfo = null) {
     const modal = document.getElementById('modal-perusahaan-relocate');
     if (!modal) return;
+
+    isBulkRelocateActive = Boolean(queueInfo);
+
+    // Queue Badge & Stepper info
+    const queueBadge = document.getElementById('p-relocate-queue-badge');
+    const queueStepEl = document.getElementById('p-relocate-queue-step');
+    const queueTotalEl = document.getElementById('p-relocate-queue-total');
+    const skipBtn = document.getElementById('btn-skip-p-relocate');
+    const submitBtnText = document.getElementById('btn-submit-p-relocate-text');
+
+    if (queueInfo) {
+        if (queueBadge) queueBadge.classList.remove('hidden');
+        if (queueStepEl) queueStepEl.innerText = queueInfo.current;
+        if (queueTotalEl) queueTotalEl.innerText = queueInfo.total;
+        if (skipBtn) skipBtn.classList.remove('hidden');
+        if (submitBtnText) {
+            submitBtnText.innerText = queueInfo.isLast ? 'Ajukan & Selesaikan Antrean' : 'Ajukan & Lanjut Mahasiswa Berikutnya';
+        }
+    } else {
+        if (queueBadge) queueBadge.classList.add('hidden');
+        if (skipBtn) skipBtn.classList.add('hidden');
+        if (submitBtnText) submitBtnText.innerText = 'Ajukan Pemindahan';
+    }
+
+    // Set hidden inputs & reset form fields
     document.getElementById('perusahaan-relocate-id').value = mhs.id;
-    document.getElementById('perusahaan-relocate-mhs').innerText = `${mhs.nama} (${mhs.nim}) - ${mhs.jurusan_nama || '-'}`;
+    document.getElementById('perusahaan-relocate-unit').value = '';
     document.getElementById('perusahaan-relocate-alasan').value = '';
+
+    const selBox = document.getElementById('p-relocate-selected-box');
+    if (selBox) selBox.classList.add('hidden');
+
+    // Kolom Kiri: Profil Mahasiswa
+    const mhsNamaEl = document.getElementById('p-relocate-mhs-nama');
+    const mhsNimEl = document.getElementById('p-relocate-mhs-nim');
+    const mhsProgBadge = document.getElementById('p-relocate-mhs-program-badge');
+    const mhsIpkEl = document.getElementById('p-relocate-mhs-ipk');
+    const mhsSksEl = document.getElementById('p-relocate-mhs-sks');
+    const mhsProdiEl = document.getElementById('p-relocate-mhs-prodi');
+    const mhsPemStackEl = document.getElementById('p-relocate-mhs-peminatan-stack');
+    const mhsPinBadge = document.getElementById('p-relocate-mhs-pin-badge');
+    const mhsAlamatEl = document.getElementById('p-relocate-mhs-alamat');
+    const mhsCoordsEl = document.getElementById('p-relocate-mhs-coords');
+    const mhsUnitAsalEl = document.getElementById('p-relocate-mhs-unit-asal');
+
+    if (mhsNamaEl) mhsNamaEl.innerText = mhs.nama || '-';
+    if (mhsNimEl) mhsNimEl.innerText = mhs.nim || '-';
+    if (mhsProgBadge) mhsProgBadge.innerText = mhs.program || '-';
+    if (mhsIpkEl) mhsIpkEl.innerText = mhs.ipk || '-';
+    if (mhsSksEl) mhsSksEl.innerText = mhs.jumlah_sks ? `${mhs.jumlah_sks} SKS` : '-';
+    if (mhsProdiEl) mhsProdiEl.innerText = mhs.jurusan_nama || '-';
+
+    // Peminatan Pilihan Mahasiswa Stack
+    if (mhsPemStackEl) {
+        if (Array.isArray(mhs.peminatan_items) && mhs.peminatan_items.length > 0) {
+            mhsPemStackEl.innerHTML = mhs.peminatan_items.map((pem, idx) => `
+                <div style="display: flex; align-items: center; gap: 8px; font-size: 0.775rem; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px 10px;">
+                    <span style="display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; background: #00A2B9; color: #ffffff; font-size: 0.65rem; font-weight: 700; flex-shrink: 0;">${idx + 1}</span>
+                    <span style="font-weight: 600; color: #1e293b; line-height: 1.3;">${escapeHtml(pem.nama)}</span>
+                </div>
+            `).join('');
+        } else if (Array.isArray(mhs.peminatan) && mhs.peminatan.length > 0) {
+            mhsPemStackEl.innerHTML = mhs.peminatan.map((pem, idx) => `
+                <div style="display: flex; align-items: center; gap: 8px; font-size: 0.775rem; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px 10px;">
+                    <span style="display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; background: #00A2B9; color: #ffffff; font-size: 0.65rem; font-weight: 700; flex-shrink: 0;">${idx + 1}</span>
+                    <span style="font-weight: 600; color: #1e293b; line-height: 1.3;">${escapeHtml(pem)}</span>
+                </div>
+            `).join('');
+        } else {
+            mhsPemStackEl.innerHTML = '<span style="font-size: 0.75rem; color: #94a3b8; font-style: italic;">Tidak ada preferensi peminatan tercatat.</span>';
+        }
+    }
+
+    // Koordinat & Domisili
+    const pLat = parseFloat(mhs.latitude);
+    const pLng = parseFloat(mhs.longitude);
+    const hasPin = !isNaN(pLat) && !isNaN(pLng) && (pLat !== 0 || pLng !== 0);
+
+    if (mhsPinBadge) {
+        if (hasPin) {
+            mhsPinBadge.className = 'badge-card badge-recom-match';
+            mhsPinBadge.innerText = 'GPS Aktif';
+        } else {
+            mhsPinBadge.className = 'badge-card badge-recom-none';
+            mhsPinBadge.innerText = 'Pin Belum Diset';
+        }
+    }
+
+    if (mhsCoordsEl) {
+        if (hasPin) {
+            mhsCoordsEl.innerText = `Lat: ${pLat.toFixed(5)}, Lng: ${pLng.toFixed(5)}`;
+        } else {
+            mhsCoordsEl.innerText = 'Koordinat GPS belum diset oleh mahasiswa';
+        }
+    }
+
+    if (mhsAlamatEl) {
+        mhsAlamatEl.innerText = mhs.alamat_lengkap || mhs.alamat || 'Alamat domisili belum diisi lengkap.';
+    }
+
+    const currentUnitName = mhs.unit_sekarang_nama || mhs.unit_tujuan_nama || 'Unit Kantor Anda';
+    if (mhsUnitAsalEl) {
+        if (mhs.is_dipindahkan && mhs.unit_asal_nama && mhs.unit_asal_nama !== currentUnitName) {
+            mhsUnitAsalEl.innerHTML = `
+                <div style="font-size: 0.825rem; font-weight: 700; color: #0b192c; line-height: 1.3;">${escapeHtml(currentUnitName)}</div>
+                <div style="font-size: 0.72rem; color: #64748b; font-weight: 500; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 0 1 4-4h12"/></svg>
+                    <span>Asal pendaftaran: <strong style="color: #475569;">${escapeHtml(mhs.unit_asal_nama)}</strong></span>
+                </div>
+            `;
+        } else {
+            mhsUnitAsalEl.innerText = currentUnitName;
+        }
+    }
+
     modal.classList.remove('hidden');
 
+    // Kolom Kanan: Setup Unit Picker dengan Algoritma Rekomendasi
     const units = await fetchAvailableUnitOptions();
     setupUnitPicker({
         searchInputId: 'p-relocate-search-input',
@@ -1827,11 +1907,30 @@ async function openRelocateModal(mhs) {
         context: {
             isBulk: false,
             mhs: mhs
+        },
+        onSelect: (selectedUnit, isSelected) => {
+            const boxEl = document.getElementById('p-relocate-selected-box');
+            const nameEl = document.getElementById('p-relocate-selected-name');
+            const distBadge = document.getElementById('p-relocate-selected-dist-badge');
+            if (isSelected && selectedUnit) {
+                if (boxEl) boxEl.classList.remove('hidden');
+                if (nameEl) nameEl.innerText = selectedUnit.nama_unit || selectedUnit.nama;
+                if (distBadge) {
+                    if (selectedUnit.distanceFormatted) {
+                        distBadge.innerText = `${selectedUnit.distanceFormatted} dari pin`;
+                        distBadge.style.display = 'inline-flex';
+                    } else {
+                        distBadge.style.display = 'none';
+                    }
+                }
+            } else {
+                if (boxEl) boxEl.classList.add('hidden');
+            }
         }
     });
 }
 
-async function loadPendaftarData() {
+async function loadPendaftarData(animateBadge = false) {
     const search = document.getElementById('filter-search-mhs')?.value.trim() || '';
     const status = document.getElementById('filter-mhs-status')?.value || '';
     const program = document.getElementById('filter-mhs-program')?.value || '';
@@ -1851,7 +1950,7 @@ async function loadPendaftarData() {
             renderPendaftarTable(currentMhsList);
             renderPendaftarPagination(data.pagination);
             if (data.unverified_count !== undefined) {
-                updatePendaftarBadge(data.unverified_count);
+                updatePendaftarBadge(data.unverified_count, animateBadge);
             }
         }
     } catch (err) {
@@ -2080,19 +2179,16 @@ function showMhsDetailModal(mhs) {
 
     let transferAlertHtml = '';
     if (mhs.is_dipindahkan && mhs.status !== 'ditolak') {
+        const asalDisplay = mhs.unit_asal_nama || 'Unit Lain';
+        const currentDisplay = mhs.unit_sekarang_nama || mhs.unit_tujuan_nama || 'Unit Kantor Anda';
         transferAlertHtml = `
             <div style="background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 10px; padding: 14px 16px; margin-bottom: 20px; text-align: left;">
                 <div style="display: flex; align-items: center; gap: 8px; font-weight: 700; color: #3730a3; font-size: 0.875rem; margin-bottom: 6px;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M4 20L21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/></svg>
                     <span>Pendaftar Hasil Pemindahan Unit</span>
                 </div>
-                <div style="font-size: 0.825rem; color: #4338ca; line-height: 1.4;">
-                    Mahasiswa ini awalnya memilih unit lain, namun oleh Administrator BLKA dialokasikan ke unit Anda:
-                    <div style="margin-top: 6px;">
-                        <span style="background: #e0e7ff; border: 1px solid #a5b4fc; padding: 3px 10px; border-radius: 6px; font-weight: 700; color: #1e1b4b; font-size: 0.8rem;">
-                            ${escapeHtml(mhs.unit_tujuan_nama || 'Unit Kantor Anda')}
-                        </span>
-                    </div>
+                <div style="font-size: 0.825rem; color: #4338ca; line-height: 1.45;">
+                    Mahasiswa ini awalnya mendaftar di <strong>${escapeHtml(asalDisplay)}</strong>, lalu dialokasikan ke unit Anda (<strong>${escapeHtml(currentDisplay)}</strong>):
                     ${mhs.catatan_admin ? `<div style="margin-top: 8px; font-size: 0.8rem; color: #4f46e5;"><strong>Catatan Administrator:</strong> ${escapeHtml(mhs.catatan_admin)}</div>` : ''}
                 </div>
             </div>
@@ -2443,7 +2539,7 @@ function isDocUrl(path) {
 // ==========================================
 // BADGE NOTIFIKASI HELPER
 // ==========================================
-function updatePendaftarBadge(count) {
+function updatePendaftarBadge(count, animate = false) {
     const badgeDesktop = document.getElementById('badge-pendaftar-pending');
     const badgeMobile = document.getElementById('badge-pendaftar-pending-mobile');
     const statSub = document.getElementById('stat-pendaftar-pending-sub');
@@ -2451,12 +2547,19 @@ function updatePendaftarBadge(count) {
     const c = parseInt(count, 10) || 0;
     [badgeDesktop, badgeMobile].forEach(badge => {
         if (!badge) return;
+        const prevCount = parseInt(badge.innerText, 10) || 0;
         if (c > 0) {
             badge.innerText = c;
             badge.classList.remove('hidden');
+            if (animate || c > prevCount) {
+                badge.classList.remove('badge-pop');
+                void badge.offsetWidth;
+                badge.classList.add('badge-pop');
+            }
         } else {
             badge.innerText = '0';
             badge.classList.add('hidden');
+            badge.classList.remove('badge-pop');
         }
     });
 
@@ -2556,12 +2659,18 @@ function initTransferModule() {
                 });
                 const data = await res.json();
                 if (res.ok && data.ok) {
-                    showAdminToast(data.message || 'Respon pemindahan berhasil diproses.', 'success');
+                    const isAccept = (action === 'terima' || action === 'approve');
+                    showAdminToast(
+                        isAccept 
+                            ? 'Pemindahan disetujui. Mahasiswa resmi masuk ke antrean Verifikasi Peserta (+1).' 
+                            : (data.message || 'Respon pemindahan berhasil diproses.'),
+                        'success'
+                    );
                     document.getElementById('modal-perusahaan-transfer-response')?.classList.add('hidden');
                     formResp.reset();
                     await loadTransferData(currentTransferSubtab);
                     await loadDashboardSummary();
-                    await loadPendaftarData();
+                    await loadPendaftarData(true);
                 } else {
                     showAdminAlert(data.error || 'Gagal memproses approval pemindahan.', 'error');
                 }
@@ -2744,6 +2853,13 @@ function initModalCloseButtons() {
             const targetId = btn.getAttribute('data-target');
             if (targetId) {
                 document.getElementById(targetId)?.classList.add('hidden');
+                if (targetId === 'modal-perusahaan-relocate' && isBulkRelocateActive) {
+                    isBulkRelocateActive = false;
+                    bulkRelocateQueue = [];
+                    bulkRelocateIndex = 0;
+                    showAdminToast('Antrean pemindahan massal dihentikan.', 'info');
+                    loadPendaftarData();
+                }
             }
         });
     });
@@ -3163,11 +3279,12 @@ function initRosterModule() {
             btnExportRoster.style.opacity = '0.75';
             btnExportRoster.innerHTML = `
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation: spin 1s linear infinite;"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-                <span>Menyiapkan Arsip ZIP...</span>
+                <span>Mengunduh Rekap Excel (.xlsx)...</span>
             `;
 
             const params = new URLSearchParams();
             params.set('status', 'diterima');
+            params.set('format', 'excel');
             if (currentPeriodeId > 0) {
                 params.set('periode_id', currentPeriodeId);
             }
@@ -3177,7 +3294,7 @@ function initRosterModule() {
                 btnExportRoster.disabled = false;
                 btnExportRoster.style.opacity = '1';
                 btnExportRoster.innerHTML = originalHtml;
-            }, 3500);
+            }, 3000);
         });
     }
 }

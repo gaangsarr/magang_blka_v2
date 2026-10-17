@@ -92,7 +92,13 @@ try {
 
     $whereClauses = [
         'p.periode_id = :pid',
-        'upp.entitas_id = :eid'
+        'upp.entitas_id = :eid',
+        "p.id NOT IN (
+            SELECT pem.pendaftaran_id 
+            FROM pemindahan_peserta pem 
+            WHERE pem.unit_tujuan_id = p.unit_pelaksana_periode_id 
+              AND pem.status_approval = 'menunggu_approval'
+        )"
     ];
     $params = [
         ':pid' => $periodeId,
@@ -184,10 +190,11 @@ try {
     // Ambil peminatan untuk pendaftar
     $pendaftaranIds = array_column($rows, 'pendaftaran_id');
     $peminatanMap = [];
+    $peminatanItemsMap = [];
     if (!empty($pendaftaranIds)) {
         $inPlaceholders = implode(',', array_fill(0, count($pendaftaranIds), '?'));
         $stmtPem = $pdo->prepare("
-            SELECT pp.pendaftaran_id, pem.nama AS nama_peminatan
+            SELECT pp.pendaftaran_id, pp.peminatan_id, pem.nama AS nama_peminatan
             FROM pendaftaran_peminatan pp
             JOIN peminatan pem ON pp.peminatan_id = pem.id
             WHERE pp.pendaftaran_id IN ({$inPlaceholders})
@@ -198,8 +205,13 @@ try {
             $pId = (int)$pemRow['pendaftaran_id'];
             if (!isset($peminatanMap[$pId])) {
                 $peminatanMap[$pId] = [];
+                $peminatanItemsMap[$pId] = [];
             }
             $peminatanMap[$pId][] = $pemRow['nama_peminatan'];
+            $peminatanItemsMap[$pId][] = [
+                'id'   => (int)$pemRow['peminatan_id'],
+                'nama' => $pemRow['nama_peminatan'],
+            ];
         }
     }
 
@@ -239,9 +251,21 @@ try {
             'is_dipindahkan'   => $isMoved,
             'unit_asal_nama'   => $r['unit_asal_nama'] ?? null,
             'unit_tujuan_nama' => $r['unit_tujuan_nama'] ?? null,
+            'unit_sekarang_nama' => $r['unit_tujuan_nama'] ?? null,
             'catatan_admin'    => $r['catatan_admin'] ?? null,
             'alamat_lengkap'   => $alamatLengkap ?: '-',
+            'alamat'           => $r['alamat'] ?? '',
+            'rt'               => $r['rt'] ?? '',
+            'rw'               => $r['rw'] ?? '',
+            'kelurahan'        => $r['kelurahan'] ?? '',
+            'kecamatan'        => $r['kecamatan'] ?? '',
+            'kota_kabupaten'   => $r['kota_kabupaten'] ?? '',
+            'provinsi'         => $r['provinsi'] ?? '',
+            'latitude'         => $r['latitude'] !== null ? (float)$r['latitude'] : null,
+            'longitude'        => $r['longitude'] !== null ? (float)$r['longitude'] : null,
             'peminatan'        => $peminatanMap[$pId] ?? [],
+            'peminatan_items'  => $peminatanItemsMap[$pId] ?? [],
+            'peminatan_ids'    => array_column($peminatanItemsMap[$pId] ?? [], 'id'),
             'submitted_at'     => $r['submitted_at'],
             'transkrip_path'   => $r['transkrip_path'] ?? null,
             'cv_path'          => $r['cv_path'] ?? null,
@@ -250,14 +274,20 @@ try {
         ];
     }
 
-    // Hitung jumlah pendaftar belum dicek/ditetapkan (status bukan diterima, ditolak, dipindahkan, dibatalkan)
+    // Hitung jumlah pendaftar belum dicek/ditetapkan (status bukan diterima, ditolak, dibatalkan dan bukan transfer yang masih menunggu approval)
     $stmtUnverified = $pdo->prepare("
         SELECT COUNT(*)
         FROM pendaftaran p
         JOIN unit_pelaksana_periode upp ON p.unit_pelaksana_periode_id = upp.id
         WHERE upp.entitas_id = :entitas_id 
           AND upp.periode_id = :periode_id
-          AND p.status NOT IN ('diterima', 'ditolak', 'dipindahkan', 'dibatalkan')
+          AND p.status NOT IN ('diterima', 'ditolak', 'dibatalkan')
+          AND p.id NOT IN (
+              SELECT pem.pendaftaran_id 
+              FROM pemindahan_peserta pem 
+              WHERE pem.unit_tujuan_id = p.unit_pelaksana_periode_id 
+                AND pem.status_approval = 'menunggu_approval'
+          )
     ");
     $stmtUnverified->execute([':entitas_id' => $entitasId, ':periode_id' => $periodeId]);
     $unverifiedCount = (int)$stmtUnverified->fetchColumn();

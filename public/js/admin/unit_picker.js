@@ -137,8 +137,8 @@ function ensureUnitPickerStyles() {
 
         /* Container Kartu dengan Scrollbar Jelas & Selalu Tampil */
         .unit-cards-scroll {
-            height: 250px !important;
-            max-height: 250px !important;
+            height: 340px !important;
+            max-height: 340px !important;
             overflow-y: scroll !important;
             overflow-x: hidden !important;
             display: flex !important;
@@ -248,6 +248,12 @@ function ensureUnitPickerStyles() {
             border: 1px solid #a7f3d0 !important;
         }
 
+        .badge-recom-second {
+            background: #eff6ff !important;
+            color: #1e40af !important;
+            border: 1px solid #bfdbfe !important;
+        }
+
         .badge-recom-partial {
             background: #fefce8 !important;
             color: #a16207 !important;
@@ -320,6 +326,37 @@ function ensureUnitPickerStyles() {
             border: 1px solid #bfdbfe !important;
         }
 
+        /* Peminatan Chips List */
+        .unit-card-peminatan-list {
+            display: flex !important;
+            align-items: center !important;
+            flex-wrap: wrap !important;
+            gap: 4px !important;
+            margin-top: 2px !important;
+        }
+
+        .peminatan-chip {
+            font-size: 0.685rem !important;
+            font-weight: 500 !important;
+            padding: 2px 7px !important;
+            border-radius: 6px !important;
+            background: #f8fafc !important;
+            color: #475569 !important;
+            border: 1px solid #e2e8f0 !important;
+            white-space: nowrap !important;
+            line-height: 1.25 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 3px !important;
+        }
+
+        .peminatan-chip.matched {
+            background: #f0fdf4 !important;
+            color: #166534 !important;
+            font-weight: 700 !important;
+            border: 1px solid #bbf7d0 !important;
+        }
+
         .unit-picker-empty {
             text-align: center !important;
             padding: 36px 16px !important;
@@ -378,6 +415,8 @@ export function setupUnitPicker({
 
     let targetJurusanId = 0;
     let targetJurusanNama = '';
+    let targetPeminatanIds = [];
+    let targetPeminatanItems = [];
     let bulkJurusanIds = [];
 
     // Deteksi koordinat mahasiswa (titik pin peta)
@@ -388,6 +427,13 @@ export function setupUnitPicker({
     if (!isBulk && mhs) {
         targetJurusanId = parseInt(mhs.jurusan_id, 10) || 0;
         targetJurusanNama = mhs.jurusan_nama || '';
+
+        if (Array.isArray(mhs.peminatan_items) && mhs.peminatan_items.length > 0) {
+            targetPeminatanItems = mhs.peminatan_items;
+            targetPeminatanIds = targetPeminatanItems.map(p => parseInt(p.id, 10)).filter(id => !isNaN(id) && id > 0);
+        } else if (Array.isArray(mhs.peminatan_ids) && mhs.peminatan_ids.length > 0) {
+            targetPeminatanIds = mhs.peminatan_ids.map(Number).filter(id => !isNaN(id) && id > 0);
+        }
 
         if (mhs.latitude && mhs.longitude) {
             const pLat = parseFloat(mhs.latitude);
@@ -425,7 +471,7 @@ export function setupUnitPicker({
         }
         if (hasStudentCoords) {
             sortHintEl.style.color = '#1d4ed8';
-            sortHintEl.innerHTML = `Terdekat dari Lokasi ${isBulk ? 'Rombongan' : 'Mahasiswa'}`;
+            sortHintEl.innerHTML = `Terdekat dari Pin Lokasi ${isBulk ? 'Rombongan' : 'Mahasiswa'}`;
         } else {
             sortHintEl.style.color = '#0284c7';
             sortHintEl.innerHTML = `Rekomendasi Terbaik di Atas`;
@@ -450,6 +496,10 @@ export function setupUnitPicker({
         const prodiIds = Array.isArray(u.prodi_ids) ? u.prodi_ids.map(Number) : [];
         const hasProdiRestriction = prodiIds.length > 0;
 
+        const peminatanList = Array.isArray(u.peminatan_list) ? u.peminatan_list : [];
+        const peminatanIds = Array.isArray(u.peminatan_ids) ? u.peminatan_ids.map(Number) : [];
+        const hasPeminatanRestriction = peminatanIds.length > 0;
+
         // Hitung jarak Haversine dari lokasi mahasiswa ke kantor unit
         let distanceKm = null;
         let distanceFormatted = '';
@@ -471,13 +521,41 @@ export function setupUnitPicker({
         }
 
         let rank = 5;
-        let badgeType = 'none'; // 'match', 'partial', 'none'
+        let badgeType = 'none'; // 'match', 'second', 'partial', 'none'
         let badgeText = '';
         let effectiveSisa = sisaQuota !== null ? sisaQuota : 9999;
+        let matchedPeminatanIndices = [];
+        let matchedPeminatanMap = {};
+        let bestMatchedChoice = 99;
 
         if (!isBulk) {
             // Mode Individual Relocate
             const prodiMatch = !hasProdiRestriction || (targetJurusanId > 0 && prodiIds.includes(targetJurusanId));
+
+            // Cek kesesuaian peminatan
+            if (targetPeminatanItems.length > 0 && peminatanIds.length > 0) {
+                targetPeminatanItems.forEach((pItem, idx) => {
+                    const pId = parseInt(pItem.id, 10);
+                    if (peminatanIds.includes(pId)) {
+                        const choiceNum = idx + 1;
+                        matchedPeminatanIndices.push(choiceNum);
+                        matchedPeminatanMap[pId] = choiceNum;
+                    }
+                });
+            } else if (targetPeminatanIds.length > 0 && peminatanIds.length > 0) {
+                targetPeminatanIds.forEach((pId, idx) => {
+                    if (peminatanIds.includes(pId)) {
+                        const choiceNum = idx + 1;
+                        matchedPeminatanIndices.push(choiceNum);
+                        matchedPeminatanMap[pId] = choiceNum;
+                    }
+                });
+            }
+
+            const peminatanMatch = !hasPeminatanRestriction || matchedPeminatanIndices.length > 0;
+            if (matchedPeminatanIndices.length > 0) {
+                bestMatchedChoice = Math.min(...matchedPeminatanIndices);
+            }
 
             if (u.tipe_kuota === 'breakdown' && targetJurusanId > 0) {
                 const pInfo = prodiList.find(p => parseInt(p.jurusan_id, 10) === targetJurusanId);
@@ -488,20 +566,28 @@ export function setupUnitPicker({
 
             const hasQuota = effectiveSisa > 0;
 
-            if (hasQuota && prodiMatch) {
+            if (hasQuota && prodiMatch && peminatanMatch) {
                 rank = 1;
                 badgeType = 'match';
-                badgeText = hasProdiRestriction ? 'Rekomendasi Utama (Prodi Cocok)' : 'Rekomendasi (Kuota Tersedia)';
-            } else if (hasQuota && !prodiMatch) {
+                if (matchedPeminatanIndices.length > 0) {
+                    badgeText = `Rekomendasi Utama (Cocok Pilihan ${matchedPeminatanIndices.join(' & ')})`;
+                } else {
+                    badgeText = 'Rekomendasi Utama (Prodi & Kuota Cocok)';
+                }
+            } else if (hasQuota && prodiMatch && !peminatanMatch) {
                 rank = 2;
+                badgeType = 'second';
+                badgeText = 'Rekomendasi Kedua (Prodi Cocok)';
+            } else if (hasQuota && !prodiMatch) {
+                rank = 3;
                 badgeType = 'partial';
                 badgeText = 'Kuota Tersedia • Prodi Berbeda';
             } else if (!hasQuota && prodiMatch) {
-                rank = 3;
+                rank = 4;
                 badgeType = 'none';
                 badgeText = 'Kuota Penuh • Prodi Cocok';
             } else {
-                rank = 4;
+                rank = 5;
                 badgeType = 'none';
                 badgeText = 'Kuota Penuh & Berbeda Prodi';
             }
@@ -543,7 +629,8 @@ export function setupUnitPicker({
         }
 
         const prodiNames = prodiList.map(p => p.nama_jurusan || '').join(' ').toLowerCase();
-        const searchCorpus = `${name} ${singkatan} ${parentName} ${alamat} ${prodiNames}`.toLowerCase();
+        const peminatanNames = peminatanList.map(p => p.nama_peminatan || '').join(' ').toLowerCase();
+        const searchCorpus = `${name} ${singkatan} ${parentName} ${alamat} ${prodiNames} ${peminatanNames}`.toLowerCase();
 
         scoredUnits.push({
             raw: u,
@@ -560,6 +647,12 @@ export function setupUnitPicker({
             prodiList,
             prodiIds,
             hasProdiRestriction,
+            peminatanList,
+            peminatanIds,
+            hasPeminatanRestriction,
+            matchedPeminatanIndices,
+            matchedPeminatanMap,
+            bestMatchedChoice,
             rank,
             badgeType,
             badgeText,
@@ -568,14 +661,20 @@ export function setupUnitPicker({
     }
 
     // Urutkan:
-    // 1. Rank (Kesesuaian Prodi & Ketersediaan Kuota)
-    // 2. Jarak terdekat dari lokasi/pin mahasiswa
-    // 3. Sisa kuota terbanyak
-    // 4. Abjad nama unit
+    // 1. Rank (Kesesuaian Prodi & Peminatan & Kuota)
+    // 2. Prioritas Pilihan Peminatan (Pilihan 1 > 2 > 3)
+    // 3. Jarak terdekat (Haversine KM dari pin mahasiswa)
+    // 4. Sisa kuota terbanyak
+    // 5. Abjad nama unit
     scoredUnits.sort((a, b) => {
         if (a.rank !== b.rank) return a.rank - b.rank;
 
-        // Jika pada kelompok rank yang sama, prioritaskan unit terdekat
+        // Jika pada kelompok Rank 1, prioritaskan yang cocok dengan pilihan ke-1 dibanding ke-2/3
+        if (a.rank === 1 && a.bestMatchedChoice !== b.bestMatchedChoice) {
+            return a.bestMatchedChoice - b.bestMatchedChoice;
+        }
+
+        // Pada kelompok rank yang sama, prioritaskan unit terdekat
         if (a.distanceKm !== null && b.distanceKm !== null) {
             if (Math.abs(a.distanceKm - b.distanceKm) > 0.05) {
                 return a.distanceKm - b.distanceKm;
@@ -645,10 +744,12 @@ export function setupUnitPicker({
                 subTitle = escapeHtml(u.alamat);
             }
 
-            // Badge rekomendasi
+            // Badge rekomendasi (No emojis, clean SVG icons)
             let badgeHtml = '';
             if (u.badgeType === 'match') {
                 badgeHtml = `<span class="badge-card badge-recom-match"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> ${escapeHtml(u.badgeText)}</span>`;
+            } else if (u.badgeType === 'second') {
+                badgeHtml = `<span class="badge-card badge-recom-second"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/></svg> ${escapeHtml(u.badgeText)}</span>`;
             } else if (u.badgeType === 'partial') {
                 badgeHtml = `<span class="badge-card badge-recom-partial">${escapeHtml(u.badgeText)}</span>`;
             } else {
@@ -689,6 +790,27 @@ export function setupUnitPicker({
                 prodiSectionHtml = `<div class="unit-card-prodi-list"><span class="prodi-chip" style="background:#f1f5f9; color:#64748b;">Terbuka untuk Semua Jurusan</span></div>`;
             }
 
+            // Peminatan chips
+            let peminatanSectionHtml = '';
+            if (u.peminatanList && u.peminatanList.length > 0) {
+                const pemChips = [];
+                const maxPemChips = 3;
+                for (let j = 0; j < Math.min(u.peminatanList.length, maxPemChips); j++) {
+                    const pItem = u.peminatanList[j];
+                    const pId = parseInt(pItem.peminatan_id, 10);
+                    const matchedIdx = u.matchedPeminatanMap && u.matchedPeminatanMap[pId];
+                    if (matchedIdx) {
+                        pemChips.push(`<span class="peminatan-chip matched" title="Cocok dengan pilihan ${matchedIdx} mahasiswa"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Pilihan ${matchedIdx}: ${escapeHtml(pItem.nama_peminatan)}</span>`);
+                    } else {
+                        pemChips.push(`<span class="peminatan-chip">${escapeHtml(pItem.nama_peminatan)}</span>`);
+                    }
+                }
+                if (u.peminatanList.length > maxPemChips) {
+                    pemChips.push(`<span class="peminatan-chip" style="color:#64748b;">+${u.peminatanList.length - maxPemChips} bidang</span>`);
+                }
+                peminatanSectionHtml = `<div class="unit-card-peminatan-list">${pemChips.join('')}</div>`;
+            }
+
             cardHtmls.push(`
                 <div class="unit-card-item ${isSelected ? 'selected' : ''}" data-upp-id="${u.upp_id}">
                     <div class="unit-card-header">
@@ -710,6 +832,7 @@ export function setupUnitPicker({
                         </span>
                     </div>
                     ${prodiSectionHtml}
+                    ${peminatanSectionHtml}
                 </div>
             `);
         }

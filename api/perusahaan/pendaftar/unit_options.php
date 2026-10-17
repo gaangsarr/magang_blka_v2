@@ -57,8 +57,11 @@ try {
     // Ambil prodi yang dibuka untuk masing-masing unit
     $uppIds = array_column($units, 'upp_id');
     $prodiMap = [];
+    $peminatanMap = [];
     if (!empty($uppIds)) {
         $inClause = implode(',', array_fill(0, count($uppIds), '?'));
+        
+        // 1. Prodi list
         $stmtUpj = $pdo->prepare("
             SELECT upj.unit_pelaksana_periode_id, upj.jurusan_id, upj.kuota_total, upj.kuota_tersisa, j.nama_jurusan
             FROM unit_periode_jurusan upj
@@ -78,12 +81,34 @@ try {
                 'kuota_tersisa' => $row['kuota_tersisa'] !== null ? (int)$row['kuota_tersisa'] : null,
             ];
         }
+
+        // 2. Peminatan list
+        $stmtUppem = $pdo->prepare("
+            SELECT uppem.unit_pelaksana_periode_id, uppem.peminatan_id, pem.nama AS nama_peminatan
+            FROM unit_periode_peminatan uppem
+            JOIN peminatan pem ON uppem.peminatan_id = pem.id
+            WHERE uppem.unit_pelaksana_periode_id IN ({$inClause})
+            ORDER BY pem.nama ASC
+        ");
+        $stmtUppem->execute($uppIds);
+        while ($pRow = $stmtUppem->fetch(PDO::FETCH_ASSOC)) {
+            $uId = (int)$pRow['unit_pelaksana_periode_id'];
+            if (!isset($peminatanMap[$uId])) {
+                $peminatanMap[$uId] = [];
+            }
+            $peminatanMap[$uId][] = [
+                'peminatan_id'   => (int)$pRow['peminatan_id'],
+                'nama_peminatan' => $pRow['nama_peminatan'],
+            ];
+        }
     }
 
-    $result = array_map(function($u) use ($prodiMap, $entitasId) {
+    $result = array_map(function($u) use ($prodiMap, $peminatanMap, $entitasId) {
         $uId = (int)$u['upp_id'];
         $u['prodi_list'] = $prodiMap[$uId] ?? [];
         $u['prodi_ids'] = array_column($u['prodi_list'], 'jurusan_id');
+        $u['peminatan_list'] = $peminatanMap[$uId] ?? [];
+        $u['peminatan_ids'] = array_column($u['peminatan_list'], 'peminatan_id');
         $u['is_self'] = ((int)$u['entitas_id'] === $entitasId);
         return $u;
     }, $units);
