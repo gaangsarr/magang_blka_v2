@@ -39,7 +39,7 @@ if (Auth::isLoggedInAdmin()) {
         'role'          => 'admin',
         'admin_role'    => $adminRole,
         'admin_nama'    => $admin['nama'] ?? ($_SESSION['admin_nama'] ?? 'Admin'),
-        'redirect_to'   => $adminRole === 'admin_perusahaan' ? '/perusahaan/index.html' : '/admin/index.html',
+        'redirect_to'   => $adminRole === 'admin_perusahaan' ? '/perusahaan/index.html' : ($adminRole === 'admin_prodi' ? '/admin/prodi/index.html' : '/admin/index.html'),
         'csrf_token'    => $csrfToken,
     ]);
     exit;
@@ -80,7 +80,7 @@ if (Auth::isLoggedInMahasiswa()) {
             'role'          => 'admin',
             'admin_role'    => $adminFound['role'] ?? 'admin_blka',
             'admin_nama'    => $adminFound['nama'] ?: ($mahasiswa['nama'] ?? 'Admin'),
-            'redirect_to'   => $adminFound['role'] === 'admin_perusahaan' ? '/perusahaan/index.html' : '/admin/index.html',
+            'redirect_to'   => $adminFound['role'] === 'admin_perusahaan' ? '/perusahaan/index.html' : ($adminFound['role'] === 'admin_prodi' ? '/admin/prodi/index.html' : '/admin/index.html'),
             'csrf_token'    => $csrfToken,
         ]);
         exit;

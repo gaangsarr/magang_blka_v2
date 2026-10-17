@@ -7,6 +7,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             const role = statusData.admin?.role;
             if (role === 'admin_perusahaan') {
                 window.location.href = '/perusahaan/index.html';
+            } else if (role === 'admin_prodi') {
+                window.location.href = '/admin/prodi/index.html';
             } else {
                 window.location.href = '/admin/index.html';
             }

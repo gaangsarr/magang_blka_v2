@@ -3,6 +3,7 @@ import { showAdminAlert, showAdminConfirm } from './common.js';
 let csrfToken = null;
 let rawPerusahaanData = [];
 let rawKampusData = [];
+let rawProdiData = [];
 let currentAdmin = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -20,11 +21,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     initTabs();
     initPerusahaanModule();
     initKampusModule();
+    initProdiModule();
     initModalCred();
     initModalResetPic();
 
     loadPerusahaanData();
     loadKampusData();
+    loadProdiData();
 });
 
 // ==========================================
@@ -932,6 +935,302 @@ function openResetPicModal(entitasId) {
 
     const modal = document.getElementById('modal-reset-pic');
     if (modal) modal.classList.remove('hidden');
+}
+
+// ==========================================
+// MODUL ADMIN PROGRAM STUDI (PRODI)
+// ==========================================
+function initProdiModule() {
+    const searchInput = document.getElementById('filter-search-prodi');
+    const statusSelect = document.getElementById('filter-status-prodi');
+
+    if (searchInput) {
+        searchInput.addEventListener('input', () => filterAndRenderProdi());
+    }
+    if (statusSelect) {
+        statusSelect.addEventListener('change', () => filterAndRenderProdi());
+    }
+
+    const btnGenAll = document.getElementById('btn-generate-all-prodi');
+    if (btnGenAll) {
+        btnGenAll.addEventListener('click', () => handleGenerateAllProdi());
+    }
+}
+
+async function loadProdiData() {
+    try {
+        const res = await fetch('/api/admin/kelola/prodi_accounts.php?action=list');
+        const data = await res.json();
+        if (!data.ok) return;
+
+        rawProdiData = data.data || [];
+
+        // Update stats
+        const countBadge = document.getElementById('count-prodi');
+        if (countBadge) countBadge.innerText = rawProdiData.length;
+
+        const statTotal = document.getElementById('stat-prodi-total');
+        if (statTotal) statTotal.innerText = data.stats.total_prodi;
+
+        const statHasAcc = document.getElementById('stat-prodi-has-account');
+        if (statHasAcc) statHasAcc.innerText = data.stats.total_has_account;
+
+        const statNoAcc = document.getElementById('stat-prodi-no-account');
+        if (statNoAcc) statNoAcc.innerText = data.stats.total_no_account;
+
+        const statAktif = document.getElementById('stat-prodi-aktif');
+        if (statAktif) statAktif.innerText = data.stats.total_aktif;
+
+        filterAndRenderProdi();
+    } catch (e) {
+        console.error('Gagal memuat data prodi:', e);
+    }
+}
+
+function filterAndRenderProdi() {
+    const search = (document.getElementById('filter-search-prodi')?.value || '').toLowerCase().trim();
+    const status = document.getElementById('filter-status-prodi')?.value || '';
+
+    const filtered = rawProdiData.filter(item => {
+        const nama = (item.nama_jurusan || '').toLowerCase();
+        const jenjang = (item.jenjang || '').toLowerCase();
+        const kode = (item.kode || '').toLowerCase();
+        const username = (item.username || '').toLowerCase();
+
+        const matchSearch = !search || nama.includes(search) || jenjang.includes(search) || kode.includes(search) || username.includes(search);
+
+        let matchStatus = true;
+        if (status === 'has_account') matchStatus = item.has_account;
+        else if (status === 'no_account') matchStatus = !item.has_account;
+        else if (status === 'aktif') matchStatus = item.has_account && item.admin_aktif;
+        else if (status === 'nonaktif') matchStatus = item.has_account && !item.admin_aktif;
+
+        return matchSearch && matchStatus;
+    });
+
+    const tbody = document.getElementById('table-prodi');
+    if (!tbody) return;
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" style="text-align: center; color: #64748b; padding: 32px 16px;">
+                    Tidak ada Program Studi yang sesuai dengan filter pencarian.
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = filtered.map((item, idx) => {
+        const hasAcc = item.has_account;
+        const statusBadge = !hasAcc 
+            ? `<span style="background: #f1f5f9; color: #64748b; font-size: 0.75rem; font-weight: 700; padding: 3px 8px; border-radius: 6px; display: inline-block;">Belum Ada Akun</span>`
+            : (item.admin_aktif 
+                ? `<span style="background: #dcfce7; color: #15803d; font-size: 0.75rem; font-weight: 700; padding: 3px 8px; border-radius: 6px; display: inline-block;">Aktif</span>`
+                : `<span style="background: #fee2e2; color: #b91c1c; font-size: 0.75rem; font-weight: 700; padding: 3px 8px; border-radius: 6px; display: inline-block;">Nonaktif</span>`);
+
+        const usernameDisplay = hasAcc
+            ? `<span style="font-family: monospace; font-weight: 700; color: #0f172a; background: #f8fafc; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 4px;">${escapeHtml(item.username)}</span>`
+            : `<span style="font-family: monospace; font-size: 0.8rem; color: #94a3b8; font-style: italic;">${escapeHtml(item.default_username)}</span>`;
+
+        let actionBtns = '';
+        if (hasAcc) {
+            actionBtns = `
+                <div style="display: flex; gap: 6px; justify-content: center; align-items: center;">
+                    <button type="button" class="btn-action-sm btn-action-outline btn-copy-prodi" data-id="${item.jurusan_id}" title="Salin Kredensial Login">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                        <span>Salin</span>
+                    </button>
+                    <button type="button" class="btn-action-sm btn-action-warning btn-reset-prodi" data-id="${item.jurusan_id}" data-admin="${item.admin_id}" data-nama="${escapeHtml(item.jenjang + ' ' + item.nama_jurusan)}" data-pass="${escapeHtml(item.default_password)}" title="Reset Password Akun">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+                        <span>Reset</span>
+                    </button>
+                    <button type="button" class="btn-action-sm ${item.admin_aktif ? 'btn-action-danger' : 'btn-action-primary'} btn-toggle-prodi" data-admin="${item.admin_id}" data-aktif="${item.admin_aktif ? 1 : 0}" title="${item.admin_aktif ? 'Nonaktifkan Akun' : 'Aktifkan Akun'}">
+                        ${item.admin_aktif ? 'Nonaktifkan' : 'Aktifkan'}
+                    </button>
+                </div>
+            `;
+        } else {
+            actionBtns = `
+                <span style="font-size: 0.775rem; color: #94a3b8; font-style: italic;">Belum terbit</span>
+            `;
+        }
+
+        return `
+            <tr>
+                <td style="text-align: center; font-size: 0.825rem; color: #64748b;">${idx + 1}</td>
+                <td style="text-align: center;"><span style="font-weight: 700; color: #004687; font-size: 0.8rem; background: #e0f2fe; padding: 2px 8px; border-radius: 4px;">${escapeHtml(item.jenjang)}</span></td>
+                <td style="text-align: center; font-family: monospace; font-weight: 700; color: #475569;">${escapeHtml(item.kode)}</td>
+                <td>
+                    <div style="font-weight: 700; color: #0f172a; font-size: 0.9rem;">${escapeHtml(item.nama_jurusan)}</div>
+                    <div style="font-size: 0.75rem; color: #64748b;">Password default: <span style="font-family: monospace; font-weight: 700; color: #0284c7;">${escapeHtml(item.default_password)}</span></div>
+                </td>
+                <td>${usernameDisplay}</td>
+                <td style="text-align: center;">
+                    <div style="font-weight: 700; color: #004687; font-size: 0.9rem;">${item.total_pendaftar}</div>
+                    <div style="font-size: 0.725rem; color: #166534;">${item.total_diterima} diterima</div>
+                </td>
+                <td style="text-align: center;">${statusBadge}</td>
+                <td>${actionBtns}</td>
+            </tr>
+        `;
+    }).join('');
+
+    // Attach listeners
+    tbody.querySelectorAll('.btn-copy-prodi').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const jId = parseInt(btn.getAttribute('data-id'), 10);
+            const item = rawProdiData.find(p => p.jurusan_id === jId);
+            if (!item) return;
+
+            const text = `Prodi: ${item.jenjang} ${item.nama_jurusan}\nUsername: ${item.username}\nPassword Default: ${item.default_password}\nPortal Login: ${window.location.origin}/admin/login.html`;
+            navigator.clipboard.writeText(text).then(() => {
+                showAdminAlert('Kredensial login akun prodi berhasil disalin ke clipboard!', 'success');
+            }).catch(() => {
+                showAdminAlert(text, 'info', 'Salin Kredensial Prodi');
+            });
+        });
+    });
+
+    tbody.querySelectorAll('.btn-reset-prodi').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const jId = parseInt(btn.getAttribute('data-id'), 10);
+            const adminId = parseInt(btn.getAttribute('data-admin'), 10);
+            const nama = btn.getAttribute('data-nama');
+            const defaultPass = btn.getAttribute('data-pass');
+            handleResetProdiPassword(jId, adminId, nama, defaultPass);
+        });
+    });
+
+    tbody.querySelectorAll('.btn-toggle-prodi').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const adminId = parseInt(btn.getAttribute('data-admin'), 10);
+            const isAktif = parseInt(btn.getAttribute('data-aktif'), 10) === 1;
+            handleToggleProdiStatus(adminId, isAktif);
+        });
+    });
+}
+
+async function handleGenerateAllProdi() {
+    const isConfirmed = await showAdminConfirm(
+        'Generate akun login untuk seluruh Program Studi yang belum memiliki akun? Kredensial akan dibuat menggunakan template username & password resmi.',
+        'Generate Semua Akun Prodi',
+        'info',
+        'Ya, Generate Sekarang',
+        'Batal'
+    );
+    if (!isConfirmed) return;
+
+    try {
+        const btn = document.getElementById('btn-generate-all-prodi');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerText = 'Memproses...';
+        }
+
+        const res = await fetch('/api/admin/kelola/prodi_accounts.php?action=generate_all', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+            body: JSON.stringify({})
+        });
+        const data = await res.json();
+
+        if (data.ok) {
+            await showAdminAlert(data.message, 'success', 'Akun Prodi Berhasil Dibuat');
+            loadProdiData();
+        } else {
+            await showAdminAlert(data.error || 'Gagal membuat akun prodi.', 'error');
+        }
+    } catch (e) {
+        console.error(e);
+        await showAdminAlert('Terjadi kesalahan sistem saat membuat akun prodi.', 'error');
+    } finally {
+        const btn = document.getElementById('btn-generate-all-prodi');
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg><span>Generate Semua Akun Prodi</span>`;
+        }
+    }
+}
+
+async function handleResetProdiPassword(jurusanId, adminId, nama, defaultPass) {
+    const isConfirmed = await showAdminConfirm(
+        `Reset password akun prodi "${nama}" kembali ke password default ("${defaultPass}")?`,
+        'Reset Password Prodi',
+        'warning',
+        'Ya, Reset ke Default',
+        'Batal'
+    );
+    if (!isConfirmed) return;
+
+    try {
+        const res = await fetch('/api/admin/kelola/prodi_accounts.php?action=reset_password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+            body: JSON.stringify({ jurusan_id: jurusanId, admin_id: adminId, mode: 'default' })
+        });
+        const data = await res.json();
+
+        if (data.ok) {
+            showCredentialModal(
+                'Password Prodi Berhasil Direset',
+                `
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+                    <div style="font-size: 0.85rem; color: #64748b; margin-bottom: 4px;">Program Studi:</div>
+                    <div style="font-weight: 700; color: #004687; font-size: 1rem; margin-bottom: 12px;">${escapeHtml(data.prodi_nama)}</div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                        <div>
+                            <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 3px;">Username Login:</div>
+                            <div style="font-family: monospace; font-weight: 800; font-size: 1.05rem; color: #1e293b; background: #fff; padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1;">${escapeHtml(data.username)}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 3px;">Password Baru:</div>
+                            <div style="font-family: monospace; font-weight: 800; font-size: 1.05rem; color: #004687; background: #eff6ff; padding: 6px 10px; border-radius: 6px; border: 1px solid #bfdbfe;">${escapeHtml(data.new_password)}</div>
+                        </div>
+                    </div>
+                </div>
+                `
+            );
+            loadProdiData();
+        } else {
+            await showAdminAlert(data.error || 'Gagal mereset password akun prodi.', 'error');
+        }
+    } catch (e) {
+        console.error(e);
+        await showAdminAlert('Terjadi kesalahan sistem saat mereset password.', 'error');
+    }
+}
+
+async function handleToggleProdiStatus(adminId, isAktif) {
+    const actionLabel = isAktif ? 'menonaktifkan' : 'mengaktifkan';
+    const isConfirmed = await showAdminConfirm(
+        `Anda yakin ingin ${actionLabel} akun admin program studi ini?`,
+        'Konfirmasi Status Akun',
+        'warning',
+        'Ya, Lanjutkan',
+        'Batal'
+    );
+    if (!isConfirmed) return;
+
+    try {
+        const res = await fetch('/api/admin/kelola/prodi_accounts.php?action=toggle_status', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+            body: JSON.stringify({ admin_id: adminId })
+        });
+        const data = await res.json();
+        if (data.ok) {
+            await showAdminAlert(data.message, 'success');
+            loadProdiData();
+        } else {
+            await showAdminAlert(data.error || 'Gagal mengubah status akun prodi.', 'error');
+        }
+    } catch (e) {
+        console.error(e);
+        await showAdminAlert('Terjadi kesalahan jaringan.', 'error');
+    }
 }
 
 function escapeHtml(text) {

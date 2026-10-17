@@ -40,7 +40,7 @@ try {
     $pdo = Database::getInstance();
 
     $stmt = $pdo->prepare(
-        "SELECT p.id, p.porto_path, upp.entitas_id, m.nim, m.nama 
+        "SELECT p.id, p.porto_path, upp.entitas_id, m.nim, m.nama, m.jurusan_id 
          FROM pendaftaran p 
          JOIN unit_pelaksana_periode upp ON p.unit_pelaksana_periode_id = upp.id 
          JOIN mahasiswa m ON p.mahasiswa_id = m.id 
@@ -65,6 +65,14 @@ try {
             http_response_code(403);
             header('Content-Type: application/json; charset=utf-8');
             echo json_encode(['error' => 'Akses ditolak. Portofolio ini bukan milik pendaftar di entitas perusahaan Anda.']);
+            exit;
+        }
+    } elseif ($admin['role'] === 'admin_prodi') {
+        $jurusanId = (int)($admin['jurusan_id'] ?? Auth::getProdiJurusanId() ?? 0);
+        if ($jurusanId <= 0 || (int)($row['jurusan_id'] ?? 0) !== $jurusanId) {
+            http_response_code(403);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['error' => 'Akses ditolak. Portofolio ini bukan milik mahasiswa dari program studi Anda.']);
             exit;
         }
     }

@@ -2065,13 +2065,118 @@ button.navbar-company-badge:hover {
   flex-shrink: 0;
 }
 
-/* Compact Peminatan Cards */
+/* Compact Peminatan Cards & Prodi Grouping in Step 3 */
 #peminatan-checkboxes.checkbox-grid,
 #peminatan-checkboxes {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.peminatan-prodi-group {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: var(--radius-md, 12px);
+  padding: 16px;
+  transition: all 0.2s ease;
+}
+
+.peminatan-prodi-group.is-selected-group {
+  border-color: #cbd5e1;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.peminatan-prodi-group.is-unselected-group {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.peminatan-prodi-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f1f5f9;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.peminatan-prodi-title-wrap {
+  display: flex;
+  align-items: center;
   gap: 10px;
-  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.peminatan-prodi-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.is-selected-group .peminatan-prodi-icon {
+  background: #eff6ff;
+  color: #0284c7;
+  border: 1px solid #bfdbfe;
+}
+
+.is-unselected-group .peminatan-prodi-icon {
+  background: #f1f5f9;
+  color: #94a3b8;
+  border: 1px solid #e2e8f0;
+}
+
+.peminatan-prodi-title {
+  font-size: 0.925rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.is-unselected-group .peminatan-prodi-title {
+  color: #64748b;
+}
+
+.peminatan-prodi-badge {
+  font-size: 0.725rem;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.peminatan-prodi-badge.badge-active {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+.peminatan-prodi-badge.badge-inactive {
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #cbd5e1;
+}
+
+.peminatan-prodi-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.peminatan-prodi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(235px, 1fr));
+  gap: 10px;
 }
 
 .peminatan-compact-card {
@@ -2097,6 +2202,78 @@ button.navbar-company-badge:hover {
 .peminatan-compact-card.checked {
   border-color: var(--brand-cyan);
   background: #eff6ff;
+}
+
+/* Disabled state for unselected prodi cards */
+.peminatan-compact-card.disabled {
+  background: #f8fafc !important;
+  border: 1.5px dashed #cbd5e1 !important;
+  cursor: not-allowed !important;
+  opacity: 0.65;
+  box-shadow: none !important;
+}
+
+.peminatan-compact-card.disabled:hover {
+  border-color: #cbd5e1 !important;
+  background: #f8fafc !important;
+}
+
+.peminatan-compact-card.disabled .peminatan-name {
+  color: #64748b !important;
+}
+
+.peminatan-compact-card.disabled input[type="checkbox"] {
+  cursor: not-allowed !important;
+  accent-color: #94a3b8;
+}
+
+/* Divider separating selected and unselected prodis */
+.unselected-prodi-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: var(--radius-md, 10px);
+  margin: 10px 0 2px 0;
+}
+
+.unselected-prodi-divider .divider-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: #0284c7;
+  border: 1px solid #bfdbfe;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.unselected-prodi-divider .divider-text h5 {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.unselected-prodi-divider .divider-text p {
+  margin: 3px 0 0 0;
+  font-size: 0.775rem;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+@keyframes flashProdiHighlight {
+  0% { background-color: #e0f2fe; border-color: #0284c7; transform: scale(1.01); }
+  50% { background-color: #e0f2fe; border-color: #0284c7; }
+  100% { background-color: #ffffff; border-color: var(--brand-border); transform: scale(1); }
+}
+
+.flash-prodi-highlight {
+  animation: flashProdiHighlight 2s ease-out;
 }
 
 .peminatan-header-row {

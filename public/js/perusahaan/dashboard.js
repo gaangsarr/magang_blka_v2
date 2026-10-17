@@ -625,7 +625,7 @@ async function validateWizardStep(step) {
     }
 
     if (step === 3) {
-        const checkedPem = document.querySelectorAll('.chk-peminatan:checked');
+        const checkedPem = document.querySelectorAll('.chk-peminatan:checked:not(:disabled)');
         if (checkedPem.length === 0) {
             await showAdminAlert('Silakan pilih minimal 1 Bidang Peminatan / Penempatan yang dibuka.', 'warning', 'Pilih Peminatan');
             return false;
@@ -636,66 +636,247 @@ async function validateWizardStep(step) {
     return true;
 }
 
+function syncPeminatanCheck(pemId, isChecked) {
+    const pemObj = wizardPeminatanData.find(p => p.id === pemId);
+    if (pemObj) pemObj.is_selected = isChecked;
+
+    document.querySelectorAll(`.chk-peminatan[data-pem-id="${pemId}"]:not(:disabled)`).forEach(input => {
+        input.checked = isChecked;
+        const card = input.closest('.peminatan-compact-card');
+        if (card) {
+            if (isChecked) card.classList.add('checked');
+            else card.classList.remove('checked');
+        }
+    });
+}
+
+function activateProdiFromStep3(jid) {
+    const prodiCheckbox = document.querySelector(`.chk-prodi[value="${jid}"]`);
+    const jObj = wizardJurusanData.find(j => j.id == jid);
+    const prodiName = (jObj?.jenjang ? `${jObj.jenjang} - ` : '') + (jObj?.nama_jurusan || `Prodi ${jid}`);
+
+    if (prodiCheckbox) {
+        prodiCheckbox.checked = true;
+        const prodiCard = prodiCheckbox.closest('.prodi-alloc-row') || prodiCheckbox.closest('.custom-checkbox-card');
+        if (prodiCard) prodiCard.classList.add('checked');
+        if (jObj) jObj.is_selected = true;
+
+        const allocInput = document.getElementById(`alloc-prodi-${jid}`);
+        if (allocInput) {
+            allocInput.style.opacity = '1';
+            allocInput.style.pointerEvents = 'auto';
+            if (!allocInput.value || parseInt(allocInput.value, 10) <= 0) allocInput.value = '1';
+        }
+        updateAllocSummary();
+    }
+
+    setWizardStep(2);
+
+    setTimeout(() => {
+        const prodiRow = document.querySelector(`.chk-prodi[value="${jid}"]`)?.closest('.prodi-alloc-row');
+        if (prodiRow) {
+            prodiRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            prodiRow.classList.remove('flash-prodi-highlight');
+            void prodiRow.offsetWidth;
+            prodiRow.classList.add('flash-prodi-highlight');
+        }
+    }, 120);
+
+    showAdminToast(`Program Studi ${prodiName} diaktifkan. Silakan sesuaikan kuota lalu klik Lanjut ke Peminatan.`, 'info', 4500);
+}
+
 function renderPeminatanForStep3() {
     const selectedJids = Array.from(document.querySelectorAll('.chk-prodi:checked')).map(cb => parseInt(cb.value, 10));
     const pemGrid = document.getElementById('peminatan-checkboxes');
     if (!pemGrid) return;
 
     pemGrid.innerHTML = '';
-    const matchingPeminatan = wizardPeminatanData.filter(pem => {
-        const pJids = pem.jurusan_ids || [];
-        return pJids.some(jid => selectedJids.includes(jid));
-    });
 
-    if (matchingPeminatan.length === 0) {
+    // Pisahkan prodi menjadi dua grup: Yang Dipilih (di Langkah 2) dan Yang Belum Dipilih
+    const selectedProdis = wizardJurusanData.filter(j => selectedJids.includes(j.id));
+    const unselectedProdis = wizardJurusanData.filter(j => !selectedJids.includes(j.id));
+
+    if (selectedProdis.length === 0 && unselectedProdis.length === 0) {
         pemGrid.innerHTML = `
-            <div style="grid-column: 1 / -1; padding: 24px; text-align: center; background: #fff1f2; border: 1px solid #fecdd3; border-radius: 10px; color: #991b1b;">
-                <strong>Tidak ada bidang peminatan yang sesuai dengan program studi yang Anda pilih.</strong><br>
-                <span style="font-size: 0.8rem;">Silakan tambahkan peminatan untuk prodi tersebut melalui Admin BLKA atau kembali ke Langkah 2 untuk memilih prodi lain.</span>
+            <div style="padding: 24px; text-align: center; background: #fff1f2; border: 1px solid #fecdd3; border-radius: 10px; color: #991b1b;">
+                <strong>Tidak ada program studi yang tersedia.</strong>
             </div>
         `;
         return;
     }
 
-    matchingPeminatan.forEach(pem => {
-        const checkedClass = pem.is_selected ? 'checked' : '';
-        const card = document.createElement('label');
-        card.className = `custom-checkbox-card peminatan-compact-card ${checkedClass}`;
-
-        // Cari program studi yang terhubung dan relevan dengan pilihan di Langkah 2
-        let matchedJurusan = (pem.jurusan_ids || [])
-            .filter(jid => selectedJids.includes(jid))
-            .map(jid => wizardJurusanData.find(j => j.id === jid))
-            .filter(Boolean);
-
-        if (matchedJurusan.length === 0) {
-            matchedJurusan = (pem.jurusan_ids || [])
-                .map(jid => wizardJurusanData.find(j => j.id === jid))
-                .filter(Boolean);
-        }
-
-        const prodiTagsHtml = matchedJurusan.map(j => {
-            const jenjangPrefix = j.jenjang && !j.nama_jurusan.startsWith(j.jenjang) ? `${j.jenjang} ` : '';
-            const prodiLabel = `${jenjangPrefix}${j.nama_jurusan}`;
-            return `<span class="peminatan-prodi-tag">${escapeHtml(prodiLabel)}</span>`;
-        }).join('');
-
-        card.innerHTML = `
-            <div class="peminatan-header-row">
-                <input type="checkbox" class="chk-peminatan" value="${pem.id}" ${pem.is_selected ? 'checked' : ''}>
-                <span class="peminatan-name">${escapeHtml(pem.nama_peminatan)}</span>
-            </div>
-            ${prodiTagsHtml ? `<div class="peminatan-prodi-tags">${prodiTagsHtml}</div>` : ''}
-        `;
-
-        card.querySelector('input').addEventListener('change', (e) => {
-            pem.is_selected = e.target.checked;
-            if (e.target.checked) card.classList.add('checked');
-            else card.classList.remove('checked');
+    // Helper untuk render satu grup prodi
+    const renderProdiGroup = (j, isSelectedGroup) => {
+        const jid = j.id;
+        const labelProdi = (j.jenjang ? `${j.jenjang} - ` : '') + j.nama_jurusan;
+        const pemsForProdi = wizardPeminatanData.filter(pem => {
+            const pJids = pem.jurusan_ids || [];
+            return pJids.includes(jid);
         });
 
-        pemGrid.appendChild(card);
-    });
+        const groupEl = document.createElement('div');
+        groupEl.className = `peminatan-prodi-group ${isSelectedGroup ? 'is-selected-group' : 'is-unselected-group'}`;
+        groupEl.id = `pem-prodi-group-${jid}`;
+
+        // Inisial badge icon
+        const initials = j.kode_jurusan || j.nama_jurusan.substring(0, 3).toUpperCase();
+        let headerActions = '';
+        if (isSelectedGroup) {
+            headerActions = `
+                <div class="peminatan-prodi-actions">
+                    <button type="button" class="btn-portal-outline btn-group-toggle" data-jid="${jid}" data-action="all" style="padding: 2px 8px; font-size: 0.725rem;">Pilih Semua</button>
+                    <button type="button" class="btn-portal-outline btn-group-toggle" data-jid="${jid}" data-action="none" style="padding: 2px 8px; font-size: 0.725rem;">Batal</button>
+                </div>
+            `;
+        } else {
+            headerActions = `
+                <div class="peminatan-prodi-actions">
+                    <button type="button" class="btn-portal-outline btn-activate-prodi" data-jid="${jid}" style="padding: 3px 10px; font-size: 0.75rem; border-color: #0284c7; color: #0284c7; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        <span>+ Tambah Kuota di Langkah 2</span>
+                    </button>
+                </div>
+            `;
+        }
+
+        const badgeHtml = isSelectedGroup
+            ? `<span class="peminatan-prodi-badge badge-active"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> ${pemsForProdi.length} Bidang • Terpilih di Langkah 2</span>`
+            : `<span class="peminatan-prodi-badge badge-inactive">${pemsForProdi.length} Bidang • Belum Dipilih</span>`;
+
+        groupEl.innerHTML = `
+            <div class="peminatan-prodi-header">
+                <div class="peminatan-prodi-title-wrap">
+                    <div class="peminatan-prodi-icon">${escapeHtml(initials)}</div>
+                    <div>
+                        <h5 class="peminatan-prodi-title">${escapeHtml(labelProdi)}</h5>
+                    </div>
+                    ${badgeHtml}
+                </div>
+                ${headerActions}
+            </div>
+            <div class="peminatan-prodi-grid" id="pem-prodi-grid-${jid}"></div>
+        `;
+
+        const gridEl = groupEl.querySelector(`#pem-prodi-grid-${jid}`);
+
+        if (pemsForProdi.length === 0) {
+            gridEl.innerHTML = `
+                <div style="grid-column: 1 / -1; padding: 10px 14px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 6px; font-size: 0.775rem; color: #64748b; font-style: italic;">
+                    Belum ada bidang peminatan khusus yang terdaftar untuk program studi ini.
+                </div>
+            `;
+        } else {
+            pemsForProdi.forEach(pem => {
+                // Cari program studi lain yang juga memiliki peminatan ini
+                const otherJurusan = (pem.jurusan_ids || [])
+                    .filter(otherJid => otherJid !== jid)
+                    .map(otherJid => wizardJurusanData.find(oj => oj.id === otherJid))
+                    .filter(Boolean);
+
+                const prodiTagsHtml = otherJurusan.map(oj => {
+                    const jenjangPrefix = oj.jenjang && !oj.nama_jurusan.startsWith(oj.jenjang) ? `${oj.jenjang} ` : '';
+                    const tagLabel = `Juga di: ${jenjangPrefix}${oj.nama_jurusan}`;
+                    return `<span class="peminatan-prodi-tag">${escapeHtml(tagLabel)}</span>`;
+                }).join('');
+
+                if (isSelectedGroup) {
+                    // Card aktif (dapat dipilih)
+                    const checkedClass = pem.is_selected ? 'checked' : '';
+                    const card = document.createElement('label');
+                    card.className = `custom-checkbox-card peminatan-compact-card ${checkedClass}`;
+                    card.innerHTML = `
+                        <div class="peminatan-header-row">
+                            <input type="checkbox" class="chk-peminatan" data-pem-id="${pem.id}" value="${pem.id}" ${pem.is_selected ? 'checked' : ''}>
+                            <span class="peminatan-name">${escapeHtml(pem.nama_peminatan)}</span>
+                        </div>
+                        ${prodiTagsHtml ? `<div class="peminatan-prodi-tags">${prodiTagsHtml}</div>` : ''}
+                    `;
+
+                    const chk = card.querySelector('input');
+                    chk.addEventListener('change', (e) => {
+                        syncPeminatanCheck(pem.id, e.target.checked);
+                    });
+
+                    gridEl.appendChild(card);
+                } else {
+                    // Card non-aktif (abu-abu, disabled)
+                    const card = document.createElement('div');
+                    card.className = 'custom-checkbox-card peminatan-compact-card disabled';
+                    card.title = `Prodi "${labelProdi}" belum dipilih di Langkah 2. Klik "+ Tambah Kuota di Langkah 2" untuk mengaktifkan peminatan ini.`;
+                    card.innerHTML = `
+                        <div class="peminatan-header-row">
+                            <input type="checkbox" disabled class="chk-peminatan-disabled" value="${pem.id}">
+                            <span class="peminatan-name">${escapeHtml(pem.nama_peminatan)}</span>
+                        </div>
+                        ${prodiTagsHtml ? `<div class="peminatan-prodi-tags">${prodiTagsHtml}</div>` : ''}
+                    `;
+
+                    card.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        showAdminToast(`Bidang "${pem.nama_peminatan}" non-aktif karena prodi ${labelProdi} belum dipilih. Klik tombol "+ Tambah Kuota di Langkah 2" di atas untuk membukanya.`, 'info', 3500);
+                    });
+
+                    gridEl.appendChild(card);
+                }
+            });
+        }
+
+        // Listener untuk tombol group toggle (Pilih Semua / Batal per Prodi)
+        groupEl.querySelectorAll('.btn-group-toggle').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const action = btn.getAttribute('data-action');
+                const isCheck = (action === 'all');
+                groupEl.querySelectorAll('.chk-peminatan:not(:disabled)').forEach(input => {
+                    const pemId = parseInt(input.value, 10);
+                    syncPeminatanCheck(pemId, isCheck);
+                });
+            });
+        });
+
+        // Listener untuk tombol "+ Tambah Kuota di Langkah 2"
+        groupEl.querySelectorAll('.btn-activate-prodi').forEach(btn => {
+            btn.addEventListener('click', () => {
+                activateProdiFromStep3(jid);
+            });
+        });
+
+        return groupEl;
+    };
+
+    // 1. RENDER PRODI YANG DIPILIH TERLEBIH DAHULU (DI PALING ATAS)
+    if (selectedProdis.length > 0) {
+        selectedProdis.forEach(j => {
+            pemGrid.appendChild(renderProdiGroup(j, true));
+        });
+    } else {
+        const emptySelectedNotice = document.createElement('div');
+        emptySelectedNotice.style.cssText = 'padding: 18px; text-align: center; background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; color: #92400e; font-size: 0.85rem;';
+        emptySelectedNotice.innerHTML = `
+            <strong>Belum ada Program Studi yang dipilih di Langkah 2.</strong><br>
+            <span style="font-size: 0.8rem;">Silakan kembali ke Langkah 2 untuk memilih prodi yang kuotanya ingin dibuka di unit kantor Anda.</span>
+        `;
+        pemGrid.appendChild(emptySelectedNotice);
+    }
+
+    // 2. RENDER DIVIDER & PRODI YANG BELUM DIPILIH (DI BAGIAN BAWAH)
+    if (unselectedProdis.length > 0) {
+        const divider = document.createElement('div');
+        divider.className = 'unselected-prodi-divider';
+        divider.innerHTML = `
+            <div class="divider-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            </div>
+            <div class="divider-text" style="flex: 1;">
+                <h5>Program Studi Lainnya (Belum Dipilih di Langkah 2)</h5>
+                <p>Bidang peminatan di bawah ini berstatus <strong>non-aktif (abu-abu)</strong> karena program studinya belum dipilih. Jika unit Anda ingin membuka peminatan ini, klik tombol <strong>"+ Tambah Kuota di Langkah 2"</strong> pada prodi terkait.</p>
+            </div>
+        `;
+        pemGrid.appendChild(divider);
+
+        unselectedProdis.forEach(j => {
+            pemGrid.appendChild(renderProdiGroup(j, false));
+        });
+    }
 }
 
 function renderReviewForStep4() {
@@ -729,9 +910,12 @@ function renderReviewForStep4() {
     document.getElementById('rev-prodi-count').innerText = `${prodiCount} Prodi`;
 
     let pemCount = 0;
-    document.querySelectorAll('.chk-peminatan:checked').forEach(cb => {
+    const seenPemIds = new Set();
+    document.querySelectorAll('.chk-peminatan:checked:not(:disabled)').forEach(cb => {
+        const pemId = parseInt(cb.value, 10);
+        if (seenPemIds.has(pemId)) return;
+        seenPemIds.add(pemId);
         pemCount++;
-        const pemId = cb.value;
         const pemObj = wizardPeminatanData.find(p => p.id == pemId);
         const badge = document.createElement('span');
         badge.className = 'badge-status badge-success';
@@ -829,6 +1013,7 @@ function initKuotaModule() {
     for (let i = 1; i <= 4; i++) {
         document.getElementById(`step-nav-${i}`)?.addEventListener('click', () => {
             if (i < wizardCurrentStep) {
+                if (i === 3) renderPeminatanForStep3();
                 setWizardStep(i);
             }
         });
@@ -853,6 +1038,9 @@ function initKuotaModule() {
     document.querySelectorAll('.btn-wizard-prev').forEach(btn => {
         btn.addEventListener('click', () => {
             const prevStep = parseInt(btn.getAttribute('data-prev'), 10);
+            if (prevStep === 3) {
+                renderPeminatanForStep3();
+            }
             setWizardStep(prevStep);
         });
     });
@@ -879,15 +1067,15 @@ function initKuotaModule() {
 
     // Select/Deselect All Peminatan
     document.getElementById('btn-select-all-pem')?.addEventListener('click', () => {
-        document.querySelectorAll('.chk-peminatan').forEach(c => {
-            c.checked = true;
-            c.closest('.custom-checkbox-card')?.classList.add('checked');
+        document.querySelectorAll('.chk-peminatan:not(:disabled)').forEach(c => {
+            const pemId = parseInt(c.value, 10);
+            syncPeminatanCheck(pemId, true);
         });
     });
     document.getElementById('btn-deselect-all-pem')?.addEventListener('click', () => {
-        document.querySelectorAll('.chk-peminatan').forEach(c => {
-            c.checked = false;
-            c.closest('.custom-checkbox-card')?.classList.remove('checked');
+        document.querySelectorAll('.chk-peminatan:not(:disabled)').forEach(c => {
+            const pemId = parseInt(c.value, 10);
+            syncPeminatanCheck(pemId, false);
         });
     });
 
@@ -917,8 +1105,13 @@ function initKuotaModule() {
             });
 
             const peminatanIds = [];
-            document.querySelectorAll('.chk-peminatan:checked').forEach(c => {
-                peminatanIds.push(parseInt(c.value, 10));
+            const seenSubmitPemIds = new Set();
+            document.querySelectorAll('.chk-peminatan:checked:not(:disabled)').forEach(c => {
+                const pid = parseInt(c.value, 10);
+                if (!seenSubmitPemIds.has(pid)) {
+                    seenSubmitPemIds.add(pid);
+                    peminatanIds.push(pid);
+                }
             });
 
             if (menerima && kuotaTotal <= 0) {

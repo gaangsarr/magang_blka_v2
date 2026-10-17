@@ -1,0 +1,1533 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>Portal Program Studi — INTERN ITPLN</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/assets/img/logo_itpln.png">
+    <link rel="apple-touch-icon" href="/assets/img/logo_itpln.png">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/admin.css">
+    <style>
+        :root {
+            --color-brand-navy: #0B192C;
+            --color-brand-navy-light: #1E293B;
+            --color-brand-cyan: #00A2B9;
+            --color-brand-cyan-hover: #008C9E;
+            --color-brand-blue: #005082;
+            --color-canvas-bg: #F8FAFC;
+            --color-surface-white: #FFFFFF;
+            --color-border-subtle: #E2E8F0;
+            --color-border-strong: #CBD5E1;
+            --color-text-main: #0F172A;
+            --color-text-muted: #64748B;
+            --color-text-light: #94A3B8;
+            --color-state-success: #10B981;
+            --color-state-warning: #F59E0B;
+            --color-state-danger: #EF4444;
+            --color-state-info: #0284C7;
+        }
+
+        body.prodi-body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--color-canvas-bg);
+            color: var(--color-text-main);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Navbar */
+        .prodi-navbar {
+            background-color: var(--color-brand-navy);
+            color: #FFFFFF;
+            padding: 12px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar-brand-group {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .navbar-logos {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .navbar-logos img {
+            height: 38px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .navbar-brand-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .navbar-brand-title {
+            font-size: 1.125rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: #FFFFFF;
+            line-height: 1.2;
+        }
+
+        .navbar-brand-subtitle {
+            font-size: 0.75rem;
+            color: var(--color-brand-cyan);
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .navbar-user-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .prodi-badge-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background-color: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 999px;
+            padding: 6px 14px;
+            color: #FFFFFF;
+            font-size: 0.8125rem;
+            font-weight: 600;
+        }
+
+        .prodi-jenjang-tag {
+            background-color: var(--color-brand-cyan);
+            color: #FFFFFF;
+            font-size: 0.7rem;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 4px;
+            letter-spacing: 0.02em;
+        }
+
+        .btn-nav-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #FFFFFF;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            padding: 7px 13px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-nav-action:hover {
+            background: rgba(255, 255, 255, 0.18);
+            border-color: rgba(255, 255, 255, 0.3);
+            color: #FFFFFF;
+        }
+
+        .btn-nav-logout {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #FCA5A5;
+        }
+
+        .btn-nav-logout:hover {
+            background: rgba(239, 68, 68, 0.25);
+            border-color: rgba(239, 68, 68, 0.5);
+            color: #FFFFFF;
+        }
+
+        /* Container */
+        .prodi-container {
+            max-width: 1380px;
+            margin: 0 auto;
+            padding: 24px 28px 48px;
+            width: 100%;
+            box-sizing: border-box;
+            flex: 1;
+        }
+
+        /* Executive Header Bar */
+        .exec-header-bar {
+            background: #FFFFFF;
+            border: 1px solid var(--color-border-subtle);
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+
+        .exec-header-title h1 {
+            margin: 0 0 6px 0;
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: var(--color-text-main);
+            letter-spacing: -0.02em;
+        }
+
+        .exec-header-title p {
+            margin: 0;
+            font-size: 0.875rem;
+            color: var(--color-text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .exec-header-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .select-periode-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--color-canvas-bg);
+            border: 1px solid var(--color-border-strong);
+            border-radius: 8px;
+            padding: 4px 10px;
+        }
+
+        .select-periode-box label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--color-text-muted);
+            text-transform: uppercase;
+        }
+
+        .select-periode-box select {
+            border: none;
+            background: transparent;
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: var(--color-brand-blue);
+            cursor: pointer;
+            outline: none;
+            padding: 4px 0;
+        }
+
+        .badge-status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 5px 11px;
+            border-radius: 999px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .badge-status-dibuka {
+            background-color: #ECFDF5;
+            color: #065F46;
+            border: 1px solid #A7F3D0;
+        }
+
+        .badge-status-persiapan {
+            background-color: #FFFBEB;
+            color: #92400E;
+            border: 1px solid #FDE68A;
+        }
+
+        .badge-status-ditutup {
+            background-color: #F1F5F9;
+            color: #475569;
+            border: 1px solid #CBD5E1;
+        }
+
+        .btn-export-excel {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            background-color: #065F46;
+            color: #FFFFFF;
+            font-size: 0.8125rem;
+            font-weight: 700;
+            padding: 8px 16px;
+            border-radius: 8px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-export-excel:hover {
+            background-color: #047857;
+            color: #FFFFFF;
+            transform: translateY(-1px);
+        }
+
+        /* Tabs Navigation */
+        .prodi-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            border-bottom: 2px solid var(--color-border-subtle);
+            padding-bottom: 0;
+        }
+
+        .prodi-tabs::-webkit-scrollbar {
+            display: none;
+        }
+
+        .prodi-tab-btn {
+            background: none;
+            border: none;
+            padding: 12px 18px;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            color: var(--color-text-muted);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .prodi-tab-btn:hover {
+            color: var(--color-brand-blue);
+        }
+
+        .prodi-tab-btn.active {
+            color: var(--color-brand-cyan);
+            border-bottom-color: var(--color-brand-cyan);
+            font-weight: 700;
+        }
+
+        .tab-counter {
+            background: #E2E8F0;
+            color: #334155;
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .prodi-tab-btn.active .tab-counter {
+            background: #E0F2FE;
+            color: #0369A1;
+        }
+
+        /* Tab Content */
+        .tab-pane {
+            display: none;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        /* KPI Cards Grid */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .kpi-card {
+            background: #FFFFFF;
+            border: 1px solid var(--color-border-subtle);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background-color: var(--color-brand-navy);
+        }
+
+        .kpi-card.kpi-total::before { background-color: var(--color-brand-blue); }
+        .kpi-card.kpi-diterima::before { background-color: var(--color-state-success); }
+        .kpi-card.kpi-diproses::before { background-color: var(--color-state-warning); }
+        .kpi-card.kpi-cadangan::before { background-color: var(--color-state-info); }
+        .kpi-card.kpi-ditolak::before { background-color: var(--color-state-danger); }
+
+        .kpi-label {
+            font-size: 0.8125rem;
+            font-weight: 700;
+            color: var(--color-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .kpi-value {
+            font-size: 1.875rem;
+            font-weight: 800;
+            color: var(--color-text-main);
+            font-variant-numeric: tabular-nums;
+            line-height: 1.1;
+        }
+
+        .kpi-desc {
+            font-size: 0.75rem;
+            color: var(--color-text-light);
+            margin-top: 6px;
+        }
+
+        /* 2-Column Analytics Layout */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .analytics-card {
+            background: #FFFFFF;
+            border: 1px solid var(--color-border-subtle);
+            border-radius: 12px;
+            padding: 22px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+
+        .card-header-clean {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 18px;
+            border-bottom: 1px solid var(--color-border-subtle);
+            padding-bottom: 14px;
+        }
+
+        .card-header-clean h3 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 800;
+            color: var(--color-text-main);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Mini Lists & Bars */
+        .stat-bar-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .stat-bar-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .stat-bar-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8125rem;
+            font-weight: 600;
+        }
+
+        .stat-bar-track {
+            height: 7px;
+            background: #E2E8F0;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .stat-bar-fill {
+            height: 100%;
+            background: var(--color-brand-cyan);
+            border-radius: 999px;
+            transition: width 0.3s ease;
+        }
+
+        /* Filter Controls */
+        .filter-card {
+            background: #FFFFFF;
+            border: 1px solid var(--color-border-subtle);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 14px;
+        }
+
+        .filter-inputs-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            flex: 1;
+        }
+
+        .search-box-input {
+            position: relative;
+            min-width: 260px;
+            flex: 1;
+        }
+
+        .search-box-input svg {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--color-text-light);
+        }
+
+        .search-box-input input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 8px 12px 8px 36px;
+            border: 1px solid var(--color-border-strong);
+            border-radius: 8px;
+            font-size: 0.875rem;
+            outline: none;
+            background: var(--color-canvas-bg);
+            transition: all 0.2s ease;
+        }
+
+        .search-box-input input:focus {
+            background: #FFFFFF;
+            border-color: var(--color-brand-cyan);
+            box-shadow: 0 0 0 3px rgba(0, 162, 185, 0.15);
+        }
+
+        .filter-select {
+            padding: 8px 12px;
+            border: 1px solid var(--color-border-strong);
+            border-radius: 8px;
+            font-size: 0.875rem;
+            background: var(--color-canvas-bg);
+            color: var(--color-text-main);
+            outline: none;
+            cursor: pointer;
+        }
+
+        .filter-select:focus {
+            border-color: var(--color-brand-cyan);
+        }
+
+        .btn-reset-filter {
+            background: transparent;
+            border: 1px solid var(--color-border-strong);
+            border-radius: 8px;
+            padding: 8px 14px;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: var(--color-text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-reset-filter:hover {
+            background: #F1F5F9;
+            color: var(--color-text-main);
+        }
+
+        /* Clean Enterprise Table */
+        .table-responsive-box {
+            background: #FFFFFF;
+            border: 1px solid var(--color-border-subtle);
+            border-radius: 12px;
+            overflow-x: auto;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+            margin-bottom: 20px;
+        }
+
+        .prodi-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8125rem;
+            text-align: left;
+        }
+
+        .prodi-table th {
+            background: #F8FAFC;
+            color: var(--color-text-muted);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.72rem;
+            letter-spacing: 0.04em;
+            padding: 12px 14px;
+            border-bottom: 2px solid var(--color-border-subtle);
+            white-space: nowrap;
+        }
+
+        .prodi-table td {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--color-border-subtle);
+            vertical-align: middle;
+            color: var(--color-text-main);
+        }
+
+        .prodi-table tr:hover td {
+            background-color: #F8FAFC;
+        }
+
+        .prodi-table .cell-mono {
+            font-variant-numeric: tabular-nums;
+            font-weight: 600;
+        }
+
+        /* Status Badge */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 9px;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            white-space: nowrap;
+        }
+
+        .status-badge-diterima {
+            background-color: #ECFDF5;
+            color: #065F46;
+            border: 1px solid #A7F3D0;
+        }
+
+        .status-badge-diproses, .status-badge-menunggu {
+            background-color: #FFFBEB;
+            color: #92400E;
+            border: 1px solid #FDE68A;
+        }
+
+        .status-badge-cadangan {
+            background-color: #EFF6FF;
+            color: #1E40AF;
+            border: 1px solid #BFDBFE;
+        }
+
+        .status-badge-ditolak {
+            background-color: #FEF2F2;
+            color: #991B1B;
+            border: 1px solid #FECACA;
+        }
+
+        .status-badge-dipindahkan {
+            background-color: #FAF5FF;
+            color: #6B21A8;
+            border: 1px solid #E9D5FF;
+        }
+
+        /* Document Action Buttons */
+        .btn-doc-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            background: #F1F5F9;
+            border: 1px solid var(--color-border-strong);
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #334155;
+            text-decoration: none;
+            transition: all 0.15s ease;
+        }
+
+        .btn-doc-link:hover {
+            background: #E2E8F0;
+            color: var(--color-text-main);
+        }
+
+        .btn-table-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 11px;
+            background: #FFFFFF;
+            border: 1px solid var(--color-border-strong);
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--color-brand-blue);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .btn-table-action:hover {
+            background: var(--color-brand-blue);
+            color: #FFFFFF;
+            border-color: var(--color-brand-blue);
+        }
+
+        /* Pagination */
+        .pagination-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            font-size: 0.8125rem;
+            color: var(--color-text-muted);
+        }
+
+        .pagination-controls {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-page-nav {
+            padding: 5px 11px;
+            background: #FFFFFF;
+            border: 1px solid var(--color-border-strong);
+            border-radius: 6px;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: var(--color-text-main);
+            cursor: pointer;
+        }
+
+        .btn-page-nav:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .btn-page-nav:hover:not(:disabled) {
+            background: #F1F5F9;
+            border-color: #94A3B8;
+        }
+
+        /* Peminatan Cards */
+        .peminatan-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+
+        .peminatan-card {
+            background: #FFFFFF;
+            border: 1px solid var(--color-border-subtle);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .peminatan-card-title {
+            font-size: 1rem;
+            font-weight: 800;
+            color: var(--color-text-main);
+            margin: 0 0 6px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .peminatan-card-desc {
+            font-size: 0.8125rem;
+            color: var(--color-text-muted);
+            line-height: 1.5;
+            margin: 0 0 14px 0;
+            flex: 1;
+        }
+
+        .peminatan-card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 1px solid var(--color-border-subtle);
+            padding-top: 10px;
+            font-size: 0.75rem;
+            color: var(--color-text-muted);
+        }
+
+        /* Modal Backdrop & Box */
+        .prodi-modal-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(2px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .prodi-modal-backdrop.open {
+            display: flex;
+        }
+
+        .prodi-modal-box {
+            background: #FFFFFF;
+            border-radius: 14px;
+            width: 100%;
+            max-width: 680px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            overflow: hidden;
+            animation: modalFadeIn 0.2s ease-out;
+        }
+
+        .prodi-modal-header {
+            padding: 18px 24px;
+            background: var(--color-brand-navy);
+            color: #FFFFFF;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .prodi-modal-header h3 {
+            margin: 0;
+            font-size: 1.125rem;
+            font-weight: 800;
+            letter-spacing: -0.01em;
+            color: #FFFFFF !important;
+        }
+
+        .btn-modal-close {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            transition: color 0.15s ease;
+        }
+
+        .btn-modal-close:hover {
+            color: #FFFFFF;
+        }
+
+        .prodi-modal-body {
+            padding: 24px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .prodi-modal-footer {
+            padding: 16px 24px;
+            background: #F8FAFC;
+            border-top: 1px solid var(--color-border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .form-group-clean {
+            margin-bottom: 16px;
+        }
+
+        .form-group-clean label {
+            display: block;
+            font-size: 0.8125rem;
+            font-weight: 700;
+            color: var(--color-text-main);
+            margin-bottom: 6px;
+        }
+
+        .form-group-clean input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 9px 12px;
+            border: 1px solid var(--color-border-strong);
+            border-radius: 8px;
+            font-size: 0.875rem;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .form-group-clean input:focus {
+            border-color: var(--color-brand-cyan);
+            box-shadow: 0 0 0 3px rgba(0, 162, 185, 0.15);
+        }
+
+        .btn-primary-action {
+            background: var(--color-brand-cyan);
+            color: #FFFFFF;
+            border: none;
+            padding: 9px 18px;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .btn-primary-action:hover {
+            background: var(--color-brand-cyan-hover);
+        }
+
+        .btn-secondary-action {
+            background: #FFFFFF;
+            color: var(--color-text-main);
+            border: 1px solid var(--color-border-strong);
+            padding: 9px 18px;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-secondary-action:hover {
+            background: #F1F5F9;
+        }
+
+        /* Detail Modal Data Grid */
+        .detail-section-title {
+            font-size: 0.875rem;
+            font-weight: 800;
+            color: var(--color-brand-blue);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin: 18px 0 10px;
+            border-bottom: 1px solid var(--color-border-subtle);
+            padding-bottom: 4px;
+        }
+
+        .detail-data-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px 20px;
+            font-size: 0.8125rem;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .detail-item-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--color-text-muted);
+            text-transform: uppercase;
+        }
+
+        .detail-item-value {
+            font-weight: 600;
+            color: var(--color-text-main);
+        }
+
+        /* Toast */
+        .prodi-toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 12px 18px;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #FFFFFF;
+            background: var(--color-brand-navy);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            animation: toastSlideUp 0.2s ease-out;
+        }
+
+        .prodi-toast.success { background-color: #065F46; }
+        .prodi-toast.error   { background-color: #991B1B; }
+        .prodi-toast.show    { display: flex; }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.96); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes toastSlideUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .prodi-navbar { padding: 10px 16px; }
+            .prodi-container { padding: 16px; }
+            .analytics-grid { grid-template-columns: 1fr; }
+            .detail-data-grid { grid-template-columns: 1fr; }
+            .exec-header-bar { flex-direction: column; align-items: stretch; }
+            .prodi-tabs {
+                overflow-x: auto;
+                scrollbar-width: none;
+                -ms-overflow-style: none;
+            }
+            .prodi-tabs::-webkit-scrollbar {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body class="prodi-body">
+
+    <!-- Top Navbar -->
+    <nav class="prodi-navbar">
+        <div class="navbar-brand-group">
+            <div class="navbar-logos">
+                <img src="/assets/img/logo_pln.png" alt="Logo PLN">
+                <img src="/assets/img/logo_itpln.png" alt="Logo ITPLN">
+            </div>
+            <div class="navbar-brand-info">
+                <span class="navbar-brand-title">INTERN ITPLN</span>
+                <span class="navbar-brand-subtitle">Portal Program Studi</span>
+            </div>
+        </div>
+
+        <div class="navbar-user-group">
+            <div class="prodi-badge-pill" id="badge-prodi-header">
+                <span class="prodi-jenjang-tag" id="header-prodi-jenjang">S1</span>
+                <span id="header-prodi-nama">Memuat Program Studi...</span>
+            </div>
+            <button type="button" class="btn-nav-action" id="btn-open-password" title="Ubah Password Akun">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                <span>Ubah Password</span>
+            </button>
+            <button type="button" class="btn-nav-action btn-nav-logout" id="btn-logout" title="Keluar">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                <span>Keluar</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <main class="prodi-container">
+
+        <!-- Executive Header Bar -->
+        <header class="exec-header-bar">
+            <div class="exec-header-title">
+                <h1 id="hero-prodi-title">Monitoring Mahasiswa Magang</h1>
+                <p>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                    <span id="hero-prodi-subtitle">Program Studi Kampus ITPLN</span>
+                </p>
+            </div>
+
+            <div class="exec-header-controls">
+                <div class="select-periode-box">
+                    <label for="select-periode">Periode:</label>
+                    <select id="select-periode" aria-label="Pilih Periode Magang">
+                        <option value="">Memuat Periode...</option>
+                    </select>
+                </div>
+
+                <div class="badge-status-pill badge-status-dibuka" id="badge-status-periode">
+                    Memuat...
+                </div>
+
+                <button type="button" class="btn-export-excel" id="btn-export-excel" title="Unduh Rekapitulasi Mahasiswa ke File Excel (.xlsx)">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    <span>Export Rekap Excel</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Tab Navigation -->
+        <div class="prodi-tabs" role="tablist">
+            <button type="button" class="prodi-tab-btn active" id="tab-btn-dashboard" data-tab="tab-dashboard" role="tab" aria-selected="true">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+                <span>Dashboard & Ringkasan</span>
+            </button>
+            <button type="button" class="prodi-tab-btn" id="tab-btn-mahasiswa" data-tab="tab-mahasiswa" role="tab" aria-selected="false">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                <span>Data Mahasiswa</span>
+                <span class="tab-counter" id="counter-tab-mhs">0</span>
+            </button>
+            <button type="button" class="prodi-tab-btn" id="tab-btn-formasi" data-tab="tab-formasi" role="tab" aria-selected="false">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M8 10h.01"/><path d="M16 10h.01"/></svg>
+                <span>Formasi & Kuota Unit PLN</span>
+                <span class="tab-counter" id="counter-tab-formasi" style="display: none;">0</span>
+            </button>
+            <button type="button" class="prodi-tab-btn" id="tab-btn-peminatan" data-tab="tab-peminatan" role="tab" aria-selected="false">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>
+                <span>Bidang Peminatan</span>
+                <span class="tab-counter" id="counter-tab-peminatan" style="display: none;">0</span>
+            </button>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- TAB 1: DASHBOARD & RINGKASAN              -->
+        <!-- ========================================== -->
+        <section class="tab-pane active" id="tab-dashboard" role="tabpanel">
+            <!-- KPI Cards -->
+            <div class="kpi-grid">
+                <div class="kpi-card kpi-total">
+                    <div class="kpi-label">Total Pendaftar</div>
+                    <div class="kpi-value" id="kpi-total-pendaftar">0</div>
+                    <div class="kpi-desc">Mahasiswa dari prodi ini</div>
+                </div>
+                <div class="kpi-card kpi-diterima">
+                    <div class="kpi-label" style="color: #065F46;">Lolos Seleksi (Diterima)</div>
+                    <div class="kpi-value" id="kpi-diterima" style="color: #065F46;">0</div>
+                    <div class="kpi-desc">Telah ditetapkan di Unit PLN</div>
+                </div>
+                <div class="kpi-card kpi-diproses">
+                    <div class="kpi-label" style="color: #92400E;">Dalam Proses Seleksi</div>
+                    <div class="kpi-value" id="kpi-diproses" style="color: #92400E;">0</div>
+                    <div class="kpi-desc">Menunggu review unit/BLKA</div>
+                </div>
+                <div class="kpi-card kpi-cadangan">
+                    <div class="kpi-label" style="color: #1E40AF;">Cadangan / Pindah</div>
+                    <div class="kpi-value" id="kpi-cadangan" style="color: #1E40AF;">0</div>
+                    <div class="kpi-desc">Cadangan & usulan relokasi</div>
+                </div>
+                <div class="kpi-card kpi-ditolak">
+                    <div class="kpi-label" style="color: #991B1B;">Tidak Lolos (Ditolak)</div>
+                    <div class="kpi-value" id="kpi-ditolak" style="color: #991B1B;">0</div>
+                    <div class="kpi-desc">Berkas/kuota tidak memenuhi</div>
+                </div>
+            </div>
+
+            <!-- Analytics Row 1 -->
+            <div class="analytics-grid">
+                <!-- Program Magang Breakdown -->
+                <div class="analytics-card">
+                    <div class="card-header-clean">
+                        <h3>
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            <span>Sebaran Durasi Program Magang</span>
+                        </h3>
+                    </div>
+                    <div class="stat-bar-list" id="list-program-breakdown">
+                        <div style="color: var(--color-text-muted); font-size: 0.8125rem;">Memuat data program...</div>
+                    </div>
+                </div>
+
+                <!-- Top Unit PLN Tujuan -->
+                <div class="analytics-card">
+                    <div class="card-header-clean">
+                        <h3>
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                            <span>Unit PLN Paling Banyak Diminati</span>
+                        </h3>
+                    </div>
+                    <div class="stat-bar-list" id="list-top-units">
+                        <div style="color: var(--color-text-muted); font-size: 0.8125rem;">Memuat data unit PLN...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Row 2 -->
+            <div class="analytics-grid">
+                <!-- Sebaran Peminatan -->
+                <div class="analytics-card">
+                    <div class="card-header-clean">
+                        <h3>
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>
+                            <span>Sebaran Pilihan Peminatan Bidang</span>
+                        </h3>
+                    </div>
+                    <div class="stat-bar-list" id="list-peminatan-stat">
+                        <div style="color: var(--color-text-muted); font-size: 0.8125rem;">Memuat sebaran peminatan...</div>
+                    </div>
+                </div>
+
+                <!-- 5 Pendaftar Terbaru -->
+                <div class="analytics-card">
+                    <div class="card-header-clean">
+                        <h3>
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                            <span>Pendaftar Terbaru</span>
+                        </h3>
+                        <button type="button" class="btn-table-action" id="btn-see-all-mhs">Lihat Semua</button>
+                    </div>
+                    <div class="stat-bar-list" id="list-recent-pendaftar">
+                        <div style="color: var(--color-text-muted); font-size: 0.8125rem;">Memuat pendaftar terbaru...</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- TAB 2: DAFTAR MAHASISWA MENDAFTAR         -->
+        <!-- ========================================== -->
+        <section class="tab-pane" id="tab-mahasiswa" role="tabpanel">
+            <!-- Filter Bar -->
+            <div class="filter-card">
+                <div class="filter-inputs-group">
+                    <div class="search-box-input">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                        <input type="text" id="mhs-search" placeholder="Cari NIM, Nama Mahasiswa, Email, atau Unit PLN...">
+                    </div>
+
+                    <select id="mhs-filter-status" class="filter-select" aria-label="Filter Status Seleksi">
+                        <option value="">Semua Status Seleksi</option>
+                        <option value="diterima">Lolos Seleksi (Diterima)</option>
+                        <option value="diproses">Dalam Proses Seleksi</option>
+                        <option value="cadangan">Cadangan</option>
+                        <option value="dipindahkan">Dipindahkan</option>
+                        <option value="ditolak">Tidak Lolos (Ditolak)</option>
+                    </select>
+
+                    <select id="mhs-filter-program" class="filter-select" aria-label="Filter Program Magang">
+                        <option value="">Semua Program Magang</option>
+                        <option value="1 Bulan">1 Bulan</option>
+                        <option value="3 Bulan">3 Bulan</option>
+                        <option value="4 Bulan">4 Bulan</option>
+                        <option value="5 Bulan">5 Bulan</option>
+                        <option value="6 Bulan">6 Bulan</option>
+                    </select>
+
+                    <button type="button" class="btn-reset-filter" id="btn-reset-filter" title="Reset Filter">Reset</button>
+                </div>
+
+                <div style="font-size: 0.8125rem; color: var(--color-text-muted);">
+                    Total Ditemukan: <strong id="mhs-total-count" style="color: var(--color-text-main); font-variant-numeric: tabular-nums;">0</strong> Mahasiswa
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="table-responsive-box">
+                <table class="prodi-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 40px; text-align: center;">No</th>
+                            <th>NIM & Mahasiswa</th>
+                            <th style="text-align: center;">L/P</th>
+                            <th style="text-align: center;">Angk.</th>
+                            <th style="text-align: center;">IPK / SKS</th>
+                            <th>Program</th>
+                            <th>Unit PLN Pilihan</th>
+                            <th>Peminatan</th>
+                            <th style="text-align: center;">Berkas</th>
+                            <th style="text-align: center;">Status Seleksi</th>
+                            <th style="text-align: center;">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-mhs-body">
+                        <tr>
+                            <td colspan="11" style="text-align: center; padding: 32px; color: var(--color-text-muted);">
+                                Memuat data pendaftar mahasiswa...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination Bar -->
+            <div class="pagination-bar">
+                <div id="mhs-pagination-info">Menampilkan 0 dari 0 data</div>
+                <div class="pagination-controls">
+                    <button type="button" class="btn-page-nav" id="btn-mhs-prev" disabled>&larr; Sebelumnya</button>
+                    <span id="mhs-page-current" style="font-weight: 700; color: var(--color-text-main); padding: 0 8px;">1</span>
+                    <button type="button" class="btn-page-nav" id="btn-mhs-next" disabled>Berikutnya &rarr;</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- TAB 3: FORMASI & KUOTA UNIT PLN            -->
+        <!-- ========================================== -->
+        <section class="tab-pane" id="tab-formasi" role="tabpanel">
+            <div style="margin-bottom: 16px;">
+                <h2 style="font-size: 1.125rem; font-weight: 800; color: var(--color-text-main); margin: 0 0 4px 0;">
+                    Formasi & Kuota Unit PLN untuk Program Studi Ini
+                </h2>
+                <p style="font-size: 0.8125rem; color: var(--color-text-muted); margin: 0;">
+                    Daftar unit PLN yang membuka formasi penempatan magang bagi mahasiswa program studi Anda pada periode terpilih.
+                </p>
+            </div>
+
+            <!-- Filter Bar Formasi & Kuota Unit PLN -->
+            <div class="filter-card" style="margin-bottom: 16px;">
+                <div class="filter-inputs-group">
+                    <div class="search-box-input">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                        <input type="text" id="formasi-search" placeholder="Cari nama unit PLN, singkatan, kota, atau alamat...">
+                    </div>
+
+                    <select id="formasi-filter-tipe" class="filter-select" aria-label="Filter Tipe Formasi">
+                        <option value="">Semua Tipe Formasi</option>
+                        <option value="breakdown">Khusus Prodi (Alokasi Terdedikasi)</option>
+                        <option value="keseluruhan">Umum / Terbuka</option>
+                    </select>
+
+                    <button type="button" class="btn-reset-filter" id="btn-reset-formasi" title="Reset Pencarian Formasi">Reset</button>
+                </div>
+
+                <div style="font-size: 0.8125rem; color: var(--color-text-muted);">
+                    Menampilkan: <strong id="formasi-count" style="color: var(--color-text-main); font-variant-numeric: tabular-nums;">0</strong> Unit PLN
+                </div>
+            </div>
+
+            <!-- Formasi Table -->
+            <div class="table-responsive-box">
+                <table class="prodi-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 40px; text-align: center;">No</th>
+                            <th>Unit PLN</th>
+                            <th>Alamat / Wilayah</th>
+                            <th style="text-align: center;">Tipe Kuota</th>
+                            <th style="text-align: center;">Kuota Prodi</th>
+                            <th style="text-align: center;">Sisa Kuota</th>
+                            <th style="text-align: center;">Pelamar Prodi</th>
+                            <th style="text-align: center;">Lolos (Diterima)</th>
+                            <th style="width: 160px;">Penyerapan</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-formasi-body">
+                        <tr>
+                            <td colspan="9" style="text-align: center; padding: 32px; color: var(--color-text-muted);">
+                                Memuat formasi kuota unit PLN...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- TAB 4: BIDANG PEMINATAN PRODI              -->
+        <!-- ========================================== -->
+        <section class="tab-pane" id="tab-peminatan" role="tabpanel">
+            <div style="margin-bottom: 16px;">
+                <h2 style="font-size: 1.125rem; font-weight: 800; color: var(--color-text-main); margin: 0 0 4px 0;">
+                    Bidang Peminatan Terdaftar untuk Program Studi
+                </h2>
+                <p style="font-size: 0.8125rem; color: var(--color-text-muted); margin: 0;">
+                    Daftar bidang peminatan magang yang terhubung dan dapat dipilih oleh mahasiswa prodi Anda serta statistik peminat pada periode terpilih.
+                </p>
+            </div>
+
+            <!-- Peminatan Cards Grid -->
+            <div class="peminatan-grid" id="grid-peminatan">
+                <div style="color: var(--color-text-muted); font-size: 0.8125rem;">Memuat daftar peminatan...</div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ========================================== -->
+    <!-- MODAL: DETAIL MAHASISWA                    -->
+    <!-- ========================================== -->
+    <div class="prodi-modal-backdrop" id="modal-detail-mhs">
+        <div class="prodi-modal-box" style="max-width: 720px;">
+            <div class="prodi-modal-header">
+                <div>
+                    <h3 id="detail-modal-name">Detail Pendaftar Mahasiswa</h3>
+                    <div style="font-size: 0.75rem; color: rgba(255, 255, 255, 0.7); margin-top: 2px;" id="detail-modal-nim">NIM: -</div>
+                </div>
+                <button type="button" class="btn-modal-close" id="btn-close-detail" aria-label="Tutup Modal">&times;</button>
+            </div>
+            <div class="prodi-modal-body">
+                <!-- Status Bar -->
+                <div style="display: flex; align-items: center; justify-content: space-between; background: #F8FAFC; border: 1px solid var(--color-border-subtle); border-radius: 8px; padding: 12px 16px; margin-bottom: 16px;">
+                    <div>
+                        <span style="font-size: 0.72rem; font-weight: 700; color: var(--color-text-muted); text-transform: uppercase;">Status Seleksi:</span>
+                        <div id="detail-status-badge" style="margin-top: 4px;">-</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <span style="font-size: 0.72rem; font-weight: 700; color: var(--color-text-muted); text-transform: uppercase;">Tanggal Daftar:</span>
+                        <div id="detail-submitted-at" style="font-size: 0.8125rem; font-weight: 600; color: var(--color-text-main); font-variant-numeric: tabular-nums;">-</div>
+                    </div>
+                </div>
+
+                <div id="detail-catatan-admin-box" style="display: none; background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 8px; padding: 12px 14px; margin-bottom: 16px;">
+                    <div style="font-size: 0.75rem; font-weight: 700; color: #92400E; margin-bottom: 4px;">Catatan Seleksi / Review:</div>
+                    <div id="detail-catatan-admin" style="font-size: 0.8125rem; color: #78350F;">-</div>
+                </div>
+
+                <!-- Academic & Biodata -->
+                <div class="detail-section-title">Data Akademik & Kontak</div>
+                <div class="detail-data-grid">
+                    <div class="detail-item">
+                        <span class="detail-item-label">Nama Lengkap</span>
+                        <span class="detail-item-value" id="detail-nama">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-item-label">NIM</span>
+                        <span class="detail-item-value cell-mono" id="detail-nim">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-item-label">Jenis Kelamin</span>
+                        <span class="detail-item-value" id="detail-jk">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-item-label">Angkatan</span>
+                        <span class="detail-item-value" id="detail-angkatan">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-item-label">IPK Terakhir</span>
+                        <span class="detail-item-value cell-mono" id="detail-ipk">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-item-label">SKS Selesai</span>
+                        <span class="detail-item-value cell-mono" id="detail-sks">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-item-label">Email Kampus / Mahasiswa</span>
+                        <span class="detail-item-value" id="detail-email">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-item-label">Nomor WhatsApp</span>
+                        <span class="detail-item-value cell-mono" id="detail-nohp">-</span>
+                    </div>
+                </div>
+
+                <!-- Unit & Program Pilihan -->
+                <div class="detail-section-title">Pilihan Magang & Unit PLN</div>
+                <div class="detail-data-grid">
+                    <div class="detail-item">
+                        <span class="detail-item-label">Unit PLN Tujuan</span>
+                        <span class="detail-item-value" id="detail-unit">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-item-label">Program Magang</span>
+                        <span class="detail-item-value" id="detail-program">-</span>
+                    </div>
+                    <div class="detail-item" style="grid-column: span 2;">
+                        <span class="detail-item-label">Alamat Unit PLN</span>
+                        <span class="detail-item-value" id="detail-unit-alamat">-</span>
+                    </div>
+                    <div class="detail-item" style="grid-column: span 2;">
+                        <span class="detail-item-label">Peminatan Bidang Dipilih</span>
+                        <div id="detail-peminatan-chips" style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px;">-</div>
+                    </div>
+                </div>
+
+                <!-- Domisili -->
+                <div class="detail-section-title">Domisili Mahasiswa</div>
+                <div class="detail-data-grid">
+                    <div class="detail-item" style="grid-column: span 2;">
+                        <span class="detail-item-label">Alamat Domisili</span>
+                        <span class="detail-item-value" id="detail-alamat">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-item-label">Kota / Kabupaten</span>
+                        <span class="detail-item-value" id="detail-kota">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-item-label">Provinsi</span>
+                        <span class="detail-item-value" id="detail-provinsi">-</span>
+                    </div>
+                </div>
+
+                <!-- Berkas -->
+                <div class="detail-section-title">Berkas Dokumen Pelamar</div>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px;">
+                    <a href="#" target="_blank" class="btn-doc-link" id="link-cv" style="display: none;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                        <span>Lihat Curriculum Vitae (CV)</span>
+                    </a>
+                    <a href="#" target="_blank" class="btn-doc-link" id="link-transkrip" style="display: none;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                        <span>Lihat Transkrip Nilai</span>
+                    </a>
+                    <a href="#" target="_blank" class="btn-doc-link" id="link-porto" style="display: none;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                        <span>Lihat Portofolio</span>
+                    </a>
+                    <span id="no-docs-notice" style="display: none; font-size: 0.8125rem; color: var(--color-text-muted);">Tidak ada berkas yang diunggah.</span>
+                </div>
+            </div>
+            <div class="prodi-modal-footer">
+                <button type="button" class="btn-secondary-action" id="btn-close-detail-footer">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL: UBAH PASSWORD                      -->
+    <!-- ========================================== -->
+    <div class="prodi-modal-backdrop" id="modal-password">
+        <div class="prodi-modal-box" style="max-width: 440px;">
+            <div class="prodi-modal-header">
+                <h3>Ubah Password Akun Prodi</h3>
+                <button type="button" class="btn-modal-close" id="btn-close-password" aria-label="Tutup">&times;</button>
+            </div>
+            <form id="form-change-password">
+                <div class="prodi-modal-body">
+                    <p style="font-size: 0.8125rem; color: var(--color-text-muted); margin: 0 0 16px 0;">
+                        Ganti password berkala untuk mengamankan akses data mahasiswa Program Studi Anda.
+                    </p>
+
+                    <div class="form-group-clean">
+                        <label for="input-current-pass">Password Saat Ini</label>
+                        <input type="password" id="input-current-pass" required placeholder="Masukkan password saat ini">
+                    </div>
+
+                    <div class="form-group-clean">
+                        <label for="input-new-pass">Password Baru</label>
+                        <input type="password" id="input-new-pass" required minlength="6" placeholder="Minimal 6 karakter">
+                    </div>
+
+                    <div class="form-group-clean">
+                        <label for="input-confirm-pass">Konfirmasi Password Baru</label>
+                        <input type="password" id="input-confirm-pass" required minlength="6" placeholder="Ulangi password baru">
+                    </div>
+                </div>
+                <div class="prodi-modal-footer">
+                    <button type="button" class="btn-secondary-action" id="btn-cancel-password">Batal</button>
+                    <button type="submit" class="btn-primary-action" id="btn-submit-password">Simpan Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="prodi-toast" id="prodi-toast">
+        <span id="toast-message">Operasi berhasil.</span>
+    </div>
+
+    <!-- Javascript -->
+    <script src="/js/admin/prodi.js"></script>
+</body>
+</html>

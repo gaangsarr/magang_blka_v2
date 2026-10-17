@@ -80,6 +80,7 @@ class Auth
             $_SESSION['admin_nama'],
             $_SESSION['admin_role'],
             $_SESSION['entitas_id'],
+            $_SESSION['jurusan_id'],
             $_SESSION['force_password_change']
         );
         $_SESSION['mahasiswa_id'] = $mahasiswaId;
@@ -97,7 +98,8 @@ class Auth
         string $nama, 
         string $adminRole = 'admin_blka', 
         ?int $entitasId = null, 
-        bool $forcePasswordChange = false
+        bool $forcePasswordChange = false,
+        ?int $jurusanId = null
     ): void
     {
         self::startSession(startPHP: true);
@@ -109,6 +111,7 @@ class Auth
         $_SESSION['admin_nama']            = $nama;
         $_SESSION['admin_role']            = $adminRole;
         $_SESSION['entitas_id']            = $entitasId;
+        $_SESSION['jurusan_id']            = $jurusanId;
         $_SESSION['force_password_change'] = $forcePasswordChange;
         $_SESSION['role']                  = 'admin';
         $_SESSION['created_at']            = time();
@@ -172,6 +175,33 @@ class Auth
         if ($admin['role'] === 'admin_perusahaan' && empty($admin['entitas_id'])) {
             http_response_code(403);
             echo json_encode(['error' => 'Akun admin perusahaan belum terhubung ke entitas unit manapun.']);
+            exit;
+        }
+    }
+
+    /**
+     * Cek apakah request datang dari Admin Prodi (atau Super Admin yang sedang memantau).
+     */
+    public static function requireProdiApi(): void
+    {
+        self::startSession(startPHP: true);
+
+        if (!self::isLoggedInAdmin()) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Unauthorized. Silakan login terlebih dahulu.']);
+            exit;
+        }
+
+        $admin = self::getAdmin();
+        if (!$admin || ($admin['role'] !== 'admin_prodi' && $admin['role'] !== 'super_admin')) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Akses ditolak. Endpoint ini khusus Admin Program Studi.']);
+            exit;
+        }
+
+        if ($admin['role'] === 'admin_prodi' && empty($admin['jurusan_id'])) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Akun admin prodi belum terhubung ke program studi manapun.']);
             exit;
         }
     }
@@ -250,7 +280,17 @@ class Auth
         $id  = (int) $_SESSION['admin_id'];
         $pdo = Database::getInstance();
 
-        $stmt = $pdo->prepare('SELECT id, nama, email, username, role, mahasiswa_id, entitas_id, force_password_change, aktif FROM admin WHERE id = :id LIMIT 1');
+        $stmt = $pdo->prepare('
+            SELECT a.id, a.nama, a.email, a.username, a.role, a.mahasiswa_id, a.entitas_id, a.jurusan_id, 
+                   a.force_password_change, a.aktif,
+                   j.nama_jurusan, j.jenjang AS jurusan_jenjang, j.kode AS jurusan_kode,
+                   e.nama AS entitas_nama
+            FROM admin a
+            LEFT JOIN jurusan j ON a.jurusan_id = j.id
+            LEFT JOIN entitas_perusahaan e ON a.entitas_id = e.id
+            WHERE a.id = :id 
+            LIMIT 1
+        ');
         $stmt->execute([':id' => $id]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -268,6 +308,19 @@ class Auth
         }
         $admin = self::getAdmin();
         return !empty($admin['entitas_id']) ? (int)$admin['entitas_id'] : null;
+    }
+
+    /**
+     * Shorthand: ambil jurusan_id admin prodi dari session/DB.
+     */
+    public static function getProdiJurusanId(): ?int
+    {
+        self::startSession(startPHP: true);
+        if (isset($_SESSION['jurusan_id']) && (int)$_SESSION['jurusan_id'] > 0) {
+            return (int)$_SESSION['jurusan_id'];
+        }
+        $admin = self::getAdmin();
+        return !empty($admin['jurusan_id']) ? (int)$admin['jurusan_id'] : null;
     }
 
     /**

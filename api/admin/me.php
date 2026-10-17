@@ -23,12 +23,15 @@ try {
 
     $isSuperAdmin = ($admin['role'] === 'super_admin' || $admin['role'] === 'superadmin');
     $isPerusahaan = ($admin['role'] === 'admin_perusahaan');
+    $isProdi      = ($admin['role'] === 'admin_prodi');
     
     $roleLabel = 'Admin BLKA';
     if ($isSuperAdmin) {
         $roleLabel = 'Super Admin BLKA';
     } elseif ($isPerusahaan) {
         $roleLabel = 'Admin Mitra Perusahaan';
+    } elseif ($isProdi) {
+        $roleLabel = 'Admin Program Studi (' . ($admin['jurusan_jenjang'] ?? '') . ' ' . ($admin['nama_jurusan'] ?? '') . ')';
     }
 
     $entitasData = null;
@@ -37,6 +40,16 @@ try {
         $stmtE = $pdo->prepare("SELECT id, nama, singkatan, tipe, alamat FROM entitas_perusahaan WHERE id = ?");
         $stmtE->execute([(int)$admin['entitas_id']]);
         $entitasData = $stmtE->fetch(PDO::FETCH_ASSOC) ?: null;
+    }
+
+    $jurusanData = null;
+    if (!empty($admin['jurusan_id'])) {
+        $jurusanData = [
+            'id'      => (int)$admin['jurusan_id'],
+            'nama'    => $admin['nama_jurusan'] ?? '',
+            'kode'    => $admin['jurusan_kode'] ?? '',
+            'jenjang' => $admin['jurusan_jenjang'] ?? '',
+        ];
     }
 
     echo json_encode([
@@ -50,8 +63,11 @@ try {
             'role_label'            => $roleLabel,
             'is_super'              => $isSuperAdmin,
             'is_perusahaan'         => $isPerusahaan,
+            'is_prodi'              => $isProdi,
             'entitas_id'            => !empty($admin['entitas_id']) ? (int)$admin['entitas_id'] : null,
             'entitas'               => $entitasData,
+            'jurusan_id'            => !empty($admin['jurusan_id']) ? (int)$admin['jurusan_id'] : null,
+            'jurusan'               => $jurusanData,
             'force_password_change' => (bool)($admin['force_password_change'] ?? false),
         ]
     ]);

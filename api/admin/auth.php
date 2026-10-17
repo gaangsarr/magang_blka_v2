@@ -42,7 +42,7 @@ try {
     
     // Wajib cek aktif = 1 agar admin yang dicabut aksesnya tidak bisa login
     $stmt = $pdo->prepare("
-        SELECT id, nama, email, username, role, entitas_id, password_hash, force_password_change, aktif 
+        SELECT id, nama, email, username, role, entitas_id, jurusan_id, password_hash, force_password_change, aktif 
         FROM admin 
         WHERE (email = :email OR username = :uname) AND aktif = 1 
         LIMIT 1
@@ -58,6 +58,7 @@ try {
     
     $role = $admin['role'] ?? 'admin_blka';
     $entitasId = !empty($admin['entitas_id']) ? (int)$admin['entitas_id'] : null;
+    $jurusanId = !empty($admin['jurusan_id']) ? (int)$admin['jurusan_id'] : null;
     $forceChange = (bool)($admin['force_password_change'] ?? false);
 
     // Set admin session dengan role yang benar dari database
@@ -66,10 +67,17 @@ try {
         $admin['nama'], 
         $role, 
         $entitasId, 
-        $forceChange
+        $forceChange,
+        $jurusanId
     );
     
-    $redirectUrl = ($role === 'admin_perusahaan') ? '/perusahaan/index.html' : '/admin/index.html';
+    if ($role === 'admin_perusahaan') {
+        $redirectUrl = '/perusahaan/index.html';
+    } elseif ($role === 'admin_prodi') {
+        $redirectUrl = '/admin/prodi/index.html';
+    } else {
+        $redirectUrl = '/admin/index.html';
+    }
 
     echo json_encode([
         'ok'                    => true,

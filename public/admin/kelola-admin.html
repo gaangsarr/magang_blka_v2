@@ -173,6 +173,11 @@
                         <span>Admin Kampus (BLKA / Staf)</span>
                         <span class="badge-count" id="count-kampus">0</span>
                     </button>
+                    <button class="kelola-tab-btn" id="tab-btn-prodi" data-target="tab-prodi">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>
+                        <span>Admin Program Studi (Prodi)</span>
+                        <span class="badge-count" id="count-prodi">0</span>
+                    </button>
                 </div>
 
                 <!-- TAB 1: ADMIN MITRA PERUSAHAAN -->
@@ -326,6 +331,91 @@
                                 Menampilkan 0 data
                             </div>
                             <div style="display: flex; gap: 6px; align-items: center;" id="pagination-nav-kampus"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 3: ADMIN PROGRAM STUDI (PRODI) -->
+                <div class="tab-panel" id="tab-prodi">
+                    <!-- Stats Badges -->
+                    <div class="stats-grid-perusahaan">
+                        <div class="stat-card-mini">
+                            <span class="stat-val" id="stat-prodi-total">0</span>
+                            <span class="stat-lbl">Total Program Studi</span>
+                        </div>
+                        <div class="stat-card-mini" style="border-left: 4px solid #10b981;">
+                            <span class="stat-val" id="stat-prodi-has-account" style="color: #10b981;">0</span>
+                            <span class="stat-lbl">Sudah Memiliki Akun</span>
+                        </div>
+                        <div class="stat-card-mini" style="border-left: 4px solid #ef4444;">
+                            <span class="stat-val" id="stat-prodi-no-account" style="color: #ef4444;">0</span>
+                            <span class="stat-lbl">Belum Memiliki Akun</span>
+                        </div>
+                        <div class="stat-card-mini" style="border-left: 4px solid #0284c7;">
+                            <span class="stat-val" id="stat-prodi-aktif" style="color: #0284c7;">0</span>
+                            <span class="stat-lbl">Akun Aktif</span>
+                        </div>
+                    </div>
+
+                    <!-- Action Bar & Filter -->
+                    <div class="admin-card" style="margin-bottom: 16px;">
+                        <div style="padding: 16px 20px; display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center;">
+                            <div style="display: flex; gap: 10px; align-items: center; flex: 1; min-width: 280px;">
+                                <input type="text" id="filter-search-prodi" class="admin-input-field" placeholder="Cari nama prodi, kode, atau username..." style="max-width: 360px; padding-left: 14px;">
+                                <select id="filter-status-prodi" class="admin-input-field" style="width: 180px; padding-left: 12px;">
+                                    <option value="">Semua Status Akun</option>
+                                    <option value="has_account">Sudah Ada Akun</option>
+                                    <option value="no_account">Belum Ada Akun</option>
+                                    <option value="aktif">Akun Aktif</option>
+                                    <option value="nonaktif">Akun Nonaktif</option>
+                                </select>
+                            </div>
+                            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                                <a id="btn-export-excel-prodi" href="/api/admin/kelola/prodi_export.php?format=excel" class="btn-action-sm btn-action-outline" target="_blank" title="Unduh format spreadsheet">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                    <span>Ekspor Excel</span>
+                                </a>
+                                <a id="btn-export-pdf-prodi" href="/api/admin/kelola/prodi_export.php?format=print" class="btn-action-sm btn-action-outline" target="_blank" title="Buka cetak surat / simpan PDF">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+                                    <span>Cetak Kredensial (PDF)</span>
+                                </a>
+                                <button type="button" id="btn-generate-all-prodi" class="btn-action-sm btn-action-primary" style="background: #004687;">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                                    <span>Generate Semua Akun Prodi</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tabel Akun Prodi -->
+                    <div class="admin-card">
+                        <div class="admin-card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h3 class="admin-card-title">Daftar Akun Admin Program Studi</h3>
+                                <span style="font-size: 0.825rem; color: #64748b;">Akun resmi untuk Kepala Program Studi / Admin Prodi untuk memantau pendaftaran magang mahasiswanya.</span>
+                            </div>
+                        </div>
+
+                        <div style="overflow-x: auto;">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 45px;">No</th>
+                                        <th style="width: 80px;">Jenjang</th>
+                                        <th style="width: 70px;">Kode</th>
+                                        <th>Program Studi</th>
+                                        <th>Username</th>
+                                        <th style="text-align: center;">Total Pendaftar</th>
+                                        <th style="text-align: center; width: 120px;">Status Akun</th>
+                                        <th style="text-align: center; width: 180px;">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-prodi">
+                                    <tr>
+                                        <td colspan="8" style="text-align: center; color: #64748b; padding: 24px;">Memuat data akun program studi...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
