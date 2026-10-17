@@ -50,6 +50,7 @@ $prog5 = isset($body['program_5_bulan']) ? (int)(bool)$body['program_5_bulan'] :
 $syaratTranskrip = isset($body['syarat_transkrip']) ? (int)(bool)$body['syarat_transkrip'] : 1;
 $syaratCv = isset($body['syarat_cv']) ? (int)(bool)$body['syarat_cv'] : 0;
 $syaratPorto = isset($body['syarat_porto']) ? (int)(bool)$body['syarat_porto'] : 0;
+$syaratLinkedin = isset($body['syarat_linkedin']) ? (int)(bool)$body['syarat_linkedin'] : 1;
 
 $angkatanInput = $body['angkatan_eligible'] ?? null;
 $angkatanEligible = null;
@@ -111,10 +112,11 @@ try {
             syarat_transkrip = ?,
             syarat_cv = ?,
             syarat_porto = ?,
+            syarat_linkedin = ?,
             angkatan_eligible = ? 
         WHERE id = ?
     ");
-    $stmt->execute([$nama, $tglMulai, $tglSelesai, $jamSelesai, $targetStatus, $prog1, $prog3, $prog4, $prog5, $syaratTranskrip, $syaratCv, $syaratPorto, $angkatanEligible, $id]);
+    $stmt->execute([$nama, $tglMulai, $tglSelesai, $jamSelesai, $targetStatus, $prog1, $prog3, $prog4, $prog5, $syaratTranskrip, $syaratCv, $syaratPorto, $syaratLinkedin, $angkatanEligible, $id]);
 
     // Jika periode ditutup karena expired, jalankan cleanup reservasi & kuota
     if ($isExpired) {

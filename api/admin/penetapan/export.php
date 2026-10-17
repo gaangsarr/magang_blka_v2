@@ -68,6 +68,7 @@ try {
             p.no_hp,
             j.nama_jurusan AS jurusan,
             p.program,
+            p.linkedin_link,
             p.status,
             p.is_dipindahkan,
             p.catatan_admin,
@@ -105,6 +106,7 @@ try {
             'No. HP', 
             'Jurusan', 
             'Program Magang', 
+            'Profil LinkedIn',
             'Unit Pilihan Awal', 
             'Unit Penetapan Final', 
             'Status Penetapan', 
@@ -122,7 +124,7 @@ try {
                 'startColor' => ['rgb' => '0B3D6B']
             ]
         ];
-        $sheet->getStyle('A1:N1')->applyFromArray($headerStyle);
+        $sheet->getStyle('A1:O1')->applyFromArray($headerStyle);
 
         $rowNum = 2;
         foreach ($rows as $idx => $r) {
@@ -145,17 +147,28 @@ try {
             $sheet->setCellValueExplicit('E' . $rowNum, (string)($r['no_hp'] ?? '-'), \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
             $sheet->setCellValue('F' . $rowNum, $r['jurusan'] ?? '-');
             $sheet->setCellValue('G' . $rowNum, $progText);
-            $sheet->setCellValue('H' . $rowNum, $unitAwal);
-            $sheet->setCellValue('I' . $rowNum, $unitFinal);
-            $sheet->setCellValue('J' . $rowNum, $statusText);
-            $sheet->setCellValue('K' . $rowNum, $isMoved);
-            $sheet->setCellValue('L' . $rowNum, $r['catatan_admin'] ?? '-');
-            $sheet->setCellValue('M' . $rowNum, $r['alamat_domisili'] ?? '-');
-            $sheet->setCellValue('N' . $rowNum, $r['submitted_at'] ?? '-');
+
+            $linkedinVal = $r['linkedin_link'] ?? '';
+            if (!empty($linkedinVal)) {
+                $sheet->setCellValue('H' . $rowNum, $linkedinVal);
+                $sheet->getCell('H' . $rowNum)->getHyperlink()->setUrl($linkedinVal);
+                $sheet->getStyle('H' . $rowNum)->getFont()->getColor()->setRGB('0A66C2');
+                $sheet->getStyle('H' . $rowNum)->getFont()->setUnderline(true);
+            } else {
+                $sheet->setCellValue('H' . $rowNum, '-');
+            }
+
+            $sheet->setCellValue('I' . $rowNum, $unitAwal);
+            $sheet->setCellValue('J' . $rowNum, $unitFinal);
+            $sheet->setCellValue('K' . $rowNum, $statusText);
+            $sheet->setCellValue('L' . $rowNum, $isMoved);
+            $sheet->setCellValue('M' . $rowNum, $r['catatan_admin'] ?? '-');
+            $sheet->setCellValue('N' . $rowNum, $r['alamat_domisili'] ?? '-');
+            $sheet->setCellValue('O' . $rowNum, $r['submitted_at'] ?? '-');
 
             // Highlight relocated rows in light amber
             if ($r['is_dipindahkan'] == 1 && $r['status'] !== 'ditolak') {
-                $sheet->getStyle('A' . $rowNum . ':N' . $rowNum)->getFill()
+                $sheet->getStyle('A' . $rowNum . ':O' . $rowNum)->getFill()
                     ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
                     ->getStartColor()->setRGB('FEF3C7');
             }
@@ -163,7 +176,7 @@ try {
             $rowNum++;
         }
 
-        foreach (range('A', 'N') as $col) {
+        foreach (range('A', 'O') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 
@@ -184,7 +197,7 @@ try {
     $output = fopen('php://output', 'w');
     fwrite($output, "\xEF\xBB\xBF");
 
-    fputcsv($output, ['No', 'NIM', 'Nama Mahasiswa', 'Email', 'No. HP', 'Jurusan', 'Program Magang', 'Unit Pilihan Awal', 'Unit Penetapan Final', 'Status Penetapan', 'Dipindahkan Paksa', 'Catatan Admin', 'Alamat Domisili', 'Tanggal Pengajuan']);
+    fputcsv($output, ['No', 'NIM', 'Nama Mahasiswa', 'Email', 'No. HP', 'Jurusan', 'Program Magang', 'Profil LinkedIn', 'Unit Pilihan Awal', 'Unit Penetapan Final', 'Status Penetapan', 'Dipindahkan Paksa', 'Catatan Admin', 'Alamat Domisili', 'Tanggal Pengajuan']);
 
     foreach ($rows as $idx => $r) {
         $progText = match($r['program'] ?? '') {
@@ -203,6 +216,7 @@ try {
             "'" . ($r['no_hp'] ?? '-'),
             $r['jurusan'] ?? '-',
             $progText,
+            $r['linkedin_link'] ?? '-',
             $unitAwal,
             $r['unit_nama'] ?? '-',
             strtoupper($r['status']),

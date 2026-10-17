@@ -140,6 +140,7 @@ try {
             p.transkrip_path,
             p.cv_path,
             p.porto_path,
+            p.linkedin_link,
             p.unit_pelaksana_periode_id,
             p.latitude,
             p.longitude,

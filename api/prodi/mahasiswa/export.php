@@ -97,6 +97,7 @@ try {
             p.cv_path,
             p.transkrip_path,
             p.porto_path,
+            p.linkedin_link,
             p.status,
             p.catatan_admin,
             p.submitted_at,
@@ -156,6 +157,7 @@ try {
             'Unit PLN Tujuan', 
             'Peminatan Bidang', 
             'Berkas Terlampir',
+            'Tautan LinkedIn',
             'Status Seleksi', 
             'Catatan Seleksi', 
             'Waktu Pendaftaran'
@@ -174,7 +176,7 @@ try {
                 'wrapText' => true
             ]
         ];
-        $sheet->getStyle('A5:P5')->applyFromArray($headerStyle);
+        $sheet->getStyle('A5:Q5')->applyFromArray($headerStyle);
         $sheet->getRowDimension(5)->setRowHeight(28);
 
         // Content Rows
@@ -193,6 +195,7 @@ try {
             if (!empty($r['cv_path'])) $docList[] = 'CV';
             if (!empty($r['transkrip_path'])) $docList[] = 'Transkrip';
             if (!empty($r['porto_path'])) $docList[] = 'Portofolio';
+            if (!empty($r['linkedin_link'])) $docList[] = 'LinkedIn';
             $docStr = !empty($docList) ? implode(', ', $docList) : '-';
 
             $dataRow = [
@@ -209,6 +212,7 @@ try {
                 $r['unit_nama'],
                 $r['peminatan_list'] ?: '-',
                 $docStr,
+                $r['linkedin_link'] ?: '-',
                 $statusText,
                 $r['catatan_admin'] ?: '-',
                 $r['submitted_at'] ? date('d/m/Y H:i', strtotime($r['submitted_at'])) : '-'
@@ -217,7 +221,7 @@ try {
             $sheet->fromArray($dataRow, null, 'A' . $rowIdx);
 
             // Border style per row
-            $sheet->getStyle("A{$rowIdx}:P{$rowIdx}")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN)->getColor()->setRGB('D0D5DD');
+            $sheet->getStyle("A{$rowIdx}:Q{$rowIdx}")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN)->getColor()->setRGB('D0D5DD');
 
             // Alignment
             $sheet->getStyle("A{$rowIdx}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
@@ -242,7 +246,7 @@ try {
         }
 
         // Auto-size columns
-        foreach (range('A', 'P') as $col) {
+        foreach (range('A', 'Q') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 

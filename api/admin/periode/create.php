@@ -49,6 +49,7 @@ $prog5 = isset($body['program_5_bulan']) ? (int)(bool)$body['program_5_bulan'] :
 $syaratTranskrip = isset($body['syarat_transkrip']) ? (int)(bool)$body['syarat_transkrip'] : 1;
 $syaratCv = isset($body['syarat_cv']) ? (int)(bool)$body['syarat_cv'] : 0;
 $syaratPorto = isset($body['syarat_porto']) ? (int)(bool)$body['syarat_porto'] : 0;
+$syaratLinkedin = isset($body['syarat_linkedin']) ? (int)(bool)$body['syarat_linkedin'] : 1;
 $copyFromPeriodeId = isset($body['copy_from_periode_id']) ? (int)$body['copy_from_periode_id'] : null;
 
 // Parse angkatan_eligible (bisa array atau string dipisah koma)
@@ -63,15 +64,15 @@ if (is_array($angkatanInput)) {
 $adminId = Auth::getAdminId();
 
 try {
-    Database::transaction(function (PDO $pdo) use ($nama, $tglMulai, $tglSelesai, $jamSelesai, $prog1, $prog3, $prog4, $prog5, $syaratTranskrip, $syaratCv, $syaratPorto, $angkatanEligible, $copyFromPeriodeId, $adminId) {
+    Database::transaction(function (PDO $pdo) use ($nama, $tglMulai, $tglSelesai, $jamSelesai, $prog1, $prog3, $prog4, $prog5, $syaratTranskrip, $syaratCv, $syaratPorto, $syaratLinkedin, $angkatanEligible, $copyFromPeriodeId, $adminId) {
         // Tutup periode lain yang sedang dibuka atau persiapan (hanya 1 periode yang boleh aktif)
         $pdo->query("UPDATE periode SET status = 'ditutup' WHERE status IN ('dibuka', 'persiapan')");
 
         $stmt = $pdo->prepare("
-            INSERT INTO periode (nama, tanggal_mulai, tanggal_selesai, jam_selesai, status, program_1_bulan, program_3_bulan, program_4_bulan, program_5_bulan, syarat_transkrip, syarat_cv, syarat_porto, angkatan_eligible) 
-            VALUES (?, ?, ?, ?, 'persiapan', ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO periode (nama, tanggal_mulai, tanggal_selesai, jam_selesai, status, program_1_bulan, program_3_bulan, program_4_bulan, program_5_bulan, syarat_transkrip, syarat_cv, syarat_porto, syarat_linkedin, angkatan_eligible) 
+            VALUES (?, ?, ?, ?, 'persiapan', ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
-        $stmt->execute([$nama, $tglMulai, $tglSelesai, $jamSelesai, $prog1, $prog3, $prog4, $prog5, $syaratTranskrip, $syaratCv, $syaratPorto, $angkatanEligible]);
+        $stmt->execute([$nama, $tglMulai, $tglSelesai, $jamSelesai, $prog1, $prog3, $prog4, $prog5, $syaratTranskrip, $syaratCv, $syaratPorto, $syaratLinkedin, $angkatanEligible]);
         
         $periodeId = $pdo->lastInsertId();
         

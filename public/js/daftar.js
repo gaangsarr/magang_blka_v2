@@ -33,6 +33,7 @@ const formData = {
     transkrip_link: '',
     cv_link: '',
     porto_link: '',
+    linkedin_link: '',
     lat: '',
     lng: '',
     rt: '',
@@ -513,6 +514,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (formData.transkrip_link && document.getElementById('transkrip_link')) document.getElementById('transkrip_link').value = formData.transkrip_link;
                 if (formData.cv_link && document.getElementById('cv_link')) document.getElementById('cv_link').value = formData.cv_link;
                 if (formData.porto_link && document.getElementById('porto_link')) document.getElementById('porto_link').value = formData.porto_link;
+                if (formData.linkedin_link && document.getElementById('linkedin_link')) document.getElementById('linkedin_link').value = formData.linkedin_link;
                 if (formData.lat && document.getElementById('lat')) document.getElementById('lat').value = formData.lat;
                 if (formData.lng && document.getElementById('lng')) document.getElementById('lng').value = formData.lng;
                 if (formData.rt && document.getElementById('rt')) document.getElementById('rt').value = formData.rt;
@@ -1092,6 +1094,25 @@ function validateStep(step) {
             }
         }
         window.portoUploadedPath = portoVal;
+
+        let linkedinVal = (document.getElementById('linkedin_link')?.value || '').trim();
+        if (linkedinVal && !linkedinVal.startsWith('http://') && !linkedinVal.startsWith('https://')) {
+            linkedinVal = 'https://' + linkedinVal.replace(/^\/+/, '');
+            const linkedinInput = document.getElementById('linkedin_link');
+            if (linkedinInput) linkedinInput.value = linkedinVal;
+        }
+        formData.linkedin_link = linkedinVal;
+
+        if (window.syaratLinkedin !== false) {
+            if (!linkedinVal) {
+                showError('Tautan profil LinkedIn wajib diisi.', 'linkedin_link', 'LinkedIn Wajib Diisi');
+                return false;
+            }
+            if (!isValidUrl(linkedinVal) || !/^https?:\/\/(?:[a-zA-Z0-9-]+\.)?linkedin\.com\//i.test(linkedinVal)) {
+                showError('Format tautan profil LinkedIn tidak valid. Pastikan mengarah ke akun LinkedIn Anda (contoh: https://linkedin.com/in/username).', 'linkedin_link', 'Tautan Tidak Valid');
+                return false;
+            }
+        }
     } else if (step === 3) {
         if (!document.getElementById('lat').value.trim() || !document.getElementById('lng').value.trim()) {
             showError('Silakan tentukan titik koordinat tempat tinggal Anda pada peta domisili.', 'map-domisili', 'Titik Lokasi Wajib Ditandai');
@@ -1153,6 +1174,7 @@ function saveFormData(immediateSync = false) {
     formData.transkrip_link = (document.getElementById('transkrip_link')?.value || '').trim();
     formData.cv_link = (document.getElementById('cv_link')?.value || '').trim();
     formData.porto_link = (document.getElementById('porto_link')?.value || '').trim();
+    formData.linkedin_link = (document.getElementById('linkedin_link')?.value || '').trim();
     
     if (document.getElementById('lat')) formData.lat = document.getElementById('lat').value;
     if (document.getElementById('lng')) formData.lng = document.getElementById('lng').value;
@@ -1609,6 +1631,10 @@ function populateResume() {
     if (resumePortoEl) {
         resumePortoEl.innerHTML = formatLinkResume(formData.porto_link || window.portoUploadedPath);
     }
+    const resumeLinkedinEl = document.getElementById('resume-linkedin-name');
+    if (resumeLinkedinEl) {
+        resumeLinkedinEl.innerHTML = formatLinkResume(formData.linkedin_link);
+    }
 }
 
 function startTimer(expireTimeMs) {
@@ -1685,6 +1711,13 @@ async function handleSubmit() {
         return;
     }
 
+    const linkedinVal = formData.linkedin_link;
+    if (window.syaratLinkedin !== false && !linkedinVal) {
+        showError('Tautan profil LinkedIn belum diisi. Silakan kembali ke tahap Data Diri.', null, 'LinkedIn Wajib Diisi');
+        btnSubmit.disabled = false;
+        return;
+    }
+
     btnSubmit.disabled = true;
     btnSubmit.innerText = 'Menyimpan...';
 
@@ -1696,7 +1729,8 @@ async function handleSubmit() {
             cv_path: cvVal || null,
             cv_link: cvVal || null,
             porto_path: portoVal || null,
-            porto_link: portoVal || null
+            porto_link: portoVal || null,
+            linkedin_link: linkedinVal || null
         };
 
         const res = await fetch('/api/mahasiswa/submit.php', {
@@ -1744,7 +1778,7 @@ async function handleSubmit() {
 // Setup Dokumen Persyaratan Berdasarkan Periode Aktif
 // ----------------------------------------------------
 function setupDokumenInputs() {
-    ['transkrip_link', 'cv_link', 'porto_link'].forEach(id => {
+    ['transkrip_link', 'cv_link', 'porto_link', 'linkedin_link'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
             el.addEventListener('input', () => {
@@ -1760,22 +1794,27 @@ function setupDokumenSyarat(periode) {
     window.syaratTranskrip = (periode.syarat_transkrip !== false && periode.syarat_transkrip != 0);
     window.syaratCv = (periode.syarat_cv === true || periode.syarat_cv == 1);
     window.syaratPorto = (periode.syarat_porto === true || periode.syarat_porto == 1);
+    window.syaratLinkedin = (periode.syarat_linkedin !== false && periode.syarat_linkedin != 0);
 
     const wrapTranskrip = document.getElementById('wrapper-upload-transkrip');
     const wrapCv = document.getElementById('wrapper-upload-cv');
     const wrapPorto = document.getElementById('wrapper-upload-porto');
+    const wrapLinkedin = document.getElementById('wrapper-upload-linkedin');
 
     const resTranskrip = document.getElementById('resume-group-transkrip');
     const resCv = document.getElementById('resume-group-cv');
     const resPorto = document.getElementById('resume-group-porto');
+    const resLinkedin = document.getElementById('resume-group-linkedin');
 
     if (wrapTranskrip) wrapTranskrip.classList.toggle('hidden', !window.syaratTranskrip);
     if (wrapCv) wrapCv.classList.toggle('hidden', !window.syaratCv);
     if (wrapPorto) wrapPorto.classList.toggle('hidden', !window.syaratPorto);
+    if (wrapLinkedin) wrapLinkedin.classList.toggle('hidden', !window.syaratLinkedin);
 
     if (resTranskrip) resTranskrip.classList.toggle('hidden', !window.syaratTranskrip);
     if (resCv) resCv.classList.toggle('hidden', !window.syaratCv);
     if (resPorto) resPorto.classList.toggle('hidden', !window.syaratPorto);
+    if (resLinkedin) resLinkedin.classList.toggle('hidden', !window.syaratLinkedin);
 
     setupDokumenInputs();
 }

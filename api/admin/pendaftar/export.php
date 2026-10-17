@@ -63,6 +63,7 @@ try {
             p.no_hp,
             j.nama_jurusan AS jurusan,
             p.program,
+            p.linkedin_link,
             e.nama AS unit_nama,
             p.status,
             CONCAT_WS(', ', p.alamat, CONCAT('RT ', p.rt, '/RW ', p.rw), p.kelurahan, p.kecamatan, p.kota_kabupaten, p.provinsi) AS alamat_domisili,
@@ -89,7 +90,7 @@ try {
         $sheet->setTitle('Data Pendaftar');
 
         // Header Styling & Titles
-        $headers = ['No', 'NIM', 'Nama Mahasiswa', 'Email', 'No. HP', 'Jurusan', 'Program Magang', 'Unit Pelaksana Pilihan', 'Status Pendaftaran', 'Alamat Domisili', 'Tanggal Pengajuan'];
+        $headers = ['No', 'NIM', 'Nama Mahasiswa', 'Email', 'No. HP', 'Jurusan', 'Program Magang', 'Profil LinkedIn', 'Unit Pelaksana Pilihan', 'Status Pendaftaran', 'Alamat Domisili', 'Tanggal Pengajuan'];
         $sheet->fromArray($headers, null, 'A1');
 
         // Header font bold & fill
@@ -100,7 +101,7 @@ try {
                 'startColor' => ['rgb' => '0B3D6B']
             ]
         ];
-        $sheet->getStyle('A1:K1')->applyFromArray($headerStyle);
+        $sheet->getStyle('A1:L1')->applyFromArray($headerStyle);
 
         $rowNum = 2;
         foreach ($rows as $idx => $r) {
@@ -120,15 +121,26 @@ try {
             $sheet->setCellValueExplicit('E' . $rowNum, (string)($r['no_hp'] ?? '-'), \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
             $sheet->setCellValue('F' . $rowNum, $r['jurusan'] ?? '-');
             $sheet->setCellValue('G' . $rowNum, $progText);
-            $sheet->setCellValue('H' . $rowNum, $r['unit_nama'] ?? '-');
-            $sheet->setCellValue('I' . $rowNum, $statusText);
-            $sheet->setCellValue('J' . $rowNum, $r['alamat_domisili'] ?? '-');
-            $sheet->setCellValue('K' . $rowNum, $r['submitted_at'] ?? '-');
+            
+            $linkedinVal = $r['linkedin_link'] ?? '';
+            if (!empty($linkedinVal)) {
+                $sheet->setCellValue('H' . $rowNum, $linkedinVal);
+                $sheet->getCell('H' . $rowNum)->getHyperlink()->setUrl($linkedinVal);
+                $sheet->getStyle('H' . $rowNum)->getFont()->getColor()->setRGB('0A66C2');
+                $sheet->getStyle('H' . $rowNum)->getFont()->setUnderline(true);
+            } else {
+                $sheet->setCellValue('H' . $rowNum, '-');
+            }
+
+            $sheet->setCellValue('I' . $rowNum, $r['unit_nama'] ?? '-');
+            $sheet->setCellValue('J' . $rowNum, $statusText);
+            $sheet->setCellValue('K' . $rowNum, $r['alamat_domisili'] ?? '-');
+            $sheet->setCellValue('L' . $rowNum, $r['submitted_at'] ?? '-');
             $rowNum++;
         }
 
         // Auto width for columns
-        foreach (range('A', 'K') as $col) {
+        foreach (range('A', 'L') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 
@@ -149,7 +161,7 @@ try {
     $output = fopen('php://output', 'w');
     fwrite($output, "\xEF\xBB\xBF"); // UTF-8 BOM for Excel
 
-    fputcsv($output, ['No', 'NIM', 'Nama Mahasiswa', 'Email', 'No. HP', 'Jurusan', 'Program Magang', 'Unit Pelaksana Pilihan', 'Status Pendaftaran', 'Alamat Domisili', 'Tanggal Pengajuan']);
+    fputcsv($output, ['No', 'NIM', 'Nama Mahasiswa', 'Email', 'No. HP', 'Jurusan', 'Program Magang', 'Profil LinkedIn', 'Unit Pelaksana Pilihan', 'Status Pendaftaran', 'Alamat Domisili', 'Tanggal Pengajuan']);
 
     foreach ($rows as $idx => $r) {
         $progText = match($r['program'] ?? '') {
@@ -167,6 +179,7 @@ try {
             "'" . ($r['no_hp'] ?? '-'),
             $r['jurusan'] ?? '-',
             $progText,
+            $r['linkedin_link'] ?? '-',
             $r['unit_nama'] ?? '-',
             strtoupper($r['status']),
             $r['alamat_domisili'] ?? '-',

@@ -139,6 +139,7 @@ try {
             p.transkrip_path,
             p.cv_path,
             p.porto_path,
+            p.linkedin_link,
             p.alamat,
             p.kota_kabupaten AS kota,
             p.provinsi,

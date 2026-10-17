@@ -63,6 +63,7 @@ try {
             p.cv_path,
             p.transkrip_path,
             p.porto_path,
+            p.linkedin_link,
             p.status,
             p.catatan_admin,
             p.submitted_at,

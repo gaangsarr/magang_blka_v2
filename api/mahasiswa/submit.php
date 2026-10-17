@@ -46,7 +46,7 @@ $uppId = (int)$body['upp_id'];
 $peminatanIds = isset($body['peminatan']) && is_array($body['peminatan']) ? array_map('intval', $body['peminatan']) : [];
 
 $pdoEarly = Database::getInstance();
-$stmtPCheck = $pdoEarly->prepare("SELECT angkatan_eligible, nama, status, tanggal_selesai, jam_selesai, syarat_transkrip, syarat_cv, syarat_porto FROM periode WHERE id = :pid");
+$stmtPCheck = $pdoEarly->prepare("SELECT angkatan_eligible, nama, status, tanggal_selesai, jam_selesai, syarat_transkrip, syarat_cv, syarat_porto, syarat_linkedin FROM periode WHERE id = :pid");
 $stmtPCheck->execute([':pid' => $periodeId]);
 $periodeDataEarly = $stmtPCheck->fetch(PDO::FETCH_ASSOC);
 
@@ -121,6 +121,30 @@ $cvPath = $validateDokumen($rawCv, 'cv', 'Curriculum Vitae (CV)', $mhsNim, !empt
 // 3. Validasi Portofolio
 $rawPorto = $body['porto_link'] ?? $body['porto_path'] ?? $_SESSION['porto_temp_path'] ?? '';
 $portoPath = $validateDokumen($rawPorto, 'porto', 'Portofolio', $mhsNim, !empty($periodeDataEarly['syarat_porto']));
+
+// 4. Validasi Tautan Profil LinkedIn
+$rawLinkedin = trim((string)($body['linkedin_link'] ?? $body['linkedin_url'] ?? ''));
+$isLinkedinMandatory = !isset($periodeDataEarly['syarat_linkedin']) || (int)$periodeDataEarly['syarat_linkedin'] === 1;
+
+$linkedinLink = null;
+if (!empty($rawLinkedin)) {
+    // Smart auto-prepend https:// jika belum ada protokol
+    if (!str_starts_with($rawLinkedin, 'http://') && !str_starts_with($rawLinkedin, 'https://')) {
+        $rawLinkedin = 'https://' . ltrim($rawLinkedin, '/');
+    }
+
+    // Validasi URL dan pastikan mengarah ke domain LinkedIn
+    if (!filter_var($rawLinkedin, FILTER_VALIDATE_URL) || !preg_match('/^https?:\/\/(?:[a-zA-Z0-9-]+\.)?linkedin\.com\//i', $rawLinkedin)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Format tautan LinkedIn tidak valid. Pastikan mengarah ke profil LinkedIn Anda (contoh: https://linkedin.com/in/username).']);
+        exit;
+    }
+    $linkedinLink = $rawLinkedin;
+} elseif ($isLinkedinMandatory) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Tautan profil LinkedIn wajib diisi sebelum mengirim pendaftaran.']);
+    exit;
+}
 
 
 // Validasi & Sanitasi Ketat Nomor Handphone / WhatsApp (hanya angka, diawali 08/628, 10-14 digit)
@@ -198,7 +222,7 @@ if ($body['program'] === '5_bulan') {
 
 $pendaftaranId = 0;
 try {
-    Database::transaction(function (PDO $pdo) use ($mahasiswaId, $periodeId, $reservasiId, $uppId, $body, $peminatanIds, $transkripPath, $cvPath, $portoPath, &$pendaftaranId) {
+    Database::transaction(function (PDO $pdo) use ($mahasiswaId, $periodeId, $reservasiId, $uppId, $body, $peminatanIds, $transkripPath, $cvPath, $portoPath, $linkedinLink, &$pendaftaranId) {
         // 1. Validasi periode dibuka dan angkatan eligible
         $stmtP = $pdo->prepare("SELECT angkatan_eligible, nama, status, tanggal_selesai, jam_selesai FROM periode WHERE id = :pid");
         $stmtP->execute([':pid' => $periodeId]);
@@ -305,6 +329,7 @@ try {
                     cv_uploaded_at = :cv_uploaded_at,
                     porto_path = :porto_path,
                     porto_uploaded_at = :porto_uploaded_at,
+                    linkedin_link = :linkedin_link,
                     status = 'diajukan',
                     catatan_admin = NULL,
                     is_dipindahkan = 0,
@@ -338,6 +363,7 @@ try {
                 ':cv_uploaded_at'        => $cvPath ? date('Y-m-d H:i:s') : null,
                 ':porto_path'            => $portoPath,
                 ':porto_uploaded_at'     => $portoPath ? date('Y-m-d H:i:s') : null,
+                ':linkedin_link'         => $linkedinLink,
             ]);
 
             // Bersihkan peminatan lama
@@ -351,14 +377,16 @@ try {
                     alamat, rt, rw, kelurahan, kecamatan, kota_kabupaten, provinsi, latitude, longitude,
                     transkrip_path, transkrip_uploaded_at,
                     cv_path, cv_uploaded_at,
-                    porto_path, porto_uploaded_at
+                    porto_path, porto_uploaded_at,
+                    linkedin_link
                 ) VALUES (
                     :mid, :pid, :rid, :upp_id,
                     :prog, :nama, :jk, :ipk, :sks, :hp,
                     :almt, :rt, :rw, :kel, :kec, :kota, :prov, :lat, :lng,
                     :transkrip_path, :transkrip_uploaded_at,
                     :cv_path, :cv_uploaded_at,
-                    :porto_path, :porto_uploaded_at
+                    :porto_path, :porto_uploaded_at,
+                    :linkedin_link
                 )
             ");
             
@@ -388,6 +416,7 @@ try {
                 ':cv_uploaded_at'        => $cvPath ? date('Y-m-d H:i:s') : null,
                 ':porto_path'            => $portoPath,
                 ':porto_uploaded_at'     => $portoPath ? date('Y-m-d H:i:s') : null,
+                ':linkedin_link'         => $linkedinLink,
             ]);
             
             $pendaftaranId = (int)$pdo->lastInsertId();

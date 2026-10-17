@@ -694,7 +694,12 @@ function renderTable(dataArray) {
                                 <span>${isLink ? 'Link Porto' : 'Porto'}</span>
                             </a>`;
                         })() : ''}
-                        ${(!p.transkrip_path && !p.cv_path && !p.porto_path) ? '<span class="doc-empty-text">Tidak ada dokumen</span>' : ''}
+                        ${p.linkedin_link ? `
+                            <a href="${escapeHtml(p.linkedin_link)}" target="_blank" rel="noopener noreferrer" class="btn-doc-pill pill-linkedin" title="Buka Profil LinkedIn: ${escapeHtml(p.linkedin_link)}">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+                                <span>LinkedIn</span>
+                            </a>` : ''}
+                        ${(!p.transkrip_path && !p.cv_path && !p.porto_path && !p.linkedin_link) ? '<span class="doc-empty-text">Tidak ada dokumen</span>' : ''}
                     </div>
                     <div class="action-row-decision">
                         <button type="button" class="btn-action-pill pill-approve" onclick="openApproveModal(${p.pendaftaran_id}, '${escapeHtml(p.nama).replace(/'/g, "\\'")}', '${escapeHtml(p.unit_nama).replace(/'/g, "\\'")}')" title="Setujui dan Tetapkan Unit">

@@ -147,6 +147,7 @@ try {
             p.transkrip_path,
             p.cv_path,
             p.porto_path,
+            p.linkedin_link,
             p.no_hp,
             p.program,
             p.status,
@@ -245,6 +246,7 @@ try {
             'transkrip_path'   => $r['transkrip_path'] ?? null,
             'cv_path'          => $r['cv_path'] ?? null,
             'porto_path'       => $r['porto_path'] ?? null,
+            'linkedin_link'    => $r['linkedin_link'] ?? null,
         ];
     }
 

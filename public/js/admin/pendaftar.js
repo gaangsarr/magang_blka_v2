@@ -168,10 +168,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td>${progBadge}</td>
                 <td style="font-weight: 600; color: #0b3d6b;">${escapeHtml(p.unit_nama)}</td>
                 <td style="text-align: center;">
-                    <button type="button" class="btn-role-action btn-detail-item" data-idx="${idx}" style="padding: 6px 14px; font-size: 0.8rem;">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-                        <span>Detail</span>
-                    </button>
+                    <div style="display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap;">
+                        <button type="button" class="btn-role-action btn-detail-item" data-idx="${idx}" style="padding: 6px 12px; font-size: 0.8rem;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                            <span>Detail</span>
+                        </button>
+                        ${p.linkedin_link ? `
+                            <a href="${escapeHtml(p.linkedin_link)}" target="_blank" rel="noopener noreferrer" class="btn-doc-pill pill-linkedin" title="Buka Profil LinkedIn: ${escapeHtml(p.linkedin_link)}" style="text-decoration: none; padding: 5px 10px; font-size: 0.775rem;">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+                                <span>LinkedIn</span>
+                            </a>
+                        ` : ''}
+                    </div>
                 </td>
             `;
             tbody.appendChild(tr);
@@ -364,6 +372,33 @@ document.addEventListener('DOMContentLoaded', async () => {
                 btnPorto.style.display = 'none';
                 btnPorto.removeAttribute('href');
                 btnPorto.onclick = null;
+            }
+        }
+
+        // 4. Profil LinkedIn
+        const wrapLinkedin = document.getElementById('detail-wrapper-linkedin');
+        const btnLinkedin = document.getElementById('detail-btn-linkedin');
+        const filenameLinkedinEl = document.getElementById('detail-linkedin-filename');
+
+        if (p.id && p.linkedin_link) {
+            if (wrapLinkedin) wrapLinkedin.style.display = 'flex';
+            if (filenameLinkedinEl) {
+                filenameLinkedinEl.innerHTML = `<a href="${escapeHtml(p.linkedin_link)}" target="_blank" rel="noopener noreferrer" style="color: #1d4ed8; text-decoration: underline; word-break: break-all;">${escapeHtml(p.linkedin_link)}</a>`;
+            }
+            if (btnLinkedin) {
+                btnLinkedin.style.display = 'inline-flex';
+                btnLinkedin.href = p.linkedin_link;
+                btnLinkedin.innerHTML = `${extLinkIcon}<span>Buka Profil LinkedIn</span>`;
+                btnLinkedin.title = 'Buka Profil LinkedIn: ' + p.linkedin_link;
+            }
+        } else {
+            if (wrapLinkedin) wrapLinkedin.style.display = 'flex';
+            if (filenameLinkedinEl) {
+                filenameLinkedinEl.innerHTML = '<span style="color: #94a3b8; font-style: italic; font-size: 0.825rem;">Tidak dicantumkan</span>';
+            }
+            if (btnLinkedin) {
+                btnLinkedin.style.display = 'none';
+                btnLinkedin.removeAttribute('href');
             }
         }
 

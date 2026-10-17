@@ -1948,6 +1948,14 @@ function renderPendaftarTable(list) {
                 </a>
             `;
         }
+        if (mhs.linkedin_link) {
+            docsHtml += `
+                <a href="${escapeHtml(mhs.linkedin_link)}" target="_blank" rel="noopener noreferrer" class="btn-doc-pill pill-linkedin" title="Buka Profil LinkedIn: ${escapeHtml(mhs.linkedin_link)}" style="text-decoration: none;">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+                    <span>LinkedIn</span>
+                </a>
+            `;
+        }
         if (!docsHtml) {
             docsHtml = '<span style="font-size: 0.72rem; color: #94a3b8; font-style: italic;">-</span>';
         }
@@ -2203,6 +2211,20 @@ function showMhsDetailModal(mhs) {
                     </a>
                 </div>`;
             })() : ''}
+
+            ${mhs.linkedin_link ? `
+                <div style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; padding: 10px 14px; border-radius: 8px; border: 1px solid #e2e8f0; flex-wrap: wrap; gap: 8px;">
+                    <div style="max-width: 65%;">
+                        <div style="font-size: 0.725rem; color: #64748b; font-weight: 600;">Profil LinkedIn</div>
+                        <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0a66c2" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+                            <span style="font-weight: 700; font-size: 0.85rem; color: #1e293b; font-family: monospace; word-break: break-all;">${escapeHtml(mhs.linkedin_link)}</span>
+                        </div>
+                    </div>
+                    <a href="${escapeHtml(mhs.linkedin_link)}" target="_blank" rel="noopener noreferrer" class="btn-portal-outline" style="padding: 6px 14px; font-size: 0.8rem; font-weight: 700; color: #1d4ed8; border-color: #bfdbfe; background: #eff6ff; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; cursor: pointer;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg><span>Buka LinkedIn</span>
+                    </a>
+                </div>` : ''}
         </div>
 
         <div class="mhs-detail-item" style="margin-top: 14px;">
@@ -3081,6 +3103,22 @@ function openCandidateDrawer(mhs) {
                     </div>
                     <a href="${escapeHtml(targetUrl)}" target="_blank" rel="noopener noreferrer" class="drawer-doc-btn">
                         <span>${isLink ? 'Buka Link' : 'Lihat PDF'}</span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                    </a>
+                </div>
+            `;
+        }
+
+        if (mhs.linkedin_link) {
+            hasAnyDoc = true;
+            docsContainer.innerHTML += `
+                <div class="drawer-doc-card">
+                    <div class="drawer-doc-info">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #0a66c2;"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+                        <span>Tautan Profil LinkedIn Mahasiswa</span>
+                    </div>
+                    <a href="${escapeHtml(mhs.linkedin_link)}" target="_blank" rel="noopener noreferrer" class="drawer-doc-btn">
+                        <span>Buka Profil</span>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                     </a>
                 </div>

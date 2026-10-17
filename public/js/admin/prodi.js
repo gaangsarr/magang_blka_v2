@@ -108,6 +108,7 @@
         linkCv: document.getElementById('link-cv'),
         linkTranskrip: document.getElementById('link-transkrip'),
         linkPorto: document.getElementById('link-porto'),
+        linkLinkedin: document.getElementById('link-linkedin'),
         noDocsNotice: document.getElementById('no-docs-notice'),
 
         // Password Modal elements
@@ -730,7 +731,10 @@
                 const portoUrl = isPortoLink ? r.porto_path : `/api/admin/porto/download.php?pendaftaran_id=${r.id}`;
                 docsHtml += `<a href="${esc(portoUrl)}" target="_blank" rel="noopener noreferrer" class="btn-doc-link" title="${isPortoLink ? 'Buka Link Portofolio: ' + esc(r.porto_path) : 'Unduh / Lihat Portofolio (PDF)'}">Porto</a>`;
             }
-            if (!r.cv_path && !r.transkrip_path && !r.porto_path) {
+            if (r.linkedin_link) {
+                docsHtml += `<a href="${esc(r.linkedin_link)}" target="_blank" rel="noopener noreferrer" class="btn-doc-link" style="color: #1d4ed8; background: #eff6ff; border-color: #bfdbfe;" title="Buka Profil LinkedIn: ${esc(r.linkedin_link)}">In</a>`;
+            }
+            if (!r.cv_path && !r.transkrip_path && !r.porto_path && !r.linkedin_link) {
                 docsHtml += `<span style="color: var(--color-text-light); font-size: 0.75rem;">-</span>`;
             }
             docsHtml += '</div>';
@@ -1061,6 +1065,15 @@
                 hasDocs = true;
             } else {
                 el.linkPorto.style.display = 'none';
+            }
+
+            if (d.linkedin_link && el.linkLinkedin) {
+                el.linkLinkedin.style.display = 'inline-flex';
+                el.linkLinkedin.href = d.linkedin_link;
+                el.linkLinkedin.title = `Buka Profil LinkedIn: ${d.linkedin_link}`;
+                hasDocs = true;
+            } else if (el.linkLinkedin) {
+                el.linkLinkedin.style.display = 'none';
             }
 
             el.noDocsNotice.style.display = hasDocs ? 'none' : 'inline';

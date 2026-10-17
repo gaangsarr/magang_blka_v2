@@ -34,6 +34,7 @@ try {
             p.cv_uploaded_at,
             p.porto_path,
             p.porto_uploaded_at,
+            p.linkedin_link,
             p.nama_snapshot AS nama,
             m.nim,
             m.jurusan_id,
@@ -133,7 +134,8 @@ try {
             'cv_filename'       => !empty($row['cv_path']) ? (str_starts_with((string)$row['cv_path'], 'http') ? 'Tautan Curriculum Vitae (CV)' : basename((string)$row['cv_path'])) : null,
             'porto_path'        => $row['porto_path'] ?? null,
             'porto_uploaded_at' => $row['porto_uploaded_at'] ?? null,
-            'porto_filename'    => !empty($row['porto_path']) ? (str_starts_with((string)$row['porto_path'], 'http') ? 'Tautan Portofolio' : basename((string)$row['porto_path'])) : null
+            'porto_filename'    => !empty($row['porto_path']) ? (str_starts_with((string)$row['porto_path'], 'http') ? 'Tautan Portofolio' : basename((string)$row['porto_path'])) : null,
+            'linkedin_link'     => $row['linkedin_link'] ?? null
         ];
     }
 

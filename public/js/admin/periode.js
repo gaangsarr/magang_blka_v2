@@ -124,6 +124,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             syarat_transkrip: document.getElementById('create-syarat-transkrip').checked,
             syarat_cv: document.getElementById('create-syarat-cv').checked,
             syarat_porto: document.getElementById('create-syarat-porto').checked,
+            syarat_linkedin: document.getElementById('create-syarat-linkedin')?.checked ? 1 : 0,
             copy_from_periode_id: document.getElementById('copy_from_periode_id').value ? parseInt(document.getElementById('copy_from_periode_id').value) : null
         };
 
@@ -179,7 +180,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             program_5_bulan: selectedEditProg === '5' ? 1 : 0,
             syarat_transkrip: document.getElementById('edit-syarat-transkrip').checked,
             syarat_cv: document.getElementById('edit-syarat-cv').checked,
-            syarat_porto: document.getElementById('edit-syarat-porto').checked
+            syarat_porto: document.getElementById('edit-syarat-porto').checked,
+            syarat_linkedin: document.getElementById('edit-syarat-linkedin')?.checked ? 1 : 0
         };
 
         try {
@@ -331,6 +333,9 @@ async function loadPeriode() {
                 if (p.syarat_porto == 1) {
                     docBadgesArr.push('<span style="font-size: 0.72rem; font-weight: 700; color: #854d0e; background: #fef9c3; padding: 2px 6px; border-radius: 4px; border: 1px solid #fef08a;">Porto</span>');
                 }
+                if (p.syarat_linkedin == 1 || p.syarat_linkedin === true || p.syarat_linkedin === undefined) {
+                    docBadgesArr.push('<span style="font-size: 0.72rem; font-weight: 700; color: #1d4ed8; background: #eff6ff; padding: 2px 6px; border-radius: 4px; border: 1px solid #bfdbfe;">LinkedIn</span>');
+                }
                 const docBadgesHtml = docBadgesArr.length > 0
                     ? `<div style="display: flex; gap: 4px; flex-wrap: wrap; margin-top: 5px;">${docBadgesArr.join('')}</div>`
                     : `<div style="font-size: 0.72rem; color: #94a3b8; margin-top: 4px;">Tanpa Syarat Berkas</div>`;
@@ -404,9 +409,11 @@ window.openEditModal = function(periodeId) {
     const editTranskrip = document.getElementById('edit-syarat-transkrip');
     const editCv = document.getElementById('edit-syarat-cv');
     const editPorto = document.getElementById('edit-syarat-porto');
+    const editLinkedin = document.getElementById('edit-syarat-linkedin');
     if (editTranskrip) editTranskrip.checked = (p.syarat_transkrip == 1);
     if (editCv) editCv.checked = (p.syarat_cv == 1);
     if (editPorto) editPorto.checked = (p.syarat_porto == 1);
+    if (editLinkedin) editLinkedin.checked = (p.syarat_linkedin != 0);
 
     const editStatus = document.getElementById('edit-status');
     if (editStatus) {

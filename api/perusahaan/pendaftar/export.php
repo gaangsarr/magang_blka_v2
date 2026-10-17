@@ -89,6 +89,7 @@ try {
             p.transkrip_path,
             p.cv_path,
             p.porto_path,
+            p.linkedin_link,
             m.nim,
             m.email,
             m.angkatan,
@@ -163,20 +164,20 @@ try {
     $sheet->setTitle($sheetTitle);
 
     // Title Block
-    $sheet->mergeCells('A1:M1');
+    $sheet->mergeCells('A1:N1');
     $sheet->setCellValue('A1', $mainHeading);
     $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FF004687'));
     $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
-    $sheet->mergeCells('A2:M2');
+    $sheet->mergeCells('A2:N2');
     $sheet->setCellValue('A2', 'Periode: ' . $periodeNama . ' | Total Mahasiswa: ' . count($rows) . ' Mahasiswa | Diekspor: ' . date('d-m-Y H:i:s'));
     $sheet->getStyle('A2')->getFont()->setSize(10)->setItalic(true);
     $sheet->getStyle('A2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
-    // Table Headers (Kolom M ditambahkan untuk Alamat Mahasiswa)
+    // Table Headers (Kolom M: LinkedIn, Kolom N: Alamat Mahasiswa)
     $headers = [
         'No', 'NIM', 'Nama Mahasiswa', 'L/P', 'Program Studi', 'Angkatan', 
-        'IPK', 'SKS', 'Program', 'Peminatan', 'No. WhatsApp / HP', 'Email Kampus', 'Alamat Lengkap Mahasiswa'
+        'IPK', 'SKS', 'Program', 'Peminatan', 'No. WhatsApp / HP', 'Email Kampus', 'Profil LinkedIn', 'Alamat Lengkap Mahasiswa'
     ];
     $colLetter = 'A';
     foreach ($headers as $h) {
@@ -184,7 +185,7 @@ try {
         $colLetter++;
     }
 
-    $sheet->getStyle('A4:M4')->applyFromArray([
+    $sheet->getStyle('A4:N4')->applyFromArray([
         'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
         'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '004687']],
         'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
@@ -209,7 +210,14 @@ try {
         $sheet->setCellValue('J' . $rowNum, $peminatanStr);
         $sheet->setCellValue('K' . $rowNum, $r['no_hp'] ?? '-');
         $sheet->setCellValue('L' . $rowNum, $r['email']);
-        $sheet->setCellValue('M' . $rowNum, $formatAlamat($r));
+        if (!empty($r['linkedin_link'])) {
+            $sheet->setCellValue('M' . $rowNum, $r['linkedin_link']);
+            $sheet->getCell('M' . $rowNum)->getHyperlink()->setUrl($r['linkedin_link']);
+            $sheet->getStyle('M' . $rowNum)->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FF0066CC'))->setUnderline(true);
+        } else {
+            $sheet->setCellValue('M' . $rowNum, '-');
+        }
+        $sheet->setCellValue('N' . $rowNum, $formatAlamat($r));
 
         $sheet->getStyle('A' . $rowNum)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         $sheet->getStyle('B' . $rowNum)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
@@ -224,10 +232,10 @@ try {
 
     $lastRow = $rowNum - 1;
     if ($lastRow >= 4) {
-        $sheet->getStyle('A4:M' . $lastRow)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FFCBD5E1'));
+        $sheet->getStyle('A4:N' . $lastRow)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FFCBD5E1'));
     }
 
-    foreach (range('A', 'M') as $col) {
+    foreach (range('A', 'N') as $col) {
         $sheet->getColumnDimension($col)->setAutoSize(true);
     }
 

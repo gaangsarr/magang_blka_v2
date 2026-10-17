@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -135,7 +135,7 @@
                                     <th>Nama & Kontak Mahasiswa</th>
                                     <th>Program</th>
                                     <th>Unit Penempatan</th>
-                                    <th style="text-align: center; width: 110px;">Aksi</th>
+                                    <th style="text-align: center; min-width: 150px;">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody id="table-pendaftar">
@@ -260,6 +260,21 @@
                                     <span>Lihat Portofolio PDF</span>
                                 </a>
                             </div>
+
+                            <!-- LinkedIn Row -->
+                            <div id="detail-wrapper-linkedin" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; background: #f8fafc; padding: 8px 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                <div>
+                                    <div style="font-size: 0.725rem; color: #64748b; font-weight: 600;">Profil LinkedIn</div>
+                                    <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0a66c2" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+                                        <span id="detail-linkedin-filename" style="font-size: 0.85rem; font-weight: 700; color: #1e293b; font-family: monospace;">-</span>
+                                    </div>
+                                </div>
+                                <a id="detail-btn-linkedin" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; color: #1d4ed8; background: #eff6ff; border: 1px solid #bfdbfe; text-decoration: none; transition: background 0.2s ease; cursor: pointer;">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                                    <span>Buka LinkedIn</span>
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -304,8 +319,8 @@
         </div>
     </div>
 
-    <script type="module" src="/js/admin/common.js"></script>
-    <script type="module" src="/js/admin/pendaftar.js"></script>
+    <script type="module" src="/js/admin/common.js?v=20261018_linkedin"></script>
+    <script type="module" src="/js/admin/pendaftar.js?v=20261018_linkedin"></script>
 </body>
 </html>
 

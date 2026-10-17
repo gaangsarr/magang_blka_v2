@@ -18,7 +18,7 @@ try {
     $pdo = Database::getInstance();
     
     // Cari periode yang sedang dibuka
-    $stmt = $pdo->prepare("SELECT id, nama, tanggal_selesai, jam_selesai, program_1_bulan, program_3_bulan, program_4_bulan, program_5_bulan, syarat_transkrip, syarat_cv, syarat_porto FROM periode WHERE status = 'dibuka' LIMIT 1");
+    $stmt = $pdo->prepare("SELECT id, nama, tanggal_selesai, jam_selesai, program_1_bulan, program_3_bulan, program_4_bulan, program_5_bulan, syarat_transkrip, syarat_cv, syarat_porto, syarat_linkedin FROM periode WHERE status = 'dibuka' LIMIT 1");
     $stmt->execute();
     $periode = $stmt->fetch(PDO::FETCH_ASSOC);
     
@@ -49,6 +49,7 @@ try {
             'syarat_transkrip' => (bool) $periode['syarat_transkrip'],
             'syarat_cv' => (bool) $periode['syarat_cv'],
             'syarat_porto' => (bool) $periode['syarat_porto'],
+            'syarat_linkedin' => !isset($periode['syarat_linkedin']) || (bool) $periode['syarat_linkedin'],
             'reservation_minutes' => \App\ReservasiHelper::getReservationMinutes(),
         ]
     ]);

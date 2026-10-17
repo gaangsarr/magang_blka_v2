@@ -145,6 +145,7 @@ try {
             p.transkrip_path,
             p.cv_path,
             p.porto_path,
+            p.linkedin_link,
             j.nama_jurusan,
             j.nama_jurusan AS jurusan_nama,
             j.jenjang,
