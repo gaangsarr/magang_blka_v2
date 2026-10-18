@@ -280,14 +280,15 @@ function populateConfigForm(config, periodeId) {
     document.getElementById('cfg-nama-ttd').value = config.nama_penandatangan || '';
     document.getElementById('cfg-tembusan').value = config.tembusan || '1.  HTD PLN Pusat';
 
+    const publicUrl = config.link_data_publik || (config.public_token ? `https://intern.itpln.ac.id/penempatan.html?token=${encodeURIComponent(config.public_token)}` : '');
     const linkInput = document.getElementById('cfg-link-publik');
     if (linkInput) {
-        linkInput.value = config.link_data_publik || '';
+        linkInput.value = publicUrl;
     }
 
     const openLinkBtn = document.getElementById('btn-open-link');
     if (openLinkBtn) {
-        openLinkBtn.href = config.link_data_publik || '#';
+        openLinkBtn.href = publicUrl || '#';
     }
 }
 
@@ -612,9 +613,15 @@ async function saveSuratConfig() {
             currentConfig = data.config;
             updateTableNomorSuratPreview();
             
+            const savedLink = (data.config && data.config.link_data_publik) ? data.config.link_data_publik : payload.link_data_publik;
+            const linkInput = document.getElementById('cfg-link-publik');
+            if (linkInput && savedLink) {
+                linkInput.value = savedLink;
+            }
+
             const openLinkBtn = document.getElementById('btn-open-link');
             if (openLinkBtn) {
-                openLinkBtn.href = payload.link_data_publik;
+                openLinkBtn.href = savedLink || '#';
             }
         } else {
             showAdminAlert(data.error || 'Terjadi kesalahan saat menyimpan konfigurasi surat.', 'error', 'Gagal Menyimpan');

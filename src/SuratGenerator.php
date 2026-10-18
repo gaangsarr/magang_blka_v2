@@ -62,6 +62,19 @@ class SuratGenerator
     }
 
     /**
+     * Domain statis resmi untuk tautan rekapitulasi penempatan data publik
+     */
+    public const PUBLIC_PORTAL_URL = 'https://intern.itpln.ac.id';
+
+    /**
+     * Bangun tautan publik rekapitulasi penempatan berdasarkan token otentikasi periode
+     */
+    public static function buildPublicPlacementUrl(string $token): string
+    {
+        return self::PUBLIC_PORTAL_URL . '/penempatan.html?token=' . $token;
+    }
+
+    /**
      * Dapatkan Base URL aplikasi (Memprioritaskan APP_URL dari .env, dengan fallback ke host request)
      */
     public static function getBaseUrl(): string
@@ -101,13 +114,12 @@ class SuratGenerator
         if (!empty($periode['program_5_bulan'])) $progs[] = '5 Bulan';
         $progText = !empty($progs) ? implode(' & ', $progs) : '5 Bulan';
 
-        $baseUrl = self::getBaseUrl();
         $token = $cfg['public_token'] ?? null;
         if (empty($token)) {
             $token = bin2hex(random_bytes(16));
         }
 
-        $defaultPublicUrl = $baseUrl . '/penempatan.html?token=' . $token;
+        $defaultPublicUrl = self::buildPublicPlacementUrl($token);
         $tglDefault = 'Jakarta, ' . self::formatIndonesianDate(date('Y-m-d'));
         $perihalDefault = "Penyampaian Penempatan Mahasiswa\nMagang " . $progText . " PLN Group Tahun Ajaran " . $tahunAkademikDefault;
 
@@ -161,8 +173,8 @@ class SuratGenerator
             $cfg['public_token'] = $token;
         }
 
-        // Selalu gunakan baseUrl terkini dari APP_URL pada link_data_publik
-        $cfg['link_data_publik'] = $defaultPublicUrl;
+        // Tautan data publik selalu menggunakan domain statis https://intern.itpln.ac.id
+        $cfg['link_data_publik'] = self::buildPublicPlacementUrl($token);
 
         $cfg['public_token'] = $token;
         $cfg['program_text'] = $progText;
@@ -210,10 +222,16 @@ class SuratGenerator
      */
     public static function saveConfig(PDO $pdo, int $periodeId, array $data): bool
     {
-        $token = $data['public_token'] ?? null;
+        $token = !empty($data['public_token']) ? trim((string)$data['public_token']) : null;
         if (empty($token)) {
-            $token = bin2hex(random_bytes(16));
+            $stmtToken = $pdo->prepare("SELECT public_token FROM konfigurasi_surat WHERE periode_id = ?");
+            $stmtToken->execute([$periodeId]);
+            $existingToken = $stmtToken->fetchColumn();
+            $token = !empty($existingToken) ? $existingToken : bin2hex(random_bytes(16));
         }
+
+        // Tautan data publik selalu menggunakan domain statis https://intern.itpln.ac.id
+        $linkDataPublik = self::buildPublicPlacementUrl($token);
 
         $sql = "
             INSERT INTO konfigurasi_surat (
@@ -269,7 +287,7 @@ class SuratGenerator
             ':jabatan_penandatangan' => $data['jabatan_penandatangan'] ?? null,
             ':nama_penandatangan' => $data['nama_penandatangan'] ?? null,
             ':tembusan' => $data['tembusan'] ?? null,
-            ':link_data_publik' => $data['link_data_publik'] ?? null,
+            ':link_data_publik' => $linkDataPublik,
         ]);
     }
 
@@ -854,7 +872,8 @@ class SuratGenerator
         $programText = $config['program_text'] ?? '5 Bulan';
         $jabatanTtd = $config['jabatan_penandatangan'] ?? 'Wakil Rektor III Bidang Kemahasiswaan';
         $namaTtd = $config['nama_penandatangan'] ?? 'Ir. Purnomo, S.T., M.T.';
-        $linkData = $config['link_data_publik'] ?? '';
+        $pubToken = $config['public_token'] ?? '';
+        $linkData = !empty($pubToken) ? self::buildPublicPlacementUrl($pubToken) : ($config['link_data_publik'] ?? '');
 
         $unitNama = $unitData['unit_nama'] ?? 'Kantor Unit PLN';
         $unitAlamat = !empty($unitData['unit_alamat']) ? $unitData['unit_alamat'] : 'Kantor PLN Unit Terkait';
