@@ -1108,8 +1108,8 @@ function validateStep(step) {
                 showError('Tautan profil LinkedIn wajib diisi.', 'linkedin_link', 'LinkedIn Wajib Diisi');
                 return false;
             }
-            if (!isValidUrl(linkedinVal) || !/^https?:\/\/(?:[a-zA-Z0-9-]+\.)?linkedin\.com\//i.test(linkedinVal)) {
-                showError('Format tautan profil LinkedIn tidak valid. Pastikan mengarah ke akun LinkedIn Anda (contoh: https://linkedin.com/in/username).', 'linkedin_link', 'Tautan Tidak Valid');
+            if (!isValidUrl(linkedinVal) || !/^https?:\/\/(?:[a-zA-Z0-9-]+\.)?(?:linkedin\.com|linked\.in|lnkd\.in)\/.+/i.test(linkedinVal)) {
+                showError('Format tautan profil LinkedIn tidak valid. Pastikan mengarah ke akun LinkedIn Anda (contoh: https://linkedin.com/in/username atau https://linked.in/username).', 'linkedin_link', 'Tautan Tidak Valid');
                 return false;
             }
         }

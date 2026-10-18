@@ -134,9 +134,9 @@ if (!empty($rawLinkedin)) {
     }
 
     // Validasi URL dan pastikan mengarah ke domain LinkedIn
-    if (!filter_var($rawLinkedin, FILTER_VALIDATE_URL) || !preg_match('/^https?:\/\/(?:[a-zA-Z0-9-]+\.)?linkedin\.com\//i', $rawLinkedin)) {
+    if (!filter_var($rawLinkedin, FILTER_VALIDATE_URL) || !preg_match('/^https?:\/\/(?:[a-zA-Z0-9-]+\.)?(?:linkedin\.com|linked\.in|lnkd\.in)\/.+/i', $rawLinkedin)) {
         http_response_code(400);
-        echo json_encode(['error' => 'Format tautan LinkedIn tidak valid. Pastikan mengarah ke profil LinkedIn Anda (contoh: https://linkedin.com/in/username).']);
+        echo json_encode(['error' => 'Format tautan LinkedIn tidak valid. Pastikan mengarah ke profil LinkedIn Anda (contoh: https://linkedin.com/in/username atau https://linked.in/username).']);
         exit;
     }
     $linkedinLink = $rawLinkedin;

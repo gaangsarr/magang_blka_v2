@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surat Pengantar Mahasiswa — INTERN ITPLN Admin</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/assets/img/logo_itpln.png">
+    <link rel="apple-touch-icon" href="/assets/img/logo_itpln.png">
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/admin.css">
+    <style>
+        /* Minimalist Period Control Bar */
+        .period-bar-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 14px 20px;
+            margin-bottom: 22px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 14px;
+        }
+        .period-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            flex: 1;
+            min-width: 280px;
+        }
+        .period-bar-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #0b3d6b;
+            white-space: nowrap;
+        }
+        .period-pills-list {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .period-pill-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            font-size: 0.825rem;
+            font-weight: 600;
+            border-radius: 9999px;
+            border: 1px solid #cbd5e1;
+            background: #f8fafc;
+            color: #334155;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            white-space: nowrap;
+        }
+        .period-pill-btn:hover {
+            border-color: #94a3b8;
+            background: #f1f5f9;
+            color: #0f172a;
+        }
+        .period-pill-btn.active {
+            background: #0b3d6b;
+            color: #ffffff;
+            border-color: #0b3d6b;
+            box-shadow: 0 2px 8px rgba(11, 61, 107, 0.25);
+            font-weight: 700;
+        }
+        .period-select-dropdown {
+            padding: 8px 14px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            background: #f8fafc;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 10px;
+            color: #0f172a;
+            cursor: pointer;
+            min-width: 240px;
+            max-width: 360px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .period-select-dropdown:focus {
+            border-color: #0b3d6b;
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(11, 61, 107, 0.1);
+        }
+        .period-bar-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .meta-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.775rem;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 8px;
+            letter-spacing: 0.01em;
+            white-space: nowrap;
+        }
+        .meta-chip-success {
+            background: #dcfce7;
+            color: #166534;
+        }
+        .meta-chip-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .meta-chip-danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .meta-chip-info {
+            background: #e0f2fe;
+            color: #0369a1;
+        }
+        .meta-chip-announcement-open {
+            background: #ecfdf5;
+            color: #059669;
+            border: 1px solid #a7f3d0;
+        }
+        .meta-chip-announcement-closed {
+            background: #f8fafc;
+            color: #64748b;
+            border: 1px solid #e2e8f0;
+        }
+        .config-form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        .form-full-width {
+            grid-column: 1 / -1;
+        }
+        .helper-note {
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .helper-note code {
+            background: #e2e8f0;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: #0f172a;
+            font-weight: 700;
+        }
+        .formula-preview-card {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 12px;
+            padding: 14px 18px;
+            margin-top: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .formula-preview-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .ttd-upload-box {
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 18px;
+            text-align: center;
+            background: #f8fafc;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        .ttd-upload-box:hover {
+            border-color: #0b3d6b;
+            background: #f1f5f9;
+        }
+        .ttd-preview-img {
+            max-height: 80px;
+            max-width: 180px;
+            object-fit: contain;
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            border-radius: 6px;
+            padding: 4px;
+            margin-top: 8px;
+            display: inline-block;
+        }
+        #config-form-body {
+            transition: all 0.3s ease;
+        }
+        #config-form-body.collapsed {
+            display: none;
+        }
+    </style>
+</head>
+<body class="admin-body">
+    <div class="admin-layout">
+        <!-- Dynamic Sidebar Navigation -->
+        <aside id="admin-sidebar" class="admin-sidebar"></aside>
+
+        <!-- Main Content Area -->
+        <main class="admin-main">
+            <!-- Topbar Header -->
+            <header class="admin-topbar">
+                <div class="topbar-title-group">
+                    <h1>Surat Pengantar Mahasiswa</h1>
+                    <p>Atur penomoran surat, data pejabat, dan terbitkan PDF surat pengantar resmi per unit PLN</p>
+                </div>
+
+                <div class="admin-profile-badge">
+                    <div class="admin-avatar" id="admin-avatar">A</div>
+                    <div class="admin-user-info">
+                        <span class="admin-user-name" id="admin-name">Administrator</span>
+                        <span class="admin-user-role" id="admin-role">Admin BLKA</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content Container -->
+            <div class="admin-content">
+                
+                <!-- Section 1: Period Control Bar -->
+                <div class="period-bar-card" id="period-bar-card">
+                    <div class="period-bar-left">
+                        <div class="period-bar-label">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>
+                            <span>Periode Magang:</span>
+                        </div>
+                        <div id="period-selector-container" class="period-selector-wrapper">
+                            <div style="font-size: 0.825rem; color: #64748b;">Memuat periode...</div>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic active period meta badges -->
+                    <div id="period-meta-badges" class="period-bar-meta">
+                        <span style="font-size: 0.8rem; color: #64748b;">Memuat informasi...</span>
+                    </div>
+                </div>
+
+                <!-- Section 2: Form Setting Surat Pengantar Mahasiswa -->
+                <div class="admin-card" style="margin-bottom: 24px;">
+                    <div class="admin-card-header" style="border-bottom: 1px solid #f1f5f9; padding-bottom: 16px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                        <div>
+                            <h3 class="admin-card-title" style="display: flex; align-items: center; gap: 8px;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                <span>1. Pengaturan Format Surat & Penandatangan</span>
+                            </h3>
+                            <p style="font-size: 0.85rem; color: #64748b; margin-top: 4px;">Atur nomor pokok surat, klasifikasi, pejabat penandatangan, dan upload tanda tangan berlatar belakang putih</p>
+                        </div>
+
+                        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                            <button type="button" id="btn-toggle-config" class="btn-secondary" style="display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; font-size: 0.825rem; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; font-weight: 600; cursor: pointer; color: #475569; transition: all 0.2s ease;">
+                                <svg id="toggle-config-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transition: transform 0.2s;"><polyline points="18 15 12 9 6 15"/></svg>
+                                <span id="toggle-config-text">Tutup Formulir</span>
+                            </button>
+
+                            <button type="button" id="btn-save-config" class="btn-primary" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 22px; background: #0b3d6b; color: #ffffff; border-radius: 10px; font-weight: 700; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(11, 61, 107, 0.2);">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                                <span>Simpan Pengaturan Surat</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="config-form-body">
+                        <form id="form-surat-pengantar-config">
+                            <input type="hidden" id="cfg-periode-id">
+                            
+                            <div class="config-form-grid">
+                                <!-- Nomor Pokok Surat (Wajib) -->
+                                <div>
+                                    <label class="admin-input-label" for="cfg-nomor-pokok">
+                                        Nomor Pokok Surat <span style="color: #ef4444;">* (Wajib Diisi Admin)</span>
+                                    </label>
+                                    <input type="text" id="cfg-nomor-pokok" class="admin-input-field" placeholder="Contoh: 0001" required>
+                                    <div class="helper-note">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                                        <span>Nomor pokok urut yang diinput manual (misal: <code>0001</code>).</span>
+                                    </div>
+                                </div>
+
+                                <!-- Format Sufiks / Klasifikasi -->
+                                <div>
+                                    <label class="admin-input-label" for="cfg-format-sufiks">
+                                        Format Klasifikasi / Sufiks <span style="color: #ef4444;">*</span>
+                                    </label>
+                                    <input type="text" id="cfg-format-sufiks" class="admin-input-field" placeholder="/Kt/2/D06" required>
+                                    <div class="helper-note">
+                                        <span>Default: <code>/Kt/2/D06</code> (dapat disesuaikan jika ada perubahan).</span>
+                                    </div>
+                                </div>
+
+                                <!-- Bulan Surat (2 digit) -->
+                                <div>
+                                    <label class="admin-input-label" for="cfg-bulan">
+                                        Bulan Surat (2 Digit) <span style="color: #ef4444;">*</span>
+                                    </label>
+                                    <input type="text" id="cfg-bulan" class="admin-input-field" placeholder="10" maxlength="2" required>
+                                    <div class="helper-note">
+                                        <span>Contoh: <code>10</code> untuk Oktober, <code>11</code> untuk November.</span>
+                                    </div>
+                                </div>
+
+                                <!-- Tahun Surat -->
+                                <div>
+                                    <label class="admin-input-label" for="cfg-tahun">
+                                        Tahun Surat (4 Digit) <span style="color: #ef4444;">*</span>
+                                    </label>
+                                    <input type="text" id="cfg-tahun" class="admin-input-field" placeholder="2026" maxlength="4" required>
+                                    <div class="helper-note">
+                                        <span>Contoh: <code>2026</code>.</span>
+                                    </div>
+                                </div>
+
+                                <!-- Tanggal Terbit Surat -->
+                                <div>
+                                    <label class="admin-input-label" for="cfg-tanggal-surat">
+                                        Tanggal Terbit Surat <span style="color: #ef4444;">*</span>
+                                    </label>
+                                    <input type="text" id="cfg-tanggal-surat" class="admin-input-field" placeholder="Jakarta, 19 Oktober 2026" required>
+                                    <div class="helper-note">
+                                        <span>Dicetak di kanan atas dan di atas tanda tangan pejabat.</span>
+                                    </div>
+                                </div>
+
+                                <!-- Tahun Akademik -->
+                                <div>
+                                    <label class="admin-input-label" for="cfg-tahun-akademik">
+                                        Tahun Akademik <span style="color: #ef4444;">*</span>
+                                    </label>
+                                    <input type="text" id="cfg-tahun-akademik" class="admin-input-field" placeholder="2026/2027" required>
+                                    <div class="helper-note">
+                                        <span>Contoh: <code>2026/2027</code>.</span>
+                                    </div>
+                                </div>
+
+                                <!-- Perihal Surat -->
+                                <div class="form-full-width">
+                                    <label class="admin-input-label" for="cfg-perihal">
+                                        Perihal Surat <span style="color: #ef4444;">*</span>
+                                    </label>
+                                    <textarea id="cfg-perihal" class="admin-input-field" rows="2" style="min-height: 55px; padding-left: 14px;" placeholder="Penyampaian Penempatan Mahasiswa Magang ITPLN" required></textarea>
+                                </div>
+
+                                <!-- Jabatan Penandatangan -->
+                                <div>
+                                    <label class="admin-input-label" for="cfg-jabatan-ttd">
+                                        Jabatan Penandatangan <span style="color: #ef4444;">*</span>
+                                    </label>
+                                    <input type="text" id="cfg-jabatan-ttd" class="admin-input-field" placeholder="Wakil Rektor III Bidang Kemahasiswaan" required>
+                                </div>
+
+                                <!-- Nama Pejabat Penandatangan -->
+                                <div>
+                                    <label class="admin-input-label" for="cfg-nama-ttd">
+                                        Nama & Gelar Penandatangan <span style="color: #ef4444;">*</span>
+                                    </label>
+                                    <input type="text" id="cfg-nama-ttd" class="admin-input-field" placeholder="Ir. Purnomo, S.T., M.T." required>
+                                </div>
+
+                                <!-- NIP/NIDN Pejabat -->
+                                <div>
+                                    <label class="admin-input-label" for="cfg-nip-ttd">
+                                        NIP / NIDN Penandatangan <span style="font-size: 0.8rem; font-weight: 500; color: #64748b;">(Opsional)</span>
+                                    </label>
+                                    <input type="text" id="cfg-nip-ttd" class="admin-input-field" placeholder="NIP / NIDN...">
+                                </div>
+
+                                <!-- Upload Tanda Tangan Pejabat -->
+                                <div class="form-full-width">
+                                    <label class="admin-input-label">
+                                        Tanda Tangan Pejabat (Background Putih / Transparan) <span style="font-size: 0.8rem; font-weight: 500; color: #64748b;">(Opsional)</span>
+                                    </label>
+                                    
+                                    <div class="ttd-upload-box" id="ttd-drop-zone">
+                                        <input type="file" id="file-ttd-input" accept="image/png,image/jpeg,image/webp" style="display: none;">
+                                        <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0b3d6b" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                            <div style="font-size: 0.875rem; font-weight: 600; color: #1e293b;">
+                                                Klik di sini untuk mengunggah file tanda tangan pejabat
+                                            </div>
+                                            <div style="font-size: 0.775rem; color: #64748b;">
+                                                Format PNG, JPG, atau WEBP berlatar belakang putih atau transparan (Maks. 3 MB)
+                                            </div>
+                                            <div id="ttd-preview-container" style="display: none; margin-top: 6px;">
+                                                <img id="img-ttd-preview" class="ttd-preview-img" alt="Preview TTD">
+                                                <div style="font-size: 0.75rem; color: #059669; font-weight: 600; margin-top: 4px;">
+                                                    ✓ File tanda tangan aktif terpasang
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Live Rumus Penomoran Preview -->
+                            <div class="formula-preview-card">
+                                <div class="formula-preview-left">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                    <div>
+                                        <div style="font-size: 0.8rem; font-weight: 700; color: #166534; text-transform: uppercase; letter-spacing: 0.5px;">Simulasi Format Nomor Unit Pertama (01):</div>
+                                        <div id="live-formula-preview" style="font-family: monospace; font-weight: 700; font-size: 1.05rem; color: #0f172a; margin-top: 2px;">
+                                            0001.01/Kt/2/D06/10/2026
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="font-size: 0.8rem; color: #475569;">
+                                    *Kode unit (.01, .02, dst) dihasilkan secara otomatis sesuai urutan unit.
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Section 3: Daftar Unit & Tombol Download Arsip ZIP -->
+                <div class="admin-card">
+                    <div class="admin-card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 20px;">
+                        <div>
+                            <h3 class="admin-card-title" style="display: flex; align-items: center; gap: 8px;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                                <span>2. Daftar Surat Pengantar Per-Kantor Unit PLN</span>
+                            </h3>
+                            <p style="font-size: 0.85rem; color: #64748b; margin-top: 4px;" id="units-count-info">Memuat unit...</p>
+                        </div>
+
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <!-- Search Unit Filter -->
+                            <div class="admin-input-wrapper" style="max-width: 260px; min-width: 180px;">
+                                <svg class="admin-input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                                <input type="text" id="filter-unit-search" class="admin-input-field" placeholder="Cari nama kantor unit..." style="background: #ffffff; padding-left: 36px; font-size: 0.825rem; height: 38px; border-radius: 8px;">
+                            </div>
+
+                            <button type="button" id="btn-download-all-zip" class="btn-primary" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 22px; background: #047857; border-radius: 10px; font-weight: 700; color: #ffffff; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(4, 120, 87, 0.2); white-space: nowrap;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                <span>Download Semua Surat (.ZIP)</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Table Container -->
+                    <div class="admin-table-container custom-scrollbar">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 50px; text-align: center;">No</th>
+                                    <th style="width: 90px; text-align: center;">Kode Unit</th>
+                                    <th style="width: 240px;">Nomor Surat Terbit</th>
+                                    <th>Kantor Unit PLN</th>
+                                    <th>Alamat Kantor</th>
+                                    <th style="width: 130px; text-align: center;">Mahasiswa</th>
+                                    <th style="width: 160px; text-align: center;">Aksi Download</th>
+                                </tr>
+                            </thead>
+                            <tbody id="units-table-body">
+                                <tr>
+                                    <td colspan="7" style="text-align: center; padding: 40px; color: #94a3b8;">
+                                        Memuat data unit penempatan...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div id="pagination-surat" style="padding: 16px 20px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                        <div id="pagination-info-surat" style="font-size: 0.85rem; color: #64748b; font-weight: 500;">
+                            Menampilkan 0 data
+                        </div>
+                        <div style="display: flex; gap: 6px; align-items: center;" id="pagination-nav-surat"></div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script type="module" src="/js/admin/common.js"></script>
+    <script type="module" src="/js/admin/surat-mahasiswa.js"></script>
+</body>
+</html>

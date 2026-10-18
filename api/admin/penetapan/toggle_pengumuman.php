@@ -56,6 +56,21 @@ try {
         exit;
     }
 
+    // Validasi nomor surat pengantar sebelum pengumuman dibuka
+    if ($pengumumanDibuka === 1) {
+        $stmtC = $pdo->prepare("SELECT nomor_pokok FROM konfigurasi_surat_pengantar WHERE periode_id = ?");
+        $stmtC->execute([$periodeId]);
+        $nomorPokok = trim((string)($stmtC->fetchColumn() ?: ''));
+
+        if ($nomorPokok === '') {
+            http_response_code(400);
+            echo json_encode([
+                'error' => 'Nomor Surat Pengantar Mahasiswa belum diatur untuk periode ini. Silakan atur nomor surat pada menu "Surat Pengantar Mahasiswa" sebelum mempublikasikan pengumuman.'
+            ]);
+            exit;
+        }
+    }
+
     // Update status pengumuman
     $stmtUpdate = $pdo->prepare("UPDATE periode SET pengumuman_dibuka = ? WHERE id = ?");
     $stmtUpdate->execute([$pengumumanDibuka, $periodeId]);

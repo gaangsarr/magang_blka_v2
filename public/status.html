@@ -991,7 +991,7 @@
                         <span style="font-size: 0.8rem; color: #78350f; font-weight: 500;">Bawa surat rekomendasi resmi ini saat melapor ke kantor penempatan:</span>
                         <a href="/api/mahasiswa/surat_pengantar/download.php?pendaftaran_id=${item.pendaftaran_id}" target="_blank" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.825rem; font-weight: 700; padding: 7px 14px; background: #0B192C; border: 1px solid #0B192C; color: #ffffff; text-decoration: none; border-radius: 6px;">
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                            <span>Unduh Surat Rekomendasi (PDF)</span>
+                            <span>Unduh Surat Pengantar (PDF)</span>
                         </a>
                     </div>
                 ` : '';
@@ -1014,7 +1014,7 @@
                         <span style="font-size: 0.8rem; color: #065f46; font-weight: 500;">Bawa surat rekomendasi resmi ini saat melapor ke kantor penempatan:</span>
                         <a href="/api/mahasiswa/surat_pengantar/download.php?pendaftaran_id=${item.pendaftaran_id}" target="_blank" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.825rem; font-weight: 700; padding: 7px 14px; background: #0B192C; border: 1px solid #0B192C; color: #ffffff; text-decoration: none; border-radius: 6px;">
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                            <span>Unduh Surat Rekomendasi (PDF)</span>
+                            <span>Unduh Surat Pengantar (PDF)</span>
                         </a>
                     </div>
                 ` : '';
@@ -1052,7 +1052,7 @@
                     footerAction.innerHTML = `
                         <a href="/api/mahasiswa/surat_pengantar/download.php?pendaftaran_id=${item.pendaftaran_id}" target="_blank" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.825rem; font-weight: 700; padding: 8px 16px; background: #0B192C; border: 1px solid #0B192C; color: #ffffff; text-decoration: none; border-radius: 6px;">
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                            <span>Unduh Surat Rekomendasi (PDF)</span>
+                            <span>Unduh Surat Pengantar (PDF)</span>
                         </a>
                     `;
                 } else {
@@ -1379,7 +1379,7 @@
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
                             </button>
                             ${isPub && (item.status === 'diterima' || item.status === 'dipindahkan' || item.is_dipindahkan) ? `
-                                <a href="/api/mahasiswa/surat_pengantar/download.php?pendaftaran_id=${item.pendaftaran_id}" target="_blank" style="display: inline-flex; align-items: center; justify-content: center; gap: 4px; font-size: 0.75rem; color: #0B192C; text-decoration: underline; font-weight: 700; margin-top: 6px;" title="Unduh Surat Rekomendasi Magang PDF">
+                                <a href="/api/mahasiswa/surat_pengantar/download.php?pendaftaran_id=${item.pendaftaran_id}" target="_blank" style="display: inline-flex; align-items: center; justify-content: center; gap: 4px; font-size: 0.75rem; color: #0B192C; text-decoration: underline; font-weight: 700; margin-top: 6px;" title="Unduh Surat Pengantar Magang PDF">
                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                                     <span>Unduh PDF</span>
                                 </a>

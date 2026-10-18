@@ -255,7 +255,18 @@ export function showAdminToast(message, type = 'info', duration = 3500) {
     }, duration);
 }
 
+export function escapeHtml(unsafe) {
+    if (unsafe === null || unsafe === undefined) return '';
+    return String(unsafe)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 // Expose globally on window so legacy / existing scripts can use them seamlessly
+window.escapeHtml = escapeHtml;
 window.showAdminAlert = showAdminAlert;
 window.showAdminConfirm = showAdminConfirm;
 window.showAdminToast = showAdminToast;
