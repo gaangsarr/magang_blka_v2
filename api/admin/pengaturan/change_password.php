@@ -88,9 +88,9 @@ try {
         exit;
     }
 
-    if (strlen($newPassword) < 6) {
+    if (strlen($newPassword) < 8) {
         http_response_code(400);
-        echo json_encode(['error' => 'Password baru minimal 6 karakter.']);
+        echo json_encode(['error' => 'Password baru minimal 8 karakter.']);
         exit;
     }
 

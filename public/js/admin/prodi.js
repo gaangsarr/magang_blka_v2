@@ -269,6 +269,11 @@
             // Bind Event Listeners
             bindEvents();
 
+            // Cek apakah akun wajib ganti password awal
+            if (state.admin.force_password_change) {
+                openPasswordModal(true);
+            }
+
             // Load initial dashboard data
             await loadDashboardData();
 
@@ -1092,13 +1097,30 @@
     // ========================================================
     // MODAL UBAH PASSWORD
     // ========================================================
-    function openPasswordModal() {
+    function openPasswordModal(isForced = false) {
         el.formPassword.reset();
         el.modalPassword.classList.add('open');
+        const modalHeaderNotice = document.getElementById('modal-pass-notice');
+        if (isForced) {
+            if (modalHeaderNotice) {
+                modalHeaderNotice.textContent = 'Demi keamanan akun Anda, silakan ubah kata sandi default sebelum melanjutkan.';
+                modalHeaderNotice.style.display = 'block';
+            }
+            if (el.btnClosePassword) el.btnClosePassword.style.display = 'none';
+            if (el.btnCancelPassword) el.btnCancelPassword.style.display = 'none';
+        } else {
+            if (modalHeaderNotice) modalHeaderNotice.style.display = 'none';
+            if (el.btnClosePassword) el.btnClosePassword.style.display = '';
+            if (el.btnCancelPassword) el.btnCancelPassword.style.display = '';
+        }
         el.inputCurrentPass.focus();
     }
 
     function closePasswordModal() {
+        if (state.admin && state.admin.force_password_change) {
+            showToast('Anda wajib memperbarui password awal sebelum dapat menggunakan portal.', 'error');
+            return;
+        }
         el.modalPassword.classList.remove('open');
     }
 
@@ -1109,8 +1131,8 @@
         const newPass = el.inputNewPass.value;
         const confirmPass = el.inputConfirmPass.value;
 
-        if (newPass.length < 6) {
-            showToast('Password baru minimal 6 karakter.', 'error');
+        if (newPass.length < 8) {
+            showToast('Password baru minimal 8 karakter.', 'error');
             return;
         }
 
@@ -1143,6 +1165,11 @@
             }
 
             showToast(data.message || 'Password berhasil diperbarui!', 'success');
+            if (state.admin) {
+                state.admin.force_password_change = false;
+            }
+            if (el.btnClosePassword) el.btnClosePassword.style.display = '';
+            if (el.btnCancelPassword) el.btnCancelPassword.style.display = '';
             closePasswordModal();
 
         } catch (err) {

@@ -262,7 +262,10 @@ function populateConfigForm(config, periodeId) {
     // Preview TTD jika sudah ada
     const ttdPreviewContainer = document.getElementById('ttd-preview-container');
     const imgTtdPreview = document.getElementById('img-ttd-preview');
-    if (config.ttd_image_path) {
+    if (config.ttd_preview_base64) {
+        if (imgTtdPreview) imgTtdPreview.src = config.ttd_preview_base64;
+        if (ttdPreviewContainer) ttdPreviewContainer.style.display = 'block';
+    } else if (config.ttd_image_path) {
         if (imgTtdPreview) imgTtdPreview.src = '/' + config.ttd_image_path.replace(/^\/+/, '');
         if (ttdPreviewContainer) ttdPreviewContainer.style.display = 'block';
     } else {

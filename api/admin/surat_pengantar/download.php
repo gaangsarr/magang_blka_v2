@@ -12,7 +12,7 @@ use App\SuratPengantarGenerator;
 $root = dirname(__DIR__, 3);
 Dotenv::createImmutable($root)->safeLoad();
 
-Auth::requireAdminApi();
+Auth::requireBlkaApi();
 
 $periodeId = isset($_GET['periode_id']) ? (int)$_GET['periode_id'] : 0;
 $unitId = isset($_GET['unit_id']) ? (int)$_GET['unit_id'] : 0;

@@ -207,6 +207,28 @@ class Auth
     }
 
     /**
+     * Cek apakah request datang dari Admin BLKA atau Super Admin.
+     * Mencegah akses dari Admin Mitra Perusahaan atau Admin Prodi.
+     */
+    public static function requireBlkaApi(): void
+    {
+        self::startSession(startPHP: true);
+
+        if (!self::isLoggedInAdmin()) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Unauthorized. Admin access required.']);
+            exit;
+        }
+
+        $admin = self::getAdmin();
+        if (!$admin || !in_array($admin['role'], ['super_admin', 'superadmin', 'admin_blka', 'admin'], true)) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Akses ditolak. Fitur ini khusus Admin BLKA dan Super Admin.']);
+            exit;
+        }
+    }
+
+    /**
      * Cek apakah request datang dari Super Admin.
      * Jika tidak → kirim JSON 403 dan exit.
      */

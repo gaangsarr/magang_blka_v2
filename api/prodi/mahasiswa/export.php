@@ -290,5 +290,5 @@ try {
 } catch (\Throwable $e) {
     http_response_code(500);
     header('Content-Type: text/plain; charset=utf-8');
-    echo 'Terjadi kesalahan saat mengekspor data: ' . $e->getMessage();
+    echo Auth::safeErrorMessage($e, 'Terjadi kesalahan sistem saat mengekspor data pendaftar.');
 }

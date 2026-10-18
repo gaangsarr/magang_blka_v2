@@ -143,6 +143,14 @@ class SuratPengantarGenerator
         $nama = trim((string)($data['nama_penandatangan'] ?? 'Ir. Purnomo, S.T., M.T.'));
         $nip = trim((string)($data['nip_penandatangan'] ?? ''));
         $ttdPath = isset($data['ttd_image_path']) ? trim((string)$data['ttd_image_path']) : null;
+        if ($ttdPath !== null && $ttdPath !== '') {
+            $cleanTtd = ltrim(str_replace('\\', '/', $ttdPath), '/');
+            if (preg_match('/^storage\/signatures\/ttd_periode_\d+_\d+\.(png|jpg|jpeg|webp)$/', $cleanTtd)) {
+                $ttdPath = $cleanTtd;
+            } else {
+                $ttdPath = null;
+            }
+        }
 
         $sql = "
             INSERT INTO konfigurasi_surat_pengantar (
@@ -337,9 +345,14 @@ class SuratPengantarGenerator
         // Tanda tangan Base64 jika ada
         $ttdBase64 = null;
         if (!empty($cfg['ttd_image_path'])) {
-            $ttdFullPath = $root . '/' . ltrim($cfg['ttd_image_path'], '/');
-            if (file_exists($ttdFullPath)) {
-                $ttdBase64 = self::getBase64Image($ttdFullPath);
+            $cleanTtd = ltrim(str_replace('\\', '/', (string)$cfg['ttd_image_path']), '/');
+            if (preg_match('/^storage\/signatures\/ttd_periode_\d+_\d+\.(png|jpg|jpeg|webp)$/', $cleanTtd)) {
+                $ttdFullPath = $root . '/' . $cleanTtd;
+                $sigDirReal = realpath($root . '/storage/signatures');
+                $realTtd = realpath($ttdFullPath);
+                if ($realTtd && $sigDirReal && str_starts_with($realTtd, $sigDirReal) && is_file($realTtd)) {
+                    $ttdBase64 = self::getBase64Image($realTtd);
+                }
             }
         }
 
@@ -363,10 +376,10 @@ class SuratPengantarGenerator
 
         // Inisialisasi Dompdf
         $options = new Options();
-        $options->set('isRemoteEnabled', true);
+        $options->set('isRemoteEnabled', false);
         $options->set('defaultFont', 'Helvetica');
         $options->set('isHtml5ParserEnabled', true);
-        $options->set('chroot', [$root, 'C:/Windows/Fonts']);
+        $options->set('chroot', $root);
 
         $dompdf = new Dompdf($options);
         $dompdf->loadHtml($html);

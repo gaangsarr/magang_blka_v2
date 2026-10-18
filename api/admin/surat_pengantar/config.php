@@ -12,7 +12,7 @@ $root = dirname(__DIR__, 3);
 Dotenv::createImmutable($root)->safeLoad();
 
 header('Content-Type: application/json; charset=utf-8');
-Auth::requireAdminApi();
+Auth::requireBlkaApi();
 
 try {
     $pdo = Database::getInstance();
@@ -55,6 +55,18 @@ try {
 
     // 2. Ambil konfigurasi surat pengantar
     $config = SuratPengantarGenerator::getConfig($pdo, $periodeId);
+
+    // Ambil preview base64 jika tanda tangan sudah ada
+    $config['ttd_preview_base64'] = null;
+    if (!empty($config['ttd_image_path'])) {
+        $cleanTtd = ltrim(str_replace('\\', '/', (string)$config['ttd_image_path']), '/');
+        $fullTtd = $root . '/' . $cleanTtd;
+        $sigDirReal = realpath($root . '/storage/signatures');
+        $fileReal = realpath($fullTtd);
+        if ($fileReal && $sigDirReal && str_starts_with($fileReal, $sigDirReal) && is_file($fileReal)) {
+            $config['ttd_preview_base64'] = SuratPengantarGenerator::getBase64Image($fileReal);
+        }
+    }
 
     // 3. Ambil daftar unit yang ada mahasiswa diterima
     $units = SuratPengantarGenerator::getUnitsSummary($pdo, $periodeId);

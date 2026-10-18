@@ -718,8 +718,8 @@ function setupSuperAdminPasswordListeners() {
                 return;
             }
 
-            if (newPass.length < 6) {
-                showAlert('Password baru minimal 6 karakter.');
+            if (newPass.length < 8) {
+                showAlert('Password baru minimal 8 karakter.');
                 return;
             }
 

@@ -12,7 +12,7 @@ $root = dirname(__DIR__, 3);
 Dotenv::createImmutable($root)->safeLoad();
 
 header('Content-Type: application/json; charset=utf-8');
-Auth::requireAdminApi();
+Auth::requireBlkaApi();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -99,10 +99,16 @@ try {
         'ttd_image_path' => $relativeStoragePath
     ]);
 
+    // Hapus file lama jika ada dan terbukti valid di dalam direktori signatures
     if (!empty($oldPath) && $oldPath !== $relativeStoragePath) {
-        $oldReal = $root . '/' . ltrim($oldPath, '/');
-        if (file_exists($oldReal) && is_file($oldReal)) {
-            @unlink($oldReal);
+        $cleanOld = ltrim(str_replace('\\', '/', $oldPath), '/');
+        if (preg_match('/^storage\/signatures\/ttd_periode_\d+_\d+\.(png|jpg|jpeg|webp)$/', $cleanOld)) {
+            $oldReal = $root . '/' . $cleanOld;
+            $sigDirReal = realpath($destDir);
+            $fileReal = realpath($oldReal);
+            if ($fileReal && $sigDirReal && str_starts_with($fileReal, $sigDirReal) && is_file($fileReal)) {
+                @unlink($fileReal);
+            }
         }
     }
 

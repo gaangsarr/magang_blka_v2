@@ -12,7 +12,7 @@ $root = dirname(__DIR__, 3);
 Dotenv::createImmutable($root)->safeLoad();
 
 header('Content-Type: application/json; charset=utf-8');
-Auth::requireAdminApi();
+Auth::requireBlkaApi();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);

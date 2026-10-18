@@ -128,7 +128,7 @@ try {
         $createdAccounts = [];
         $stmtInsert = $pdo->prepare("
             INSERT INTO admin (nama, username, password_hash, role, jurusan_id, force_password_change, aktif, created_at, updated_at)
-            VALUES (:nama, :username, :password_hash, 'admin_prodi', :jurusan_id, 0, 1, NOW(), NOW())
+            VALUES (:nama, :username, :password_hash, 'admin_prodi', :jurusan_id, 1, 1, NOW(), NOW())
         ");
 
         $superAdmin = Auth::getAdmin();
@@ -230,15 +230,17 @@ try {
             );
         }
 
+        $forceFlag = ($mode === 'default') ? 1 : 0;
         $hash = password_hash($plainPass, PASSWORD_BCRYPT);
         $stmtUpd = $pdo->prepare("
             UPDATE admin 
-            SET password_hash = :hash, force_password_change = 0, updated_at = NOW() 
+            SET password_hash = :hash, force_password_change = :force, updated_at = NOW() 
             WHERE id = :id
         ");
         $stmtUpd->execute([
-            ':hash' => $hash,
-            ':id'   => (int)$account['id']
+            ':hash'  => $hash,
+            ':force' => $forceFlag,
+            ':id'    => (int)$account['id']
         ]);
 
         echo json_encode([

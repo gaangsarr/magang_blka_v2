@@ -23,13 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 try {
     $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
 
-    // Validasi CSRF jika token dikirimkan
-    $csrfToken = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? ($input['csrf_token'] ?? null);
-    if ($csrfToken && !Auth::validateCsrfToken($csrfToken)) {
-        http_response_code(403);
-        echo json_encode(['error' => 'Sesi keamanan (CSRF) kadaluarsa. Silakan refresh halaman.']);
-        exit;
-    }
+    Auth::requireCsrfApi();
 
     $currentPassword = (string)($input['current_password'] ?? '');
     $newPassword     = (string)($input['new_password'] ?? '');
@@ -41,9 +35,9 @@ try {
         exit;
     }
 
-    if (strlen($newPassword) < 6) {
+    if (strlen($newPassword) < 8) {
         http_response_code(400);
-        echo json_encode(['error' => 'Password baru minimal 6 karakter.']);
+        echo json_encode(['error' => 'Password baru minimal 8 karakter.']);
         exit;
     }
 
