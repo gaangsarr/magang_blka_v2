@@ -42,10 +42,16 @@ if (!Auth::isLoggedInAdmin() && Auth::isLoggedInMahasiswa()) {
 }
 
 if (Auth::isLoggedInAdmin()) {
+    $admin = Auth::getAdmin();
+    $role = $admin['role'] ?? ($_SESSION['admin_role'] ?? 'admin_blka');
+    $isSuper = ($role === 'super_admin' || $role === 'superadmin');
     echo json_encode([
         'authenticated' => true,
-        'admin' => Auth::getAdmin(),
-        'csrf_token' => $csrfToken
+        'admin'         => $admin,
+        'role'          => $role,
+        'admin_role'    => $role,
+        'is_super'      => $isSuper,
+        'csrf_token'    => $csrfToken
     ]);
 } else {
     echo json_encode([

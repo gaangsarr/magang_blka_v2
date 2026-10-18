@@ -13,16 +13,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    currentAdmin = statusData;
-    const isSuper = statusData.is_super || statusData.admin_role === 'super_admin' || statusData.role === 'super_admin';
+    currentAdmin = statusData.admin || statusData;
+    const adminRole = currentAdmin.role || statusData.role || statusData.admin_role || '';
+    const isSuper = Boolean(statusData.is_super || currentAdmin.is_super || adminRole === 'super_admin' || adminRole === 'superadmin');
 
-    // Sembunyikan Kelola Admin & Notifikasi Email jika bukan Super Admin
+    // Sembunyikan Kelola Admin, Notifikasi Email & Keamanan jika bukan Super Admin
     if (!isSuper) {
         const cardKelola = document.getElementById('card-kelola-admin');
         if (cardKelola) cardKelola.style.display = 'none';
 
         const cardEmail = document.getElementById('card-notifikasi-email');
         if (cardEmail) cardEmail.style.display = 'none';
+
+        const cardKeamanan = document.getElementById('card-keamanan-admin');
+        if (cardKeamanan) cardKeamanan.style.display = 'none';
+    } else {
+        setupSuperAdminPasswordListeners();
+        loadSuperAdminAccountInfo();
     }
 
     // Load current settings
@@ -539,3 +546,223 @@ function setupDokumenListeners() {
         });
     }
 }
+
+let superAdminAccountData = null;
+
+async function loadSuperAdminAccountInfo() {
+    try {
+        const res = await fetch('/api/admin/pengaturan/change_password.php');
+        const data = await res.json();
+        if (data.ok) {
+            superAdminAccountData = data;
+            const nameEl = document.getElementById('superadmin-display-name');
+            const metaEl = document.getElementById('superadmin-display-meta');
+            const grpCurrent = document.getElementById('group-current-password');
+            const inputCurrent = document.getElementById('current_password');
+
+            if (nameEl) {
+                nameEl.innerText = data.nama || 'Super Admin';
+            }
+            if (metaEl) {
+                const infoParts = [];
+                if (data.email) infoParts.push(`Email: ${data.email}`);
+                if (data.username) infoParts.push(`Username: ${data.username}`);
+                infoParts.push(`Password Login: ${data.has_password ? 'Sudah Diatur' : 'Belum Diatur (Login SSO)'}`);
+                metaEl.innerText = infoParts.join(' • ');
+            }
+
+            if (grpCurrent && inputCurrent) {
+                if (data.has_password) {
+                    grpCurrent.style.display = 'block';
+                    inputCurrent.required = true;
+                } else {
+                    grpCurrent.style.display = 'none';
+                    inputCurrent.required = false;
+                    inputCurrent.value = '';
+                }
+            }
+        }
+    } catch (err) {
+        console.error('[pengaturan.js] Error loading super admin info:', err);
+    }
+}
+
+function setupSuperAdminPasswordListeners() {
+    const modal = document.getElementById('modal-ganti-password');
+    const btnOpen = document.getElementById('btn-open-modal-password');
+    const btnClose = document.getElementById('btn-close-modal-password');
+    const btnCancel = document.getElementById('btn-cancel-modal-password');
+    const form = document.getElementById('form-ganti-password');
+    const alertBox = document.getElementById('pw-form-alert');
+
+    function openModal() {
+        if (!modal) return;
+        if (form) form.reset();
+        hideAlert();
+
+        // Reset toggle password icons and types
+        document.querySelectorAll('.btn-toggle-pw').forEach(btn => {
+            const targetId = btn.getAttribute('data-target');
+            const inp = document.getElementById(targetId);
+            if (inp) inp.type = 'password';
+            const eyeOpen = btn.querySelector('.eye-open');
+            const eyeClosed = btn.querySelector('.eye-closed');
+            if (eyeOpen) eyeOpen.style.display = 'block';
+            if (eyeClosed) eyeClosed.style.display = 'none';
+        });
+
+        if (superAdminAccountData) {
+            const grpCurrent = document.getElementById('group-current-password');
+            const inputCurrent = document.getElementById('current_password');
+            if (grpCurrent && inputCurrent) {
+                if (superAdminAccountData.has_password) {
+                    grpCurrent.style.display = 'block';
+                    inputCurrent.required = true;
+                } else {
+                    grpCurrent.style.display = 'none';
+                    inputCurrent.required = false;
+                    showAlert('Akun Anda saat ini belum memiliki kata sandi lokal (masuk via SSO). Silakan buat kata sandi baru.', 'info');
+                }
+            }
+        }
+
+        modal.classList.add('active');
+        const firstInput = (superAdminAccountData && superAdminAccountData.has_password) 
+            ? document.getElementById('current_password') 
+            : document.getElementById('new_password');
+        if (firstInput) setTimeout(() => firstInput.focus(), 150);
+    }
+
+    function closeModal() {
+        if (!modal) return;
+        modal.classList.remove('active');
+        if (form) form.reset();
+        hideAlert();
+    }
+
+    function showAlert(msg, type = 'error') {
+        if (!alertBox) return;
+        alertBox.style.display = 'block';
+        if (type === 'error') {
+            alertBox.style.background = '#fef2f2';
+            alertBox.style.color = '#b91c1c';
+            alertBox.style.border = '1px solid #fecaca';
+        } else if (type === 'info') {
+            alertBox.style.background = '#f0f9ff';
+            alertBox.style.color = '#0369a1';
+            alertBox.style.border = '1px solid #bae6fd';
+        } else {
+            alertBox.style.background = '#f0fdf4';
+            alertBox.style.color = '#15803d';
+            alertBox.style.border = '1px solid #bbf7d0';
+        }
+        alertBox.innerText = msg;
+    }
+
+    function hideAlert() {
+        if (alertBox) alertBox.style.display = 'none';
+    }
+
+    if (btnOpen) btnOpen.addEventListener('click', openModal);
+    if (btnClose) btnClose.addEventListener('click', closeModal);
+    if (btnCancel) btnCancel.addEventListener('click', closeModal);
+
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal && modal.classList.contains('active')) {
+            closeModal();
+        }
+    });
+
+    document.querySelectorAll('.btn-toggle-pw').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const targetId = btn.getAttribute('data-target');
+            const inp = document.getElementById(targetId);
+            if (!inp) return;
+            const eyeOpen = btn.querySelector('.eye-open');
+            const eyeClosed = btn.querySelector('.eye-closed');
+
+            if (inp.type === 'password') {
+                inp.type = 'text';
+                if (eyeOpen) eyeOpen.style.display = 'none';
+                if (eyeClosed) eyeClosed.style.display = 'block';
+            } else {
+                inp.type = 'password';
+                if (eyeOpen) eyeOpen.style.display = 'block';
+                if (eyeClosed) eyeClosed.style.display = 'none';
+            }
+        });
+    });
+
+    if (form) {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideAlert();
+
+            const curPass = document.getElementById('current_password') ? document.getElementById('current_password').value : '';
+            const newPass = document.getElementById('new_password').value;
+            const confPass = document.getElementById('confirm_password').value;
+
+            if (superAdminAccountData && superAdminAccountData.has_password && !curPass) {
+                showAlert('Password saat ini wajib diisi.');
+                return;
+            }
+
+            if (!newPass) {
+                showAlert('Password baru wajib diisi.');
+                return;
+            }
+
+            if (newPass.length < 6) {
+                showAlert('Password baru minimal 6 karakter.');
+                return;
+            }
+
+            if (newPass !== confPass) {
+                showAlert('Konfirmasi password baru tidak cocok.');
+                return;
+            }
+
+            const btnSubmit = document.getElementById('btn-submit-password');
+            const origText = btnSubmit.innerHTML;
+            btnSubmit.disabled = true;
+            btnSubmit.innerText = 'Menyimpan...';
+
+            try {
+                const res = await fetch('/api/admin/pengaturan/change_password.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': csrfToken
+                    },
+                    body: JSON.stringify({
+                        current_password: curPass,
+                        new_password: newPass,
+                        confirm_password: confPass
+                    })
+                });
+
+                const data = await res.json();
+                if (res.ok && data.ok) {
+                    closeModal();
+                    await showAdminAlert('Kata sandi Super Admin berhasil diperbarui!', 'success', 'Password Diperbarui');
+                    await loadSuperAdminAccountInfo();
+                } else {
+                    showAlert(data.error || 'Gagal mengubah kata sandi.');
+                }
+            } catch (err) {
+                console.error('[pengaturan.js] Error updating password:', err);
+                showAlert('Kesalahan koneksi ke server saat memperbarui password.');
+            } finally {
+                btnSubmit.disabled = false;
+                btnSubmit.innerHTML = origText;
+            }
+        });
+    }
+}
+
