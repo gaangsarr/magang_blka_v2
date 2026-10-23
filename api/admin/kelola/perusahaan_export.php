@@ -152,7 +152,7 @@ try {
 
             <div class="info-box">
                 <strong>PETUNJUK PENGGUNAAN KREDENSIAL UNTUK ADMIN MITRA PERUSAHAAN:</strong><br>
-                1. Kredensial di bawah ini digunakan oleh PIC / Bagian SDM unit mitra untuk mengakses Dashboard Perusahaan di URL: <strong>https://magang.itpln.ac.id/perusahaan/</strong> atau <strong>/admin/login.html</strong>.<br>
+                1. Kredensial di bawah ini digunakan oleh PIC / Bagian SDM unit mitra untuk mengakses Dashboard Perusahaan di URL: <strong>https://intern.itpln.ac.id/admin/login.html</strong>.<br>
                 2. Saat login pertama kali menggunakan Username dan Password Awal, sistem akan <strong>mewajibkan perubahan password baru</strong> dan melengkapi data kontak PIC.<br>
                 3. Jika terdapat kendala login atau lupa password, hubungi Administrator BLKA ITPLN.
             </div>

@@ -151,24 +151,78 @@ try {
             exit;
         }
 
-        // 4. Jika mode breakdown, kuota tiap prodi tidak boleh dikurangi dari alokasi sebelumnya
-        if ($menerimaMagang && $tipeKuota === 'breakdown') {
-            $stmtOldUpj = $pdo->prepare("SELECT jurusan_id, kuota_total FROM unit_periode_jurusan WHERE unit_pelaksana_periode_id = ?");
-            $stmtOldUpj->execute([$uppId]);
-            $oldUpjMap = [];
-            foreach ($stmtOldUpj->fetchAll(PDO::FETCH_ASSOC) as $ou) {
-                $oldUpjMap[(int)$ou['jurusan_id']] = (int)($ou['kuota_total'] ?? 0);
+        // 4. Program studi yang sudah ditetapkan pada status Persiapan TIDAK BOLEH dihapus saat periode dibuka
+        $stmtOldUpj = $pdo->prepare("
+            SELECT upj.jurusan_id, upj.kuota_total, j.nama_jurusan, j.jenjang 
+            FROM unit_periode_jurusan upj
+            JOIN jurusan j ON upj.jurusan_id = j.id
+            WHERE upj.unit_pelaksana_periode_id = ?
+        ");
+        $stmtOldUpj->execute([$uppId]);
+        $oldProdiRows = $stmtOldUpj->fetchAll(PDO::FETCH_ASSOC);
+
+        if ($menerimaMagang && !empty($oldProdiRows)) {
+            $deletedProdiNames = [];
+            foreach ($oldProdiRows as $op) {
+                $oldJid = (int)$op['jurusan_id'];
+                if (!in_array($oldJid, $jurusanIds, true)) {
+                    $prefix = $op['jenjang'] ? "{$op['jenjang']} - " : '';
+                    $deletedProdiNames[] = $prefix . $op['nama_jurusan'];
+                }
             }
 
-            foreach ($oldUpjMap as $oldJid => $oldJQuota) {
+            if (!empty($deletedProdiNames)) {
+                $deletedStr = implode(', ', $deletedProdiNames);
+                http_response_code(400);
+                echo json_encode([
+                    'error' => "Program studi ($deletedStr) yang sudah ditetapkan pada status Persiapan tidak dapat dihapus saat status periode DIBUKA. Anda hanya dapat menambah program studi baru atau menambah kuota."
+                ]);
+                exit;
+            }
+        }
+
+        // 5. Bidang peminatan yang sudah ditetapkan pada status Persiapan TIDAK BOLEH dihapus saat periode dibuka
+        $stmtOldUppem = $pdo->prepare("
+            SELECT uppem.peminatan_id, p.nama AS nama_peminatan
+            FROM unit_periode_peminatan uppem
+            JOIN peminatan p ON uppem.peminatan_id = p.id
+            WHERE uppem.unit_pelaksana_periode_id = ?
+        ");
+        $stmtOldUppem->execute([$uppId]);
+        $oldPemRows = $stmtOldUppem->fetchAll(PDO::FETCH_ASSOC);
+
+        if ($menerimaMagang && !empty($oldPemRows)) {
+            $deletedPemNames = [];
+            foreach ($oldPemRows as $opm) {
+                $oldPemId = (int)$opm['peminatan_id'];
+                if (!in_array($oldPemId, $peminatanIds, true)) {
+                    $deletedPemNames[] = $opm['nama_peminatan'];
+                }
+            }
+
+            if (!empty($deletedPemNames)) {
+                $deletedPemStr = implode(', ', $deletedPemNames);
+                http_response_code(400);
+                echo json_encode([
+                    'error' => "Bidang peminatan ($deletedPemStr) yang sudah ditetapkan pada status Persiapan tidak dapat dihapus saat status periode DIBUKA. Anda hanya dapat menambah bidang peminatan baru."
+                ]);
+                exit;
+            }
+        }
+
+        // 6. Jika mode breakdown, kuota tiap prodi tidak boleh dikurangi dari alokasi sebelumnya
+        if ($menerimaMagang && $tipeKuota === 'breakdown') {
+            foreach ($oldProdiRows as $op) {
+                $oldJid = (int)$op['jurusan_id'];
+                $oldJQuota = (int)($op['kuota_total'] ?? 0);
                 if ($oldJQuota > 0) {
                     $newJQuota = $allocMap[$oldJid] ?? 0;
-                    if (!in_array($oldJid, $jurusanIds, true) || $newJQuota < $oldJQuota) {
-                        $stmtJn = $pdo->prepare("SELECT nama_jurusan FROM jurusan WHERE id = ?");
-                        $stmtJn->execute([$oldJid]);
-                        $jName = $stmtJn->fetchColumn() ?: "ID $oldJid";
+                    if ($newJQuota < $oldJQuota) {
+                        $jName = ($op['jenjang'] ? "{$op['jenjang']} - " : '') . $op['nama_jurusan'];
                         http_response_code(400);
-                        echo json_encode(['error' => "Alokasi kuota untuk program studi $jName tidak boleh dikurangi saat periode sedang dibuka (sebelumnya $oldJQuota slot)."]);
+                        echo json_encode([
+                            'error' => "Alokasi kuota untuk program studi $jName tidak boleh dikurangi saat periode sedang dibuka (sebelumnya $oldJQuota slot, kuota hanya dapat ditambah atau tetap)."
+                        ]);
                         exit;
                     }
                 }

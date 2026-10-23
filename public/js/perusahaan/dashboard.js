@@ -13,6 +13,7 @@ let wizardCurrentStep = 1;
 let wizardCurrentMode = 'keseluruhan';
 let wizardJurusanData = [];
 let wizardPeminatanData = [];
+let wizardIsDibukaWithExistingKuota = false;
 
 // Verification & Transfer State
 let selectedPendaftarIds = new Set();
@@ -508,8 +509,11 @@ function selectMode(mode) {
         const radioBreakdown = modeCardBreakdown?.querySelector('input[type="radio"]');
         if (radioBreakdown) radioBreakdown.checked = true;
         document.getElementById('alloc-calc-bar')?.classList.remove('hidden');
+        const isLockedByOpenPeriod = document.querySelector('.chk-prodi[data-locked="true"]') !== null;
         const instr = document.getElementById('prodi-instruction-text');
-        if (instr) instr.innerText = 'Centang program studi yang diterima dan tentukan jatah kuota masing-masing.';
+        if (instr && !isLockedByOpenPeriod) {
+            instr.innerText = 'Centang program studi yang diterima dan tentukan jatah kuota masing-masing.';
+        }
         document.querySelectorAll('.prodi-alloc-input-wrap').forEach(el => el.style.display = 'flex');
     } else {
         wizardCurrentMode = 'keseluruhan';
@@ -518,8 +522,11 @@ function selectMode(mode) {
         const radioKeseluruhan = modeCardKeseluruhan?.querySelector('input[type="radio"]');
         if (radioKeseluruhan) radioKeseluruhan.checked = true;
         document.getElementById('alloc-calc-bar')?.classList.add('hidden');
+        const isLockedByOpenPeriod = document.querySelector('.chk-prodi[data-locked="true"]') !== null;
         const instr = document.getElementById('prodi-instruction-text');
-        if (instr) instr.innerText = 'Centang program studi yang diterima di unit kantor Anda (kuota bebas diperebutkan bersama).';
+        if (instr && !isLockedByOpenPeriod) {
+            instr.innerText = 'Centang program studi yang diterima di unit kantor Anda (kuota bebas diperebutkan bersama).';
+        }
         document.querySelectorAll('.prodi-alloc-input-wrap').forEach(el => el.style.display = 'none');
     }
     updateAllocSummary();
@@ -628,7 +635,7 @@ async function validateWizardStep(step) {
     }
 
     if (step === 3) {
-        const checkedPem = document.querySelectorAll('.chk-peminatan:checked:not(:disabled)');
+        const checkedPem = document.querySelectorAll('.chk-peminatan:checked');
         if (checkedPem.length === 0) {
             await showAdminAlert('Silakan pilih minimal 1 Bidang Peminatan / Penempatan yang dibuka.', 'warning', 'Pilih Peminatan');
             return false;
@@ -639,9 +646,28 @@ async function validateWizardStep(step) {
     return true;
 }
 
+function updatePeminatanStickyCount() {
+    const selectedCount = wizardPeminatanData.filter(p => p.is_selected).length;
+    const badge = document.getElementById('sticky-peminatan-count');
+    if (badge) {
+        badge.innerText = `${selectedCount} Peminatan Dipilih`;
+        if (selectedCount > 0) {
+            badge.className = 'badge-status badge-success';
+        } else {
+            badge.className = 'badge-status badge-info';
+        }
+    }
+}
+
 function syncPeminatanCheck(pemId, isChecked) {
     const pemObj = wizardPeminatanData.find(p => p.id === pemId);
-    if (pemObj) pemObj.is_selected = isChecked;
+    if (pemObj) {
+        const isLocked = Boolean(pemObj.is_locked || (wizardIsDibukaWithExistingKuota && pemObj.is_selected));
+        if (!isChecked && isLocked) {
+            return;
+        }
+        pemObj.is_selected = isChecked;
+    }
 
     document.querySelectorAll(`.chk-peminatan[data-pem-id="${pemId}"]:not(:disabled)`).forEach(input => {
         input.checked = isChecked;
@@ -651,6 +677,8 @@ function syncPeminatanCheck(pemId, isChecked) {
             else card.classList.remove('checked');
         }
     });
+
+    updatePeminatanStickyCount();
 }
 
 function activateProdiFromStep3(jid) {
@@ -783,22 +811,43 @@ function renderPeminatanForStep3() {
                 }).join('');
 
                 if (isSelectedGroup) {
-                    // Card aktif (dapat dipilih)
-                    const checkedClass = pem.is_selected ? 'checked' : '';
+                    // Card aktif (dapat dipilih) atau terkunci jika sudah ditetapkan sebelumnya
+                    const isLockedPem = Boolean(pem.is_locked || (wizardIsDibukaWithExistingKuota && pem.is_selected));
+                    const checkedClass = (pem.is_selected || isLockedPem) ? 'checked' : '';
+                    const lockedClass = isLockedPem ? 'is-locked-pem' : '';
                     const card = document.createElement('label');
-                    card.className = `custom-checkbox-card peminatan-compact-card ${checkedClass}`;
+                    card.className = `custom-checkbox-card peminatan-compact-card ${checkedClass} ${lockedClass}`;
+                    if (isLockedPem) {
+                        card.style.cursor = 'default';
+                        card.title = 'Bidang peminatan ini sudah ditetapkan pada masa Persiapan dan tidak dapat dihapus saat status periode DIBUKA';
+                    }
                     card.innerHTML = `
-                        <div class="peminatan-header-row">
-                            <input type="checkbox" class="chk-peminatan" data-pem-id="${pem.id}" value="${pem.id}" ${pem.is_selected ? 'checked' : ''}>
-                            <span class="peminatan-name">${escapeHtml(pem.nama_peminatan)}</span>
+                        <div class="peminatan-header-row" style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 6px;">
+                            <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+                                <input type="checkbox" class="chk-peminatan" data-pem-id="${pem.id}" value="${pem.id}" ${pem.is_selected || isLockedPem ? 'checked' : ''} ${isLockedPem ? 'disabled data-locked="true" style="cursor: not-allowed;"' : ''}>
+                                <span class="peminatan-name" style="${isLockedPem ? 'font-weight: 700; color: #1e293b;' : ''}">${escapeHtml(pem.nama_peminatan)}</span>
+                            </div>
+                            ${isLockedPem ? `
+                                <span class="badge-status badge-info" style="font-size: 0.675rem; padding: 2px 6px; font-weight: 700; display: inline-flex; align-items: center; gap: 3px; background: #eff6ff; color: #0284c7; border: 1px solid #bfdbfe; flex-shrink: 0;" title="Ditetapkan pada masa Persiapan — Terkunci (tidak dapat dihapus)">
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                    <span>Ditetapkan</span>
+                                </span>
+                            ` : ''}
                         </div>
                         ${prodiTagsHtml ? `<div class="peminatan-prodi-tags">${prodiTagsHtml}</div>` : ''}
                     `;
 
                     const chk = card.querySelector('input');
-                    chk.addEventListener('change', (e) => {
-                        syncPeminatanCheck(pem.id, e.target.checked);
-                    });
+                    if (isLockedPem) {
+                        card.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            showAdminToast(`Bidang "${pem.nama_peminatan}" telah ditetapkan pada status Persiapan dan tidak dapat dihapus saat status periode DIBUKA. Anda hanya dapat menambah bidang peminatan baru.`, 'info', 4000);
+                        });
+                    } else {
+                        chk.addEventListener('change', (e) => {
+                            syncPeminatanCheck(pem.id, e.target.checked);
+                        });
+                    }
 
                     gridEl.appendChild(card);
                 } else {
@@ -829,10 +878,19 @@ function renderPeminatanForStep3() {
             btn.addEventListener('click', () => {
                 const action = btn.getAttribute('data-action');
                 const isCheck = (action === 'all');
-                groupEl.querySelectorAll('.chk-peminatan:not(:disabled)').forEach(input => {
+                let lockedCountInGroup = 0;
+                groupEl.querySelectorAll('.chk-peminatan').forEach(input => {
                     const pemId = parseInt(input.value, 10);
-                    syncPeminatanCheck(pemId, isCheck);
+                    const isLocked = input.disabled || input.getAttribute('data-locked') === 'true';
+                    if (!isCheck && isLocked) {
+                        lockedCountInGroup++;
+                    } else if (!isLocked) {
+                        syncPeminatanCheck(pemId, isCheck);
+                    }
                 });
+                if (!isCheck && lockedCountInGroup > 0) {
+                    showAdminToast(`${lockedCountInGroup} bidang peminatan yang telah ditetapkan tetap aktif dan tidak dapat dihapus.`, 'info', 3500);
+                }
             });
         });
 
@@ -880,6 +938,8 @@ function renderPeminatanForStep3() {
             pemGrid.appendChild(renderProdiGroup(j, false));
         });
     }
+
+    updatePeminatanStickyCount();
 }
 
 function renderReviewForStep4() {
@@ -914,16 +974,19 @@ function renderReviewForStep4() {
 
     let pemCount = 0;
     const seenPemIds = new Set();
-    document.querySelectorAll('.chk-peminatan:checked:not(:disabled)').forEach(cb => {
+    document.querySelectorAll('.chk-peminatan:checked').forEach(cb => {
         const pemId = parseInt(cb.value, 10);
         if (seenPemIds.has(pemId)) return;
         seenPemIds.add(pemId);
         pemCount++;
         const pemObj = wizardPeminatanData.find(p => p.id == pemId);
+        const isLocked = cb.disabled || cb.getAttribute('data-locked') === 'true' || Boolean(pemObj?.is_locked);
         const badge = document.createElement('span');
-        badge.className = 'badge-status badge-success';
-        badge.style.cssText = 'font-size: 0.8rem; padding: 4px 10px; font-weight: 600;';
-        badge.innerText = pemObj?.nama_peminatan || `Peminatan ${pemId}`;
+        badge.className = isLocked ? 'badge-status badge-info' : 'badge-status badge-success';
+        badge.style.cssText = 'font-size: 0.8rem; padding: 4px 10px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;';
+        badge.innerHTML = isLocked
+            ? `<span>${escapeHtml(pemObj?.nama_peminatan || `Peminatan ${pemId}`)}</span> <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`
+            : `<span>${escapeHtml(pemObj?.nama_peminatan || `Peminatan ${pemId}`)}</span>`;
         pemListWrap?.appendChild(badge);
     });
     document.getElementById('rev-pem-count').innerText = `${pemCount} Bidang`;
@@ -1034,6 +1097,10 @@ function initKuotaModule() {
                     renderReviewForStep4();
                 }
                 setWizardStep(nextStep);
+                const detailBox = document.getElementById('kuota-detail-container');
+                if (detailBox) {
+                    detailBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
             }
         });
     });
@@ -1045,6 +1112,10 @@ function initKuotaModule() {
                 renderPeminatanForStep3();
             }
             setWizardStep(prevStep);
+            const detailBox = document.getElementById('kuota-detail-container');
+            if (detailBox) {
+                detailBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
         });
     });
 
@@ -1055,17 +1126,39 @@ function initKuotaModule() {
             c.closest('.custom-checkbox-card')?.classList.add('checked');
             const row = c.closest('.prodi-alloc-row');
             if (row) row.classList.add('checked');
+            const jObj = wizardJurusanData.find(j => j.id == c.value);
+            if (jObj) jObj.is_selected = true;
+            const inputAlloc = document.getElementById(`alloc-prodi-${c.value}`);
+            if (inputAlloc) {
+                inputAlloc.style.opacity = '1';
+                inputAlloc.style.pointerEvents = 'auto';
+            }
         });
         updateAllocSummary();
     });
     document.getElementById('btn-deselect-all-prodi')?.addEventListener('click', () => {
-        document.querySelectorAll('.chk-prodi:not(:disabled)').forEach(c => {
-            c.checked = false;
-            c.closest('.custom-checkbox-card')?.classList.remove('checked');
-            const row = c.closest('.prodi-alloc-row');
-            if (row) row.classList.remove('checked');
+        let lockedCount = 0;
+        document.querySelectorAll('.chk-prodi').forEach(c => {
+            if (c.disabled || c.getAttribute('data-locked') === 'true') {
+                lockedCount++;
+            } else {
+                c.checked = false;
+                c.closest('.custom-checkbox-card')?.classList.remove('checked');
+                const row = c.closest('.prodi-alloc-row');
+                if (row) row.classList.remove('checked');
+                const jObj = wizardJurusanData.find(j => j.id == c.value);
+                if (jObj) jObj.is_selected = false;
+                const inputAlloc = document.getElementById(`alloc-prodi-${c.value}`);
+                if (inputAlloc) {
+                    inputAlloc.style.opacity = '0.4';
+                    inputAlloc.style.pointerEvents = 'none';
+                }
+            }
         });
         updateAllocSummary();
+        if (lockedCount > 0) {
+            showAdminToast(`${lockedCount} program studi yang telah ditetapkan pada status Persiapan tetap aktif dan tidak dapat dihapus.`, 'info', 4000);
+        }
     });
 
     // Select/Deselect All Peminatan
@@ -1076,10 +1169,19 @@ function initKuotaModule() {
         });
     });
     document.getElementById('btn-deselect-all-pem')?.addEventListener('click', () => {
-        document.querySelectorAll('.chk-peminatan:not(:disabled)').forEach(c => {
+        let lockedCount = 0;
+        document.querySelectorAll('.chk-peminatan').forEach(c => {
             const pemId = parseInt(c.value, 10);
-            syncPeminatanCheck(pemId, false);
+            const isLocked = c.disabled || c.getAttribute('data-locked') === 'true';
+            if (isLocked) {
+                lockedCount++;
+            } else {
+                syncPeminatanCheck(pemId, false);
+            }
         });
+        if (lockedCount > 0) {
+            showAdminToast(`${lockedCount} bidang peminatan yang telah ditetapkan pada status Persiapan tetap aktif dan tidak dapat dihapus.`, 'info', 4000);
+        }
     });
 
     // Live listening on total kuota input
@@ -1109,7 +1211,7 @@ function initKuotaModule() {
 
             const peminatanIds = [];
             const seenSubmitPemIds = new Set();
-            document.querySelectorAll('.chk-peminatan:checked:not(:disabled)').forEach(c => {
+            document.querySelectorAll('.chk-peminatan:checked').forEach(c => {
                 const pid = parseInt(c.value, 10);
                 if (!seenSubmitPemIds.has(pid)) {
                     seenSubmitPemIds.add(pid);
@@ -1244,13 +1346,17 @@ async function loadKuotaData(periodeId = 0) {
             const k = data.kuota;
             const existingTotalKuota = parseInt(k?.kuota_total, 10) || 0;
             const hasExistingKuota = Boolean(k?.upp_id && existingTotalKuota > 0);
+            wizardIsDibukaWithExistingKuota = Boolean(isDibuka && hasExistingKuota);
 
             if (canEdit) {
                 if (isDibuka && hasExistingKuota) {
                     lockAlert.innerHTML = `
-                        <div style="display: flex; align-items: center; gap: 8px; color: #92400e; background: #fffbeb; border: 1px solid #fde68a; padding: 12px 16px; border-radius: 8px; font-size: 0.85rem; line-height: 1.4;">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="1.2" fill="currentColor" stroke="none"/></svg>
-                            <span><strong>Pemberitahuan Periode DIBUKA:</strong> Anda <strong>hanya dapat menambah kuota</strong> (minimal ${existingTotalKuota} mahasiswa). Metode kuota terkunci dan unit aktif tidak dapat dinonaktifkan.</span>
+                        <div style="display: flex; align-items: flex-start; gap: 10px; color: #92400e; background: #fffbeb; border: 1px solid #fde68a; padding: 14px 18px; border-radius: 10px; font-size: 0.85rem; line-height: 1.5;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 1px;"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                            <div>
+                                <strong style="display: block; font-size: 0.9rem; margin-bottom: 2px;">Ketentuan Periode DIBUKA:</strong>
+                                <span>Program studi dan bidang peminatan yang telah ditetapkan saat masa Persiapan <strong>terkunci dan tidak dapat dihapus</strong> (hanya dapat menambah program studi atau peminatan baru). Total kuota mahasiswa juga hanya dapat ditambah atau tetap (minimal ${existingTotalKuota} kursi), serta metode alokasi kuota terkunci.</span>
+                            </div>
                         </div>
                     `;
                     lockAlert.classList.remove('hidden');
@@ -1349,6 +1455,26 @@ async function loadKuotaData(periodeId = 0) {
                 }
             }
 
+            const instr = document.getElementById('prodi-instruction-text');
+            if (instr) {
+                if (isDibuka && hasExistingKuota) {
+                    instr.innerHTML = 'Program studi yang telah ditetapkan saat masa Persiapan <strong>terkunci</strong> dan tidak dapat dihapus. Anda dapat mencentang program studi tambahan jika ingin menambah kuota jurusan.';
+                } else if (initMode === 'breakdown') {
+                    instr.innerText = 'Centang program studi yang diterima dan tentukan jatah kuota masing-masing.';
+                } else {
+                    instr.innerText = 'Centang program studi yang diterima di unit kantor Anda (kuota bebas diperebutkan bersama).';
+                }
+            }
+
+            const pemInstr = document.getElementById('peminatan-instruction-text');
+            if (pemInstr) {
+                if (isDibuka && hasExistingKuota) {
+                    pemInstr.innerHTML = 'Bidang peminatan yang telah ditetapkan saat masa Persiapan <strong>terkunci</strong> dan tidak dapat dihapus. Anda dapat mencentang bidang peminatan tambahan yang ingin dibuka.';
+                } else {
+                    pemInstr.innerText = 'Dikelompokkan per program studi. Prodi yang Anda pilih di Langkah 2 tampil di atas. Prodi lain ditampilkan abu-abu (non-aktif) sebagai referensi jika ingin menambah kuota.';
+                }
+            }
+
             // Render Prodi Checkboxes with optional allocation input
             const prodiGrid = document.getElementById('prodi-checkboxes');
             if (prodiGrid && wizardJurusanData) {
@@ -1358,37 +1484,54 @@ async function loadKuotaData(periodeId = 0) {
                     const labelProdi = (j.jenjang ? `${j.jenjang} - ` : '') + j.nama_jurusan;
                     const defaultAlloc = j.kuota_total || 1;
                     const existingProdiAlloc = parseInt(j.kuota_total, 10) || 0;
-                    const isLockedProdi = isDibuka && hasExistingKuota && j.is_selected && (existingProdiAlloc > 0);
+                    // Locked prodi: jika periode DIBUKA dan prodi ini sudah terpilih/ditetapkan sebelumnya
+                    const isLockedProdi = Boolean(j.is_locked || (isDibuka && hasExistingKuota && j.is_selected));
 
                     const card = document.createElement('div');
-                    card.className = `prodi-alloc-row ${checkedClass}`;
+                    card.className = `prodi-alloc-row ${checkedClass} ${isLockedProdi ? 'is-locked-prodi' : ''}`;
                     card.innerHTML = `
-                        <label style="display: flex; align-items: center; gap: 10px; cursor: ${isLockedProdi ? 'default' : 'pointer'}; flex: 1;">
-                            <input type="checkbox" class="chk-prodi" value="${j.id}" ${j.is_selected ? 'checked' : ''} ${isLockedProdi ? 'disabled title="Prodi sudah dialokasikan kuota pada periode DIBUKA dan tidak dapat dinonaktifkan"' : ''} style="cursor: ${isLockedProdi ? 'not-allowed' : 'pointer'}; width: 17px; height: 17px;">
-                            <span style="font-size: 0.875rem; font-weight: 700; color: #1e293b;">${escapeHtml(labelProdi)}</span>
+                        <label style="display: flex; align-items: center; gap: 10px; cursor: ${isLockedProdi ? 'default' : 'pointer'}; flex: 1; min-width: 0;">
+                            <input type="checkbox" class="chk-prodi" value="${j.id}" ${j.is_selected ? 'checked' : ''} ${isLockedProdi ? 'disabled data-locked="true" title="Program studi ini sudah ditetapkan pada masa Persiapan dan tidak dapat dihapus saat status periode DIBUKA"' : ''} style="cursor: ${isLockedProdi ? 'not-allowed' : 'pointer'}; width: 18px; height: 18px; flex-shrink: 0;">
+                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                <span style="font-size: 0.875rem; font-weight: 700; color: #1e293b;">${escapeHtml(labelProdi)}</span>
+                                ${isLockedProdi ? `
+                                    <span class="badge-status badge-info" style="font-size: 0.7rem; padding: 2px 8px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; background: #eff6ff; color: #0284c7; border: 1px solid #bfdbfe;" title="Ditetapkan pada masa Persiapan — Terkunci (tidak dapat dihapus)">
+                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                        <span>Ditetapkan (Terkunci)</span>
+                                    </span>
+                                ` : ''}
+                            </div>
                         </label>
                         <div class="prodi-alloc-input-wrap" style="display: ${initMode === 'breakdown' ? 'flex' : 'none'}; align-items: center; gap: 6px;">
                             <label for="alloc-prodi-${j.id}" style="font-size: 0.775rem; color: #64748b;">Kuota:</label>
-                            <input type="number" id="alloc-prodi-${j.id}" class="prodi-alloc-input" min="${isLockedProdi ? existingProdiAlloc : 1}" max="1000" value="${defaultAlloc}" style="${!j.is_selected ? 'opacity: 0.4; pointer-events: none;' : ''}" ${isLockedProdi ? `title="Minimal ${existingProdiAlloc} saat periode DIBUKA"` : ''}>
+                            <input type="number" id="alloc-prodi-${j.id}" class="prodi-alloc-input" min="${isLockedProdi && existingProdiAlloc > 0 ? existingProdiAlloc : 1}" max="1000" value="${defaultAlloc}" style="${!j.is_selected ? 'opacity: 0.4; pointer-events: none;' : ''}" ${isLockedProdi && existingProdiAlloc > 0 ? `title="Minimal ${existingProdiAlloc} saat periode DIBUKA (hanya dapat ditambah atau tetap)"` : ''}>
                         </div>
                     `;
 
                     const chk = card.querySelector('input.chk-prodi');
                     const allocInput = card.querySelector('.prodi-alloc-input');
 
-                    chk.addEventListener('change', (e) => {
-                        j.is_selected = e.target.checked;
-                        if (e.target.checked) {
-                            card.classList.add('checked');
-                            allocInput.style.opacity = '1';
-                            allocInput.style.pointerEvents = 'auto';
-                        } else {
-                            card.classList.remove('checked');
-                            allocInput.style.opacity = '0.4';
-                            allocInput.style.pointerEvents = 'none';
-                        }
-                        updateAllocSummary();
-                    });
+                    if (isLockedProdi) {
+                        card.addEventListener('click', (e) => {
+                            if (!e.target.closest('.prodi-alloc-input-wrap')) {
+                                showAdminToast(`Program studi "${labelProdi}" telah ditetapkan pada status Persiapan dan tidak dapat dihapus saat status periode DIBUKA. Anda hanya dapat menambah program studi baru.`, 'info', 4000);
+                            }
+                        });
+                    } else {
+                        chk.addEventListener('change', (e) => {
+                            j.is_selected = e.target.checked;
+                            if (e.target.checked) {
+                                card.classList.add('checked');
+                                allocInput.style.opacity = '1';
+                                allocInput.style.pointerEvents = 'auto';
+                            } else {
+                                card.classList.remove('checked');
+                                allocInput.style.opacity = '0.4';
+                                allocInput.style.pointerEvents = 'none';
+                            }
+                            updateAllocSummary();
+                        });
+                    }
 
                     allocInput.addEventListener('input', () => {
                         updateAllocSummary();

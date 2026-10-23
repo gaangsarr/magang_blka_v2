@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/admin.css">
     <!-- Perusahaan Enterprise CSS -->
-    <link rel="stylesheet" href="/css/perusahaan.css?v=20260925v15">
+    <link rel="stylesheet" href="/css/perusahaan.css?v=20261023v1">
     <style>
         @media (max-width: 860px) {
             #p-relocate-split-body {
@@ -437,12 +437,12 @@
                                     <div style="color: #64748b; font-size: 0.85rem;">Memuat daftar program studi...</div>
                                 </div>
 
-                                <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 16px; border-top: 1px solid #e2e8f0;">
+                                <div class="wizard-sticky-actions" id="wizard-actions-step-2">
                                     <button type="button" class="btn-portal-outline btn-wizard-prev" data-prev="1" style="padding: 10px 20px; display: inline-flex; align-items: center; gap: 6px;">
                                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                                         <span>Kembali ke Mode Kuota</span>
                                     </button>
-                                    <button type="button" class="btn-portal-primary btn-wizard-next" data-next="3" id="btn-next-step-2" style="padding: 10px 24px; display: inline-flex; align-items: center; gap: 6px;">
+                                    <button type="button" class="btn-portal-primary btn-wizard-next" data-next="3" id="btn-next-step-2" style="padding: 10px 24px; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 8px rgba(0, 162, 185, 0.28);">
                                         <span>Lanjut ke Peminatan</span>
                                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                                     </button>
@@ -454,7 +454,7 @@
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
                                     <div>
                                         <h4 style="margin: 0; font-size: 1rem; font-weight: 800; color: #0b3d6b;">Pilih Bidang Peminatan / Penempatan</h4>
-                                        <p style="font-size: 0.8rem; color: #64748b; margin: 4px 0 0 0;">Dikelompokkan per program studi. Prodi yang Anda pilih di Langkah 2 tampil di atas. Prodi lain ditampilkan abu-abu (non-aktif) sebagai referensi jika ingin menambah kuota.</p>
+                                        <p id="peminatan-instruction-text" style="font-size: 0.8rem; color: #64748b; margin: 4px 0 0 0;">Dikelompokkan per program studi. Prodi yang Anda pilih di Langkah 2 tampil di atas. Prodi lain ditampilkan abu-abu (non-aktif) sebagai referensi jika ingin menambah kuota.</p>
                                     </div>
                                     <div style="display: flex; gap: 8px;">
                                         <button type="button" id="btn-select-all-pem" class="btn-portal-outline" style="padding: 4px 10px; font-size: 0.75rem;">Pilih Semua</button>
@@ -466,13 +466,16 @@
                                     <div style="color: #64748b; font-size: 0.85rem;">Memuat daftar peminatan...</div>
                                 </div>
 
-                                <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 16px; border-top: 1px solid #e2e8f0;">
+                                <div class="wizard-sticky-actions" id="wizard-actions-step-3">
                                     <button type="button" class="btn-portal-outline btn-wizard-prev" data-prev="2" style="padding: 10px 20px; display: inline-flex; align-items: center; gap: 6px;">
                                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                                         <span>Kembali ke Program Studi</span>
                                     </button>
-                                    <button type="button" class="btn-portal-primary btn-wizard-next" data-next="4" id="btn-next-step-3" style="padding: 10px 24px; display: inline-flex; align-items: center; gap: 6px;">
-                                        <span>Review & Konfirmasi</span>
+                                    <div class="wizard-sticky-info">
+                                        <span class="badge-status badge-info" id="sticky-peminatan-count" style="font-size: 0.775rem; font-weight: 700; padding: 4px 12px; letter-spacing: 0.01em;">0 Peminatan Dipilih</span>
+                                    </div>
+                                    <button type="button" class="btn-portal-primary btn-wizard-next" data-next="4" id="btn-next-step-3" style="padding: 10px 24px; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 8px rgba(0, 162, 185, 0.28);">
+                                        <span>Lanjut ke Review & Konfirmasi</span>
                                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                                     </button>
                                 </div>

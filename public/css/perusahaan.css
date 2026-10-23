@@ -953,6 +953,16 @@ button.navbar-company-badge:hover {
   margin-bottom: 20px;
 }
 
+/* Sticky action bar support inside Tab Kuota */
+#tab-kuota .admin-card {
+  overflow: visible;
+}
+
+#tab-kuota .admin-card > .admin-card-header {
+  border-top-left-radius: var(--radius-lg);
+  border-top-right-radius: var(--radius-lg);
+}
+
 .admin-card-header {
   padding: 18px 22px;
   border-bottom: 1px solid var(--brand-border);
@@ -1978,6 +1988,37 @@ button.navbar-company-badge:hover {
   animation: fadeInPane 0.25s ease-out;
 }
 
+/* Sticky Action Bar for Step 2 (Prodi) and Step 3 (Peminatan) */
+.wizard-sticky-actions {
+  position: sticky;
+  bottom: 56px;
+  z-index: 95;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-top: 1.5px solid var(--brand-border);
+  box-shadow: 0 -6px 20px rgba(11, 25, 44, 0.08);
+  padding: 14px 22px;
+  margin-top: 20px;
+  margin-left: -22px;
+  margin-right: -22px;
+  margin-bottom: -22px;
+  border-bottom-left-radius: var(--radius-lg);
+  border-bottom-right-radius: var(--radius-lg);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  transition: box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.wizard-sticky-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 /* Mode Kuota Radio Cards */
 .mode-kuota-grid {
   display: grid;
@@ -2238,6 +2279,29 @@ button.navbar-company-badge:hover {
   accent-color: #94a3b8;
 }
 
+/* Locked state for peminatan established during persiapan when periode is dibuka */
+.peminatan-compact-card.is-locked-pem {
+  border-color: #cbd5e1 !important;
+  border-left: 3.5px solid var(--brand-blue, #005082) !important;
+  background: #f8fafc !important;
+  cursor: default !important;
+}
+
+.peminatan-compact-card.is-locked-pem:hover {
+  border-color: #94a3b8 !important;
+  border-left-color: var(--brand-cyan, #00A2B9) !important;
+  background: #f1f5f9 !important;
+}
+
+.peminatan-compact-card.is-locked-pem input[type="checkbox"] {
+  cursor: not-allowed !important;
+}
+
+.peminatan-compact-card.is-locked-pem .peminatan-name {
+  color: #1e293b !important;
+  font-weight: 700 !important;
+}
+
 /* Divider separating selected and unselected prodis */
 .unselected-prodi-divider {
   display: flex;
@@ -2360,6 +2424,18 @@ button.navbar-company-badge:hover {
 .prodi-alloc-row.checked {
   border-color: var(--brand-navy);
   background: #f8fafc;
+}
+
+.prodi-alloc-row.is-locked-prodi {
+  border-color: #cbd5e1;
+  border-left: 4px solid var(--brand-blue, #005082);
+  background: #f8fafc;
+}
+
+.prodi-alloc-row.is-locked-prodi:hover {
+  border-color: #94a3b8;
+  border-left-color: var(--brand-cyan, #00A2B9);
+  background: #f1f5f9;
 }
 
 .prodi-alloc-input {
@@ -2638,5 +2714,31 @@ textarea.admin-input-field {
   .mobile-bottom-nav-item.active .nav-icon-wrap {
     background: #eff6ff;
     color: var(--brand-navy);
+  }
+}
+
+/* Wizard Sticky Actions Mobile Overrides */
+@media (max-width: 768px) {
+  .wizard-sticky-actions {
+    bottom: 64px;
+    padding: 12px 16px;
+  }
+}
+
+@media (max-width: 640px) {
+  .wizard-sticky-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+    gap: 8px;
+    padding: 12px 14px;
+  }
+  .wizard-sticky-actions .btn-portal-primary,
+  .wizard-sticky-actions .btn-portal-outline {
+    width: 100%;
+    justify-content: center;
+  }
+  .wizard-sticky-info {
+    justify-content: center;
+    text-align: center;
   }
 }

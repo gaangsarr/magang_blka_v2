@@ -131,12 +131,14 @@ try {
     foreach ($allJurusan as $j) {
         $jId = (int)$j['id'];
         $isSelected = isset($upjMap[$jId]);
+        $isLocked = ($selectedPeriode['status'] === 'dibuka' && $uppId > 0 && $isSelected);
         $jurusanList[] = [
             'id'            => $jId,
             'kode_jurusan'  => $j['kode'] ?? '',
             'nama_jurusan'  => $j['nama_jurusan'],
             'jenjang'       => $j['jenjang'] ?: 'S1',
             'is_selected'   => $isSelected,
+            'is_locked'     => $isLocked,
             'kuota_total'   => $isSelected ? ($upjMap[$jId]['kuota_total'] !== null ? (int)$upjMap[$jId]['kuota_total'] : null) : null,
             'kuota_tersisa' => $isSelected ? ($upjMap[$jId]['kuota_tersisa'] !== null ? (int)$upjMap[$jId]['kuota_tersisa'] : null) : null,
         ];
@@ -173,12 +175,15 @@ try {
     foreach ($allPeminatan as $pem) {
         $pemId = (int)$pem['id'];
         $jIds = !empty($pem['jurusan_ids_str']) ? array_map('intval', explode(',', $pem['jurusan_ids_str'])) : [];
+        $isSelected = in_array($pemId, array_map('intval', $selectedPeminatanIds), true);
+        $isLocked = ($selectedPeriode['status'] === 'dibuka' && $uppId > 0 && $isSelected);
         $peminatanList[] = [
             'id'             => $pemId,
             'nama_peminatan' => $pem['nama'],
             'deskripsi'      => $pem['deskripsi'],
             'jurusan_ids'    => $jIds,
-            'is_selected'    => in_array($pemId, array_map('intval', $selectedPeminatanIds), true),
+            'is_selected'    => $isSelected,
+            'is_locked'      => $isLocked,
         ];
     }
 
