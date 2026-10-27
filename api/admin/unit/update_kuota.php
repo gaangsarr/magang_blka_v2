@@ -313,6 +313,11 @@ try {
                 'peminatan_ids' => $peminatanIds
             ])
         ]);
+
+        // Otomatis setujui pengajuan permintaan kuota mahasiswa untuk unit ini jika kuota aktif & tersedia
+        if ($aktif === 1 && $kuotaBaru > 0) {
+            \App\PengajuanUnitHelper::autoApproveByEntitas($pdo, $entitasId, $adminId);
+        }
     });
     
     echo json_encode([

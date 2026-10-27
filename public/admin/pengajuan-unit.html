@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manajemen Pengajuan Unit Magang — INTERN ITPLN Admin</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/assets/img/logo_itpln.png">
+    <link rel="apple-touch-icon" href="/assets/img/logo_itpln.png">
+    
+    <!-- Google Fonts: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/admin.css">
+    <style>
+        .pengajuan-kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .kpi-stat-card {
+            background: #FFFFFF;
+            border: 1px solid var(--color-border-subtle);
+            border-radius: 12px;
+            padding: 18px 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        }
+
+        .kpi-stat-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .kpi-stat-val {
+            font-size: 1.45rem;
+            font-weight: 800;
+            line-height: 1.1;
+            color: #0F172A;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .kpi-stat-label {
+            font-size: 0.8rem;
+            color: #64748B;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        /* Tabs Navigation */
+        .admin-nav-tabs {
+            display: flex;
+            gap: 8px;
+            border-bottom: 1px solid var(--color-border-subtle);
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 12px 20px;
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #64748B;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-btn:hover {
+            color: var(--color-brand-cyan);
+        }
+
+        .tab-btn.active {
+            color: var(--color-brand-cyan);
+            border-bottom-color: var(--color-brand-cyan);
+        }
+
+        .tab-badge {
+            background: #E2E8F0;
+            color: #334155;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 0.725rem;
+            font-variant-numeric: tabular-nums;
+        }
+        .tab-btn.active .tab-badge {
+            background: rgba(0, 162, 185, 0.12);
+            color: var(--color-brand-cyan);
+        }
+
+        /* Filter Row */
+        .admin-filter-bar {
+            background: #FFFFFF;
+            border: 1px solid var(--color-border-subtle);
+            border-radius: 10px;
+            padding: 14px 18px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .filter-search-wrap {
+            position: relative;
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .filter-search-input {
+            width: 100%;
+            padding: 8px 12px 8px 34px;
+            border: 1px solid var(--color-border-strong);
+            border-radius: 6px;
+            font-size: 0.85rem;
+            box-sizing: border-box;
+            outline: none;
+        }
+        .filter-search-input:focus {
+            border-color: var(--color-brand-cyan);
+        }
+
+        .filter-status-select {
+            padding: 8px 14px;
+            border: 1px solid var(--color-border-strong);
+            border-radius: 6px;
+            font-size: 0.85rem;
+            background: #FFFFFF;
+            outline: none;
+            cursor: pointer;
+        }
+
+        /* Table Card */
+        .admin-table-card {
+            background: #FFFFFF;
+            border: 1px solid var(--color-border-subtle);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        }
+
+        .admin-data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            text-align: left;
+        }
+
+        .admin-data-table th {
+            background: #F8FAFC;
+            color: #64748B;
+            font-weight: 700;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            padding: 12px 18px;
+            border-bottom: 1px solid var(--color-border-subtle);
+        }
+
+        .admin-data-table td {
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--color-border-subtle);
+            vertical-align: middle;
+            color: #0F172A;
+        }
+
+        .admin-data-table tbody tr:hover {
+            background-color: #FAFCFE;
+        }
+
+        /* Badges & Pills */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 9px;
+            border-radius: 999px;
+            font-size: 0.725rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .badge-wait { background: #FFFBEB; color: #B45309; border: 1px solid #FDE68A; }
+        .badge-proc { background: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE; }
+        .badge-appr { background: #ECFDF5; color: #047857; border: 1px solid #A7F3D0; }
+        .badge-rejt { background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; }
+
+        .btn-wa-chat {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.775rem;
+            font-weight: 700;
+            background: #25D366;
+            color: #FFFFFF;
+            text-decoration: none;
+            transition: background 0.15s ease;
+            white-space: nowrap;
+        }
+        .btn-wa-chat:hover {
+            background: #1DA851;
+        }
+
+        .btn-table-sm {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.775rem;
+            font-weight: 700;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+        .btn-sm-primary {
+            background: var(--color-brand-cyan);
+            color: #FFFFFF;
+        }
+        .btn-sm-primary:hover {
+            background: var(--color-brand-cyan-hover);
+        }
+        .btn-sm-outline {
+            background: #FFFFFF;
+            border-color: var(--color-border-strong);
+            color: #334155;
+        }
+        .btn-sm-outline:hover {
+            background: #F8FAFC;
+        }
+        .btn-sm-danger {
+            background: #FFFFFF;
+            border-color: #FECACA;
+            color: #DC2626;
+        }
+        .btn-sm-danger:hover {
+            background: #FEF2F2;
+        }
+
+        /* Sub-table students list */
+        .students-subrow {
+            background: #F8FAFC !important;
+        }
+        .students-subrow-card {
+            padding: 12px 18px 16px;
+        }
+        .subtable-students {
+            width: 100%;
+            border-collapse: collapse;
+            background: #FFFFFF;
+            border: 1px solid #E2E8F0;
+            border-radius: 8px;
+            overflow: hidden;
+            font-size: 0.8rem;
+        }
+        .subtable-students th {
+            background: #F1F5F9;
+            padding: 8px 12px;
+            font-size: 0.725rem;
+        }
+        .subtable-students td {
+            padding: 8px 12px;
+            border-bottom: 1px solid #F1F5F9;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 16px;
+            box-sizing: border-box;
+        }
+        .modal-overlay.show {
+            display: flex;
+        }
+        .modal-content-card {
+            background: #FFFFFF;
+            border-radius: 14px;
+            max-width: 580px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        .modal-header-admin {
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--color-border-subtle);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-body-admin {
+            padding: 20px 24px;
+        }
+        .modal-footer-admin {
+            padding: 14px 24px;
+            border-top: 1px solid var(--color-border-subtle);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            background: #F8FAFC;
+        }
+        .form-admin-group {
+            margin-bottom: 14px;
+        }
+        .form-admin-label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #0F172A;
+            margin-bottom: 5px;
+        }
+        .form-admin-input, .form-admin-select, .form-admin-textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--color-border-strong);
+            border-radius: 6px;
+            font-size: 0.85rem;
+            box-sizing: border-box;
+            outline: none;
+            font-family: inherit;
+        }
+        .form-admin-input:focus, .form-admin-select:focus, .form-admin-textarea:focus {
+            border-color: var(--color-brand-cyan);
+        }
+    </style>
+</head>
+<body class="admin-body">
+    <div class="admin-layout">
+        <!-- Dynamic Sidebar Navigation -->
+        <aside id="admin-sidebar" class="admin-sidebar"></aside>
+
+        <!-- Main Content Area -->
+        <main class="admin-main">
+            <!-- Topbar Header -->
+            <header class="admin-topbar">
+                <div class="topbar-title-group">
+                    <h1>Pengajuan Unit &amp; Kebutuhan Magang</h1>
+                    <p>Pantau aspirasi kebutuhan kuota unit terdaftar dan tindak lanjuti usulan unit baru dari mahasiswa</p>
+                </div>
+
+                <div class="admin-profile-badge">
+                    <div class="admin-avatar" id="admin-avatar">A</div>
+                    <div class="admin-user-info">
+                        <span class="admin-user-name" id="admin-name">Administrator</span>
+                        <span class="admin-user-role" id="admin-role">Admin BLKA</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content Container -->
+            <div class="admin-content">
+
+                <!-- KPI Stats Grid -->
+                <div class="pengajuan-kpi-grid">
+                    <div class="kpi-stat-card">
+                        <div class="kpi-stat-icon" style="background: #FFFBEB; color: #D97706;">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                        </div>
+                        <div>
+                            <div class="kpi-stat-val" id="stat-kuota-menunggu">0</div>
+                            <div class="kpi-stat-label">Permintaan Kuota Aktif</div>
+                        </div>
+                    </div>
+
+                    <div class="kpi-stat-card">
+                        <div class="kpi-stat-icon" style="background: #EFF6FF; color: #2563EB;">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                        </div>
+                        <div>
+                            <div class="kpi-stat-val" id="stat-usulan-menunggu">0</div>
+                            <div class="kpi-stat-label">Usulan Unit Baru Aktif</div>
+                        </div>
+                    </div>
+
+                    <div class="kpi-stat-card">
+                        <div class="kpi-stat-icon" style="background: #F0FDF4; color: #16A34A;">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        </div>
+                        <div>
+                            <div class="kpi-stat-val" id="stat-mhs-count">0</div>
+                            <div class="kpi-stat-label">Mahasiswa Mengajukan</div>
+                        </div>
+                    </div>
+
+                    <div class="kpi-stat-card">
+                        <div class="kpi-stat-icon" style="background: #ECFDF5; color: #059669;">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>
+                        </div>
+                        <div>
+                            <div class="kpi-stat-val" id="stat-disetujui">0</div>
+                            <div class="kpi-stat-label">Telah Disetujui / Dibuka</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabs Navigation -->
+                <div class="admin-nav-tabs">
+                    <button type="button" class="tab-btn active" id="tab-btn-kuota" data-tab="kuota">
+                        <span>Permintaan Kuota Unit</span>
+                        <span class="tab-badge" id="badge-tab-kuota">0</span>
+                    </button>
+                    <button type="button" class="tab-btn" id="tab-btn-usulan" data-tab="usulan">
+                        <span>Usulan Unit Baru</span>
+                        <span class="tab-badge" id="badge-tab-usulan">0</span>
+                    </button>
+                </div>
+
+                <!-- Filter Bar -->
+                <div class="admin-filter-bar">
+                    <div class="filter-search-wrap">
+                        <input type="text" class="filter-search-input" id="admin-search" placeholder="Cari nama unit, alamat, mahasiswa, atau NIM...">
+                    </div>
+                    <div>
+                        <select class="filter-status-select" id="admin-filter-status">
+                            <option value="semua">Semua Status</option>
+                            <option value="menunggu">Menunggu Tindak Lanjut</option>
+                            <option value="diproses">Sedang Diproses</option>
+                            <option value="disetujui">Telah Disetujui</option>
+                            <option value="ditolak">Ditolak</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Table Card Container -->
+                <div class="admin-table-card">
+                    <div id="table-container">
+                        <table class="admin-data-table">
+                            <thead id="admin-table-head"></thead>
+                            <tbody id="admin-table-body">
+                                <tr>
+                                    <td colspan="6" style="text-align: center; padding: 40px; color: #64748b;">
+                                        Memuat data pengajuan...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div class="pagination-bar" id="admin-pagination" style="display: none; padding: 12px 18px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: #64748b;">
+                        <span id="admin-pagination-info">Halaman 1 dari 1</span>
+                        <div style="display: flex; gap: 8px;">
+                            <button type="button" class="btn-table-sm btn-sm-outline" id="btn-admin-prev" disabled>&larr; Sebelumnya</button>
+                            <button type="button" class="btn-table-sm btn-sm-outline" id="btn-admin-next" disabled>Selanjutnya &rarr;</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal 1: Tolak Pengajuan (Catatan Wajib) -->
+    <div class="modal-overlay" id="modal-tolak">
+        <div class="modal-content-card">
+            <div class="modal-header-admin">
+                <h3 style="margin: 0; font-size: 1.1rem; font-weight: 700; color: #DC2626;">Tolak Pengajuan Unit</h3>
+                <button type="button" class="btn-close-modal" data-close="modal-tolak" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+            </div>
+            <div class="modal-body-admin">
+                <p style="font-size: 0.85rem; color: #475569; margin: 0 0 14px;">
+                    Silakan berikan alasan atau catatan penolakan. Mahasiswa pengusul akan dapat melihat catatan ini di akun mereka.
+                </p>
+                <input type="hidden" id="tolak-target-id">
+                <input type="hidden" id="tolak-target-mode">
+                <div class="form-admin-group">
+                    <label class="form-admin-label" for="tolak-alasan">Alasan Penolakan <span style="color:#DC2626;">*</span></label>
+                    <textarea class="form-admin-textarea" id="tolak-alasan" rows="3" placeholder="Contoh: Unit belum memiliki fasilitas pembimbing magang / Unit telah merger..." required></textarea>
+                </div>
+            </div>
+            <div class="modal-footer-admin">
+                <button type="button" class="btn-table-sm btn-sm-outline" data-close="modal-tolak">Batal</button>
+                <button type="button" class="btn-table-sm btn-sm-danger" id="btn-confirm-tolak">Tolak Pengajuan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 2: Setujui Usulan Unit Baru (Buat Master Entitas) -->
+    <div class="modal-overlay" id="modal-approve-usulan">
+        <div class="modal-content-card">
+            <div class="modal-header-admin">
+                <div>
+                    <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: #047857;">Setujui Usulan Unit Baru</h3>
+                    <div style="font-size: 0.775rem; color: #64748b; margin-top: 2px;">Tambahkan unit ini ke master entitas PLN</div>
+                </div>
+                <button type="button" class="btn-close-modal" data-close="modal-approve-usulan" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+            </div>
+            <form id="form-approve-usulan">
+                <div class="modal-body-admin">
+                    <input type="hidden" id="appr-usulan-id">
+                    
+                    <div class="form-admin-group">
+                        <label class="form-admin-label" for="appr-mode-select">Tindakan Persetujuan</label>
+                        <select class="form-admin-select" id="appr-mode-select">
+                            <option value="buat_baru">Buat Unit Baru di Master Data Entitas</option>
+                            <option value="tautkan">Tautkan ke Unit Terdaftar yang Sudah Ada</option>
+                        </select>
+                    </div>
+
+                    <!-- Panel Buat Baru -->
+                    <div id="panel-buat-baru">
+                        <div class="form-admin-group">
+                            <label class="form-admin-label" for="appr-nama-unit">Nama Resmi Unit <span style="color:#DC2626;">*</span></label>
+                            <input type="text" class="form-admin-input" id="appr-nama-unit" required>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <div class="form-admin-group">
+                                <label class="form-admin-label" for="appr-singkatan">Singkatan Unit (Opsional)</label>
+                                <input type="text" class="form-admin-input" id="appr-singkatan" placeholder="Misal: UP3 Garut">
+                            </div>
+                            <div class="form-admin-group">
+                                <label class="form-admin-label" for="appr-tipe">Tipe Hierarki PLN <span style="color:#DC2626;">*</span></label>
+                                <select class="form-admin-select" id="appr-tipe" required>
+                                    <option value="">Pilih Tipe...</option>
+                                    <option value="unit_pelaksana" selected>Unit Pelaksana (UP3/UPDL)</option>
+                                    <option value="unit_layanan">Unit Layanan (ULP)</option>
+                                    <option value="unit_induk">Unit Induk (UID/UIW)</option>
+                                    <option value="anak_perusahaan">Anak Perusahaan</option>
+                                    <option value="subholding">Subholding</option>
+                                    <option value="holding">Holding (Pusat)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-admin-group">
+                            <label class="form-admin-label" for="appr-parent-id">Unit Induk / Parent</label>
+                            <select class="form-admin-select" id="appr-parent-id">
+                                <option value="">Tidak ada (Root / Holding)</option>
+                            </select>
+                        </div>
+                        <div class="form-admin-group">
+                            <label class="form-admin-label" for="appr-alamat">Alamat Lengkap</label>
+                            <input type="text" class="form-admin-input" id="appr-alamat">
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <div class="form-admin-group">
+                                <label class="form-admin-label" for="appr-pic-nama">Nama PIC</label>
+                                <input type="text" class="form-admin-input" id="appr-pic-nama">
+                            </div>
+                            <div class="form-admin-group">
+                                <label class="form-admin-label" for="appr-pic-wa">No. WhatsApp PIC</label>
+                                <input type="tel" class="form-admin-input" id="appr-pic-wa">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Panel Tautkan ke Unit Terdaftar -->
+                    <div id="panel-tautkan" style="display: none;">
+                        <div class="form-admin-group">
+                            <label class="form-admin-label" for="appr-target-entitas">Pilih Unit Terdaftar</label>
+                            <select class="form-admin-select" id="appr-target-entitas">
+                                <option value="">Pilih Unit...</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer-admin">
+                    <button type="button" class="btn-table-sm btn-sm-outline" data-close="modal-approve-usulan">Batal</button>
+                    <button type="submit" class="btn-table-sm btn-sm-primary" id="btn-submit-approve">Setujui &amp; Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="/js/admin/common.js"></script>
+    <script type="module" src="/js/admin/pengajuan-unit.js"></script>
+</body>
+</html>

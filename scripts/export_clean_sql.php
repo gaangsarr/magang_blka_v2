@@ -45,6 +45,7 @@ $emptyTables = [
     'unit_peminatan',
     'unit_periode_jurusan',
     'unit_periode_peminatan',
+    'pengajuan_unit_mahasiswa',
 ];
 
 // Dapatkan seluruh tabel
